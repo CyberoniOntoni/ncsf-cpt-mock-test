@@ -47,6 +47,12 @@ python shuffledtest/deploy_pages.py
 
 Configured custom domain: `ncsf.50bar.app` (Cloudflare Pages project `ncsf-mock-exam`).
 
+If the custom domain shows “CNAME record not set”, add this DNS record once in the Cloudflare dashboard for `50bar.app`:
+
+| Type | Name | Target | Proxied |
+|------|------|--------|---------|
+| CNAME | `ncsf` | `ncsf-mock-exam.pages.dev` | Yes |
+
 ## Project structure
 
 | Path | Purpose |
