@@ -243,6 +243,21 @@ body {
   color: var(--accent);
 }
 
+.exam-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.exam-timer.timer-warning {
+  color: var(--warning);
+}
+
+.exam-timer.timer-expired {
+  color: var(--danger);
+}
+
 .question-content {
   margin-bottom: 1.5rem;
 }
@@ -654,17 +669,7 @@ body {
 
 @media (max-width: 768px) {
   .app-header {
-    padding: 1rem 1.25rem;
-    padding-top: max(1rem, env(safe-area-inset-top));
-  }
-
-  .app-header h1 {
-    font-size: 1.25rem;
-  }
-
-  .app-header p {
-    font-size: 0.8rem;
-    line-height: 1.4;
+    display: none;
   }
 
   .container {
@@ -828,10 +833,6 @@ body {
 }
 
 @media (max-width: 380px) {
-  .app-header h1 {
-    font-size: 1.1rem;
-  }
-
   .info-item .value {
     font-size: 0.9rem;
   }

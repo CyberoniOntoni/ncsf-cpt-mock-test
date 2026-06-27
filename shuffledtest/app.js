@@ -1,11 +1,14 @@
 const PASS_THRESHOLD = 0.70;
 const EXAM_SIZE = 150;
+const EXAM_TIME_LIMIT_MS = 3 * 60 * 60 * 1000;
 const QUESTION_POOL_SIZE = EXAM_QUESTIONS.length;
 let TOTAL_QUESTIONS = EXAM_SIZE;
 
 let currentIndex = 0;
 let answers = [];
 let shuffledQuestions = [];
+let examStartTime = null;
+let timerIntervalId = null;
 
 const screens = {
   start: document.getElementById("start-screen"),
@@ -55,12 +58,52 @@ function prepareShuffledExam() {
   });
 }
 
+function formatElapsed(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function stopExamTimer() {
+  if (timerIntervalId !== null) {
+    clearInterval(timerIntervalId);
+    timerIntervalId = null;
+  }
+  examStartTime = null;
+}
+
+function updateTimerDisplay() {
+  const timerEl = document.getElementById("exam-timer");
+  if (!timerEl || examStartTime === null) return;
+
+  const elapsed = Date.now() - examStartTime;
+  timerEl.textContent = `${formatElapsed(elapsed)} / 03:00:00`;
+  timerEl.classList.toggle("timer-warning", elapsed >= EXAM_TIME_LIMIT_MS - 15 * 60 * 1000 && elapsed < EXAM_TIME_LIMIT_MS);
+  timerEl.classList.remove("timer-expired");
+
+  if (elapsed >= EXAM_TIME_LIMIT_MS) {
+    timerEl.classList.add("timer-expired");
+    stopExamTimer();
+    submitExam({ timedOut: true });
+  }
+}
+
+function startExamTimer() {
+  stopExamTimer();
+  examStartTime = Date.now();
+  updateTimerDisplay();
+  timerIntervalId = setInterval(updateTimerDisplay, 1000);
+}
+
 function startExam() {
   shuffledQuestions = prepareShuffledExam();
   TOTAL_QUESTIONS = shuffledQuestions.length;
   currentIndex = 0;
   answers = new Array(TOTAL_QUESTIONS).fill(null);
   showScreen("exam");
+  startExamTimer();
   renderQuestion();
 }
 
@@ -255,17 +298,23 @@ function nextQuestion() {
   }
 }
 
-function submitExam() {
-  const unanswered = answers.filter((a) => a === null).length;
-  if (unanswered > 0) {
-    if (
-      !confirm(
-        `You have ${unanswered} unanswered question(s). Submit anyway?`
+function submitExam(options = {}) {
+  const { timedOut = false } = options;
+
+  if (!timedOut) {
+    const unanswered = answers.filter((a) => a === null).length;
+    if (unanswered > 0) {
+      if (
+        !confirm(
+          `You have ${unanswered} unanswered question(s). Submit anyway?`
+        )
       )
-    )
-      return;
+        return;
+    }
   }
-  showResults();
+
+  stopExamTimer();
+  showResults({ timedOut });
 }
 
 function calculateScore() {
@@ -283,10 +332,12 @@ function calculateScore() {
   };
 }
 
-function showResults() {
+function showResults(options = {}) {
+  const { timedOut = false } = options;
   const { correct, total, percent, details } = calculateScore();
   const passed = percent >= PASS_THRESHOLD;
   const required = Math.ceil(total * PASS_THRESHOLD);
+  const unanswered = answers.filter((a) => a === null).length;
 
   showScreen("results");
 
@@ -303,9 +354,23 @@ function showResults() {
     ? "PASSED — You met the 70% requirement!"
     : "NOT PASSED — You need 70% to pass.";
 
-  document.getElementById("result-summary").textContent = passed
-    ? `Congratulations! You scored ${Math.round(percent * 100)}%, exceeding the NCSF passing threshold of 70%.`
-    : `You scored ${Math.round(percent * 100)}%. You needed ${required} correct answers (70%). Review the detailed explanations below.`;
+  let summary;
+  if (timedOut) {
+    const unansweredNote =
+      unanswered === 0
+        ? "You answered every question before time ran out."
+        : `You did not answer ${unanswered} question${unanswered === 1 ? "" : "s"}.`;
+    summary = `Your 3-hour exam session has ended. ${unansweredNote} `;
+    summary += passed
+      ? `You scored ${Math.round(percent * 100)}% and met the 70% passing requirement.`
+      : `You scored ${Math.round(percent * 100)}%. You needed ${required} correct answers (70%). Review the detailed explanations below.`;
+  } else {
+    summary = passed
+      ? `Congratulations! You scored ${Math.round(percent * 100)}%, exceeding the NCSF passing threshold of 70%.`
+      : `You scored ${Math.round(percent * 100)}%. You needed ${required} correct answers (70%). Review the detailed explanations below.`;
+  }
+
+  document.getElementById("result-summary").textContent = summary;
 
   window.examDetails = details;
 }
@@ -373,6 +438,7 @@ document.getElementById("review-correct-btn").addEventListener("click", () =>
   showReview("correct")
 );
 document.getElementById("retake-btn").addEventListener("click", () => {
+  stopExamTimer();
   showScreen("start");
 });
 document.getElementById("back-results-btn").addEventListener("click", () => {
