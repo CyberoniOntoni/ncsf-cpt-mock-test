@@ -1,0 +1,49 @@
+# Other workspaces in this folder
+FitProject/
+ncsf-mock-exam/
+mcps/
+terminals/
+agent-tools/
+
+# Large media and extraction artifacts
+ncsf_frames/
+ncsf_video.mp4
+ncsf_audio.webm
+ncsf_ocr_raw.txt
+extraq_extracted/
+extraq_blocks.txt
+
+# Regeneratable outputs
+crosscheck_*
+strict_audit_*
+manual_verification_report.txt
+distractor_audit.json
+quizlet_*
+extraq_questions.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Node / deploy artifacts
+shuffledtest/node_modules/
+shuffledtest/dist/
+shuffledtest/.wrangler/
+
+# Local deploy helpers
+shuffledtest/remove_pages_domain.py
+shuffledtest/setup_custom_domain.py
+shuffledtest/create_dns_record.py
+
+# Optional dev/audit scripts
+audit_*.py
+build_manual_refs.py
+build_shuffledtest.py
+crosscheck_online.py
+extract_questions.py
+list_review_questions.py
+merge_database.py
+scrape_quizlet.py
+
+.DS_Store
+Thumbs.db

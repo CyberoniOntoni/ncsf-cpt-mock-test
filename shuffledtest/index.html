@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NCSF CPT Free Mock Test — 150-Question Practice Exam</title>
+  <meta name="description" content="Free NCSF Certified Personal Trainer (CPT) mock exam with 150 randomized questions from a 418-question pool. Instant feedback, detailed explanations, and 70% passing score. Practice anytime.">
+  <meta name="keywords" content="NCSF CPT, NCSF mock exam, NCSF practice test, certified personal trainer exam, CPT practice questions, personal trainer certification, free mock test, NCSF study guide">
+  <meta name="author" content="50bar">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ncsf.50bar.app/">
+  <meta name="theme-color" content="#0f766e">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NCSF CPT Free Mock Test">
+  <meta property="og:title" content="NCSF CPT Free Mock Test — 150-Question Practice Exam">
+  <meta property="og:description" content="Free NCSF CPT practice exam: 150 shuffled questions per attempt, instant feedback, and detailed answer explanations.">
+  <meta property="og:url" content="https://ncsf.50bar.app/">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="NCSF CPT Free Mock Test">
+  <meta name="twitter:description" content="Free NCSF Certified Personal Trainer mock exam with 150 randomized questions and detailed explanations.">
+
+  <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "NCSF CPT Free Mock Test",
+    "url": "https://ncsf.50bar.app/",
+    "description": "Free NCSF Certified Personal Trainer (CPT) practice exam with 150 randomized questions per attempt, instant feedback, and detailed explanations.",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web browser",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "about": {
+      "@type": "EducationalOccupationalCredential",
+      "name": "NCSF Certified Personal Trainer (CPT)"
+    },
+    "featureList": [
+      "150 randomized questions per exam attempt",
+      "418-question verified practice pool",
+      "Instant answer feedback with explanations",
+      "70% passing score benchmark",
+      "Review mode for wrong, correct, and all answers"
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>NCSF CPT Free Mock Test</h1>
+    <p>150 questions per test · <span data-pool-size>—</span>-question pool · 70% passing score</p>
+  </header>
+
+  <main class="container">
+    <section id="start-screen" class="screen active">
+      <div class="card">
+        <h2>Free NCSF CPT Practice Exam</h2>
+        <p>
+          Prepare for the <strong>NCSF Certified Personal Trainer (CPT)</strong> exam with a free mock test.
+          Each attempt draws <strong>150 random questions</strong> from a pool of
+          <strong><span data-pool-size>—</span> verified practice questions</strong>
+          covering anatomy, exercise technique, programming, nutrition, and client screening.
+          Question order and answer options are shuffled every attempt.
+        </p>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="value">150</div>
+            <div class="label">Per Test</div>
+          </div>
+          <div class="info-item">
+            <div class="value" data-pool-size>—</div>
+            <div class="label">Question Pool</div>
+          </div>
+          <div class="info-item">
+            <div class="value">4</div>
+            <div class="label">Options Each</div>
+          </div>
+          <div class="info-item">
+            <div class="value">70%</div>
+            <div class="label">Passing Score</div>
+          </div>
+          <div class="info-item">
+            <div class="value">105</div>
+            <div class="label">Correct to Pass</div>
+          </div>
+        </div>
+
+        <ul class="feature-list">
+          <li><strong>150 questions</strong> randomly selected from the full pool each attempt</li>
+          <li>Illustrated questions display images during the exam when available</li>
+          <li>Answer options are <strong>randomly shuffled</strong> for each question every attempt</li>
+          <li><strong>Instant feedback</strong> — correct answers highlight green; wrong answers show the correct choice and a detailed explanation immediately</li>
+          <li>Live <strong>correct / incorrect counters</strong> track your progress during the exam</li>
+          <li>After submitting, review <strong>detailed explanations</strong> for all questions</li>
+        </ul>
+
+        <button id="start-btn" class="btn btn-primary">Start Free Mock Exam</button>
+
+        <p class="source-note">
+          Free study tool for NCSF CPT candidates · 418-question practice pool · Manual references cross-checked
+        </p>
+      </div>
+    </section>
+
+    <section id="exam-screen" class="screen">
+      <div class="shuffle-badge">🔀 150 questions drawn from pool · order &amp; options shuffled</div>
+      <div class="progress-bar-wrap">
+        <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+      </div>
+
+      <div class="exam-meta">
+        <span id="question-counter" class="question-number">Question 1 of 150</span>
+        <div class="score-tracker">
+          <span class="tracker-correct">✓ <strong id="correct-count">0</strong> Correct</span>
+          <span class="tracker-incorrect">✗ <strong id="incorrect-count">0</strong> Incorrect</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="question-content" class="question-content"></div>
+        <div id="options-list" class="options-list"></div>
+        <div id="feedback-panel" class="feedback-panel hidden"></div>
+
+        <div class="exam-nav">
+          <button id="prev-btn" class="btn btn-secondary" disabled>← Previous</button>
+          <button id="next-btn" class="btn btn-primary">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="results-screen" class="screen">
+      <div class="card">
+        <div class="score-display">
+          <div id="score-circle" class="score-circle">
+            <span id="score-percent" class="percent">0%</span>
+            <span id="score-fraction" class="label">0 / 150</span>
+          </div>
+          <p id="result-status" class="result-status"></p>
+          <p id="result-summary" style="color: var(--text-muted);"></p>
+        </div>
+
+        <div class="result-actions">
+          <button id="review-btn" class="btn btn-danger">Review Wrong Answers</button>
+          <button id="review-correct-btn" class="btn btn-success">Review Correct Answers</button>
+          <button id="review-all-btn" class="btn btn-secondary">Review All Questions</button>
+          <button id="retake-btn" class="btn btn-primary">Retake (New Shuffle)</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="review-screen" class="screen">
+      <div class="review-header">
+        <h2>Detailed Answer Review</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          Every question includes the correct answer, a detailed explanation, and notes on why incorrect options don't apply.
+        </p>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="wrong">Wrong Only</button>
+          <button class="filter-tab" data-filter="correct">Correct Only</button>
+          <button class="filter-tab" data-filter="all">All Questions</button>
+        </div>
+      </div>
+
+      <div id="review-list"></div>
+
+      <div class="result-actions" style="margin-top: 2rem;">
+        <button id="back-results-btn" class="btn btn-secondary">← Back to Results</button>
+        <button class="btn btn-primary" onclick="document.getElementById('retake-btn').click()">Retake (New Shuffle)</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Free NCSF Certified Personal Trainer (CPT) mock exam for certification prep · Practice questions with instant feedback and detailed explanations</p>
+  </footer>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
