@@ -195,13 +195,9 @@ def main():
         exp = _pqt.enrich_explanation(
             item["q"], item["a"], item["wrong"], item["base_exp"], manual_ref
         )
-        distractors_exp = _pqt.build_distractors_explanation(
-            item["q"], item["a"], item["wrong"], item["base_exp"]
-        )
         items.append({
             **item,
             "exp": exp,
-            "distractorsExp": distractors_exp,
             "manualRef": manual_ref,
             "strict": strict,
             "crosscheck": crosscheck,
@@ -224,7 +220,6 @@ def main():
             "options": options,
             "correctIndex": options.index(item["a"]),
             "explanation": item["exp"],
-            "distractorsExplanation": item["distractorsExp"],
             "source": item["source"],
             "merged": True,
             "crosscheckApproved": True,

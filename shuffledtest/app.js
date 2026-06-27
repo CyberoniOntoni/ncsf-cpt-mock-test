@@ -66,10 +66,6 @@ function startExam() {
 
 function getQuestionDetail(q, userAnswer) {
   const isCorrect = userAnswer === q.correctIndex;
-  const wrongOptions = q.options
-    .map((opt, idx) => ({ opt, idx }))
-    .filter(({ idx }) => idx !== q.correctIndex)
-    .map(({ opt }) => opt);
   return {
     question: q,
     userAnswer,
@@ -77,7 +73,6 @@ function getQuestionDetail(q, userAnswer) {
     userText:
       userAnswer !== null ? q.options[userAnswer] : "Not answered",
     correctText: q.correctText || q.options[q.correctIndex],
-    wrongOptions,
   };
 }
 
@@ -148,23 +143,6 @@ function renderQuestionContent(q) {
   container.innerHTML = `<p class="question-text">${escapeHtml(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
 }
 
-function getDistractorsExplanation(q, correctText) {
-  if (q.distractorsExplanation) {
-    return q.distractorsExplanation;
-  }
-  if (q.wrongExplanations && typeof q.wrongExplanations === "object") {
-    const parts = Object.values(q.wrongExplanations).filter(Boolean);
-    if (parts.length) return parts.join(" ");
-  }
-  return `The other options do not apply — ${correctText} is the keyed answer.`;
-}
-
-function buildDistractorsHtml(q, correctText) {
-  const expl = getDistractorsExplanation(q, correctText);
-  if (!expl) return "";
-  return `<div class="wrong-options"><strong>Why the other options are incorrect:</strong><p class="wrong-options-text">${expl}</p></div>`;
-}
-
 function buildImmediateFeedbackHtml(d) {
   if (d.isCorrect) {
     return `<p class="feedback-status correct">✓ Correct!</p>`;
@@ -177,10 +155,6 @@ function buildImmediateFeedbackHtml(d) {
   html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${d.correctText}</p>`;
   html += `<div class="explanation"><strong>Why this is correct:</strong> ${body}</div>`;
   html += buildManualReferenceHtml(reference);
-
-  if (d.wrongOptions.length) {
-    html += buildDistractorsHtml(q, d.correctText);
-  }
 
   return html;
 }
@@ -352,10 +326,6 @@ function buildReviewHtml(d) {
 
   html += `<div class="explanation"><strong>Why this is correct:</strong> ${body}</div>`;
   html += buildManualReferenceHtml(reference);
-
-  if (d.wrongOptions.length) {
-    html += buildDistractorsHtml(q, d.correctText);
-  }
 
   return html;
 }

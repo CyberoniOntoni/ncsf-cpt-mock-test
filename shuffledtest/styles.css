@@ -398,28 +398,6 @@ body {
   margin-bottom: 0.25rem;
 }
 
-.feedback-panel .wrong-options {
-  background: rgba(239, 68, 68, 0.08);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-top: 0.75rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.feedback-panel .wrong-options strong {
-  color: var(--text);
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.feedback-panel .wrong-options-text {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  line-height: 1.55;
-  margin: 0;
-}
-
 .manual-reference {
   background: rgba(139, 92, 246, 0.1);
   border: 1px solid var(--accent);
@@ -563,28 +541,6 @@ body {
   color: var(--text);
   display: block;
   margin-bottom: 0.25rem;
-}
-
-.review-item .wrong-options {
-  background: rgba(239, 68, 68, 0.08);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-top: 0.75rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.review-item .wrong-options strong {
-  color: var(--text);
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.review-item .wrong-options-text {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  line-height: 1.55;
-  margin: 0;
 }
 
 .filter-tabs {
@@ -827,11 +783,6 @@ body {
   .feedback-panel {
     padding: 1rem;
     font-size: 0.9rem;
-  }
-
-  .feedback-panel .wrong-options,
-  .review-item .wrong-options {
-    font-size: 0.82rem;
   }
 
   .exam-nav {

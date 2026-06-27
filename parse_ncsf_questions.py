@@ -589,9 +589,6 @@ def generate_questions_js(items, out_path, seed=42):
             "options": options,
             "correctIndex": correct_index,
             "explanation": item["exp"],
-            "distractorsExplanation": _pqt.build_distractors_explanation(
-                item["q"], correct, wrong, item.get("exp", "")
-            ),
         })
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
