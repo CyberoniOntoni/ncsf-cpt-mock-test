@@ -30,6 +30,9 @@ shuffledtest/node_modules/
 shuffledtest/dist/
 shuffledtest/.wrangler/
 
+# History rewrite helper (local only)
+replacements.txt
+
 # Secrets and local credentials — never commit
 .env
 .env.*
