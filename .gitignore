@@ -30,7 +30,7 @@ shuffledtest/node_modules/
 shuffledtest/dist/
 shuffledtest/.wrangler/
 
-# Local deploy helpers
+# Legacy local deploy helpers
 shuffledtest/remove_pages_domain.py
 shuffledtest/setup_custom_domain.py
 shuffledtest/create_dns_record.py

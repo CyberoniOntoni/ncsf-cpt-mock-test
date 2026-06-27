@@ -1,4 +1,10 @@
 {
+  "name": "ncsf-cpt-mock-test",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler pages deploy . --project-name=ncsf-mock-exam --branch=main --commit-dirty=true",
+    "pages:dev": "wrangler pages dev ."
+  },
   "devDependencies": {
     "wrangler": "^4.105.0"
   }

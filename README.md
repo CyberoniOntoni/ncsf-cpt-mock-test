@@ -18,8 +18,7 @@ Free practice exam for the NCSF Certified Personal Trainer (CPT) certification.
 ```bash
 cd shuffledtest
 npm install
-# Open index.html with a local server, or use:
-npx wrangler dev
+npx wrangler pages dev .
 ```
 
 ## Rebuild question database
@@ -30,20 +29,23 @@ python build_master_database.py
 
 Requires `quiz.txt`, `extraq.docx`, and `manual_references.json` in the repo root.
 
-## Deploy to Cloudflare
+## Deploy to Cloudflare Pages
 
 ```bash
+python build_master_database.py
 cd shuffledtest
 npm install
-python ../build_master_database.py
-# sync dist
-mkdir -p dist  # Windows: New-Item dist -ItemType Directory
-copy index.html,app.js,styles.css,questions.js,robots.txt,sitemap.xml dist\
-xcopy images dist\images\ /E /I
-npx wrangler deploy
+npm run deploy
 ```
 
-Configured custom domain: `ncsf.50bar.app` (see `shuffledtest/wrangler.jsonc`).
+Or use the helper (removes legacy Worker deploy, deploys Pages, attaches custom domain):
+
+```bash
+python build_master_database.py
+python shuffledtest/deploy_pages.py
+```
+
+Configured custom domain: `ncsf.50bar.app` (Cloudflare Pages project `ncsf-mock-exam`).
 
 ## Project structure
 

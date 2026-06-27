@@ -1,0 +1,9 @@
+node_modules
+dist
+.wrangler
+deploy_pages.py
+remove_pages_domain.py
+setup_custom_domain.py
+create_dns_record.py
+package-lock.json
+wrangler.jsonc

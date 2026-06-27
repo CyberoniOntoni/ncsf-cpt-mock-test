@@ -2,14 +2,5 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ncsf-mock-exam",
   "compatibility_date": "2026-06-01",
-  "assets": {
-    "directory": "./dist"
-  },
-  "routes": [
-    {
-      "pattern": "ncsf.50bar.app",
-      "custom_domain": true,
-      "zone_name": "50bar.app"
-    }
-  ]
+  "pages_build_output_dir": "."
 }
