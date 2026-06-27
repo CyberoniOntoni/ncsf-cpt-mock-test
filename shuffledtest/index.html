@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>NCSF CPT Free Mock Test — 150-Question Practice Exam</title>
-  <meta name="description" content="Free NCSF Certified Personal Trainer (CPT) mock exam with 150 randomized questions from a 418-question pool. Instant feedback, detailed explanations, and 70% passing score. Practice anytime.">
-  <meta name="keywords" content="NCSF CPT, NCSF mock exam, NCSF practice test, certified personal trainer exam, CPT practice questions, personal trainer certification, free mock test, NCSF study guide">
+  <meta name="description" content="Free NCSF Certified Personal Trainer (CPT) mock exam with 150 randomized questions from a 418-question pool. Instant feedback, detailed explanations, and 70% passing score. Practice on phone, tablet, or desktop.">
+  <meta name="keywords" content="NCSF CPT, NCSF mock exam, NCSF practice test, certified personal trainer exam, CPT practice questions, personal trainer certification, free mock test, NCSF study guide, NCSF exam prep, CPT exam questions">
   <meta name="author" content="50bar">
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
   <link rel="canonical" href="https://ncsf.50bar.app/">
-  <meta name="theme-color" content="#0f766e">
+  <meta name="theme-color" content="#4c1d95">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NCSF CPT Mock Test">
+  <meta name="format-detection" content="telephone=no">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NCSF CPT Free Mock Test">
@@ -48,7 +53,68 @@
       "418-question verified practice pool",
       "Instant answer feedback with explanations",
       "70% passing score benchmark",
-      "Review mode for wrong, correct, and all answers"
+      "Review mode for wrong, correct, and all answers",
+      "Mobile-friendly exam on phone and tablet"
+    ],
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "NCSF CPT certification candidates"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is this NCSF CPT mock test free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The NCSF CPT Free Mock Test is completely free. No sign-up, payment, or account is required. Start practicing immediately in your web browser."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How many questions are on the NCSF CPT practice exam?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Each attempt includes 150 questions randomly drawn from a pool of 418 verified NCSF CPT practice questions. Question order and answer options are shuffled every time you retake the exam."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What score do I need to pass the NCSF CPT mock test?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You need 70% to pass — at least 105 correct answers out of 150. Your score is calculated instantly when you submit the exam."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What topics does the NCSF CPT exam cover?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Questions cover anatomy and physiology, exercise technique, program design, client screening and assessment, nutrition fundamentals, and professional practice topics aligned with NCSF Certified Personal Trainer certification prep."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I take the NCSF mock exam on my phone?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. The practice test is fully mobile-friendly. You can read questions, view images, select answers, and review explanations on a smartphone or tablet."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I retake the NCSF CPT practice test?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Click Retake (New Shuffle) after finishing to draw a fresh set of 150 questions with newly shuffled answer options for unlimited practice sessions."
+        }
+      }
     ]
   }
   </script>
@@ -74,23 +140,23 @@
         <div class="info-grid">
           <div class="info-item">
             <div class="value">150</div>
-            <div class="label">Per Test</div>
+            <div class="label">Per test</div>
           </div>
           <div class="info-item">
             <div class="value" data-pool-size>—</div>
-            <div class="label">Question Pool</div>
+            <div class="label">Pool</div>
           </div>
           <div class="info-item">
             <div class="value">4</div>
-            <div class="label">Options Each</div>
+            <div class="label">Options</div>
           </div>
           <div class="info-item">
             <div class="value">70%</div>
-            <div class="label">Passing Score</div>
+            <div class="label">Pass score</div>
           </div>
           <div class="info-item">
             <div class="value">105</div>
-            <div class="label">Correct to Pass</div>
+            <div class="label">To pass</div>
           </div>
         </div>
 
@@ -103,16 +169,57 @@
           <li>After submitting, review <strong>detailed explanations</strong> for all questions</li>
         </ul>
 
-        <button id="start-btn" class="btn btn-primary">Start Free Mock Exam</button>
+        <button id="start-btn" class="btn btn-primary btn-start">Start Free Mock Exam</button>
+
+        <div class="topics-section" aria-label="Exam topics covered">
+          <h3>Topics Covered</h3>
+          <ul class="topics-list">
+            <li>Anatomy &amp; physiology</li>
+            <li>Exercise technique</li>
+            <li>Program design</li>
+            <li>Client screening</li>
+            <li>Nutrition basics</li>
+            <li>Professional practice</li>
+          </ul>
+        </div>
+
+        <section class="faq-section" aria-labelledby="faq-heading">
+          <h3 id="faq-heading">Frequently Asked Questions</h3>
+          <dl class="faq-list">
+            <div class="faq-item">
+              <dt>Is this NCSF CPT mock test free?</dt>
+              <dd>Yes — completely free with no sign-up. Start practicing in your browser on any device.</dd>
+            </div>
+            <div class="faq-item">
+              <dt>How many questions are on each attempt?</dt>
+              <dd>150 questions randomly selected from a <span data-pool-size>—</span>-question pool, with shuffled answer options every retake.</dd>
+            </div>
+            <div class="faq-item">
+              <dt>What score do I need to pass?</dt>
+              <dd>70% — at least 105 correct out of 150. Your result is calculated instantly on submit.</dd>
+            </div>
+            <div class="faq-item">
+              <dt>Can I use this on my phone?</dt>
+              <dd>Yes. The exam is optimized for mobile — tap answers, scroll explanations, and review results on a small screen.</dd>
+            </div>
+            <div class="faq-item">
+              <dt>Does this replace official NCSF study materials?</dt>
+              <dd>No. This is a supplementary practice tool. Always use the official NCSF CPT textbook and resources for certification prep.</dd>
+            </div>
+          </dl>
+        </section>
 
         <p class="source-note">
-          Free study tool for NCSF CPT candidates · 418-question practice pool · Manual references cross-checked
+          Free study tool for NCSF CPT candidates · <span data-pool-size>—</span>-question practice pool · Manual references cross-checked
         </p>
       </div>
     </section>
 
     <section id="exam-screen" class="screen">
-      <div class="shuffle-badge">🔀 150 questions drawn from pool · order &amp; options shuffled</div>
+      <div class="shuffle-badge" aria-live="polite">
+        <span class="badge-long">🔀 150 questions drawn from pool · order &amp; options shuffled</span>
+        <span class="badge-short">🔀 150 Q · shuffled</span>
+      </div>
       <div class="progress-bar-wrap">
         <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
       </div>
@@ -180,7 +287,8 @@
   </main>
 
   <footer class="site-footer">
-    <p>Free NCSF Certified Personal Trainer (CPT) mock exam for certification prep · Practice questions with instant feedback and detailed explanations</p>
+    <p>Free NCSF Certified Personal Trainer (CPT) mock exam for certification prep · 150-question practice test with instant feedback and detailed explanations · Works on mobile and desktop</p>
+    <p class="footer-keywords">NCSF CPT practice test · NCSF mock exam · certified personal trainer exam prep · free CPT study questions</p>
   </footer>
 
   <script src="questions.js"></script>
