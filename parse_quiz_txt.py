@@ -200,9 +200,9 @@ MIN_EXPLANATION_LEN = 160
 TERM_DEFINITIONS = {
     "angiogenesis": "formation of new blood vessels",
     "atherosclerosis": "arterial plaque buildup and narrowing",
-    "hyperlipidemia": "elevated blood lipid/fat levels",
-    "hyperglycemia": "elevated blood glucose",
-    "dyslipidemia": "abnormal blood lipid profile",
+    "hyperlipidemia": "elevated blood lipids — a risk factor, not the name for arterial plaque blockage",
+    "hyperglycemia": "elevated blood glucose — unrelated to arterial plaque formation from hypertension",
+    "dyslipidemia": "abnormal blood lipid profile — describes lipid levels, not plaque buildup inside artery walls",
     "hemoglobin stability": "not a recognized cardiovascular physiology term",
     "cardiovascular sequencing": "not the term for vessel elasticity",
     "subcutaneous": "fat stored under the skin (not visceral/organ fat)",
@@ -382,6 +382,25 @@ TERM_DEFINITIONS = {
     "1,250": "below the ~2,000 kcal/week needed for fitness-level protection",
     "1,500": "below the ~2,000 kcal/week needed for fitness-level protection",
     "1,750": "below the ~2,000 kcal/week needed for fitness-level protection",
+    "lateral rotation": "outward rotation away from the midline — not internal (medial) rotation",
+    "external rotation": "rotation away from the body's midline — internal rotation is medial rotation",
+    "supination": "forearm palm-up rotation — not the term for humeral internal rotation",
+    "below or lower than another structure": "inferior (caudad) position — superior means above or higher",
+    "lateral to another structure": "side-to-side position — superior describes vertical (cephalad) location",
+    "posterior to another structure": "front-back (dorsal) position — not the superior/inferior vertical axis",
+    "skeletal muscle": "voluntary striated muscle for movement — not involuntary visceral smooth muscle",
+    "striated voluntary muscle": "consciously controlled skeletal muscle — differs from involuntary smooth muscle",
+    "cardiac muscle only": "striated heart muscle only — blood vessels and digestive organs use smooth muscle",
+    "using a standing desk at work": "minor NEAT increase — lacks structured cardiorespiratory stimulus of daily exercise",
+    "taking antioxidants": "supplement antioxidants lack the broad proven benefit of regular physical activity",
+    "increasing protein intake": "supports lean tissue but cannot replace exercise for inactive, overweight clients",
+    "lowering systolic blood pressure by five point (5) mmhg": "modest BP improvement — cannot match eliminating tobacco-related cancer and CVD risk",
+    "loss of five (5) pounds": "weight loss helps but does not remove ongoing carcinogen exposure from smoking",
+    "increasing vo2max by 3.5 ml/kg/min": "aerobic gain is valuable but smoking cessation delivers broader mortality risk reduction",
+    "hinge": "uniaxial hinge joint (knee/elbow) — shoulders and hips are multiaxial ball-and-socket joints",
+    "pivot": "single-axis rotational joint — not the multiaxial shoulder/hip classification",
+    "saddle": "saddle joint (e.g., thumb CMC) — not the ball-and-socket hip and shoulder type",
+    "coronal only": "coronal (frontal) plane — trunk rotation occurs in the transverse plane",
 }
 
 GENERIC_DISTRACTOR_MARKERS = (
@@ -617,8 +636,8 @@ def _try_contextual_explanation(question, correct, wrong_option, base_exp):
 
     if "all of the above" in cl or "all the above" in cl:
         return (
-            f"{w} is a valid error listed, but all listed errors apply — "
-            f"the complete answer is \"{correct}\"."
+            "Lists a valid point, but every listed item applies — "
+            f"select the complete \"{correct}\" answer."
         )
 
     if "curvature" in q or ("curve" in q and "spine" in q):
@@ -763,130 +782,393 @@ def _truncate(text, max_len=120):
     return cut.rstrip(".,;")
 
 
-def explain_wrong_option(question, correct, wrong_option, base_exp=None):
-    q = question.lower()
+def _clean_explanation_body(base_exp):
+    if not base_exp:
+        return ""
+    body = base_exp.strip()
+    marker = "NCSF Manual reference:"
+    if marker in body:
+        body = body[: body.index(marker)].strip()
+    return re.sub(r"\s+", " ", body).rstrip(".")
+
+
+def _is_sentence_option(text):
+    t = (text or "").strip()
+    if len(t) > 75:
+        return True
+    if t and t[0].islower():
+        return True
+    return t.count(" ") >= 10
+
+
+def format_wrong_reason(wrong_option, reason):
+    reason = (reason or "").strip()
     w = wrong_option.strip()
+    for prefix in (f"{w} —", f"{w} -", f"{w}:", f"{w}."):
+        if reason.lower().startswith(prefix.lower()):
+            reason = reason[len(prefix) :].lstrip(" —-.:")
+            break
+    return reason.strip()
+
+
+def _is_primarily_numeric_option(w):
+    t = w.strip()
+    if _is_sentence_option(t):
+        return False
+    if re.match(r"^\d+°$", t) or re.search(r"^\d+/\d+", t):
+        return True
+    if re.match(r"^[\d.,]+\s*(mmhg|kcal|beats/min|bpm|g/kg|lbs)?$", t, re.I):
+        return True
+    return len(t) < 30 and bool(re.search(r"\d", t))
+
+
+def _try_sentence_refutation(question, correct, w, body):
     wl = w.lower()
-    focus = _question_focus(question, correct, base_exp)
-    term_def = lookup_term_explanation(w)
+    patterns = [
+        (r"does not occur", "This can occur — excessive endurance training may reduce fast-twitch fiber size."),
+        (
+            r"positive adaptation.*speed",
+            "Fiber shrinkage is a negative effect of high-volume aerobic work, not a speed-training benefit.",
+        ),
+        (
+            r"strength training.*less than 4",
+            "Atrophy is tied to endurance overload, not simply lifting fewer than four days per week.",
+        ),
+        (r"heart rate exceeding 14", "Elevated heart rate is a normal aerobic response — not the concerning sign here."),
+        (r"systolic.*160", "Systolic rise during exercise is expected; rising diastolic pressure is the red flag."),
+        (
+            r"none of the above.*normal",
+            "Rising diastolic BP during steady-state aerobic exercise is not a normal, safe response.",
+        ),
+        (
+            r"free weights are best",
+            "Free weights add stability demand, but the keyed answer emphasizes machine isolation for hypertrophy.",
+        ),
+        (
+            r"rest intervals.*two minutes.*atp",
+            "ATP timing is not the accurate hypertrophy-training principle tested in this stem.",
+        ),
+        (
+            r"older clients.*12-15",
+            "Rep prescription for older clients is not the accurate hypertrophy statement here.",
+        ),
+        (
+            r"resistance-based exercises using machines",
+            "Machine use is common but not the defining trait — sequential stations with transitions define circuits.",
+        ),
+        (
+            r"body weight movements.*high speed",
+            "Circuits need not be fast bodyweight work; sequential exercise with brief transitions is the constant.",
+        ),
+        (
+            r"alternating upper and lower",
+            "Alternation is optional programming, not the universal defining feature of circuit training.",
+        ),
+        (
+            r"beginner looking to lose weight",
+            "Pyramid loading targets maximal strength progressions, not beginner fat-loss programming.",
+        ),
+        (
+            r"power gains through plyometric",
+            "Plyometric power work uses different loading schemes than pyramid strength progression.",
+        ),
+        (
+            r"sport-specific movement",
+            "Sport-skill refinement is not the primary use case for pyramid strength loading.",
+        ),
+        (
+            r"will not affect his training",
+            "Medication and BP response still matter for exercise safety and session planning.",
+        ),
+        (
+            r"blood pressure will rise above average.*supine",
+            "Supine positioning is not the standard mitigation for exercise BP concerns in this context.",
+        ),
+        (
+            r"increase the duration of the warm-up",
+            "Extending warm-up alone does not address the clinical concern described in the stem.",
+        ),
+    ]
+    for pat, reason in patterns:
+        if re.search(pat, wl):
+            return reason
+    return None
 
-    contextual = _try_contextual_explanation(question, correct, w, base_exp)
-    if contextual:
-        return contextual
 
-    if _is_generic_distractor(w):
-        short = correct if len(correct) <= 55 else _truncate(focus, 70)
-        return f"{w} — a training approach unrelated to this question ({short})."
+def _try_numeric_reason(question, correct, w, body):
+    wl = w.lower()
+    q = question.lower()
 
-    if _is_definition_question(question, w):
-        if term_def:
-            return f"{w} — {_truncate(term_def, 90)}. The blank refers to {_truncate(focus, 70)}."
-        return f"{w} — not the term filling the blank ({_truncate(focus, 70)})."
+    if "pound" in q and "fat" in q and "kcal" in wl:
+        if "3500" in correct:
+            if "1500" in w or "2500" in w:
+                return "Underestimates stored energy — adipose tissue holds roughly 3500 kcal per pound."
+            if "4500" in w:
+                return "Overestimates typical fat energy density (~3500 kcal/lb is standard)."
 
-    if re.search(
-        r"(which of the following is not|what would not|not be considered|not part of|not an|inappropriate use)",
+    if "liter of oxygen" in q or "litre of oxygen" in q:
+        if w.strip() in ("7", "9", "10"):
+            return "Metabolic estimate is ~5 kcal per liter of O₂ consumed during exercise."
+
+    if "beats" in wl and ("karvonen" in q or "heart rate reserve" in q or "karvonen" in body.lower()):
+        return "Does not match the Karvonen formula: ((220 − age) − RHR) × intensity + RHR."
+
+    if re.search(r"\d+/\d+", w) and ("blood pressure" in q or "mmhg" in wl):
+        return "Implies a larger drop than ~10 mmHg typically seen after 3 months of aerobic training."
+
+    if "°" in w or re.search(r"^\d+\s*degrees?$", wl):
+        if "deltoid" in q and "30" in correct:
+            deg = re.search(r"(\d+)", w)
+            if deg:
+                n = int(deg.group(1))
+                if n < 30:
+                    return "Supraspinatus still leads abduction before the deltoid becomes the primary mover (~30°)."
+                if n > 30:
+                    return "Past the transition where the deltoid supersedes rotator-cuff initiation."
+
+    if _is_primarily_numeric_option(w) and body:
+        return f"Not the value supported here — {_truncate(body, 95)}."
+    return None
+
+
+def _try_impact_reason(question, correct, w, body):
+    q = question.lower()
+    if not re.search(
+        r"(greatest|most effective|most important|primary|main impact|best choice|greatest positive)",
         q,
     ):
-        if term_def:
-            return f"{w} does apply here ({_truncate(term_def, 75)}). The question asks for the exception."
-        return f"{w} is appropriate in this context; {correct} is what does NOT belong."
+        return None
+    if re.search(r"°|\d+/\d+", w.strip()):
+        return None
 
-    if re.search(r"(greatest|most effective|most important|primary|main impact|best choice)", q):
-        if term_def:
-            return f"{w} — {_truncate(term_def, 80)} Less impact than {correct} for this scenario."
-        return f"{w} has health benefits, but {correct} carries greater impact here."
+    wl, cl = w.lower(), correct.lower()
+    pairs = [
+        (
+            ("quitting smoking",),
+            ("blood pressure",),
+            "A modest BP reduction helps, but ending tobacco use eliminates ongoing carcinogen-driven cancer and CVD risk.",
+        ),
+        (
+            ("quitting smoking",),
+            ("pounds", "weight"),
+            "Weight loss helps, but smoking cessation removes sustained tobacco-related disease burden.",
+        ),
+        (
+            ("quitting smoking",),
+            ("vo2",),
+            "Improving aerobic capacity matters, but quitting smoking yields broader mortality and disease-risk reduction.",
+        ),
+        (
+            ("adding daily physical activity",),
+            ("standing desk",),
+            "Adds minor NEAT only — lacks structured cardiorespiratory and metabolic stimulus of daily exercise.",
+        ),
+        (
+            ("adding daily physical activity",),
+            ("antioxidant",),
+            "Supplement antioxidants lack the proven population-level benefit of regular activity for inactive clients.",
+        ),
+        (
+            ("adding daily physical activity",),
+            ("protein",),
+            "Protein supports lean tissue but cannot replace exercise for reversing inactivity-related health risks.",
+        ),
+    ]
+    for c_keys, w_keys, reason in pairs:
+        if any(k in cl for k in c_keys) and any(k in wl for k in w_keys):
+            return reason
 
-    if "mmhg" in q or re.search(r"\d+/\d+", w):
-        if re.search(r"\d+/\d+", w):
-            return (
-                f"{w} overestimates BP reduction from aerobic training. "
-                f"~10 mmHg is realistic — not a drop to ideal/normotensive levels."
-            )
-        if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        return f"{w} does not reflect the expected blood pressure change from aerobic exercise."
+    term_def = lookup_term_explanation(w)
+    if term_def:
+        return f"{_truncate(term_def, 90)} Less impact than {_truncate(correct, 55)} here."
+    if body:
+        return f"Offers some benefit, but {_truncate(body.split('.')[0], 85)}."
+    return None
 
-    if re.search(r"(muscle|mover|agonist|antagonist|rotator cuff|prime mover|stabiliz)", q):
-        if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        return f"{w} — acts on a different joint or movement than {correct}."
 
-    if "plane" in q:
-        if term_def and any(p in w.lower() for p in ("sagittal", "frontal", "transverse")):
-            return f"{w} — {_truncate(term_def, 90)} This exercise uses a different plane."
-        return f"{w} involves a different movement plane than this exercise."
+def _try_plane_reason(question, correct, w, body):
+    q = question.lower()
+    wl = w.lower()
+    if "plane" not in q and not any(p in wl for p in ("sagittal", "frontal", "transverse", "coronal")):
+        return None
 
-    if re.search(r"(exercise|performing|technique|spot|regression|progression|error)", q):
+    if "rotation" in q and "transverse" in correct.lower():
+        plane_reasons = {
+            "sagittal": "Sagittal plane is forward/backward flexion-extension — trunk rotation is transverse-plane movement.",
+            "frontal": "Frontal (coronal) plane is side-to-side motion — rotation occurs in the transverse plane.",
+            "coronal only": "Coronal plane describes lateral movement, not horizontal rotation of the trunk.",
+        }
+        for key, reason in plane_reasons.items():
+            if key in wl:
+                return reason
+
+    term_def = lookup_term_explanation(w)
+    if term_def:
+        return f"{_truncate(term_def, 80)} — this movement occurs in a different plane."
+    if body:
+        return f"Different movement plane than described ({_truncate(body, 80)})."
+    return "Involves a different anatomical movement plane."
+
+
+def _try_anatomy_term_reason(question, correct, w, body):
+    wl = w.lower()
+    q = question.lower()
+    cl = correct.lower()
+    opposites = [
+        (("superior",), ("below", "lower", "inferior"), "Superior means toward the head — the opposite of below/lower."),
+        (("superior",), ("lateral",), "Superior is a vertical (cephalad) term, not a side-to-side (lateral) relationship."),
+        (("superior",), ("posterior",), "Superior describes above/below position, not front vs back (posterior)."),
+        (("medial rotation",), ("external", "lateral"), "Internal rotation is medial rotation — external/lateral is the opposite."),
+        (("medial rotation",), ("supination",), "Supination is forearm terminology, not humeral internal rotation."),
+        (("wrist",), ("elbow",), "The elbow is proximal to the wrist, not distal to it."),
+        (("wrist",), ("shoulder",), "The shoulder is proximal to the wrist in the upper extremity."),
+        (("wrist",), ("ankle",), "The ankle is a lower-extremity joint, not distal to the elbow."),
+        (("ball-and-socket",), ("hinge",), "Hinge joints are uniaxial — shoulders and hips are multiaxial ball-and-socket."),
+        (("ball-and-socket",), ("pivot",), "Pivot joints rotate on one axis — not the multiaxial shoulder/hip type."),
+        (("ball-and-socket",), ("saddle",), "Saddle joints differ from the ball-and-socket classification of hips and shoulders."),
+        (("smooth muscle",), ("skeletal", "striated voluntary"), "Skeletal muscle is voluntary striated tissue — visceral walls use smooth muscle."),
+        (("smooth muscle",), ("cardiac",), "Cardiac muscle powers the heart — digestive and vascular walls use smooth muscle."),
+    ]
+    for c_keys, w_keys, reason in opposites:
+        if any(k in cl for k in c_keys) and any(k in wl for k in w_keys):
+            return reason
+
+    if "mid-axillary" in q:
+        if "left and right" in wl:
+            return "Left/right division is along the midsagittal line, not the mid-axillary (front/back) line."
+        if "superior and inferior" in wl:
+            return "Superior/inferior splits are transverse — mid-axillary divides anterior from posterior."
+        if "proximal and distal" in wl:
+            return "Proximal/distal describes limb segment position, not coronal front/back division."
+    return None
+
+
+def _try_definition_reason(question, correct, w, body):
+    is_blank = _is_definition_question(question, w) or "________" in question
+    term_def = lookup_term_explanation(w)
+
+    if is_blank:
         if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        if base_exp and len(base_exp) >= 40:
-            return f"{w} — not the correct exercise or technique. {_truncate(focus, 95)}."
-        return f"{w} — not the correct exercise, technique, or spotting method for this scenario."
+            focus = _truncate(body or correct, 70)
+            return f"{_truncate(term_def, 90)}. The blank refers to {focus}."
+        if body:
+            return f"Not the term filling the blank — {_truncate(body.split('.')[0], 85)}."
+        return None
+
+    if term_def and len(w) < 60 and not _is_sentence_option(w):
+        if body:
+            return f"{_truncate(term_def, 90)} Not the concept tested ({_truncate(body.split('.')[0], 65)})."
+        return _truncate(term_def, 110)
+    return None
+
+
+def _try_exception_question(question, correct, w, body):
+    q = question.lower()
+    if not re.search(
+        r"(which of the following is not|what would not|not be considered|not part of|not an|inappropriate|contraindicated|exception)",
+        q,
+    ):
+        return None
+    term_def = lookup_term_explanation(w)
+    if term_def:
+        return f"{_truncate(term_def, 80)} — appropriate here; the question asks for the exception."
+    return f"Applies in this context — the question seeks what does NOT belong ({_truncate(correct, 60)})."
+
+
+def _try_topic_reason(question, correct, w, body):
+    q = question.lower()
+    wl = w.lower()
+    term_def = lookup_term_explanation(w)
+
+    if re.search(r"(muscle|mover|agonist|antagonist|rotator cuff|prime mover)", q):
+        if not _is_sentence_option(w):
+            if term_def:
+                return _truncate(term_def, 110)
+            if body:
+                return f"Different muscle or action than required — {_truncate(body.split('.')[0], 80)}."
+
+    if re.search(r"(screen|referral|trainer|scope|consent|clearance|protocol|liability|ethics|concern during)", q):
+        if _is_sentence_option(w) and body:
+            if "diastolic" in body.lower() and "diastolic" not in wl and "systolic" in wl:
+                return "Systolic rise during aerobic exercise is common — rising diastolic pressure is the concerning response."
+            if "diastolic" in body.lower() and "heart rate" in wl:
+                return "Elevated exercise heart rate is expected — diastolic BP rise is the abnormal finding."
+            return f"Not the professional concern described — {_truncate(body, 95)}."
+        if term_def:
+            return _truncate(term_def, 100)
+
+    if re.search(r"\b(vitamin|protein|fat|calor|fiber|supplement|diet|nutrition|kcal|grams?|mineral|obesity|sugar)\b", q):
+        if "sugar" in q and "obesity" in q:
+            if "stored in fat" in wl:
+                return "Sugar is stored as glycogen first; obesity risk is driven by insulin inhibiting fat breakdown."
+            if "not easily digested" in wl:
+                return "Sugar digests rapidly; insulin spikes from high sugar intake promote fat storage."
+            if "pancreas" in wl and "produce fat" in wl:
+                return "The pancreas secretes insulin, not fat; elevated insulin promotes fat accumulation."
+        if term_def:
+            return _truncate(term_def, 100)
+        if body and re.search(r"\d", w):
+            return f"Incorrect amount or guideline — {_truncate(body, 90)}."
 
     if re.search(r"(frequency|times per week|times a week|per week)", q) and "kcal" not in q:
         if re.search(r"\bonce\b", wl):
-            return f"{w} — NCSF guidelines recommend minimum twice-weekly total-body resistance training."
+            return "Below the NCSF minimum of twice-weekly total-body resistance training."
         if "four" in wl:
-            return f"{w} — twice weekly is the minimum guideline, not four sessions."
+            return "Four sessions exceed the minimum twice-per-week guideline asked for."
         if "most days" in wl or "daily" in wl:
-            return f"{w} — exceeds the minimum twice-per-week frequency asked for in the guideline."
+            return "Daily training exceeds the minimum twice-per-week frequency in the guideline."
 
-    if "kcal" in q and re.search(r"\d", w):
-        if "2,000" in correct or "2000" in cl:
-            return f"{w} — fitness-level protection requires ~2,000 kcal/week, above health-maintenance levels."
-        if "1,000" in correct or "1000" in cl:
-            return f"{w} — basic health maintenance requires ~1,000 kcal/week of activity, not this amount."
-
-    if "sugar" in q and "obesity" in q:
-        if "stored in fat" in wl:
-            return f"{w} — sugar is stored as glycogen first; obesity risk comes from insulin inhibiting fat breakdown."
-        if "not easily digested" in wl:
-            return f"{w} — sugar is easily digested; high insulin from sugar spikes promotes fat storage."
-        if "pancreas" in wl and "produce fat" in wl:
-            return f"{w} — the pancreas releases insulin, not fat; elevated insulin inhibits lipolysis."
-
-    if re.search(r"\b(vitamin|protein|fat|calor|fiber|supplement|diet|nutrition|kcal|grams?|mineral)\b", q):
-        if re.search(r"\d+%", wl):
-            if "saturated" in q:
-                return f"{w} — dietary guidelines limit saturated fat to about 10% of total calories."
-            if "trans" in q:
-                return f"{w} — trans fat intake should be minimized, not this percentage."
-        if re.search(r"\d+\s*calorie", wl) and re.search(r"(fat|gram|g\b)", q):
-            return f"{w} — fat provides 9 kcal/g; multiply grams of fat by 9, not this value."
-        if re.search(r"\d+\s*g", wl) and "fiber" in q:
-            return f"{w} — adult fiber intake is recommended at 20–35 g/day, not this amount."
-        if re.search(r"\d+\s*g/kg", wl) and "protein" in q:
-            return f"{w} — hypertrophy protein targets are about 1.6–2.0 g/kg, not this level."
-        if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        return f"{w} — does not match the nutritional guideline tested ({correct})."
-
-    if re.search(r"(screen|referral|trainer|scope|consent|clearance|protocol|liability|ethics)", q):
-        if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        return f"{w} — outside trainer scope or not the required professional action."
-
-    if re.search(r"(energy|metabolism|atp|glycolysis|phosphagen|aerobic|anaerobic|fuel|glycogen)", q):
-        if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        return f"{w} — not the primary fuel source or energy system for this activity."
-
-    if re.search(r"(heart rate|vo2|cardiac|stroke volume|hdl|ldl|cholesterol|hypertension|atherosclerosis)", q):
-        if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        return f"{w} — does not match the cardiovascular principle being tested."
-
-    if re.search(r"(\d+%|\d+ (weeks|minutes|seconds|beats|rm|g/kg|lbs|pounds))", w.lower()) or re.search(
-        r"(how much|how many|calculate|equals|realistic)", q
+    if re.search(r"(energy|metabolism|atp|glycolysis|phosphagen|fuel|glycogen)", q) and not re.search(
+        r"(concern|monitor|session)", q
     ):
         if term_def:
-            return f"{w} — {_truncate(term_def, 100)}"
-        return f"{w} — not the evidence-based value or realistic outcome."
+            return _truncate(term_def, 100)
+        if body:
+            return f"Not the primary fuel or pathway here — {_truncate(body.split('.')[0], 85)}."
 
+    if re.search(r"(heart rate|vo2|cardiac|stroke volume|hdl|ldl|cholesterol|hypertension|atherosclerosis|blood pressure)", q):
+        if term_def:
+            return _truncate(term_def, 100)
+        if _is_sentence_option(w) and body:
+            return f"Does not reflect the cardiovascular principle tested — {_truncate(body, 90)}."
+
+    if _is_generic_distractor(w):
+        return f"Unrelated training approach for this stem ({_truncate(correct, 55)})."
+
+    return None
+
+
+def _try_body_contrast(question, correct, w, body):
+    if not body:
+        return None
+    if _is_sentence_option(w):
+        return f"Inaccurate — {_truncate(body, 110)}."
+    term_def = lookup_term_explanation(w)
     if term_def:
-        return f"{w} — {_truncate(term_def, 110)}"
+        return _truncate(term_def, 110)
+    return f"Not supported — {_truncate(body, 100)}."
 
-    return _build_specific_reason(question, correct, w, base_exp)
+
+def explain_wrong_option(question, correct, wrong_option, base_exp=None):
+    w = wrong_option.strip()
+    body = _clean_explanation_body(base_exp)
+
+    reason = (
+        _try_sentence_refutation(question, correct, w, body)
+        or _try_contextual_explanation(question, correct, w, base_exp)
+        or _try_impact_reason(question, correct, w, body)
+        or _try_numeric_reason(question, correct, w, body)
+        or _try_plane_reason(question, correct, w, body)
+        or _try_anatomy_term_reason(question, correct, w, body)
+        or _try_definition_reason(question, correct, w, body)
+        or _try_exception_question(question, correct, w, body)
+        or _try_topic_reason(question, correct, w, body)
+        or _try_body_contrast(question, correct, w, body)
+    )
+    return format_wrong_reason(
+        w,
+        reason or _truncate(body or f"Correct answer: {correct}", 110),
+    )
 
 
 def build_wrong_explanations(question, correct, wrong_list, base_exp=None):

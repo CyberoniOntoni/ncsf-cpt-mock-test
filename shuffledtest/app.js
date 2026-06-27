@@ -148,11 +148,20 @@ function renderQuestionContent(q) {
   container.innerHTML = `<p class="question-text">${escapeHtml(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
 }
 
+function stripOptionPrefix(opt, expl) {
+  let text = String(expl || "").trim();
+  const optLower = opt.toLowerCase();
+  if (text.toLowerCase().startsWith(optLower)) {
+    text = text.slice(opt.length).replace(/^[—–\-:\s]+/, "").trim();
+  }
+  return text;
+}
+
 function getWrongOptionExplanation(q, opt, correctText) {
   if (q.wrongExplanations && q.wrongExplanations[opt]) {
-    return q.wrongExplanations[opt];
+    return stripOptionPrefix(opt, q.wrongExplanations[opt]);
   }
-  return `${opt} does not apply here — ${correctText} is the supported answer.`;
+  return `Not supported here — ${correctText} is the keyed answer.`;
 }
 
 function buildImmediateFeedbackHtml(d) {
@@ -171,9 +180,8 @@ function buildImmediateFeedbackHtml(d) {
   if (d.wrongOptions.length) {
     html += `<div class="wrong-options"><strong>Why the other options are incorrect:</strong><ul>`;
     d.wrongOptions.forEach((opt) => {
-      const label = opt === d.userText ? "<strong>(Your choice)</strong> " : "";
       const expl = getWrongOptionExplanation(q, opt, d.correctText);
-      html += `<li>${label}<em>${opt}</em> — ${expl}</li>`;
+      html += `<li><em>${escapeHtml(opt)}</em> — ${expl}</li>`;
     });
     html += `</ul></div>`;
   }
@@ -352,9 +360,8 @@ function buildReviewHtml(d) {
   if (!d.isCorrect && d.wrongOptions.length) {
     html += `<div class="wrong-options"><strong>Why the other options are incorrect:</strong><ul>`;
     d.wrongOptions.forEach((opt) => {
-      const label = opt === d.userText ? "<strong>(Your choice)</strong> " : "";
       const expl = getWrongOptionExplanation(q, opt, d.correctText);
-      html += `<li>${label}<em>${opt}</em> — ${expl}</li>`;
+      html += `<li><em>${escapeHtml(opt)}</em> — ${expl}</li>`;
     });
     html += `</ul></div>`;
   }
