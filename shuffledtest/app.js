@@ -28,13 +28,24 @@ function shuffleArray(arr) {
   return a;
 }
 
+function isAllOfTheAboveOption(text) {
+  return /^all\s+(of\s+)?the\s+above/i.test(String(text).trim());
+}
+
+/** Shuffle options but keep "all of the above" (and variants) last */
+function shuffleOptions(options) {
+  const pinned = options.filter(isAllOfTheAboveOption);
+  const rest = options.filter((opt) => !isAllOfTheAboveOption(opt));
+  return [...shuffleArray(rest), ...pinned];
+}
+
 /** Pick EXAM_SIZE questions from pool, shuffle order AND option order each attempt */
 function prepareShuffledExam() {
   const pool = shuffleArray(EXAM_QUESTIONS);
   const selected = pool.slice(0, Math.min(EXAM_SIZE, pool.length));
   return selected.map((q) => {
     const correctText = q.options[q.correctIndex];
-    const options = shuffleArray(q.options);
+    const options = shuffleOptions(q.options);
     return {
       ...q,
       options,
