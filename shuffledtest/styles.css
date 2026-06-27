@@ -413,12 +413,11 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.feedback-panel .wrong-options ul {
-  margin-left: 1.25rem;
-}
-
-.feedback-panel .wrong-options li {
-  margin-bottom: 0.5rem;
+.feedback-panel .wrong-options-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
 }
 
 .manual-reference {
@@ -581,12 +580,11 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.review-item .wrong-options ul {
-  margin-left: 1.25rem;
-}
-
-.review-item .wrong-options li {
-  margin-bottom: 0.5rem;
+.review-item .wrong-options-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
 }
 
 .filter-tabs {

@@ -148,20 +148,21 @@ function renderQuestionContent(q) {
   container.innerHTML = `<p class="question-text">${escapeHtml(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
 }
 
-function stripOptionPrefix(opt, expl) {
-  let text = String(expl || "").trim();
-  const optLower = opt.toLowerCase();
-  if (text.toLowerCase().startsWith(optLower)) {
-    text = text.slice(opt.length).replace(/^[—–\-:\s]+/, "").trim();
+function getDistractorsExplanation(q, correctText) {
+  if (q.distractorsExplanation) {
+    return q.distractorsExplanation;
   }
-  return text;
+  if (q.wrongExplanations && typeof q.wrongExplanations === "object") {
+    const parts = Object.values(q.wrongExplanations).filter(Boolean);
+    if (parts.length) return parts.join(" ");
+  }
+  return `The other options do not apply — ${correctText} is the keyed answer.`;
 }
 
-function getWrongOptionExplanation(q, opt, correctText) {
-  if (q.wrongExplanations && q.wrongExplanations[opt]) {
-    return stripOptionPrefix(opt, q.wrongExplanations[opt]);
-  }
-  return `Not supported here — ${correctText} is the keyed answer.`;
+function buildDistractorsHtml(q, correctText) {
+  const expl = getDistractorsExplanation(q, correctText);
+  if (!expl) return "";
+  return `<div class="wrong-options"><strong>Why the other options are incorrect:</strong><p class="wrong-options-text">${expl}</p></div>`;
 }
 
 function buildImmediateFeedbackHtml(d) {
@@ -178,12 +179,7 @@ function buildImmediateFeedbackHtml(d) {
   html += buildManualReferenceHtml(reference);
 
   if (d.wrongOptions.length) {
-    html += `<div class="wrong-options"><strong>Why the other options are incorrect:</strong><ul>`;
-    d.wrongOptions.forEach((opt) => {
-      const expl = getWrongOptionExplanation(q, opt, d.correctText);
-      html += `<li><em>${escapeHtml(opt)}</em> — ${expl}</li>`;
-    });
-    html += `</ul></div>`;
+    html += buildDistractorsHtml(q, d.correctText);
   }
 
   return html;
@@ -357,13 +353,8 @@ function buildReviewHtml(d) {
   html += `<div class="explanation"><strong>Why this is correct:</strong> ${body}</div>`;
   html += buildManualReferenceHtml(reference);
 
-  if (!d.isCorrect && d.wrongOptions.length) {
-    html += `<div class="wrong-options"><strong>Why the other options are incorrect:</strong><ul>`;
-    d.wrongOptions.forEach((opt) => {
-      const expl = getWrongOptionExplanation(q, opt, d.correctText);
-      html += `<li><em>${escapeHtml(opt)}</em> — ${expl}</li>`;
-    });
-    html += `</ul></div>`;
+  if (d.wrongOptions.length) {
+    html += buildDistractorsHtml(q, d.correctText);
   }
 
   return html;

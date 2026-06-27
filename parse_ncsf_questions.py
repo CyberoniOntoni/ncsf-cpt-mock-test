@@ -589,7 +589,7 @@ def generate_questions_js(items, out_path, seed=42):
             "options": options,
             "correctIndex": correct_index,
             "explanation": item["exp"],
-            "wrongExplanations": _pqt.build_wrong_explanations(
+            "distractorsExplanation": _pqt.build_distractors_explanation(
                 item["q"], correct, wrong, item.get("exp", "")
             ),
         })

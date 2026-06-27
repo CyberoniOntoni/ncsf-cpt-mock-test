@@ -1171,11 +1171,130 @@ def explain_wrong_option(question, correct, wrong_option, base_exp=None):
     )
 
 
+def _format_option_list(options):
+    opts = [o.strip() for o in options if o and o.strip()]
+    if len(opts) == 1:
+        return opts[0]
+    if len(opts) == 2:
+        return f"{opts[0]} and {opts[1]}"
+    return ", ".join(opts[:-1]) + f", and {opts[-1]}"
+
+
+def _classify_wrong_group(question, wrong_list):
+    q = question.lower()
+    if all(_is_primarily_numeric_option(w) or "°" in w for w in wrong_list):
+        return "numeric"
+    if "________" in question or any(_is_definition_question(question, w) for w in wrong_list):
+        return "definition"
+    if any(_is_sentence_option(w) for w in wrong_list):
+        return "statements"
+    if any(p in q for p in ("plane", "sagittal", "frontal", "transverse", "rotation")):
+        return "plane"
+    if re.search(r"(muscle|tissue|bone|joint|ligament|anatom)", q):
+        return "anatomy"
+    return "terms"
+
+
+def build_distractors_explanation(question, correct, wrong_list, base_exp=None):
+    """One combined explanation for why all non-correct options fail."""
+    wrong_list = [w.strip() for w in wrong_list if w.strip() != correct.strip()]
+    if not wrong_list:
+        return ""
+
+    body = _clean_explanation_body(base_exp)
+    labels = _format_option_list(wrong_list)
+    q = question.lower()
+    cl = correct.lower()
+    reasons = [explain_wrong_option(question, correct, w, base_exp) for w in wrong_list]
+
+    if "all of the above" in cl or "all the above" in cl:
+        return (
+            f"Each listed choice ({labels}) is valid on its own, but every option applies — "
+            f"the complete answer is \"{correct}\"."
+        )
+
+    group = _classify_wrong_group(question, wrong_list)
+
+    if group == "definition":
+        bits = []
+        for w, r in zip(wrong_list, reasons):
+            term = lookup_term_explanation(w)
+            bits.append(f"{w} ({_truncate(term or r, 55)})")
+        focus = _truncate(body.split(".")[0] if body else correct, 90)
+        return (
+            f"The other choices — {labels} — are different concepts ({'; '.join(bits)}). "
+            f"The blank refers to {focus}."
+        )
+
+    if group == "numeric":
+        if body:
+            return f"The other values ({labels}) are not correct. {_truncate(body, 155)}"
+        if len(set(reasons)) == 1:
+            return f"The other values ({labels}) are incorrect because {reasons[0]}"
+        return (
+            f"The other values ({labels}) do not fit this stem: "
+            f"{' '.join(f'{w} — {r}' for w, r in zip(wrong_list, reasons))}"
+        )
+
+    if group == "plane":
+        return (
+            f"The other planes ({labels}) describe different axes of movement than this action. "
+            f"{_truncate(body or reasons[0], 125)}"
+        )
+
+    if re.search(
+        r"(greatest|most effective|most important|primary|main impact|best choice|greatest positive)",
+        q,
+    ):
+        detail = " ".join(
+            f"{_truncate(w, 42)}: {_truncate(r, 75)}" for w, r in zip(wrong_list, reasons)
+        )
+        return (
+            f"The other choices ({labels}) are less impactful than \"{correct}\". {detail}"
+        )
+
+    if group == "statements":
+        if body:
+            return (
+                f"The other statements ({labels}) do not describe what this question tests. "
+                f"{_truncate(body, 155)}"
+            )
+        return (
+            "The other options do not apply: "
+            + " ".join(
+                f"{_truncate(w, 55)} is incorrect because {r}"
+                for w, r in zip(wrong_list, reasons)
+            )
+        )
+
+    if group == "anatomy" and body:
+        return (
+            f"The other choices ({labels}) describe different structures or actions than required. "
+            f"{_truncate(body, 145)}"
+        )
+
+    if body:
+        unique = list(dict.fromkeys(reasons))
+        if len(unique) == 1:
+            return (
+                f"The other options ({labels}) are incorrect because {unique[0]} "
+                f"{_truncate(body, 110)}"
+            ).strip()
+        return (
+            f"The other options ({labels}) do not apply here. {_truncate(body, 150)}"
+        )
+
+    if all(len(r) < 100 for r in reasons):
+        return (
+            "The remaining choices are incorrect: "
+            + " ".join(f"{w} — {r}" for w, r in zip(wrong_list, reasons))
+        )
+
+    return f"The other options ({labels}) are incorrect. {_truncate(reasons[0], 140)}"
+
+
 def build_wrong_explanations(question, correct, wrong_list, base_exp=None):
-    return {
-        w: explain_wrong_option(question, correct, w, base_exp)
-        for w in wrong_list
-    }
+    return build_distractors_explanation(question, correct, wrong_list, base_exp)
 
 
 def load_manual_references():
