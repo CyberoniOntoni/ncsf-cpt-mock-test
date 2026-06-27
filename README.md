@@ -38,14 +38,15 @@ npm install
 npm run deploy
 ```
 
-Or use the helper (removes legacy Worker deploy, deploys Pages, attaches custom domain):
+Optional local helper (not committed — copy from example):
 
 ```bash
-python build_master_database.py
+cp shuffledtest/deploy_pages.example.py shuffledtest/deploy_pages.py
+# Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in your environment
 python shuffledtest/deploy_pages.py
 ```
 
-Configured custom domain: `ncsf.50bar.app` (Cloudflare Pages project `ncsf-mock-exam`).
+Configured custom domain: `ncsf.50bar.app` (Cloudflare Pages project `ncsf-mock-exam`). Never commit API tokens or `.env` files.
 
 If the custom domain shows “CNAME record not set”, add this DNS record once in the Cloudflare dashboard for `50bar.app`:
 

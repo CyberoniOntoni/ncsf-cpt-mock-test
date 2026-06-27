@@ -30,7 +30,24 @@ shuffledtest/node_modules/
 shuffledtest/dist/
 shuffledtest/.wrangler/
 
-# Legacy local deploy helpers
+# Secrets and local credentials — never commit
+.env
+.env.*
+!.env.example
+shuffledtest/.env
+shuffledtest/.env.*
+!shuffledtest/.env.example
+*.pem
+*.key
+*credentials*
+*secret*
+
+# Wrangler / Cloudflare local auth cache
+**/.wrangler/
+**/wrangler-account.json
+
+# Local deploy helpers (may read API tokens / account IDs)
+shuffledtest/deploy_pages.py
 shuffledtest/remove_pages_domain.py
 shuffledtest/setup_custom_domain.py
 shuffledtest/create_dns_record.py
