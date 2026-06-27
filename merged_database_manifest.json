@@ -1,0 +1,23 @@
+{
+  "version": "merged-extraq-v3",
+  "total_questions": 418,
+  "quiz_txt_count": 150,
+  "youtube_video_count": 130,
+  "extraq_docx_count": 138,
+  "extraq_docx_enhanced": 12,
+  "questions_with_images": 8,
+  "questions_with_option_images": 1,
+  "merged": true,
+  "approved": true,
+  "sources": [
+    "quiz.txt (NCSF Practice Exam / Quizlet 651343093)",
+    "youtube-video (NCSF exam video OCR bank)",
+    "extraq.docx (supplemental questions with images)"
+  ],
+  "verification": {
+    "manual_references": 280,
+    "strict_high": 242,
+    "crosscheck_approved": 418
+  },
+  "output": "D:\\Software\\Grok\\shuffledtest\\questions.js"
+}
