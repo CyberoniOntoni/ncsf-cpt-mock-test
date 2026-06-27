@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ncsf-cpt-mock-test",
+  "compatibility_date": "2026-06-27",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "shuffledtest"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
