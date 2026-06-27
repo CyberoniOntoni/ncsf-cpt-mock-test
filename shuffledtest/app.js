@@ -1,7 +1,9 @@
 const PASS_THRESHOLD = 0.70;
 const EXAM_SIZE = 150;
 const EXAM_TIME_LIMIT_MS = 3 * 60 * 60 * 1000;
+const EXAM_SESSION_KEY = "ncsf-exam-session-v1";
 const QUESTION_POOL_SIZE = EXAM_QUESTIONS.length;
+const questionById = new Map(EXAM_QUESTIONS.map((q) => [q.id, q]));
 let TOTAL_QUESTIONS = EXAM_SIZE;
 
 let currentIndex = 0;
@@ -35,11 +37,26 @@ function isAllOfTheAboveOption(text) {
   return /^all\s+(of\s+)?the\s+above/i.test(String(text).trim());
 }
 
-/** Shuffle options but keep "all of the above" (and variants) last */
-function shuffleOptions(options) {
-  const pinned = options.filter(isAllOfTheAboveOption);
-  const rest = options.filter((opt) => !isAllOfTheAboveOption(opt));
+/** Shuffle option indices but keep "all of the above" (and variants) last */
+function shuffleOptionIndices(options) {
+  const pinned = [];
+  const rest = [];
+  options.forEach((opt, i) => {
+    if (isAllOfTheAboveOption(opt)) pinned.push(i);
+    else rest.push(i);
+  });
   return [...shuffleArray(rest), ...pinned];
+}
+
+function applyOptionOrder(q, optionOrder) {
+  const options = optionOrder.map((i) => q.options[i]);
+  const correctText = q.options[q.correctIndex];
+  return {
+    ...q,
+    options,
+    correctIndex: optionOrder.indexOf(q.correctIndex),
+    correctText,
+  };
 }
 
 /** Pick EXAM_SIZE questions from pool, shuffle order AND option order each attempt */
@@ -47,15 +64,106 @@ function prepareShuffledExam() {
   const pool = shuffleArray(EXAM_QUESTIONS);
   const selected = pool.slice(0, Math.min(EXAM_SIZE, pool.length));
   return selected.map((q) => {
-    const correctText = q.options[q.correctIndex];
-    const options = shuffleOptions(q.options);
-    return {
-      ...q,
-      options,
-      correctIndex: options.indexOf(correctText),
-      correctText,
-    };
+    const optionOrder = shuffleOptionIndices(q.options);
+    return { ...applyOptionOrder(q, optionOrder), optionOrder };
   });
+}
+
+function isExamSessionExpired(startTime) {
+  return Date.now() - startTime >= EXAM_TIME_LIMIT_MS;
+}
+
+function serializeExamSession() {
+  return {
+    version: 1,
+    examStartTime,
+    currentIndex,
+    answers,
+    questions: shuffledQuestions.map((q) => ({
+      id: q.id,
+      optionOrder: q.optionOrder,
+    })),
+  };
+}
+
+function rebuildQuestionsFromSession(questions) {
+  const rebuilt = [];
+  for (const entry of questions) {
+    const q = questionById.get(entry.id);
+    if (!q || !Array.isArray(entry.optionOrder)) return null;
+    if (
+      entry.optionOrder.length !== q.options.length ||
+      new Set(entry.optionOrder).size !== q.options.length
+    ) {
+      return null;
+    }
+    rebuilt.push({
+      ...applyOptionOrder(q, entry.optionOrder),
+      optionOrder: entry.optionOrder,
+    });
+  }
+  return rebuilt;
+}
+
+function saveExamSession() {
+  if (examStartTime === null || shuffledQuestions.length === 0) return;
+  try {
+    sessionStorage.setItem(
+      EXAM_SESSION_KEY,
+      JSON.stringify(serializeExamSession())
+    );
+  } catch {
+    /* private browsing or quota exceeded */
+  }
+}
+
+function clearExamSession() {
+  try {
+    sessionStorage.removeItem(EXAM_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadExamSession() {
+  try {
+    const raw = sessionStorage.getItem(EXAM_SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (
+      session?.version !== 1 ||
+      typeof session.examStartTime !== "number" ||
+      !Array.isArray(session.answers) ||
+      !Array.isArray(session.questions) ||
+      session.questions.length === 0
+    ) {
+      clearExamSession();
+      return null;
+    }
+    return session;
+  } catch {
+    clearExamSession();
+    return null;
+  }
+}
+
+function applyExamSession(session) {
+  const rebuilt = rebuildQuestionsFromSession(session.questions);
+  if (!rebuilt) {
+    clearExamSession();
+    return false;
+  }
+
+  shuffledQuestions = rebuilt;
+  TOTAL_QUESTIONS = shuffledQuestions.length;
+  answers = session.answers.slice(0, TOTAL_QUESTIONS);
+  while (answers.length < TOTAL_QUESTIONS) answers.push(null);
+  currentIndex = Math.min(
+    Math.max(0, session.currentIndex ?? 0),
+    TOTAL_QUESTIONS - 1
+  );
+  examStartTime = session.examStartTime;
+  return true;
 }
 
 function formatElapsed(ms) {
@@ -71,6 +179,10 @@ function stopExamTimer() {
     clearInterval(timerIntervalId);
     timerIntervalId = null;
   }
+}
+
+function resetExamClock() {
+  stopExamTimer();
   examStartTime = null;
 }
 
@@ -85,26 +197,55 @@ function updateTimerDisplay() {
 
   if (elapsed >= EXAM_TIME_LIMIT_MS) {
     timerEl.classList.add("timer-expired");
-    stopExamTimer();
+    resetExamClock();
     submitExam({ timedOut: true });
   }
 }
 
-function startExamTimer() {
+function resumeExamTimer(startTime) {
   stopExamTimer();
-  examStartTime = Date.now();
+  examStartTime = startTime;
   updateTimerDisplay();
   timerIntervalId = setInterval(updateTimerDisplay, 1000);
 }
 
+function startExamTimer() {
+  resumeExamTimer(Date.now());
+}
+
+function enterExamScreen() {
+  showScreen("exam");
+  resumeExamTimer(examStartTime);
+  renderQuestion();
+}
+
 function startExam() {
+  clearExamSession();
+  resetExamClock();
   shuffledQuestions = prepareShuffledExam();
   TOTAL_QUESTIONS = shuffledQuestions.length;
   currentIndex = 0;
   answers = new Array(TOTAL_QUESTIONS).fill(null);
-  showScreen("exam");
-  startExamTimer();
-  renderQuestion();
+  examStartTime = Date.now();
+  saveExamSession();
+  enterExamScreen();
+}
+
+function restoreExamSession() {
+  const session = loadExamSession();
+  if (!session) return false;
+
+  if (isExamSessionExpired(session.examStartTime)) {
+    if (!applyExamSession(session)) return false;
+    resetExamClock();
+    clearExamSession();
+    showResults({ timedOut: true });
+    return true;
+  }
+
+  if (!applyExamSession(session)) return false;
+  enterExamScreen();
+  return true;
 }
 
 function getQuestionDetail(q, userAnswer) {
@@ -277,12 +418,14 @@ function selectOption(index) {
   answers[currentIndex] = index;
   showAnswerFeedback(index);
   updateScoreTracker();
+  saveExamSession();
 }
 
 function prevQuestion() {
   if (currentIndex > 0) {
     currentIndex--;
     renderQuestion();
+    saveExamSession();
   }
 }
 
@@ -293,6 +436,7 @@ function nextQuestion() {
   if (currentIndex < TOTAL_QUESTIONS - 1) {
     currentIndex++;
     renderQuestion();
+    saveExamSession();
   } else {
     submitExam();
   }
@@ -313,7 +457,8 @@ function submitExam(options = {}) {
     }
   }
 
-  stopExamTimer();
+  resetExamClock();
+  clearExamSession();
   showResults({ timedOut });
 }
 
@@ -438,7 +583,8 @@ document.getElementById("review-correct-btn").addEventListener("click", () =>
   showReview("correct")
 );
 document.getElementById("retake-btn").addEventListener("click", () => {
-  stopExamTimer();
+  resetExamClock();
+  clearExamSession();
   showScreen("start");
 });
 document.getElementById("back-results-btn").addEventListener("click", () => {
@@ -449,6 +595,11 @@ document.querySelectorAll(".filter-tab").forEach((tab) => {
   tab.addEventListener("click", () => showReview(tab.dataset.filter));
 });
 
-document.querySelectorAll("[data-pool-size]").forEach((el) => {
-  el.textContent = String(QUESTION_POOL_SIZE);
-});
+function initApp() {
+  document.querySelectorAll("[data-pool-size]").forEach((el) => {
+    el.textContent = String(QUESTION_POOL_SIZE);
+  });
+  restoreExamSession();
+}
+
+initApp();
