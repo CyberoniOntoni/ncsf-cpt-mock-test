@@ -301,7 +301,8 @@ function splitExplanationAndReference(q) {
 
 function buildManualReferenceHtml(reference) {
   if (!reference) return "";
-  return `<div class="manual-reference"><strong>📖 NCSF Manual:</strong> ${reference.replace(/^NCSF Manual reference:\s*/i, "")}</div>`;
+  const text = reference.replace(/^NCSF Manual reference:\s*/i, "");
+  return `<div class="manual-reference"><strong>📖 NCSF Manual:</strong> ${escapeHtml(text)}</div>`;
 }
 
 function escapeHtml(text) {
@@ -335,9 +336,9 @@ function buildImmediateFeedbackHtml(d) {
   const q = d.question;
   const { body, reference } = splitExplanationAndReference(q);
   let html = `<p class="feedback-status incorrect">✗ Incorrect</p>`;
-  html += `<p class="your-answer"><strong>Your answer:</strong> ${d.userText}</p>`;
-  html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${d.correctText}</p>`;
-  html += `<div class="explanation"><strong>Why this is correct:</strong> ${body}</div>`;
+  html += `<p class="your-answer"><strong>Your answer:</strong> ${escapeHtml(d.userText)}</p>`;
+  html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${escapeHtml(d.correctText)}</p>`;
+  html += `<div class="explanation"><strong>Why this is correct:</strong> ${escapeHtml(body)}</div>`;
   html += buildManualReferenceHtml(reference);
 
   return html;
@@ -526,15 +527,15 @@ function buildReviewHtml(d) {
   let html = `<h3>Q${q.id}: ${escapeHtml(q.question)}</h3>`;
   html += buildQuestionImagesHtml(q.imagePaths);
 
-  html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${d.correctText}</p>`;
+  html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${escapeHtml(d.correctText)}</p>`;
 
   if (!d.isCorrect) {
-    html += `<p class="your-answer"><strong>Your answer:</strong> ${d.userText}</p>`;
+    html += `<p class="your-answer"><strong>Your answer:</strong> ${escapeHtml(d.userText)}</p>`;
   } else {
-    html += `<p class="your-answer correct-choice"><strong>Your answer:</strong> ${d.userText} ✓</p>`;
+    html += `<p class="your-answer correct-choice"><strong>Your answer:</strong> ${escapeHtml(d.userText)} ✓</p>`;
   }
 
-  html += `<div class="explanation"><strong>Why this is correct:</strong> ${body}</div>`;
+  html += `<div class="explanation"><strong>Why this is correct:</strong> ${escapeHtml(body)}</div>`;
   html += buildManualReferenceHtml(reference);
 
   return html;

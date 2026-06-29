@@ -6,8 +6,8 @@ Free practice exam for the NCSF Certified Personal Trainer (CPT) certification.
 
 ## Features
 
-- 150 randomized questions per attempt from a 418-question pool
-- Sources: Quizlet bank, YouTube video questions, and supplemental DOCX items
+- 150 randomized questions per attempt from the full practice pool
+- Sources: Quizlet bank, YouTube video questions, `extraq.docx`, and `questions.docx`
 - Shuffled answer options every attempt
 - Instant feedback with detailed explanations for wrong answers
 - 70% passing score (105/150 correct)
@@ -27,7 +27,7 @@ npx wrangler pages dev .
 python build_master_database.py
 ```
 
-Requires `quiz.txt`, `extraq.docx`, and `manual_references.json` in the repo root.
+Requires `quiz.txt`, `extraq.docx`, `questions.docx`, and `manual_references.json` in the repo root.
 
 ## Deploy to Cloudflare Pages
 
@@ -65,6 +65,7 @@ If the custom domain shows “CNAME record not set”, add this DNS record once 
 | `parse_extraq_docx.py` | Supplemental DOCX questions + images |
 | `quiz.txt` | Primary 150-question Quizlet export |
 | `extraq.docx` | Supplemental questions with figures |
+| `questions.docx` | Additional questions with explanations and images |
 | `manual_references.json` | NCSF manual reference metadata |
 
 ## License

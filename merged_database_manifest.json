@@ -1,23 +1,28 @@
 {
-  "version": "merged-extraq-v3",
-  "total_questions": 418,
+  "version": "merged-questions-v5",
+  "total_questions": 414,
   "quiz_txt_count": 150,
   "youtube_video_count": 130,
   "extraq_docx_count": 138,
   "extraq_docx_enhanced": 12,
-  "questions_with_images": 8,
-  "questions_with_option_images": 1,
+  "questions_docx_count": 10,
+  "questions_docx_enhanced": 148,
+  "pre_dedup_count": 428,
+  "duplicates_removed": 14,
+  "questions_with_images": 18,
+  "questions_with_option_images": 2,
   "merged": true,
   "approved": true,
   "sources": [
     "quiz.txt (NCSF Practice Exam / Quizlet 651343093)",
     "youtube-video (NCSF exam video OCR bank)",
-    "extraq.docx (supplemental questions with images)"
+    "extraq.docx (supplemental questions with images)",
+    "questions.docx (additional questions with images and explanations)"
   ],
   "verification": {
-    "manual_references": 280,
+    "manual_references": 276,
     "strict_high": 242,
-    "crosscheck_approved": 418
+    "crosscheck_approved": 414
   },
   "output": "shuffledtest/questions.js"
 }

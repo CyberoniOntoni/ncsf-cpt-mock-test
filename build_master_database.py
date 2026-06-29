@@ -4,6 +4,8 @@ import json
 import os
 import random
 import sys
+from collections import defaultdict
+from difflib import SequenceMatcher
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -29,7 +31,9 @@ STRICT_AUDIT = ROOT / "strict_audit_report.json"
 CROSSCHECK_JSON = ROOT / "crosscheck_report.json"
 MANIFEST_JSON = ROOT / "merged_database_manifest.json"
 EXTRAQ_DOCX = ROOT / "extraq.docx"
-DATABASE_VERSION = "merged-extraq-v3"
+QUESTIONS_DOCX = ROOT / "questions.docx"
+DATABASE_VERSION = "merged-questions-v5"
+NEAR_DUPLICATE_THRESHOLD = 0.92
 
 
 def load_json_by_id(path):
@@ -47,15 +51,25 @@ def load_crosscheck():
     return load_json_by_id(CROSSCHECK_JSON)
 
 
-def load_extraq_bank():
-    if not EXTRAQ_DOCX.exists():
-        return []
+def _load_docx_parser():
     _espec = importlib.util.spec_from_file_location(
         "parse_extraq", str(ROOT / "parse_extraq_docx.py")
     )
-    _extraq = importlib.util.module_from_spec(_espec)
-    _espec.loader.exec_module(_extraq)
-    return _extraq.main()
+    _parser = importlib.util.module_from_spec(_espec)
+    _espec.loader.exec_module(_parser)
+    return _parser
+
+
+def load_extraq_bank():
+    if not EXTRAQ_DOCX.exists():
+        return []
+    return _load_docx_parser().parse_docx_bank(EXTRAQ_DOCX, media_subdir="extraq")
+
+
+def load_questions_docx_bank():
+    if not QUESTIONS_DOCX.exists():
+        return []
+    return _load_docx_parser().parse_docx_bank(QUESTIONS_DOCX, media_subdir="questions")
 
 
 # Fix distractors that are category-mismatched or trivially obvious
@@ -80,7 +94,27 @@ def apply_distractor_fixes(item):
         item["wrong"] = [w for w in fixed_wrong if w.lower() != item["a"].lower()][:3]
 
 
-def apply_extraq_enhancements(target, source):
+def explanation_body_len(text):
+    text = (text or "").strip()
+    for marker in ("NCSF Manual reference:", " This question tests"):
+        if marker in text:
+            text = text.split(marker)[0]
+    return len(text.strip())
+
+
+def item_quality_rank(item):
+    source = item.get("source", "")
+    return (
+        explanation_body_len(item.get("base_exp")),
+        1 if "questions.docx" in source else 0,
+        1 if "extraq.docx" in source else 0,
+        len(item.get("imagePaths", [])),
+        len(item.get("optionImages", {})),
+        len(item.get("q", "")),
+    )
+
+
+def apply_supplemental_enhancements(target, source):
     if source.get("imagePaths"):
         merged = list(dict.fromkeys(target.get("imagePaths", []) + source["imagePaths"]))
         target["imagePaths"] = merged
@@ -90,12 +124,99 @@ def apply_extraq_enhancements(target, source):
         target["optionImages"] = opt_imgs
     src_exp = (source.get("base_exp") or "").strip()
     tgt_exp = (target.get("base_exp") or "").strip()
-    if src_exp and len(src_exp) > len(tgt_exp):
+    src_len = explanation_body_len(src_exp)
+    tgt_len = explanation_body_len(tgt_exp)
+    src_tag = source.get("source", "")
+    prefer_source = "questions.docx" in src_tag and src_len >= tgt_len
+    if src_exp and (src_len > tgt_len or prefer_source):
         target["base_exp"] = src_exp
-    src_tag = "extraq.docx"
+    src_tag = source.get("source", "supplemental.docx")
     if src_tag not in target.get("source", ""):
         base = target.get("source", "")
         target["source"] = f"{base}+{src_tag}" if base else src_tag
+
+
+def question_similarity(left, right):
+    return SequenceMatcher(
+        None,
+        _pqt.normalize_question(left),
+        _pqt.normalize_question(right),
+    ).ratio()
+
+
+def same_correct_answer(left, right):
+    return left["a"].lower().strip() == right["a"].lower().strip()
+
+
+def deduplicate_near_duplicates(merged):
+    n = len(merged)
+    parent = list(range(n))
+
+    def find(idx):
+        while parent[idx] != idx:
+            parent[idx] = parent[parent[idx]]
+            idx = parent[idx]
+        return idx
+
+    def union(left, right):
+        root_left = find(left)
+        root_right = find(right)
+        if root_left != root_right:
+            parent[root_right] = root_left
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            if question_similarity(merged[i]["q"], merged[j]["q"]) < NEAR_DUPLICATE_THRESHOLD:
+                continue
+            if not same_correct_answer(merged[i], merged[j]):
+                continue
+            union(i, j)
+
+    groups = defaultdict(list)
+    for idx in range(n):
+        groups[find(idx)].append(idx)
+
+    deduped = []
+    removed = 0
+    for indices in groups.values():
+        keeper_idx = max(indices, key=lambda i: item_quality_rank(merged[i]))
+        keeper = dict(merged[keeper_idx])
+        best_question = max(merged[i]["q"] for i in indices)
+        keeper["q"] = best_question
+        for idx in indices:
+            if idx == keeper_idx:
+                continue
+            apply_supplemental_enhancements(keeper, merged[idx])
+            removed += 1
+        deduped.append(keeper)
+
+    return deduped, removed
+
+
+def merge_docx_items(merged, seen, by_normalized, items, counters):
+    added_key, enhanced_key = counters
+    counts = {added_key: 0, enhanced_key: 0}
+    for item in items:
+        nq = _pqt.normalize_question(item["q"])
+        if nq in by_normalized:
+            apply_supplemental_enhancements(by_normalized[nq], item)
+            counts[enhanced_key] += 1
+            continue
+        if nq in seen:
+            continue
+        seen.add(nq)
+        merged.append({
+            "q": item["q"],
+            "a": item["a"],
+            "wrong": item["wrong"],
+            "base_exp": item.get("base_exp", ""),
+            "source": item.get("source", "docx"),
+            "imagePaths": item.get("imagePaths", []),
+            "optionImages": item.get("optionImages", {}),
+        })
+        by_normalized[nq] = merged[-1]
+        counts[added_key] += 1
+    return counts
 
 
 def merge_question_banks():
@@ -134,43 +255,55 @@ def merge_question_banks():
 
     video_count = len(merged) - quiz_count
 
-    extraq_items = load_extraq_bank()
-    extraq_added = 0
-    extraq_enhanced = 0
     by_normalized = {_pqt.normalize_question(m["q"]): m for m in merged}
 
-    for item in extraq_items:
-        nq = _pqt.normalize_question(item["q"])
-        if nq in by_normalized:
-            apply_extraq_enhancements(by_normalized[nq], item)
-            extraq_enhanced += 1
-            continue
-        if nq in seen:
-            continue
-        seen.add(nq)
-        merged.append({
-            "q": item["q"],
-            "a": item["a"],
-            "wrong": item["wrong"],
-            "base_exp": item.get("base_exp", ""),
-            "source": item.get("source", "extraq.docx"),
-            "imagePaths": item.get("imagePaths", []),
-            "optionImages": item.get("optionImages", {}),
-        })
-        by_normalized[nq] = merged[-1]
-        extraq_added += 1
+    extraq_counts = merge_docx_items(
+        merged,
+        seen,
+        by_normalized,
+        load_extraq_bank(),
+        ("extraq_added", "extraq_enhanced"),
+    )
+    questions_counts = merge_docx_items(
+        merged,
+        seen,
+        by_normalized,
+        load_questions_docx_bank(),
+        ("questions_docx_added", "questions_docx_enhanced"),
+    )
 
-    extraq_count = extraq_added
-    return merged, quiz_count, video_count, extraq_count, extraq_enhanced
+    return (
+        merged,
+        quiz_count,
+        video_count,
+        extraq_counts["extraq_added"],
+        extraq_counts["extraq_enhanced"],
+        questions_counts["questions_docx_added"],
+        questions_counts["questions_docx_enhanced"],
+    )
 
 
 def main():
-    merged, quiz_count, video_count, extraq_count, extraq_enhanced = merge_question_banks()
+    (
+        merged,
+        quiz_count,
+        video_count,
+        extraq_count,
+        extraq_enhanced,
+        questions_docx_count,
+        questions_docx_enhanced,
+    ) = merge_question_banks()
+    pre_dedup_count = len(merged)
+    merged, duplicates_removed = deduplicate_near_duplicates(merged)
     print(f"Merged database: {len(merged)} questions")
+    if duplicates_removed:
+        print(f"  near-duplicates removed: {duplicates_removed} (from {pre_dedup_count})")
     print(f"  quiz.txt: {quiz_count}")
     print(f"  youtube-video (unique): {video_count}")
     print(f"  extraq.docx (new): {extraq_count}")
     print(f"  extraq.docx (enhanced existing): {extraq_enhanced}")
+    print(f"  questions.docx (new): {questions_docx_count}")
+    print(f"  questions.docx (enhanced existing): {questions_docx_enhanced}")
 
     manual_by_question = _pqt.load_manual_references()
     strict_by_id = load_strict_audit()
@@ -255,6 +388,10 @@ def main():
         "youtube_video_count": video_count,
         "extraq_docx_count": extraq_count,
         "extraq_docx_enhanced": extraq_enhanced,
+        "questions_docx_count": questions_docx_count,
+        "questions_docx_enhanced": questions_docx_enhanced,
+        "pre_dedup_count": pre_dedup_count,
+        "duplicates_removed": duplicates_removed,
         "questions_with_images": with_images,
         "questions_with_option_images": with_option_images,
         "merged": True,
@@ -263,6 +400,7 @@ def main():
             "quiz.txt (NCSF Practice Exam / Quizlet 651343093)",
             "youtube-video (NCSF exam video OCR bank)",
             "extraq.docx (supplemental questions with images)",
+            "questions.docx (additional questions with images and explanations)",
         ],
         "verification": {
             "manual_references": with_ref,

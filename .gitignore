@@ -11,6 +11,9 @@ ncsf_video.mp4
 ncsf_audio.webm
 ncsf_ocr_raw.txt
 extraq_extracted/
+questions_extracted/
+questions_blocks.txt
+questions_questions.json
 extraq_blocks.txt
 
 # Regeneratable outputs

@@ -12,7 +12,33 @@ ROOT = Path(__file__).resolve().parent
 DOCX = ROOT / "extraq.docx"
 EXTRACT_DIR = ROOT / "extraq_extracted"
 MEDIA_OUT = ROOT / "shuffledtest" / "images" / "extraq"
+MEDIA_WEB_PREFIX = "images/extraq"
+SOURCE_TAG = "extraq.docx"
 OUTPUT_JSON = ROOT / "extraq_questions.json"
+
+
+def configure_parser(
+    *,
+    docx=None,
+    extract_dir=None,
+    media_out=None,
+    media_web_prefix=None,
+    source=None,
+    output_json=None,
+):
+    global DOCX, EXTRACT_DIR, MEDIA_OUT, MEDIA_WEB_PREFIX, SOURCE_TAG, OUTPUT_JSON
+    if docx is not None:
+        DOCX = Path(docx)
+    if extract_dir is not None:
+        EXTRACT_DIR = Path(extract_dir)
+    if media_out is not None:
+        MEDIA_OUT = Path(media_out)
+    if media_web_prefix is not None:
+        MEDIA_WEB_PREFIX = media_web_prefix
+    if source is not None:
+        SOURCE_TAG = source
+    if output_json is not None:
+        OUTPUT_JSON = Path(output_json)
 
 NS = {
     "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
@@ -101,7 +127,7 @@ def copy_media_files(media_rel_paths):
             continue
         dest = MEDIA_OUT / fname
         shutil.copy2(src, dest)
-        copied[fname] = f"images/extraq/{fname}"
+        copied[fname] = f"{MEDIA_WEB_PREFIX}/{fname}"
     return copied
 
 
@@ -260,7 +286,7 @@ def to_bank_items(questions):
             "a": correct,
             "wrong": wrong,
             "base_exp": q.get("explanation") or pqt.lookup_base_explanation(q["question"], correct) or "",
-            "source": "extraq.docx",
+            "source": SOURCE_TAG,
         }
         if q.get("imagePaths"):
             item["imagePaths"] = q["imagePaths"]
@@ -270,31 +296,63 @@ def to_bank_items(questions):
     return items
 
 
-def main():
+def run_parser(*, write_debug=True, write_json=True):
     doc_xml, rels_xml = extract_docx()
     rid_map = load_rid_map(rels_xml)
     blocks = parse_blocks(doc_xml, rid_map)
 
-    debug_path = ROOT / "extraq_blocks.txt"
-    with open(debug_path, "w", encoding="utf-8") as f:
-        for i, b in enumerate(blocks):
-            imgs = f" [IMG: {b['images']}]" if b.get("images") else ""
-            f.write(f"{i:4d}| {b.get('text', '')}{imgs}\n")
+    if write_debug:
+        debug_path = EXTRACT_DIR.parent / f"{DOCX.stem}_blocks.txt"
+        with open(debug_path, "w", encoding="utf-8") as f:
+            for i, b in enumerate(blocks):
+                imgs = f" [IMG: {b['images']}]" if b.get("images") else ""
+                f.write(f"{i:4d}| {b.get('text', '')}{imgs}\n")
 
     questions = parse_questions(blocks)
     finalize_image_paths(questions)
     bank_items = to_bank_items(questions)
 
-    payload = {"questions": questions, "bank_items": bank_items}
-    OUTPUT_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    if write_json and OUTPUT_JSON:
+        payload = {"questions": questions, "bank_items": bank_items}
+        OUTPUT_JSON.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
     with_img = sum(1 for q in questions if q.get("imagePaths"))
     with_opt_img = sum(1 for q in questions if q.get("optionImages"))
-    print(f"Parsed {len(questions)} questions from extraq.docx")
+    print(f"Parsed {len(questions)} questions from {DOCX.name}")
     print(f"  question images: {with_img}")
     print(f"  option images: {with_opt_img}")
-    print(f"Wrote {OUTPUT_JSON}")
+    if write_json and OUTPUT_JSON:
+        print(f"Wrote {OUTPUT_JSON}")
     return bank_items
+
+
+def parse_docx_bank(
+    docx_path,
+    *,
+    extract_dir=None,
+    media_subdir=None,
+    source_tag=None,
+    output_json=None,
+    write_debug=False,
+    write_json=False,
+):
+    docx_path = Path(docx_path)
+    stem = docx_path.stem
+    media_subdir = media_subdir or stem
+    configure_parser(
+        docx=docx_path,
+        extract_dir=extract_dir or ROOT / f"{stem}_extracted",
+        media_out=ROOT / "shuffledtest" / "images" / media_subdir,
+        media_web_prefix=f"images/{media_subdir}",
+        source=source_tag or docx_path.name,
+        output_json=output_json or ROOT / f"{stem}_questions.json",
+    )
+    return run_parser(write_debug=write_debug, write_json=write_json)
+
+
+def main():
+    configure_parser()
+    return run_parser()
 
 
 if __name__ == "__main__":
