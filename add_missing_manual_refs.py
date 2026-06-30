@@ -188,14 +188,12 @@ def append_reference(explanation: str, reference_text: str) -> str:
     return f"{explanation.rstrip()} {reference_text}"
 
 
-def main() -> None:
-    questions = load_questions()
+def backfill_missing_references(questions: list[dict], *, write_report: bool = True) -> dict:
     missing = [q for q in questions if not has_manual_reference(q)]
     print(f"Questions missing manual reference: {len(missing)}/{len(questions)}")
 
     if not missing:
-        print("Nothing to do.")
-        return
+        return {"added": 0, "verified": 0, "weak": 0, "still_missing": 0, "methods": {}}
 
     print(f"Indexing NCSF manuals in {_bmr.MANUAL_DIR}...")
     pages = _bmr.build_manual_index()
@@ -241,33 +239,47 @@ def main() -> None:
                 }
             )
 
+    summary = {
+        "added": added,
+        "verified": verified,
+        "weak": len(weak),
+        "still_missing": len(still_missing),
+        "methods": methods,
+    }
+
+    if write_report:
+        lines = [
+            f"Added manual references: {added}",
+            f"Verified (score >= 4): {verified}",
+            f"Weak matches: {len(weak)}",
+            f"Still missing (no PDF match): {len(still_missing)}",
+            f"Methods: {methods}",
+            "",
+        ]
+        if weak:
+            lines.append("Weak matches:")
+            for item in weak[:25]:
+                lines.append(
+                    f"  Q{item['id']} [{item['method']}, score {item['score']}]: {item['reference']}"
+                )
+            if len(weak) > 25:
+                lines.append(f"  ... and {len(weak) - 25} more")
+            lines.append("")
+        if still_missing:
+            lines.append("No match found:")
+            for item in still_missing:
+                lines.append(f"  Q{item['id']}: {item['question']}")
+        REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
+        print("\n".join(lines[:8]))
+        print(f"Wrote {REPORT_PATH}")
+
+    return summary
+
+
+def main() -> None:
+    questions = load_questions()
+    backfill_missing_references(questions)
     save_questions(questions)
-
-    lines = [
-        f"Added manual references: {added}",
-        f"Verified (score >= 4): {verified}",
-        f"Weak matches: {len(weak)}",
-        f"Still missing (no PDF match): {len(still_missing)}",
-        f"Methods: {methods}",
-        "",
-    ]
-    if weak:
-        lines.append("Weak matches:")
-        for item in weak[:25]:
-            lines.append(
-                f"  Q{item['id']} [{item['method']}, score {item['score']}]: {item['reference']}"
-            )
-        if len(weak) > 25:
-            lines.append(f"  ... and {len(weak) - 25} more")
-        lines.append("")
-    if still_missing:
-        lines.append("No match found:")
-        for item in still_missing:
-            lines.append(f"  Q{item['id']}: {item['question']}")
-
-    REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
-    print("\n".join(lines[:8]))
-    print(f"Wrote {REPORT_PATH}")
     print(f"Updated {QUESTIONS_JS}")
 
 

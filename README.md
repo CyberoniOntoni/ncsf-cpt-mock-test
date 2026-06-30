@@ -27,7 +27,7 @@ Combine the three primary source files into one bank, then build the exam:
 
 ```bash
 python merge_question_sources.py   # quiz.txt + extraq.docx + questions.docx → questions_bank.json
-python build_master_database.py    # questions_bank.json + youtube bank → web/questions.js
+python build_master_database.py    # questions_bank.json + youtube bank → web/questions.js (auto PDF backfill)
 ```
 
 `questions_bank.json` is the single merged source for the Quizlet export and both Word banks. Re-run `merge_question_sources.py` after editing any of `quiz.txt`, `extraq.docx`, or `questions.docx`.

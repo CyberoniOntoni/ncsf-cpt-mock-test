@@ -68,7 +68,6 @@ web/create_dns_record.py
 
 # Optional dev/audit scripts
 audit_*.py
-build_manual_refs.py
 build_shuffledtest.py
 crosscheck_online.py
 extract_questions.py

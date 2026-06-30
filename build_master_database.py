@@ -501,6 +501,23 @@ def main():
 
     print(f"Wrote manifest to {MANIFEST_JSON}")
     print(f"Wrote {len(output)} questions to {OUTPUT}")
+
+    _amspec = importlib.util.spec_from_file_location(
+        "add_missing_manual_refs", str(ROOT / "add_missing_manual_refs.py")
+    )
+    _amr = importlib.util.module_from_spec(_amspec)
+    _amspec.loader.exec_module(_amr)
+    backfill = _amr.backfill_missing_references(output, write_report=False)
+    if backfill["added"]:
+        with open(OUTPUT, "w", encoding="utf-8") as f:
+            f.write("const EXAM_QUESTIONS = ")
+            json.dump(output, f, indent=2)
+            f.write(";\n")
+        print(
+            f"Backfilled {backfill['added']} manual references from NCSF PDFs "
+            f"({backfill['verified']} verified)"
+        )
+
     return len(output)
 
 
