@@ -258,6 +258,8 @@ body {
   color: var(--danger);
 }
 
+
+
 .question-content {
   margin-bottom: 1.5rem;
 }
@@ -355,6 +357,61 @@ body {
   width: 100%;
 }
 
+.muscle-term {
+  display: inline;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: #c4b5fd;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.muscle-term:hover,
+.muscle-term:focus-visible {
+  color: #ddd6fe;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.muscle-preview {
+  position: fixed;
+  z-index: 2000;
+  width: 156px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.muscle-preview-image {
+  display: block;
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.muscle-preview-label {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--text-muted);
+}
+
 .option-image {
   max-height: 180px;
   align-self: center;
@@ -398,6 +455,10 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.feedback-panel .your-answer.correct-choice {
+  color: var(--success);
+}
+
 .feedback-panel .explanation {
   background: var(--surface);
   border-radius: 8px;
@@ -436,9 +497,29 @@ body {
 
 .exam-nav {
   display: flex;
-  justify-content: space-between;
+  align-items: stretch;
   margin-top: 2rem;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.exam-nav .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.75rem 0.65rem;
+  font-size: 0.95rem;
+}
+
+.exam-nav .btn-restart {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.exam-nav .btn-restart:hover {
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .score-display {

@@ -231,6 +231,18 @@ function startExam() {
   enterExamScreen();
 }
 
+function restartExam({ askConfirm = true } = {}) {
+  if (askConfirm) {
+    const ok = window.confirm(
+      "Restart the exam? Your current answers will be cleared and you'll get a new random set of 150 questions with a fresh 3-hour timer."
+    );
+    if (!ok) return;
+  }
+
+  closeMusclePopover();
+  startExam();
+}
+
 function restoreExamSession() {
   const session = loadExamSession();
   if (!session) return false;
@@ -313,6 +325,155 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;");
 }
 
+let muscleNameRegex = null;
+let muscleAliasToId = null;
+let activeMusclePopover = null;
+let activeMuscleTerm = null;
+
+/** Exercise/phrase names that contain muscle words but are not anatomy references */
+const MUSCLE_LINK_BLOCKLIST = [
+  "nordic hamstring curls",
+  "nordic hamstrings",
+  "nordic hamstring",
+  "hamstring curls",
+  "hamstring curl",
+  "stability ball leg curls",
+  "leg curls",
+  "leg curl",
+];
+
+function getMuscleLinkBlockedRanges(text) {
+  const lower = String(text).toLowerCase();
+  const ranges = [];
+
+  for (const phrase of MUSCLE_LINK_BLOCKLIST) {
+    let start = 0;
+    while (start < lower.length) {
+      const idx = lower.indexOf(phrase, start);
+      if (idx === -1) break;
+      ranges.push([idx, idx + phrase.length]);
+      start = idx + phrase.length;
+    }
+  }
+
+  return ranges;
+}
+
+function isMuscleMatchBlocked(start, end, blockedRanges) {
+  return blockedRanges.some(([blockStart, blockEnd]) => start < blockEnd && end > blockStart);
+}
+
+function initMuscleGlossary() {
+  if (typeof MUSCLE_ALIAS_INDEX === "undefined" || !MUSCLE_ALIAS_INDEX.length) {
+    return;
+  }
+
+  muscleAliasToId = new Map(
+    MUSCLE_ALIAS_INDEX.map(({ alias, id }) => [alias.toLowerCase(), id])
+  );
+  const pattern = MUSCLE_ALIAS_INDEX.map(({ alias }) =>
+    alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  ).join("|");
+  muscleNameRegex = new RegExp(`\\b(${pattern})\\b`, "gi");
+}
+
+function formatTextWithMuscles(text, options = {}) {
+  const { linkMuscles = true } = options;
+  if (!linkMuscles || !muscleNameRegex || text == null || text === "") {
+    return escapeHtml(text);
+  }
+
+  const blockedRanges = getMuscleLinkBlockedRanges(text);
+  let html = "";
+  let lastIndex = 0;
+  const regex = new RegExp(muscleNameRegex.source, muscleNameRegex.flags);
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    html += escapeHtml(text.slice(lastIndex, match.index));
+    const matched = match[0];
+    const matchStart = match.index;
+    const matchEnd = regex.lastIndex;
+    const muscleId = muscleAliasToId.get(matched.toLowerCase());
+    const entry = muscleId && MUSCLE_GLOSSARY[muscleId];
+    const blocked = isMuscleMatchBlocked(matchStart, matchEnd, blockedRanges);
+
+    if (entry?.image && !blocked) {
+      html += `<span class="muscle-term" role="button" tabindex="0" data-muscle-id="${escapeHtml(muscleId)}" aria-label="Show ${escapeHtml(entry.label)} anatomy preview" aria-expanded="false">${escapeHtml(matched)}</span>`;
+    } else {
+      html += escapeHtml(matched);
+    }
+
+    lastIndex = matchEnd;
+  }
+
+  html += escapeHtml(text.slice(lastIndex));
+  return html;
+}
+
+function closeMusclePopover() {
+  if (activeMusclePopover) {
+    activeMusclePopover.remove();
+    activeMusclePopover = null;
+  }
+  if (activeMuscleTerm) {
+    activeMuscleTerm.setAttribute("aria-expanded", "false");
+    activeMuscleTerm = null;
+  }
+}
+
+function positionMusclePopover(popover, anchor) {
+  const margin = 8;
+  const previewWidth = 156;
+  const previewHeight = 176;
+  const rect = anchor.getBoundingClientRect();
+  let left = rect.left + rect.width / 2 - previewWidth / 2;
+  let top = rect.top - previewHeight - margin;
+
+  if (top < margin) {
+    top = rect.bottom + margin;
+  }
+
+  left = Math.max(margin, Math.min(left, window.innerWidth - previewWidth - margin));
+  top = Math.max(margin, Math.min(top, window.innerHeight - previewHeight - margin));
+
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+}
+
+function showMusclePopover(muscleId, anchor) {
+  const entry = MUSCLE_GLOSSARY[muscleId];
+  if (!entry?.image) return;
+
+  if (activeMuscleTerm === anchor && activeMusclePopover) {
+    closeMusclePopover();
+    return;
+  }
+
+  closeMusclePopover();
+
+  const popover = document.createElement("div");
+  popover.className = "muscle-preview";
+  popover.setAttribute("role", "tooltip");
+  popover.innerHTML = `<img src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.label)} anatomy" class="muscle-preview-image" width="140" height="140" loading="lazy"><span class="muscle-preview-label">${escapeHtml(entry.label)}</span>`;
+  document.body.appendChild(popover);
+  positionMusclePopover(popover, anchor);
+
+  activeMusclePopover = popover;
+  activeMuscleTerm = anchor;
+  anchor.setAttribute("aria-expanded", "true");
+}
+
+function handleMuscleTermActivation(event) {
+  const term = event.target.closest(".muscle-term");
+  if (!term) return false;
+
+  event.preventDefault();
+  event.stopPropagation();
+  showMusclePopover(term.dataset.muscleId, term);
+  return true;
+}
+
 function buildQuestionImagesHtml(imagePaths) {
   if (!imagePaths?.length) return "";
   return `<div class="question-images">${imagePaths
@@ -325,20 +486,24 @@ function buildQuestionImagesHtml(imagePaths) {
 
 function renderQuestionContent(q) {
   const container = document.getElementById("question-content");
-  container.innerHTML = `<p class="question-text">${escapeHtml(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
+  container.innerHTML = `<p class="question-text">${formatTextWithMuscles(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
 }
 
 function buildImmediateFeedbackHtml(d) {
-  if (d.isCorrect) {
-    return `<p class="feedback-status correct">✓ Correct!</p>`;
-  }
-
   const q = d.question;
   const { body, reference } = splitExplanationAndReference(q);
-  let html = `<p class="feedback-status incorrect">✗ Incorrect</p>`;
-  html += `<p class="your-answer"><strong>Your answer:</strong> ${escapeHtml(d.userText)}</p>`;
-  html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${escapeHtml(d.correctText)}</p>`;
-  html += `<div class="explanation"><strong>Why this is correct:</strong> ${escapeHtml(body)}</div>`;
+  let html = d.isCorrect
+    ? `<p class="feedback-status correct">✓ Correct!</p>`
+    : `<p class="feedback-status incorrect">✗ Incorrect</p>`;
+
+  if (d.isCorrect) {
+    html += `<p class="your-answer correct-choice"><strong>Your answer:</strong> ${formatTextWithMuscles(d.userText)} ✓</p>`;
+  } else {
+    html += `<p class="your-answer"><strong>Your answer:</strong> ${formatTextWithMuscles(d.userText)}</p>`;
+    html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${formatTextWithMuscles(d.correctText)}</p>`;
+  }
+
+  html += `<div class="explanation"><strong>Why this is correct:</strong> ${formatTextWithMuscles(body, { linkMuscles: false })}</div>`;
   html += buildManualReferenceHtml(reference);
 
   return html;
@@ -349,14 +514,8 @@ function showAnswerFeedback(userAnswer) {
   const detail = getQuestionDetail(shuffledQuestions[currentIndex], userAnswer);
 
   applyOptionHighlighting(userAnswer);
-
-  if (detail.isCorrect) {
-    panel.classList.add("hidden");
-    panel.innerHTML = "";
-  } else {
-    panel.classList.remove("hidden");
-    panel.innerHTML = buildImmediateFeedbackHtml(detail);
-  }
+  panel.classList.remove("hidden");
+  panel.innerHTML = buildImmediateFeedbackHtml(detail);
 }
 
 function clearAnswerFeedback() {
@@ -385,7 +544,7 @@ function renderQuestion() {
 
     const label = document.createElement("span");
     label.className = "option-label";
-    label.textContent = `${String.fromCharCode(65 + i)}. ${opt}`;
+    label.innerHTML = `${String.fromCharCode(65 + i)}. ${formatTextWithMuscles(opt)}`;
     btn.appendChild(label);
 
     const optImg = q.optionImages?.[opt];
@@ -398,7 +557,10 @@ function renderQuestion() {
       btn.appendChild(img);
     }
 
-    btn.addEventListener("click", () => selectOption(i));
+    btn.addEventListener("click", (event) => {
+      if (handleMuscleTermActivation(event)) return;
+      selectOption(i);
+    });
     optionsList.appendChild(btn);
   });
 
@@ -524,18 +686,18 @@ function showResults(options = {}) {
 function buildReviewHtml(d) {
   const q = d.question;
   const { body, reference } = splitExplanationAndReference(q);
-  let html = `<h3>Q${q.id}: ${escapeHtml(q.question)}</h3>`;
+  let html = `<h3>Q${q.id}: ${formatTextWithMuscles(q.question)}</h3>`;
   html += buildQuestionImagesHtml(q.imagePaths);
 
-  html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${escapeHtml(d.correctText)}</p>`;
+  html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${formatTextWithMuscles(d.correctText)}</p>`;
 
   if (!d.isCorrect) {
-    html += `<p class="your-answer"><strong>Your answer:</strong> ${escapeHtml(d.userText)}</p>`;
+    html += `<p class="your-answer"><strong>Your answer:</strong> ${formatTextWithMuscles(d.userText)}</p>`;
   } else {
-    html += `<p class="your-answer correct-choice"><strong>Your answer:</strong> ${escapeHtml(d.userText)} ✓</p>`;
+    html += `<p class="your-answer correct-choice"><strong>Your answer:</strong> ${formatTextWithMuscles(d.userText)} ✓</p>`;
   }
 
-  html += `<div class="explanation"><strong>Why this is correct:</strong> ${escapeHtml(body)}</div>`;
+  html += `<div class="explanation"><strong>Why this is correct:</strong> ${formatTextWithMuscles(body, { linkMuscles: false })}</div>`;
   html += buildManualReferenceHtml(reference);
 
   return html;
@@ -583,11 +745,12 @@ document.getElementById("review-all-btn").addEventListener("click", () =>
 document.getElementById("review-correct-btn").addEventListener("click", () =>
   showReview("correct")
 );
-document.getElementById("retake-btn").addEventListener("click", () => {
-  resetExamClock();
-  clearExamSession();
-  showScreen("start");
-});
+document.getElementById("restart-btn").addEventListener("click", () =>
+  restartExam({ askConfirm: true })
+);
+document.getElementById("retake-btn").addEventListener("click", () =>
+  restartExam({ askConfirm: false })
+);
 document.getElementById("back-results-btn").addEventListener("click", () => {
   showScreen("results");
 });
@@ -596,7 +759,37 @@ document.querySelectorAll(".filter-tab").forEach((tab) => {
   tab.addEventListener("click", () => showReview(tab.dataset.filter));
 });
 
+document.addEventListener("click", (event) => {
+  if (handleMuscleTermActivation(event)) return;
+  if (!event.target.closest(".muscle-preview")) {
+    closeMusclePopover();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeMusclePopover();
+    return;
+  }
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const term = event.target.closest(".muscle-term");
+  if (!term) return;
+  event.preventDefault();
+  showMusclePopover(term.dataset.muscleId, term);
+});
+
+window.addEventListener(
+  "resize",
+  () => {
+    if (activeMusclePopover && activeMuscleTerm) {
+      positionMusclePopover(activeMusclePopover, activeMuscleTerm);
+    }
+  },
+  { passive: true }
+);
+
 function initApp() {
+  initMuscleGlossary();
   document.querySelectorAll("[data-pool-size]").forEach((el) => {
     el.textContent = String(QUESTION_POOL_SIZE);
   });
