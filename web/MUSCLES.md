@@ -1,14 +1,14 @@
 # Muscles and Muscle Groups in Quiz Content
 
 Inventory of anatomical muscle terms found in **questions**, **answer options**, and **explanations**.
-Source: `web/questions.js` (414 questions).
+Source: `web/questions.js` (413 questions).
 
 Use this list to decide which preview images to place in `web/images/muscles/`.
 
 ## Summary
 
-- **Unique terms / groups:** 49
-- **Total mentions:** 370
+- **Unique terms / groups:** 47
+- **Total mentions:** 361
 - **Questions referencing at least one term:** 86
 
 ## Review checklist (by frequency)
@@ -17,36 +17,34 @@ Suggested filename column is optional — use whatever naming you prefer when dr
 
 | Term | Category | Mentions | Suggested image file |
 | --- | --- | ---: | --- |
-| Hamstrings | Hamstrings | 26 | `hamstrings.png` |
-| Quadriceps | Quadriceps | 26 | `quadriceps.png` |
+| Hamstrings | Hamstrings | 27 | `hamstrings.png` |
+| Quadriceps | Quadriceps | 25 | `quadriceps.png` |
 | Deltoid | Shoulder | 19 | `deltoid.png` |
 | Gastrocnemius | Lower leg | 18 | `gastrocnemius.png` |
-| Triceps | Upper arm | 18 | `triceps.png` |
 | Hip flexors | Hip group | 17 | `hip-flexors.png` |
 | Glutes | Hip / glute | 16 | `glutes.png` |
 | Latissimus dorsi | Back | 16 | `latissimus-dorsi.png` |
+| Triceps | Upper arm | 16 | `triceps.png` |
 | Abdominals | Trunk | 15 | `abdominals.png` |
-| Rhomboids | Back | 14 | `rhomboids.png` |
 | Rotator cuff | Shoulder group | 14 | `rotator-cuff.png` |
+| Rhomboids | Back | 13 | `rhomboids.png` |
 | Supraspinatus | Rotator cuff | 13 | `supraspinatus.png` |
-| Trapezius | Back | 12 | `trapezius.png` |
-| Erector spinae | Trunk | 10 | `erector-spinae.png` |
+| Erector spinae | Trunk | 11 | `erector-spinae.png` |
+| Trapezius | Back | 11 | `trapezius.png` |
+| Rectus abdominis | Trunk | 10 | `rectus-abdominis.png` |
 | Soleus | Lower leg | 10 | `soleus.png` |
-| Rectus abdominis | Trunk | 9 | `rectus-abdominis.png` |
-| Obliques | Trunk | 8 | `obliques.png` |
+| Obliques | Trunk | 9 | `obliques.png` |
 | Rectus femoris | Quadriceps | 8 | `rectus-femoris.png` |
 | Subscapularis | Rotator cuff | 8 | `subscapularis.png` |
 | Infraspinatus | Rotator cuff | 7 | `infraspinatus.png` |
 | Pectoralis major | Chest | 7 | `pectoralis-major.png` |
-| Biceps | Upper arm | 6 | `biceps.png` |
 | Lats | Back | 6 | `lats.png` |
+| Biceps | Upper arm | 5 | `biceps.png` |
 | Biceps femoris | Hamstrings | 5 | `biceps-femoris.png` |
+| Transverse abdominis | Trunk | 5 | `transverse-abdominis.png` |
 | Gluteus maximus | Hip / glute | 4 | `gluteus-maximus.png` |
 | Gluteus medius | Hip / glute | 4 | `gluteus-medius.png` |
-| Hip abductors | Hip group | 4 | `hip-abductors.png` |
-| Hip adductors | Hip group | 4 | `hip-adductors.png` |
 | Piriformis | Hip | 4 | `piriformis.png` |
-| Transverse abdominis | Trunk | 4 | `transverse-abdominis.png` |
 | Iliopsoas | Hip flexor | 3 | `iliopsoas.png` |
 | Levator scapulae | Back / neck | 3 | `levator-scapulae.png` |
 | Pectoralis | Chest | 3 | `pectoralis.png` |
@@ -78,7 +76,7 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Rotator cuff | 14 | 5 | 2 | 7 | 16, 25, 72, 113, 139, 169, 241, 247 |
+| Rotator cuff | 14 | 5 | 2 | 7 | 16, 25, 72, 113, 139, 170, 374, 380 |
 
 ### Sample contexts
 
@@ -94,10 +92,10 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Supraspinatus | 13 | 0 | 6 | 7 | 16, 25, 27, 40, 162, 241, 247, 361, 399 |
-| Subscapularis | 8 | 0 | 4 | 4 | 16, 113, 241, 247 |
-| Infraspinatus | 7 | 0 | 5 | 2 | 16, 21, 158, 241, 247 |
-| Teres minor | 3 | 0 | 2 | 1 | 16, 241, 247 |
+| Supraspinatus | 13 | 0 | 6 | 7 | 16, 25, 27, 40, 162, 255, 293, 374, 380 |
+| Subscapularis | 8 | 0 | 4 | 4 | 16, 113, 374, 380 |
+| Infraspinatus | 7 | 0 | 5 | 2 | 16, 21, 158, 374, 380 |
+| Teres minor | 3 | 0 | 2 | 1 | 16, 374, 380 |
 
 ### Sample contexts
 
@@ -121,8 +119,8 @@ Columns in detailed tables below:
 
 **Teres minor**
 - Q16 explanation: The supraspinatus, infraspinatus, teres minor, and subscapularis make up the musculature of the rota...
-- Q241 option 4: Teres minor
-- Q247 option 1: Teres minor
+- Q374 option 4: Teres minor
+- Q380 option 3: Teres minor
 
 ---
 
@@ -130,7 +128,7 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Deltoid | 19 | 4 | 6 | 9 | 21, 25, 40, 52, 113, 116, 139, 160, 162, 247, 307, 391 |
+| Deltoid | 19 | 4 | 6 | 9 | 21, 25, 40, 52, 113, 116, 139, 160, 162, 202, 285, 380 |
 
 ### Sample contexts
 
@@ -146,8 +144,8 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Pectoralis major | 7 | 0 | 5 | 2 | 22, 47, 52, 113, 162, 166 |
-| Pectoralis | 3 | 1 | 2 | 0 | 19, 169, 401 |
+| Pectoralis major | 7 | 0 | 5 | 2 | 22, 47, 52, 113, 162, 167 |
+| Pectoralis | 3 | 1 | 2 | 0 | 19, 170, 295 |
 
 ### Sample contexts
 
@@ -159,8 +157,8 @@ Columns in detailed tables below:
 
 **Pectoralis**
 - Q19 option 3: pectoralis
-- Q169 option 2: Romanian deadlift and pectoralis stretch
-- Q401 question: ...ich strengthening exercise for the pectoralis would be considered the most functional for a 65-year-...
+- Q170 option 4: Romanian deadlift and pectoralis stretch
+- Q295 question: ...ich strengthening exercise for the pectoralis would be considered the most functional for a 65-year-...
 
 ---
 
@@ -168,8 +166,8 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Triceps | 18 | 3 | 9 | 6 | 13, 52, 112, 113, 117, 139, 154, 162, 163, 169, 299, 401, 408 |
-| Biceps | 6 | 3 | 1 | 2 | 20, 154, 162, 351, 389 |
+| Triceps | 16 | 3 | 7 | 6 | 13, 52, 112, 113, 117, 139, 154, 170, 193, 295, 302 |
+| Biceps | 5 | 3 | 0 | 2 | 20, 154, 245, 283 |
 | Biceps brachii | 2 | 0 | 1 | 1 | 52 |
 
 ### Sample contexts
@@ -183,8 +181,8 @@ Columns in detailed tables below:
 **Biceps**
 - Q20 question: ...of the standing barbell curl, the biceps contract _________.
 - Q154 question: When performing biceps and triceps exercises, what joint action should occur...
-- Q162 option 1: Pectoralis major and biceps
-- Q351 question: Which back exercise employs the biceps to the greatest degree?
+- Q245 question: Which back exercise employs the biceps to the greatest degree?
+- Q245 explanation: ...inated grip will allow for greater biceps activation when performing back exercises. The chin-up...
 
 **Biceps brachii**
 - Q52 option 2: biceps brachii
@@ -196,10 +194,10 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Latissimus dorsi | 16 | 1 | 8 | 7 | 22, 40, 52, 139, 158, 162, 166, 299, 383, 391, 399 |
-| Rhomboids | 14 | 0 | 6 | 8 | 19, 21, 22, 158, 162, 166, 391, 399 |
-| Trapezius | 12 | 0 | 5 | 7 | 21, 40, 158, 162, 284, 294, 391 |
-| Lats | 6 | 1 | 1 | 4 | 13, 32, 299, 386, 399 |
+| Latissimus dorsi | 16 | 1 | 8 | 7 | 22, 40, 52, 139, 158, 162, 167, 193, 277, 285, 293 |
+| Rhomboids | 13 | 0 | 5 | 8 | 19, 21, 22, 158, 167, 285, 293 |
+| Trapezius | 11 | 0 | 4 | 7 | 21, 40, 155, 158, 182, 285 |
+| Lats | 6 | 1 | 1 | 4 | 13, 32, 193, 280, 293 |
 
 ### Sample contexts
 
@@ -219,13 +217,13 @@ Columns in detailed tables below:
 - Q21 option 1: trapezius
 - Q40 option 3: Trapezius
 - Q40 explanation: ...causes humeral abduction while the trapezius causes shoulder complex elevation. The latissimus dors...
-- Q158 option 3: trapezius
+- Q155 explanation: The trapezius musculature is comprised of three portions that serve...
 
 **Lats**
 - Q13 explanation: ...Many exercisers "cheat" using the lats to assist with momentum forces; seen when the humerus...
 - Q32 option 3: Hands at the lats
-- Q299 explanation: ...er and elbow extensors, namely the lats and triceps, can limit one’s ability to maintain the p...
-- Q386 question: ...he best exercise to strengthen the lats in the frontal plane?
+- Q193 explanation: ...er and elbow extensors, namely the lats and triceps, can limit one’s ability to maintain the p...
+- Q280 question: ...he best exercise to strengthen the lats in the frontal plane?
 
 ---
 
@@ -248,53 +246,53 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Abdominals | 15 | 6 | 1 | 8 | 39, 171, 223, 229, 273, 306, 342, 408 |
-| Erector spinae | 10 | 2 | 4 | 4 | 17, 22, 166, 171, 231, 237, 387, 406 |
-| Rectus abdominis | 9 | 1 | 4 | 4 | 17, 229, 231, 342, 387, 399, 406, 408 |
-| Obliques | 8 | 2 | 2 | 4 | 17, 234, 294, 387, 406 |
-| Transverse abdominis | 4 | 1 | 1 | 2 | 231, 406 |
-| Quadratus lumborum | 3 | 0 | 2 | 1 | 27, 282 |
-| External oblique | 1 | 0 | 1 | 0 | 231 |
+| Abdominals | 15 | 6 | 1 | 8 | 39, 172, 201, 236, 302, 356, 362, 406 |
+| Erector spinae | 11 | 2 | 5 | 4 | 17, 22, 162, 167, 172, 281, 300, 364, 370 |
+| Rectus abdominis | 10 | 1 | 5 | 4 | 17, 162, 236, 281, 293, 300, 302, 362, 364 |
+| Obliques | 9 | 2 | 3 | 4 | 17, 162, 182, 281, 300, 367 |
+| Transverse abdominis | 5 | 1 | 2 | 2 | 162, 300, 364 |
+| Quadratus lumborum | 3 | 0 | 2 | 1 | 27, 152 |
+| External oblique | 1 | 0 | 1 | 0 | 364 |
 
 ### Sample contexts
 
 **Abdominals**
 - Q39 option 4: increase the use of abdominal exercises to strengthen the core
-- Q171 question: ...of contraction is performed by the abdominals and erector spinae muscles during the performance of a...
-- Q171 explanation: ...ic contraction is performed by the abdominals and the erector spinae muscle group during the perform...
-- Q171 explanation: ...ic contraction is performed by the abdominals and the erector spinae muscle group during the perform...
+- Q172 question: ...of contraction is performed by the abdominals and erector spinae muscles during the performance of a...
+- Q172 explanation: ...ic contraction is performed by the abdominals and the erector spinae muscle group during the perform...
+- Q172 explanation: ...ic contraction is performed by the abdominals and the erector spinae muscle group during the perform...
 
 **Erector spinae**
 - Q17 option 3: erector spinae
 - Q22 option 3: eccentric contraction of the erector spinae
-- Q166 option 3: erector spinae
-- Q171 question: ...is performed by the abdominals and erector spinae muscles during the performance of a push-up?
+- Q162 option 4: rectus abdominis and erector spinae
+- Q167 option 1: erector spinae
 
 **Rectus abdominis**
 - Q17 option 2: rectus abdominis
 - Q17 explanation: The rectus abdominis is the muscle responsible for the first 30 degrees of...
-- Q229 question: ...abdominal exercises targeting the rectus abdominis?
-- Q231 option 1: Rectus abdominis only
+- Q162 option 4: rectus abdominis and erector spinae
+- Q236 option 1: central hypertrophy of the rectus abdominis
 
 **Obliques**
 - Q17 option 4: obliques
-- Q234 question: In addition to trunk rotation, the obliques are also responsible for what?
-- Q234 explanation: Obliques perform trunk rotation and lateral (side) flexion. NCS...
-- Q294 option 2: obliques
+- Q162 option 3: obliques and transverse abdominis
+- Q182 option 3: obliques
+- Q182 explanation: ...The trapezius, gluteus medius, and obliques function as global movers and global stabilizers durin...
 
 **Transverse abdominis**
-- Q231 option 4: Transverse abdominis
-- Q231 explanation: The transverse abdominis provides deep segmental spinal stability via the corse...
-- Q406 question: The transverse abdominis serves which of the following purposes?
-- Q406 explanation: The transverse abdominis is a primary deep spinal stabilizer which helps protec...
+- Q162 option 3: obliques and transverse abdominis
+- Q300 question: The transverse abdominis serves which of the following purposes?
+- Q300 explanation: The transverse abdominis is a primary deep spinal stabilizer which helps protec...
+- Q364 option 3: Transverse abdominis
 
 **Quadratus lumborum**
 - Q27 option 3: quadratus lumborum
 - Q27 explanation: ...nsor fascia latae abducts the hip, quadratus lumborum laterally flexes the trunk, and supraspinatus initiate...
-- Q282 option 3: quadratus lumborum
+- Q152 option 4: quadratus lumborum
 
 **External oblique**
-- Q231 option 2: External oblique only
+- Q364 option 2: External oblique only
 
 ---
 
@@ -302,10 +300,8 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Hip flexors | 17 | 2 | 6 | 9 | 17, 46, 53, 149, 152, 165, 189, 192, 242, 243, 282, 408 |
-| Hip abductors | 4 | 1 | 1 | 2 | 165, 251 |
-| Hip adductors | 4 | 0 | 1 | 3 | 46, 165 |
-| Adductor magnus | 1 | 0 | 1 | 0 | 375 |
+| Hip flexors | 17 | 2 | 6 | 9 | 17, 46, 53, 149, 152, 166, 302, 310, 324, 326, 375, 376 |
+| Adductor magnus | 1 | 0 | 1 | 0 | 269 |
 
 ### Sample contexts
 
@@ -315,20 +311,8 @@ Columns in detailed tables below:
 - Q46 explanation: ...e sagittal plane would stretch the hip flexors - and to a limited degree the hip extensors. NCSF Manu...
 - Q53 question: ...namic flexibility activity for the hip flexors?
 
-**Hip abductors**
-- Q165 option 4: Hip abductors
-- Q165 explanation: ...vers for the lateral lunge are the hip abductors when a single anchor is used because the glute medius...
-- Q251 question: ...gluteal muscle(s) can function as hip abductors?
-- Q251 explanation: ...eus medius and minimus are primary hip abductors and pelvic stabilizers. NCSF Manual reference: Ch. 3 (...
-
-**Hip adductors**
-- Q46 explanation: ...te flexibility improvements in the hip adductors as the ROM placed upon the musculature is increased in...
-- Q165 option 1: Hip adductors
-- Q165 explanation: ...of mass to the starting point. The hip adductors do contribute to a lesser degree, but are actually str...
-- Q165 explanation: ...of mass to the starting point. The hip adductors do contribute to a lesser degree, but are actually str...
-
 **Adductor magnus**
-- Q375 option 2: Adductor magnus
+- Q269 option 4: Adductor magnus
 
 ---
 
@@ -336,13 +320,13 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Glutes | 16 | 0 | 7 | 9 | 18, 28, 30, 138, 152, 165, 227, 282, 286, 332, 409 |
-| Gluteus maximus | 4 | 0 | 4 | 0 | 18, 228, 243, 251 |
-| Gluteus medius | 4 | 0 | 2 | 2 | 251, 294 |
-| Gluteal | 2 | 1 | 0 | 1 | 152, 251 |
-| Gluteus minimus | 1 | 0 | 1 | 0 | 251 |
-| Tensor fasciae latae | 1 | 0 | 1 | 0 | 251 |
-| TFL (tensor fasciae latae) | 1 | 0 | 0 | 1 | 165 |
+| Glutes | 16 | 0 | 7 | 9 | 18, 28, 30, 138, 152, 164, 166, 226, 303, 310, 360 |
+| Gluteus maximus | 4 | 0 | 4 | 0 | 18, 361, 376, 384 |
+| Gluteus medius | 4 | 0 | 2 | 2 | 182, 384 |
+| Gluteal | 2 | 1 | 0 | 1 | 310, 384 |
+| Gluteus minimus | 1 | 0 | 1 | 0 | 384 |
+| Tensor fasciae latae | 1 | 0 | 1 | 0 | 384 |
+| TFL (tensor fasciae latae) | 1 | 0 | 0 | 1 | 166 |
 
 ### Sample contexts
 
@@ -354,28 +338,28 @@ Columns in detailed tables below:
 
 **Gluteus maximus**
 - Q18 option 2: gluteus maximus
-- Q228 option 2: Gluteus maximus only
-- Q243 option 2: Gluteus maximus only (single-joint hip extensor)
-- Q251 option 2: Gluteus maximus only
+- Q361 option 4: Gluteus maximus only
+- Q376 option 1: Gluteus maximus only (single-joint hip extensor)
+- Q384 option 3: Gluteus maximus only
 
 **Gluteus medius**
-- Q251 option 4: Gluteus medius and gluteus minimus
-- Q251 explanation: Gluteus medius and minimus are primary hip abductors and pelvic stabi...
-- Q294 option 1: gluteus medius
-- Q294 explanation: ...seated calf raise. The trapezius, gluteus medius, and obliques function as global movers and global sta...
+- Q182 option 1: gluteus medius
+- Q182 explanation: ...seated calf raise. The trapezius, gluteus medius, and obliques function as global movers and global sta...
+- Q384 option 2: Gluteus medius and gluteus minimus
+- Q384 explanation: Gluteus medius and minimus are primary hip abductors and pelvic stabi...
 
 **Gluteal**
-- Q152 explanation: Tight gluteal muscles can pull the pelvis into posterior tilt, espec...
-- Q251 question: What gluteal muscle(s) can function as hip abductors?
+- Q310 explanation: Tight gluteal muscles can pull the pelvis into posterior tilt, espec...
+- Q384 question: What gluteal muscle(s) can function as hip abductors?
 
 **Gluteus minimus**
-- Q251 option 4: Gluteus medius and gluteus minimus
+- Q384 option 2: Gluteus medius and gluteus minimus
 
 **Tensor fasciae latae**
-- Q251 option 1: Tensor fasciae latae only
+- Q384 option 1: Tensor fasciae latae only
 
 **TFL (tensor fasciae latae)**
-- Q165 explanation: ...te medius and tensor fascia latae (TFL) push outward in the frontal plane to return the cente...
+- Q166 explanation: ...te medius and tensor fascia latae (TFL) push outward in the frontal plane to return the cente...
 
 ---
 
@@ -383,14 +367,14 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Iliopsoas | 3 | 0 | 3 | 0 | 17, 18, 347 |
+| Iliopsoas | 3 | 0 | 3 | 0 | 17, 18, 241 |
 
 ### Sample contexts
 
 **Iliopsoas**
 - Q17 option 1: iliopsoas
 - Q18 option 4: iliopsoas
-- Q347 option 2: Iliopsoas
+- Q241 option 3: Iliopsoas
 
 ---
 
@@ -398,15 +382,15 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Piriformis | 4 | 0 | 2 | 2 | 251, 347 |
+| Piriformis | 4 | 0 | 2 | 2 | 241, 384 |
 
 ### Sample contexts
 
 **Piriformis**
-- Q251 option 3: Piriformis only
-- Q347 option 3: Piriformis
-- Q347 explanation: The piriformis is an external rotator of the hip. While normally a mu...
-- Q347 explanation: The piriformis is an external rotator of the hip. While normally a mu...
+- Q241 option 2: Piriformis
+- Q241 explanation: The piriformis is an external rotator of the hip. While normally a mu...
+- Q241 explanation: The piriformis is an external rotator of the hip. While normally a mu...
+- Q384 option 4: Piriformis only
 
 ---
 
@@ -414,11 +398,11 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Quadriceps | 26 | 2 | 10 | 14 | 14, 18, 19, 28, 30, 138, 152, 161, 165, 169, 228, 238, 242, 282, 286, 347 |
-| Rectus femoris | 8 | 0 | 4 | 4 | 14, 18, 19, 243, 375 |
+| Quadriceps | 25 | 2 | 9 | 14 | 14, 18, 19, 28, 30, 138, 152, 161, 164, 170, 241, 310, 361, 371, 375 |
+| Rectus femoris | 8 | 0 | 4 | 4 | 14, 18, 19, 269, 376 |
 | Vastus intermedius | 3 | 0 | 1 | 2 | 14, 19 |
 | Vastus lateralis | 3 | 0 | 1 | 2 | 14, 19 |
-| Vastus medialis | 3 | 0 | 1 | 2 | 14, 19, 243 |
+| Vastus medialis | 3 | 0 | 1 | 2 | 14, 19, 376 |
 
 ### Sample contexts
 
@@ -447,7 +431,7 @@ Columns in detailed tables below:
 **Vastus medialis**
 - Q14 explanation: ...ent muscles; the vastus lateralis, vastus medialis, vastus intermedius and rectus femoris. The rectus fem...
 - Q19 explanation: ...lateralis, vastus intermedius and vastus medialis are all part of the quadriceps; functioning as the ant...
-- Q243 option 3: Vastus medialis only (single-joint knee extensor)
+- Q376 option 3: Vastus medialis only (single-joint knee extensor)
 
 ---
 
@@ -455,8 +439,8 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Hamstrings | 26 | 1 | 9 | 16 | 18, 19, 30, 38, 135, 138, 152, 169, 227, 228, 242, 282, 347, 375, 405, 409 |
-| Biceps femoris | 5 | 0 | 4 | 1 | 14, 18, 19, 243, 283 |
+| Hamstrings | 27 | 1 | 10 | 16 | 18, 19, 30, 38, 135, 138, 152, 170, 185, 241, 269, 299, 303, 310, 360, 361, 375 |
+| Biceps femoris | 5 | 0 | 4 | 1 | 14, 18, 19, 153, 376 |
 | Semimembranosus | 1 | 0 | 0 | 1 | 19 |
 | Semitendinosus | 1 | 0 | 0 | 1 | 19 |
 
@@ -472,7 +456,7 @@ Columns in detailed tables below:
 - Q14 option 3: biceps femoris
 - Q18 option 3: biceps femoris
 - Q19 explanation: ...amstring muscle group includes the biceps femoris, semimembranosus and semitendinosus. The rectus femori...
-- Q243 option 4: ...emoris (hip flexor/knee extensor); Biceps femoris (knee flexor/hip extensor); Gastrocnemius (plantar fle...
+- Q153 option 2: an eccentric contraction of the biceps femoris
 
 **Semimembranosus**
 - Q19 explanation: ...group includes the biceps femoris, semimembranosus and semitendinosus. The rectus femoris, vastus lateral...
@@ -486,9 +470,9 @@ Columns in detailed tables below:
 
 | Term | Mentions | Q | O | E | Question IDs |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Gastrocnemius | 18 | 2 | 8 | 8 | 43, 153, 161, 181, 228, 230, 242, 243, 283, 375 |
-| Soleus | 10 | 0 | 5 | 5 | 43, 153, 181, 230, 283, 294, 375 |
-| Tibialis anterior | 2 | 0 | 2 | 0 | 181, 243 |
+| Gastrocnemius | 18 | 2 | 8 | 8 | 43, 153, 161, 269, 311, 321, 361, 363, 375, 376 |
+| Soleus | 10 | 0 | 5 | 5 | 43, 153, 182, 269, 311, 321, 363 |
+| Tibialis anterior | 2 | 0 | 2 | 0 | 321, 376 |
 | Calves | 1 | 0 | 0 | 1 | 161 |
 
 ### Sample contexts
@@ -501,13 +485,13 @@ Columns in detailed tables below:
 
 **Soleus**
 - Q43 explanation: ...d be a better choice to target the soleus of the calf because it does not insert across the knee...
-- Q153 option 2: Soleus
-- Q181 option 2: Soleus
-- Q181 explanation: The soleus is postural and contains predominantly slow-twitch (Ty...
+- Q153 option 1: an isometric contraction of the soleus
+- Q182 option 4: soleus
+- Q182 explanation: The soleus is a local postural stabilizer of the ankle. Due to it...
 
 **Tibialis anterior**
-- Q181 option 4: Tibialis anterior
-- Q243 option 1: Tibialis anterior only (single-joint dorsiflexor)
+- Q321 option 3: Tibialis anterior
+- Q376 option 4: Tibialis anterior only (single-joint dorsiflexor)
 
 **Calves**
 - Q161 explanation: ...Active-isolation stretches for the calves actually use a constant contraction of the quadriceps...

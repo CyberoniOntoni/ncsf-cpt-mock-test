@@ -20,9 +20,17 @@ extraq_blocks.txt
 crosscheck_*
 strict_audit_*
 manual_verification_report.txt
+manual_refs_added_report.txt
 distractor_audit.json
 quizlet_*
 extraq_questions.json
+extraq_blocks.txt
+
+# One-off extraction / review artifacts
+ncsf_extract_preview/
+grok-review-*.md
+build_muscle_glossary.py
+extract_ncsf_muscle_images.py
 
 # Python
 __pycache__/

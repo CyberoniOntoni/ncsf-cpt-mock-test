@@ -15,8 +15,6 @@ MUSCLE_PATTERNS: list[tuple[str, str, str]] = [
     # (regex, display name, category)
     (r"\brotator cuff\b", "Rotator cuff", "Shoulder group"),
     (r"\bhip flexors?\b", "Hip flexors", "Hip group"),
-    (r"\bhip abductors?\b", "Hip abductors", "Hip group"),
-    (r"\bhip adductors?\b", "Hip adductors", "Hip group"),
     (r"\bgluteus maximus\b", "Gluteus maximus", "Hip / glute"),
     (r"\bgluteus medius\b", "Gluteus medius", "Hip / glute"),
     (r"\bgluteus minimus\b", "Gluteus minimus", "Hip / glute"),
