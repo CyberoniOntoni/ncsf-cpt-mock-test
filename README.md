@@ -23,9 +23,14 @@ npx wrangler pages dev .
 
 ## Rebuild question database
 
+Combine the three primary source files into one bank, then build the exam:
+
 ```bash
-python build_master_database.py
+python merge_question_sources.py   # quiz.txt + extraq.docx + questions.docx → questions_bank.json
+python build_master_database.py    # questions_bank.json + youtube bank → web/questions.js
 ```
+
+`questions_bank.json` is the single merged source for the Quizlet export and both Word banks. Re-run `merge_question_sources.py` after editing any of `quiz.txt`, `extraq.docx`, or `questions.docx`.
 
 Requires `quiz.txt`, `extraq.docx`, `questions.docx`, and `manual_references.json` in the repo root.
 
@@ -59,7 +64,9 @@ If the custom domain shows “CNAME record not set”, add this DNS record once 
 | Path | Purpose |
 |------|---------|
 | `web/` | Web app (HTML, CSS, JS, images) |
-| `build_master_database.py` | Merges all question banks into `questions.js` |
+| `questions_bank.json` | Combined question bank (`quiz.txt` + `extraq.docx` + `questions.docx`) |
+| `merge_question_sources.py` | Builds `questions_bank.json` from the three source files |
+| `build_master_database.py` | Merges `questions_bank.json` + YouTube bank into `questions.js` |
 | `parse_quiz_txt.py` | Quizlet source parser and explanation engine |
 | `parse_ncsf_questions.py` | YouTube/video question bank |
 | `parse_extraq_docx.py` | Supplemental DOCX questions + images |

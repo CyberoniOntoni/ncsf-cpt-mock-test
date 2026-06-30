@@ -32,7 +32,8 @@ CROSSCHECK_JSON = ROOT / "crosscheck_report.json"
 MANIFEST_JSON = ROOT / "merged_database_manifest.json"
 EXTRAQ_DOCX = ROOT / "extraq.docx"
 QUESTIONS_DOCX = ROOT / "questions.docx"
-DATABASE_VERSION = "merged-questions-v5"
+QUESTIONS_BANK_JSON = ROOT / "questions_bank.json"
+DATABASE_VERSION = "merged-questions-v6"
 NEAR_DUPLICATE_THRESHOLD = 0.92
 
 
@@ -219,7 +220,32 @@ def merge_docx_items(merged, seen, by_normalized, items, counters):
     return counts
 
 
-def merge_question_banks():
+def bank_record_to_item(record: dict) -> dict:
+    item = {
+        "q": record["question"],
+        "a": record["answer"],
+        "wrong": record["wrong"],
+        "base_exp": record.get("explanation", ""),
+        "source": record.get("source", "questions_bank.json"),
+    }
+    if record.get("imagePaths"):
+        item["imagePaths"] = record["imagePaths"]
+    if record.get("optionImages"):
+        item["optionImages"] = record["optionImages"]
+    return item
+
+
+def load_questions_bank():
+    if not QUESTIONS_BANK_JSON.exists():
+        return None
+    payload = json.loads(QUESTIONS_BANK_JSON.read_text(encoding="utf-8"))
+    questions = payload.get("questions")
+    if not isinstance(questions, list) or not questions:
+        raise ValueError(f"{QUESTIONS_BANK_JSON.name} has no questions array")
+    return [bank_record_to_item(record) for record in questions], payload.get("stats", {})
+
+
+def merge_quiz_docx_sources():
     quiz_items = _pqt.parse_quiz(INPUT)
     seen = set()
     merged = []
@@ -238,23 +264,6 @@ def merge_question_banks():
         })
 
     quiz_count = len(merged)
-
-    for v in _ncsf.ALL:
-        nq = _pqt.normalize_question(v["q"])
-        if nq in seen:
-            continue
-        seen.add(nq)
-        wrong = _ncsf.get_distractors(v["a"], v["q"], v)
-        merged.append({
-            "q": v["q"],
-            "a": v["a"],
-            "wrong": wrong,
-            "base_exp": v.get("exp", ""),
-            "source": "youtube-video",
-        })
-
-    video_count = len(merged) - quiz_count
-
     by_normalized = {_pqt.normalize_question(m["q"]): m for m in merged}
 
     extraq_counts = merge_docx_items(
@@ -272,14 +281,67 @@ def merge_question_banks():
         ("questions_docx_added", "questions_docx_enhanced"),
     )
 
+    stats = {
+        "quiz_count": quiz_count,
+        "extraq_added": extraq_counts["extraq_added"],
+        "extraq_enhanced": extraq_counts["extraq_enhanced"],
+        "questions_docx_added": questions_counts["questions_docx_added"],
+        "questions_docx_enhanced": questions_counts["questions_docx_enhanced"],
+    }
+    return merged, stats
+
+
+def merge_question_banks():
+    bank = load_questions_bank()
+    if bank is not None:
+        merged, bank_stats = bank
+        quiz_count = bank_stats.get("quiz_count", sum(1 for m in merged if m.get("source") == "quiz.txt"))
+        extraq_added = bank_stats.get("extraq_added", 0)
+        extraq_enhanced = bank_stats.get("extraq_enhanced", 0)
+        questions_docx_added = bank_stats.get("questions_docx_added", 0)
+        questions_docx_enhanced = bank_stats.get("questions_docx_enhanced", 0)
+        print(f"Loaded {len(merged)} questions from {QUESTIONS_BANK_JSON.name}")
+    else:
+        merged, stats = merge_quiz_docx_sources()
+        merged, duplicates_removed = deduplicate_near_duplicates(merged)
+        if duplicates_removed:
+            print(
+                f"Combined quiz/docx sources: {len(merged)} questions "
+                f"({duplicates_removed} near-duplicates removed)"
+            )
+        quiz_count = stats["quiz_count"]
+        extraq_added = stats["extraq_added"]
+        extraq_enhanced = stats["extraq_enhanced"]
+        questions_docx_added = stats["questions_docx_added"]
+        questions_docx_enhanced = stats["questions_docx_enhanced"]
+
+    seen = {_pqt.normalize_question(item["q"]) for item in merged}
+    start_count = len(merged)
+
+    for v in _ncsf.ALL:
+        nq = _pqt.normalize_question(v["q"])
+        if nq in seen:
+            continue
+        seen.add(nq)
+        wrong = _ncsf.get_distractors(v["a"], v["q"], v)
+        merged.append({
+            "q": v["q"],
+            "a": v["a"],
+            "wrong": wrong,
+            "base_exp": v.get("exp", ""),
+            "source": "youtube-video",
+        })
+
+    video_count = len(merged) - start_count
+
     return (
         merged,
         quiz_count,
         video_count,
-        extraq_counts["extraq_added"],
-        extraq_counts["extraq_enhanced"],
-        questions_counts["questions_docx_added"],
-        questions_counts["questions_docx_enhanced"],
+        extraq_added,
+        extraq_enhanced,
+        questions_docx_added,
+        questions_docx_enhanced,
     )
 
 
@@ -397,10 +459,10 @@ def main():
         "merged": True,
         "approved": True,
         "sources": [
-            "quiz.txt (NCSF Practice Exam / Quizlet 651343093)",
+            "questions_bank.json (quiz.txt + extraq.docx + questions.docx)"
+            if QUESTIONS_BANK_JSON.exists()
+            else "quiz.txt + extraq.docx + questions.docx (live merge)",
             "youtube-video (NCSF exam video OCR bank)",
-            "extraq.docx (supplemental questions with images)",
-            "questions.docx (additional questions with images and explanations)",
         ],
         "verification": {
             "manual_references": with_ref,
