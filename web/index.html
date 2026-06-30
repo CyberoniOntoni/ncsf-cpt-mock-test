@@ -262,16 +262,16 @@
     </section>
 
     <section id="exam-screen" class="screen">
-      <div class="shuffle-badge" aria-live="polite">
-        <span class="badge-long">🔀 150 questions drawn from pool · order &amp; options shuffled</span>
-        <span class="badge-short">🔀 150 Q · shuffled</span>
-      </div>
       <div class="progress-bar-wrap">
         <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
       </div>
 
       <div class="exam-meta">
         <span id="question-counter" class="question-number">Question 1 of 150</span>
+        <div class="score-tracker">
+          <span class="tracker-correct">✓ <strong id="correct-count">0</strong> Correct</span>
+          <span class="tracker-incorrect">✗ <strong id="incorrect-count">0</strong> Incorrect</span>
+        </div>
         <span
           id="exam-timer"
           class="exam-timer"
@@ -279,10 +279,6 @@
           aria-live="polite"
           aria-label="Elapsed exam time"
         >00:00:00 / 03:00:00</span>
-        <div class="score-tracker">
-          <span class="tracker-correct">✓ <strong id="correct-count">0</strong> Correct</span>
-          <span class="tracker-incorrect">✗ <strong id="incorrect-count">0</strong> Incorrect</span>
-        </div>
       </div>
 
       <div class="card">
