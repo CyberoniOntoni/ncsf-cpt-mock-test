@@ -1,13 +1,13 @@
 {
   "version": "merged-questions-v6",
-  "total_questions": 414,
+  "total_questions": 413,
   "quiz_txt_count": 150,
   "youtube_video_count": 118,
   "extraq_docx_count": 150,
   "extraq_docx_enhanced": 0,
   "questions_docx_count": 10,
   "questions_docx_enhanced": 148,
-  "pre_dedup_count": 427,
+  "pre_dedup_count": 426,
   "duplicates_removed": 13,
   "questions_with_images": 18,
   "questions_with_option_images": 2,
@@ -20,7 +20,7 @@
   "verification": {
     "manual_references": 276,
     "strict_high": 242,
-    "crosscheck_approved": 414
+    "crosscheck_approved": 413
   },
   "output": "web/questions.js"
 }

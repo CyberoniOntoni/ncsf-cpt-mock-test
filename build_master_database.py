@@ -149,6 +149,28 @@ def same_correct_answer(left, right):
     return left["a"].lower().strip() == right["a"].lower().strip()
 
 
+def semantic_duplicate_key(item):
+    """Group questions that test the same rule even if wording/answers differ."""
+    q = _pqt.normalize_question(item["q"])
+    a = item["a"].lower()
+    if "resting heart rate" not in a:
+        return None
+    if "male" not in q:
+        return None
+    if "medical referral" in q or "medical clearance" in q:
+        return "male-resting-hr-medical-referral"
+    return None
+
+
+def should_merge_as_duplicate(left, right):
+    if question_similarity(left["q"], right["q"]) >= NEAR_DUPLICATE_THRESHOLD:
+        return same_correct_answer(left, right)
+
+    left_key = semantic_duplicate_key(left)
+    right_key = semantic_duplicate_key(right)
+    return left_key is not None and left_key == right_key
+
+
 def deduplicate_near_duplicates(merged):
     n = len(merged)
     parent = list(range(n))
@@ -167,9 +189,7 @@ def deduplicate_near_duplicates(merged):
 
     for i in range(n):
         for j in range(i + 1, n):
-            if question_similarity(merged[i]["q"], merged[j]["q"]) < NEAR_DUPLICATE_THRESHOLD:
-                continue
-            if not same_correct_answer(merged[i], merged[j]):
+            if not should_merge_as_duplicate(merged[i], merged[j]):
                 continue
             union(i, j)
 

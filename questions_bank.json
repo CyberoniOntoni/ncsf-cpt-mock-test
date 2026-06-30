@@ -1,6 +1,6 @@
 {
   "version": "combined-v1",
-  "generated_at": "2026-06-30T08:41:29.441207+00:00",
+  "generated_at": "2026-06-30T08:53:14.739569+00:00",
   "sources": [
     "quiz.txt",
     "extraq.docx",
@@ -13,8 +13,8 @@
     "questions_docx_added": 10,
     "questions_docx_enhanced": 148,
     "pre_dedup_count": 310,
-    "deduplicated_count": 309,
-    "duplicates_removed": 1
+    "deduplicated_count": 308,
+    "duplicates_removed": 2
   },
   "questions": [
     {
@@ -961,14 +961,14 @@
     },
     {
       "question": "Your male client has the following measures - which one indicates a medical referral prior to exercise participation?",
-      "answer": "resting heart rate of 110 bpm",
+      "answer": "resting heart rate of 105 bpm",
       "wrong": [
-        "blood pressure of 140/90",
-        "waist circumference of 36 inches",
-        "cholesterol of 185 mg/dL"
+        "blood pressure of 140/90 mmHg",
+        "body fat of 25%",
+        "total cholesterol of 195 mg/dl"
       ],
-      "explanation": "A client would require medical referral due to a resting heart rate greater than 100 beats per minute. High resting heart rates increase the risk of arrhythmias. The resting heart rate should be assessed upon waking before any adrenal hormones impact the value; however, it is common for the personal trainer to measure it during a screening assessment. Therefore, clients should be instructed to sit or lie motionless for 2-5 minutes before the trainer assesses their radial pulse to attain a more accurate value.",
-      "source": "quiz.txt+questions.docx"
+      "explanation": "A client would require medical referral due to a resting heart rate greater than 100 beats per minute, as this indicates tachycardia. High resting heart rates increase the risk of arrhythmias. The resting heart rate should be assessed upon waking before any adrenal hormones impact the value; however, it is common for the personal trainer to measure it during a screening assessment. Therefore, clients should be instructed to sit or lie motionless for 2-5 minutes before the trainer assesses their radial pulse to attain a more accurate value. Follow-up assessments are warranted when measures above 90 beats per minute are obtained - as it could be test anxiety. Similarly, a client with a resting systolic blood pressure 160 or greater, or diastolic blood pressure 100 or greater would require medical referral as well.",
+      "source": "extraq.docx+quiz.txt+questions.docx"
     },
     {
       "question": "When performing a test, what would enhance the validity of the measure?",
@@ -2364,17 +2364,6 @@
         "Perform the exercise in a pool to prevent weight bearing"
       ],
       "explanation": "Any individual actively receiving care for a current injury from a medical professional should get clearance prior to engaging concurrent physiological systems. This clearance provides the \"do's and don'ts\", reducing both injury risk and trainer liability.",
-      "source": "extraq.docx"
-    },
-    {
-      "question": "Which of the following measurements would require your male client to obtain a medical clearance before participating in an exercise program due to cardiovascular disease risk?",
-      "answer": "resting heart rate of 105 bpm",
-      "wrong": [
-        "blood pressure of 140/90 mmHg",
-        "body fat of 25%",
-        "total cholesterol of 195 mg/dl"
-      ],
-      "explanation": "A client would require medical referral due to a resting heart rate greater than 100 beats per minute, as this indicates tachycardia. High resting heart rates increase the risk of arrhythmias. The resting heart rate should be assessed upon waking before any adrenal hormones impact the value; however, it is common for the personal trainer to measure it during a screening assessment. Therefore, clients should be instructed to sit or lie motionless for 2-5 minutes before the trainer assesses their radial pulse to attain a more accurate value. Follow-up assessments are warranted when measures above 90 beats per minute are obtained - as it could be test anxiety. Similarly, a client with a resting systolic blood pressure 160 or greater, or diastolic blood pressure 100 or greater would require medical referral as well.",
       "source": "extraq.docx"
     },
     {
