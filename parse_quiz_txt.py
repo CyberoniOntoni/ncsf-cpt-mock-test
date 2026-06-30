@@ -1,4 +1,4 @@
-"""Parse quiz.txt into shuffledtest questions.js"""
+"""Parse quiz.txt into web questions.js"""
 import json
 import os
 import re
@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 INPUT = str(ROOT / "quiz.txt")
-OUTPUT = str(ROOT / "shuffledtest" / "questions.js")
+OUTPUT = str(ROOT / "web" / "questions.js")
 MANUAL_REFS = str(ROOT / "manual_references.json")
 
 # Detailed explanations keyed by correct answer text (from quiz.txt)

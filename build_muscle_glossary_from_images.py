@@ -1,12 +1,12 @@
-"""Build muscle-glossary.js from images in shuffledtest/images/muscles/."""
+"""Build muscle-glossary.js from images in web/images/muscles/."""
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-IMAGES_DIR = ROOT / "shuffledtest" / "images" / "muscles"
-OUTPUT = ROOT / "shuffledtest" / "muscle-glossary.js"
+IMAGES_DIR = ROOT / "web" / "images" / "muscles"
+OUTPUT = ROOT / "web" / "muscle-glossary.js"
 
 # id matches {id}.png unless image is overridden. Aliases are longest-first in the index.
 GLOSSARY_SPEC: list[dict] = [
@@ -102,7 +102,7 @@ def main() -> None:
         raise RuntimeError(f"Glossary references missing images: {', '.join(missing_on_disk)}")
 
     js = (
-        "/** Auto-generated from shuffledtest/images/muscles via build_muscle_glossary_from_images.py. */\n"
+        "/** Auto-generated from web/images/muscles via build_muscle_glossary_from_images.py. */\n"
         "const MUSCLE_GLOSSARY = "
         + json.dumps(glossary, indent=2)
         + ";\n\nconst MUSCLE_ALIAS_INDEX = "

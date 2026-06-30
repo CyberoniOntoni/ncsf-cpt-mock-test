@@ -7,8 +7,8 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-QUESTIONS_JS = ROOT / "shuffledtest" / "questions.js"
-OUTPUT = ROOT / "shuffledtest" / "MUSCLES.md"
+QUESTIONS_JS = ROOT / "web" / "questions.js"
+OUTPUT = ROOT / "web" / "MUSCLES.md"
 
 # Longer / more specific patterns first so overlapping terms resolve correctly.
 MUSCLE_PATTERNS: list[tuple[str, str, str]] = [
@@ -224,9 +224,9 @@ def main() -> None:
         "# Muscles and Muscle Groups in Quiz Content",
         "",
         "Inventory of anatomical muscle terms found in **questions**, **answer options**, and **explanations**.",
-        f"Source: `shuffledtest/questions.js` ({len(questions)} questions).",
+        f"Source: `web/questions.js` ({len(questions)} questions).",
         "",
-        "Use this list to decide which preview images to place in `shuffledtest/images/muscles/`.",
+        "Use this list to decide which preview images to place in `web/images/muscles/`.",
         "",
         "## Summary",
         "",

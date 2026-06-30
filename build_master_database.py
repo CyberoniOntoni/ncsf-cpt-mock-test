@@ -407,7 +407,7 @@ def main():
             "strict_high": strict_high,
             "crosscheck_approved": len(output),
         },
-        "output": "shuffledtest/questions.js",
+        "output": "web/questions.js",
     }
     MANIFEST_JSON.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 

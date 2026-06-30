@@ -599,6 +599,6 @@ def generate_questions_js(items, out_path, seed=42):
 
 
 if __name__ == "__main__":
-    out_path = str(ROOT / "shuffledtest" / "questions.js")
+    out_path = str(ROOT / "web" / "questions.js")
     result = generate_questions_js(ALL, out_path)
     print(f"Generated {len(result)} questions to {out_path}")

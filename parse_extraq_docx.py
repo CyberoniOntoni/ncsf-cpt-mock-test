@@ -11,7 +11,7 @@ from xml.etree import ElementTree as ET
 ROOT = Path(__file__).resolve().parent
 DOCX = ROOT / "extraq.docx"
 EXTRACT_DIR = ROOT / "extraq_extracted"
-MEDIA_OUT = ROOT / "shuffledtest" / "images" / "extraq"
+MEDIA_OUT = ROOT / "web" / "images" / "extraq"
 MEDIA_WEB_PREFIX = "images/extraq"
 SOURCE_TAG = "extraq.docx"
 OUTPUT_JSON = ROOT / "extraq_questions.json"
@@ -342,7 +342,7 @@ def parse_docx_bank(
     configure_parser(
         docx=docx_path,
         extract_dir=extract_dir or ROOT / f"{stem}_extracted",
-        media_out=ROOT / "shuffledtest" / "images" / media_subdir,
+        media_out=ROOT / "web" / "images" / media_subdir,
         media_web_prefix=f"images/{media_subdir}",
         source=source_tag or docx_path.name,
         output_json=output_json or ROOT / f"{stem}_questions.json",

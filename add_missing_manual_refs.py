@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-QUESTIONS_JS = ROOT / "shuffledtest" / "questions.js"
+QUESTIONS_JS = ROOT / "web" / "questions.js"
 REPORT_PATH = ROOT / "manual_refs_added_report.txt"
 
 _spec = importlib.util.spec_from_file_location("build_manual_refs", ROOT / "build_manual_refs.py")

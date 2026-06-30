@@ -1,4 +1,4 @@
-/** Auto-generated from shuffledtest/images/muscles via build_muscle_glossary_from_images.py. */
+/** Auto-generated from web/images/muscles via build_muscle_glossary_from_images.py. */
 const MUSCLE_GLOSSARY = {
   "hamstrings": {
     "label": "Hamstrings",

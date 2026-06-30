@@ -1,9 +1,9 @@
 # Muscles and Muscle Groups in Quiz Content
 
 Inventory of anatomical muscle terms found in **questions**, **answer options**, and **explanations**.
-Source: `shuffledtest/questions.js` (414 questions).
+Source: `web/questions.js` (414 questions).
 
-Use this list to decide which preview images to place in `shuffledtest/images/muscles/`.
+Use this list to decide which preview images to place in `web/images/muscles/`.
 
 ## Summary
 

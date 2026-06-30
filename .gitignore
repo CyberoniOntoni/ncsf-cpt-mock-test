@@ -29,9 +29,9 @@ __pycache__/
 *.pyc
 
 # Node / deploy artifacts
-shuffledtest/node_modules/
-shuffledtest/dist/
-shuffledtest/.wrangler/
+web/node_modules/
+web/dist/
+web/.wrangler/
 
 # History rewrite helper (local only)
 replacements.txt
@@ -40,9 +40,9 @@ replacements.txt
 .env
 .env.*
 !.env.example
-shuffledtest/.env
-shuffledtest/.env.*
-!shuffledtest/.env.example
+web/.env
+web/.env.*
+!web/.env.example
 *.pem
 *.key
 *credentials*
@@ -53,10 +53,10 @@ shuffledtest/.env.*
 **/wrangler-account.json
 
 # Local deploy helpers (may read API tokens / account IDs)
-shuffledtest/deploy_pages.py
-shuffledtest/remove_pages_domain.py
-shuffledtest/setup_custom_domain.py
-shuffledtest/create_dns_record.py
+web/deploy_pages.py
+web/remove_pages_domain.py
+web/setup_custom_domain.py
+web/create_dns_record.py
 
 # Optional dev/audit scripts
 audit_*.py
