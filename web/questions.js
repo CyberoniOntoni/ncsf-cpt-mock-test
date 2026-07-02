@@ -2714,8 +2714,8 @@ const EXAM_QUESTIONS = [
       "perform only upper-body resistance training and non-impact aerobic exercise"
     ],
     "correctIndex": 1,
-    "explanation": "The appropriate response for the trainer would be to ask follow-up questions concerning the injury, surgery and rehabilitation. Answers to the follow-up questions are essential when planning the most appropriate course of action. The severity of the injury as well as the comprehensiveness of any rehab will determine the starting point for exercise prescription. However, further testing specific to the left knee joint (e.g., flexibility and stability testing) would be appropriate in creating the most effective program. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 35; Ch. 1 (Introduction to Personal Training), p. 9.",
-    "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 35; Ch. 1 (Introduction to Personal Training), p. 9.",
+    "explanation": "The appropriate response for the trainer would be to ask follow-up questions concerning the injury, surgery and rehabilitation. Answers to the follow-up questions are essential when planning the most appropriate course of action. The severity of the injury as well as the comprehensiveness of any rehab will determine the starting point for exercise prescription. However, further testing specific to the left knee joint (e.g., flexibility and stability testing) would be appropriate in creating the most effective program. NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 14 (Cardiorespiratory Fitness), p. 2.",
+    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 14 (Cardiorespiratory Fitness), p. 2.",
     "manualVerified": true
   },
   {
@@ -3120,8 +3120,8 @@ const EXAM_QUESTIONS = [
       "Reduce total body fat via diet and exercise"
     ],
     "correctIndex": 3,
-    "explanation": "Reducing total body fat and weight will reduce the appearance of cellulite. Changing the macronutrient content of the diet will not have an impact if a negative caloric balance is not attained. CLA has not demonstrated any efficacy and spot reduction of cellulite (e.g., performing numerous crunches to reduce belly cellulite) is not effective as it will only improve the muscle tonicity in the area, but you cannot force localized fat use. NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 11 (Weight Management), p. 18.",
-    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 11 (Weight Management), p. 18.",
+    "explanation": "Reducing total body fat and weight will reduce the appearance of cellulite. Changing the macronutrient content of the diet will not have an impact if a negative caloric balance is not attained. CLA has not demonstrated any efficacy and spot reduction of cellulite (e.g., performing numerous crunches to reduce belly cellulite) is not effective as it will only improve the muscle tonicity in the area, but you cannot force localized fat use. NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 11 (Weight Management), p. 19.",
+    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 11 (Weight Management), p. 19.",
     "manualVerified": true
   },
   {
@@ -3204,8 +3204,8 @@ const EXAM_QUESTIONS = [
       "3 sets per exercise at 80-90% 1RM, 4-8 reps, 75-90 second rest intervals, muscle group-specific exercise"
     ],
     "correctIndex": 2,
-    "explanation": "Higher and very low repetition ranges reduce muscle architectural changes. Low reps at 1-3 works the nervous system while high reps over 15 work the metabolic system. 15 reps equal about 45 seconds of time-under-tension, with a 1:1 to 1:0.75 ratio. This type of training is specifically geared towards caloric expenditure with a side benefit of maintaining lean mass. However, due the elevated time-under-tension (>20 minutes), it may not be feasible for a novice client unaccustomed to resistance training. NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 15 (Flexibility), p. 22.",
-    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 15 (Flexibility), p. 22.",
+    "explanation": "Higher and very low repetition ranges reduce muscle architectural changes. Low reps at 1-3 works the nervous system while high reps over 15 work the metabolic system. 15 reps equal about 45 seconds of time-under-tension, with a 1:1 to 1:0.75 ratio. This type of training is specifically geared towards caloric expenditure with a side benefit of maintaining lean mass. However, due the elevated time-under-tension (>20 minutes), it may not be feasible for a novice client unaccustomed to resistance training. NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 12 (Exercise Program Components), p. 15.",
+    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 12 (Exercise Program Components), p. 15.",
     "manualVerified": true
   },
   {
@@ -3980,14 +3980,14 @@ const EXAM_QUESTIONS = [
       "Dumbbell shoulder press on a physioball"
     ],
     "correctIndex": 0,
-    "explanation": "A stability ball can be used for a number of exercises but should not be used with back squats in place of another utility. The back squat is already a relatively difficult exercise and if the ball were to move or pop, the exerciser could be severely injured. As an exercise professional it is your job to assess the risk-benefit ratio of any activity. Any action that places the client at risk for injury with a missed repetition or movement of equipment – such as a supine leg press using a Smith machine – should be avoided. NCSF Manual reference: Ch. 11 (Weight Management), p. 21; Ch. 13 (Anaerobic Resistance Training), p. 31.",
+    "explanation": "A stability ball can be used for a number of exercises but should not be used with back squats in place of another utility. The back squat is already a relatively difficult exercise and if the ball were to move or pop, the exerciser could be severely injured. As an exercise professional it is your job to assess the risk-benefit ratio of any activity. Any action that places the client at risk for injury with a missed repetition or movement of equipment – such as a supine leg press using a Smith machine – should be avoided. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 31.",
     "optionImages": {
       "Dumbbell shoulder press on a physioball": "images/extraq/image11.png",
       "Leg curls using a stability ball": "images/extraq/image12.png",
       "Barbell box squats using a stability ball instead of a box": "images/extraq/image13.png",
       "Push-ups using a stability ball instead of a bench": "images/extraq/image14.png"
     },
-    "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 21; Ch. 13 (Anaerobic Resistance Training), p. 31.",
+    "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 31.",
     "manualVerified": true
   },
   {
