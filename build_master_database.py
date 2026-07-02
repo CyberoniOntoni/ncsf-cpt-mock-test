@@ -153,12 +153,11 @@ def semantic_duplicate_key(item):
     """Group questions that test the same rule even if wording/answers differ."""
     q = _pqt.normalize_question(item["q"])
     a = item["a"].lower()
-    if "resting heart rate" not in a:
-        return None
-    if "male" not in q:
-        return None
-    if "medical referral" in q or "medical clearance" in q:
-        return "male-resting-hr-medical-referral"
+    if "resting heart rate" in a and "male" in q:
+        if "medical referral" in q or "medical clearance" in q:
+            return "male-resting-hr-medical-referral"
+    if "blood lipid profile" in q and a == "hdl will increase":
+        return "moderate-aerobic-blood-lipid-hdl"
     return None
 
 

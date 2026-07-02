@@ -664,9 +664,9 @@
     },
     {
       "question": "When prescribing exercise to improve movement efficiency and proprioception, the emphasis should be placed on:",
-      "answer": "improved balance using unilateral training",
+      "answer": "neural rehearsal via movement practice",
       "wrong": [
-        "neural rehearsal via movement practice",
+        "improved balance using unilateral training",
         "antagonist inhibition via active-isolation stretching",
         "central stability using overhead training"
       ],
@@ -2114,17 +2114,6 @@
       "source": "extraq.docx"
     },
     {
-      "question": "What affect does routine, moderate-intensity aerobic training have on one's blood lipid profile?",
-      "answer": "HDL will increase",
-      "wrong": [
-        "VLDL will increase",
-        "LDL will increase",
-        "Aerobic exercise does not affect circulating cholesterol"
-      ],
-      "explanation": "An increase in HDL cholesterol can be seen with weekly aerobic training. High-density lipoproteins (HDL) are produced by the liver and serve a protective role in preventing arterial plaque formation, which can be increased with the presence of high LDL. An increase in HDL will facilitate increased transport of LDL cholesterol out of circulation. Specifically, HDL will carry LDL back to the liver (where it is formed); thwarting its immediate contribution to the progression of vascular disease.",
-      "source": "extraq.docx"
-    },
-    {
       "question": "Increased midsection girth with age is a concern because:",
       "answer": "android obesity is linked with heart disease",
       "wrong": [
@@ -2962,7 +2951,7 @@
     },
     {
       "question": "Why do machines allow for more weight to be lifted than during free weight exercises?",
-      "answer": "The body experiences significantly reduced stabilization",
+      "answer": "The body requires significantly reduced stabilization",
       "wrong": [
         "Mechanical advantage via lever systems",
         "The actual weight is not lifted by the body",

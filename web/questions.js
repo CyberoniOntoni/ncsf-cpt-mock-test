@@ -16,8 +16,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 11; Ch. 4 (Human Physiology), p. 34.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -38,8 +36,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 15; Ch. 1 (Introduction to Personal Training), p. 6.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -60,8 +56,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 6; Ch. 4 (Human Physiology), p. 34.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -75,17 +69,15 @@ const EXAM_QUESTIONS = [
       "130/84 mmHg"
     ],
     "correctIndex": 3,
-    "explanation": "With a properly-executed exercise program, 3 months of training would plausibly reduce blood pressure by 8-11 mmHg; resulting in a realistic measurement of 130/84 mmHg. It is believed that these changes are brought about by alterations in the sympathetic nervous system that reduce peripheral resistance and increase renal secretion of sodium. Basically, an individual’s arteries are able to expand slightly, decreasing pressure immediately, and the kidneys are able to reduce salt content in the blood to further reduce pressure. NCSF Manual reference: Ch. 4 (Human Physiology), p. 9; Ch. 4 (Human Physiology), p. 28.",
+    "explanation": "With a properly-executed exercise program, 3 months of training would plausibly reduce blood pressure by 8-11 mmHg; resulting in a realistic measurement of 130/84 mmHg. It is believed that these changes are brought about by alterations in the sympathetic nervous system that reduce peripheral resistance and increase renal secretion of sodium. Basically, an individual\u2019s arteries are able to expand slightly, decreasing pressure immediately, and the kidneys are able to reduce salt content in the blood to further reduce pressure. NCSF Manual reference: Ch. 4 (Human Physiology), p. 9; Ch. 4 (Human Physiology), p. 28.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 9; Ch. 4 (Human Physiology), p. 28.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 5,
@@ -97,15 +89,13 @@ const EXAM_QUESTIONS = [
       "intramuscular"
     ],
     "correctIndex": 2,
-    "explanation": "Android obesity is a term used to describe fat storage within the midsection of the human body called visceral fat. It is a major health concern based on its known relationship with heart disease. Android obesity is associated with an “apple-shape physique” and is dangerous because visceral fat cells release cytokines (chemicals) which promote systemic inflammation. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 244; Ch. 6 (Physical Activity and Risk for Disease), p. 25.",
+    "explanation": "Android obesity is a term used to describe fat storage within the midsection of the human body called visceral fat. It is a major health concern based on its known relationship with heart disease. Android obesity is associated with an \u201capple-shape physique\u201d and is dangerous because visceral fat cells release cytokines (chemicals) which promote systemic inflammation. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 244; Ch. 6 (Physical Activity and Risk for Disease), p. 25.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 244; Ch. 6 (Physical Activity and Risk for Disease), p. 25.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -126,8 +116,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 29; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -148,10 +136,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 11; Ch. 9 (Exploring Dietary Supplements), p. 27.",
     "manualVerified": true,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 8,
@@ -170,8 +156,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 15 (Flexibility), p. 22; Ch. 1 (Introduction to Personal Training), p. 9.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -192,10 +176,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 152; Ch. 9 (Exploring Dietary Supplements), p. 6.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 10,
@@ -214,8 +196,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 12; Ch. 1 (Introduction to Personal Training), p. 19.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -236,8 +216,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 23; Ch. 13 (Anaerobic Resistance Training), p. 13.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -258,8 +236,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 208; Ch. 6 (Physical Activity and Risk for Disease), p. 2.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -280,8 +256,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 33; Ch. 2 (Functional Anatomy and Training Instruction), p. 16.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -295,15 +269,13 @@ const EXAM_QUESTIONS = [
       "vastus lateralis"
     ],
     "correctIndex": 1,
-    "explanation": "The quadriceps is comprised of four different muscles; the vastus lateralis, vastus medialis, vastus intermedius and rectus femoris. The rectus femoris is the only quadriceps muscle that crosses two joints – the hip and knee. The superior aspect of the rectus femoris originates at the pelvis, resulting in hip flexion when contracted. The inferior portion inserts on the patella via the quadriceps tendon causing knee extension. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 96; Ch. 2 (Functional Anatomy and Training Instruction), p. 38.",
+    "explanation": "The quadriceps is comprised of four different muscles; the vastus lateralis, vastus medialis, vastus intermedius and rectus femoris. The rectus femoris is the only quadriceps muscle that crosses two joints \u2013 the hip and knee. The superior aspect of the rectus femoris originates at the pelvis, resulting in hip flexion when contracted. The inferior portion inserts on the patella via the quadriceps tendon causing knee extension. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 96; Ch. 2 (Functional Anatomy and Training Instruction), p. 38.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 96; Ch. 2 (Functional Anatomy and Training Instruction), p. 38.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -324,8 +296,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 600; Ch. 2 (Functional Anatomy and Training Instruction), p. 29.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -339,15 +309,13 @@ const EXAM_QUESTIONS = [
       "supraspinatus"
     ],
     "correctIndex": 0,
-    "explanation": "The supraspinatus, infraspinatus, teres minor, and subscapularis make up the musculature of the rotator cuff; often easily remembered through the acronym “SITS”. The shoulder joint is a shallow ball-and-socket joint formed by the scapula and humerus. The rotator cuff functions for assist rotational motion and help counteract joint instability by stabilizing the humerus at different angles. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 17.",
+    "explanation": "The supraspinatus, infraspinatus, teres minor, and subscapularis make up the musculature of the rotator cuff; often easily remembered through the acronym \u201cSITS\u201d. The shoulder joint is a shallow ball-and-socket joint formed by the scapula and humerus. The rotator cuff functions for assist rotational motion and help counteract joint instability by stabilizing the humerus at different angles. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 17.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 17.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -368,8 +336,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 54; Ch. 2 (Functional Anatomy and Training Instruction), p. 100.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -390,8 +356,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 97; Ch. 2 (Functional Anatomy and Training Instruction), p. 93.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -416,8 +380,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 93; Ch. 13 (Anaerobic Resistance Training), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -442,8 +404,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 85; Ch. 2 (Functional Anatomy and Training Instruction), p. 96.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -464,8 +424,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 12; Ch. 2 (Functional Anatomy and Training Instruction), p. 66.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -483,15 +441,13 @@ const EXAM_QUESTIONS = [
       "eccentric contraction of the latissimus dorsi"
     ],
     "correctIndex": 1,
-    "explanation": "Concentric contraction of the rhomboids will cause the scapulae to retract, as seen during the correct performance of the bilateral row exercise. The rhomboids function to move the scapulae inward; providing the “squeezing sensation” felt in the upper back when activated properly. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 16; Ch. 2 (Functional Anatomy and Training Instruction), p. 4.",
+    "explanation": "Concentric contraction of the rhomboids will cause the scapulae to retract, as seen during the correct performance of the bilateral row exercise. The rhomboids function to move the scapulae inward; providing the \u201csqueezing sensation\u201d felt in the upper back when activated properly. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 16; Ch. 2 (Functional Anatomy and Training Instruction), p. 4.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 16; Ch. 2 (Functional Anatomy and Training Instruction), p. 4.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -515,8 +471,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 600; Ch. 7 (Resting and Active Fitness Assessments), p. 290.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -537,8 +491,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 20; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 8.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -546,10 +498,10 @@ const EXAM_QUESTIONS = [
     "id": 25,
     "question": "The deltoid becomes the primary abductor of the humerus beginning at what joint angle; reducing involvement of the rotator cuff?",
     "options": [
-      "45°",
-      "5°",
-      "15°",
-      "30°"
+      "45\u00b0",
+      "5\u00b0",
+      "15\u00b0",
+      "30\u00b0"
     ],
     "correctIndex": 3,
     "explanation": "In order to reduce the activation of the rotator cuff, the lowest portion of the lift should place the humerus at a 30 degree angle relative to the hips. If the arms are lowered past this point, neural activation of the deltoid (specifically the medial head) will be diminished and replaced by rotator cuff activation; specifically the supraspinatus. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 45; Ch. 2 (Functional Anatomy and Training Instruction), p. 68.",
@@ -559,10 +511,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 45; Ch. 2 (Functional Anatomy and Training Instruction), p. 68.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 26,
@@ -581,8 +531,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 13; Ch. 2 (Functional Anatomy and Training Instruction), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -606,10 +554,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 47; Ch. 2 (Functional Anatomy and Training Instruction), p. 95.",
     "manualVerified": true,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 28,
@@ -628,10 +574,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 94; Ch. 2 (Functional Anatomy and Training Instruction), p. 96.",
     "manualVerified": true,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "imagePaths": [
       "images/questions/image9.png"
     ]
@@ -653,8 +597,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 22.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -675,10 +617,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 72; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "imagePaths": [
       "images/questions/image10.png",
       "images/questions/image11.png",
@@ -695,15 +635,13 @@ const EXAM_QUESTIONS = [
       "overhead squat"
     ],
     "correctIndex": 2,
-    "explanation": "Of the choices listed the alternating jump lunges are the only action that requires ballistic hip and leg extension. Hip power is developed through rapid contractions, preferably using the stretch shortening cycle for added force gain. Rapid extension of the hips, knees, and ankles increase the body’s vertical power production capabilities for activities such as running and jumping. NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 18; Ch. 13 (Anaerobic Resistance Training), p. 21.",
+    "explanation": "Of the choices listed the alternating jump lunges are the only action that requires ballistic hip and leg extension. Hip power is developed through rapid contractions, preferably using the stretch shortening cycle for added force gain. Rapid extension of the hips, knees, and ankles increase the body\u2019s vertical power production capabilities for activities such as running and jumping. NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 18; Ch. 13 (Anaerobic Resistance Training), p. 21.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 18; Ch. 13 (Anaerobic Resistance Training), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -717,15 +655,13 @@ const EXAM_QUESTIONS = [
       "Hands on the thighs and lower limbs"
     ],
     "correctIndex": 1,
-    "explanation": "The proper spotting technique for an individual performing the chin-up would be place your hands on the client’s hips at the waist; assisting the concentric portion of the movement. A common error is to spot from the ankles/feet, which often causes an increase in lordotic curvature and can lead to forward forces. If they slip off due to hand fatigue when the spot position is at the ankles - it could lead to a serious injury. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 2; Ch. 2 (Functional Anatomy and Training Instruction), p. 13.",
+    "explanation": "The proper spotting technique for an individual performing the chin-up would be place your hands on the client\u2019s hips at the waist; assisting the concentric portion of the movement. A common error is to spot from the ankles/feet, which often causes an increase in lordotic curvature and can lead to forward forces. If they slip off due to hand fatigue when the spot position is at the ankles - it could lead to a serious injury. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 2; Ch. 2 (Functional Anatomy and Training Instruction), p. 13.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 2; Ch. 2 (Functional Anatomy and Training Instruction), p. 13.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -746,10 +682,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 93; Ch. 13 (Anaerobic Resistance Training), p. 20.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 34,
@@ -768,8 +702,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 5; Ch. 12 (Exercise Program Components), p. 6.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -790,8 +722,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 71; Ch. 2 (Functional Anatomy and Training Instruction), p. 39.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -812,10 +742,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 35; Ch. 6 (Physical Activity and Risk for Disease), p. 26.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 37,
@@ -834,8 +762,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 45; Ch. 8 (Understanding Nutrition), p. 392.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -856,8 +782,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 80; Ch. 2 (Functional Anatomy and Training Instruction), p. 93.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -881,8 +805,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 38; Ch. 2 (Functional Anatomy and Training Instruction), p. 67.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -903,8 +825,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 45; Ch. 2 (Functional Anatomy and Training Instruction), p. 67.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -925,8 +845,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 69; Ch. 2 (Functional Anatomy and Training Instruction), p. 88.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -947,8 +865,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 600; Ch. 2 (Functional Anatomy and Training Instruction), p. 29.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -969,8 +885,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 40; Ch. 2 (Functional Anatomy and Training Instruction), p. 99.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -991,14 +905,12 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 29; Ch. 8 (Understanding Nutrition), p. 30.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 45,
-    "question": "You observe your client having difficulty performing a 90° step-up. Specifically, he is leaning forward and not fully extending his legs. What is the correct course of action?",
+    "question": "You observe your client having difficulty performing a 90\u00b0 step-up. Specifically, he is leaning forward and not fully extending his legs. What is the correct course of action?",
     "options": [
       "have the client move slower and focus on pushing through the balls of his feet",
       "have the client swing his arms to aid in momentum",
@@ -1006,17 +918,15 @@ const EXAM_QUESTIONS = [
       "have the client hold a light medicine ball at the chest to help them remain upright"
     ],
     "correctIndex": 2,
-    "explanation": "If a client is struggling during a high step-up requiring a knee angle of 90°, the most beneficial modification would be to reduce the step height so his knee angle is lower. Decreasing the knee angle will allow the client to fully extend the leg using proper form without compensation. Starting lower and progressing upward allows the body to acclimate to its weight when under-conditioned. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 487; Ch. 2 (Functional Anatomy and Training Instruction), p. 95.",
+    "explanation": "If a client is struggling during a high step-up requiring a knee angle of 90\u00b0, the most beneficial modification would be to reduce the step height so his knee angle is lower. Decreasing the knee angle will allow the client to fully extend the leg using proper form without compensation. Starting lower and progressing upward allows the body to acclimate to its weight when under-conditioned. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 487; Ch. 2 (Functional Anatomy and Training Instruction), p. 95.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 487; Ch. 2 (Functional Anatomy and Training Instruction), p. 95.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 46,
@@ -1035,8 +945,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 95; Ch. 12 (Exercise Program Components), p. 489.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1057,8 +965,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 71; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 17.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1079,8 +985,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 84.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1101,8 +1005,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 27; Ch. 16 (Introduction to Exercise Programming), p. 16.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1123,8 +1025,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 66.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1145,8 +1045,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 76; Ch. 2 (Functional Anatomy and Training Instruction), p. 82.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1160,15 +1058,13 @@ const EXAM_QUESTIONS = [
       "posterior deltoid"
     ],
     "correctIndex": 1,
-    "explanation": "Reciprocal inhibition causes the biceps brachii to relax during a triceps push-down. Reciprocal inhibition is the process by which the body’s nervous system will send signals to cause the antagonist muscle to relax, to allow the agonist (prime mover) to contract without added resistance. NCSF Manual reference: Ch. 15 (Flexibility), p. 9; Ch. 2 (Functional Anatomy and Training Instruction), p. 35.",
+    "explanation": "Reciprocal inhibition causes the biceps brachii to relax during a triceps push-down. Reciprocal inhibition is the process by which the body\u2019s nervous system will send signals to cause the antagonist muscle to relax, to allow the agonist (prime mover) to contract without added resistance. NCSF Manual reference: Ch. 15 (Flexibility), p. 9; Ch. 2 (Functional Anatomy and Training Instruction), p. 35.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 15 (Flexibility), p. 9; Ch. 2 (Functional Anatomy and Training Instruction), p. 35.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1189,8 +1085,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 12; Ch. 16 (Introduction to Exercise Programming), p. 629.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1204,15 +1098,13 @@ const EXAM_QUESTIONS = [
       "to increase muscular endurance"
     ],
     "correctIndex": 2,
-    "explanation": "The drop set best serves to increase muscle fiber recruitment, thus making it ideal for hypertrophy training. While the total repetitions creep into the “endurance” domain, the fact that the entire set is performed at near-maximal intensity elicits the proper endocrine response for lean mass gains when part of an appropriate hypertrophy program. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 13 (Anaerobic Resistance Training), p. 27.",
+    "explanation": "The drop set best serves to increase muscle fiber recruitment, thus making it ideal for hypertrophy training. While the total repetitions creep into the \u201cendurance\u201d domain, the fact that the entire set is performed at near-maximal intensity elicits the proper endocrine response for lean mass gains when part of an appropriate hypertrophy program. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 13 (Anaerobic Resistance Training), p. 27.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 13 (Anaerobic Resistance Training), p. 27.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1233,8 +1125,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24; Ch. 13 (Anaerobic Resistance Training), p. 553.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1255,8 +1145,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 14; Ch. 11 (Weight Management), p. 13.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1264,10 +1152,10 @@ const EXAM_QUESTIONS = [
     "id": 57,
     "question": "When prescribing exercise to improve movement efficiency and proprioception, the emphasis should be placed on:",
     "options": [
-      "neural rehearsal via movement practice",
+      "improved balance using unilateral training",
       "antagonist inhibition via active-isolation stretching",
       "central stability using overhead training",
-      "improved balance using unilateral training"
+      "neural rehearsal via movement practice"
     ],
     "correctIndex": 3,
     "explanation": "Practice is the best method for improvements. Motor (neural) rehearsal improves tissue familiarity and causes the nervous system to establish patterns. New exercisers should constantly rehearse exercise movements to ensure proper biomechanics before loads or additional challenges are added. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24; Ch. 13 (Anaerobic Resistance Training), p. 25.",
@@ -1277,8 +1165,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24; Ch. 13 (Anaerobic Resistance Training), p. 25.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1299,8 +1185,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 36; Ch. 7 (Resting and Active Fitness Assessments), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1314,15 +1198,13 @@ const EXAM_QUESTIONS = [
       "capillary density and glycogen storage"
     ],
     "correctIndex": 1,
-    "explanation": "Heart rate and peripheral resistance determine an individual’s blood pressure. Peripheral resistance represents the pressure exerted by blood vessels. Blood pressure can be adjusted by baroreceptors (pressure receptors) in large arteries, which may increase or decrease the circumference of the vessels; also called vasodilation or vasoconstriction. At rest, blood pressure is primarily determined by peripheral resistance due to a low heart rate. However, during exercise, heart rate increases and becomes a primary determinant of systolic blood pressure (pressure during contraction), whereas peripheral resistance is primarily diastolic (presure when the heart relaxes). NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 17; Ch. 4 (Human Physiology), p. 28.",
+    "explanation": "Heart rate and peripheral resistance determine an individual\u2019s blood pressure. Peripheral resistance represents the pressure exerted by blood vessels. Blood pressure can be adjusted by baroreceptors (pressure receptors) in large arteries, which may increase or decrease the circumference of the vessels; also called vasodilation or vasoconstriction. At rest, blood pressure is primarily determined by peripheral resistance due to a low heart rate. However, during exercise, heart rate increases and becomes a primary determinant of systolic blood pressure (pressure during contraction), whereas peripheral resistance is primarily diastolic (presure when the heart relaxes). NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 17; Ch. 4 (Human Physiology), p. 28.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 17; Ch. 4 (Human Physiology), p. 28.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1336,15 +1218,13 @@ const EXAM_QUESTIONS = [
       "reduced endocrine system responses"
     ],
     "correctIndex": 0,
-    "explanation": "The nervous system has the fastest adaptation rate. As an extension of the brain, its motor “learning” capabilities are significant. Rapid increases in movement performance or strength are commonly seen among untrained individuals within 3-5 weeks. This early adaptation process to training is the body’s response to finding the most efficient way to manage a stress while exerting the least amount of energy. Improvements in the nervous system will promote increases in motor unit firing rates, recruitment and synchronicity within the musculature being targeted. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 26; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 22.",
+    "explanation": "The nervous system has the fastest adaptation rate. As an extension of the brain, its motor \u201clearning\u201d capabilities are significant. Rapid increases in movement performance or strength are commonly seen among untrained individuals within 3-5 weeks. This early adaptation process to training is the body\u2019s response to finding the most efficient way to manage a stress while exerting the least amount of energy. Improvements in the nervous system will promote increases in motor unit firing rates, recruitment and synchronicity within the musculature being targeted. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 26; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 22.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 26; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 22.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1365,8 +1245,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 4; Ch. 8 (Understanding Nutrition), p. 300.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1387,8 +1265,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 7; Ch. 4 (Human Physiology), p. 158.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1409,8 +1285,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 6; Ch. 4 (Human Physiology), p. 5.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1431,8 +1305,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 489; Ch. 12 (Exercise Program Components), p. 88.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1453,8 +1325,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 16; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 8.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1468,15 +1338,13 @@ const EXAM_QUESTIONS = [
       "increased stroke volume"
     ],
     "correctIndex": 3,
-    "explanation": "Increased stroke volume is an adaptation of the heart associated with appropriately-prescribed aerobic training. Aerobic training is known to increase the left ventricle’s contraction strength and blood volume per contraction; the two components of stroke volume. As stroke volume goes up heart rate goes down proportionately; at both rest and during sub-maximal training. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 10; Ch. 6 (Physical Activity and Risk for Disease), p. 15.",
+    "explanation": "Increased stroke volume is an adaptation of the heart associated with appropriately-prescribed aerobic training. Aerobic training is known to increase the left ventricle\u2019s contraction strength and blood volume per contraction; the two components of stroke volume. As stroke volume goes up heart rate goes down proportionately; at both rest and during sub-maximal training. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 10; Ch. 6 (Physical Activity and Risk for Disease), p. 15.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 10; Ch. 6 (Physical Activity and Risk for Disease), p. 15.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1497,8 +1365,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 21; Ch. 7 (Resting and Active Fitness Assessments), p. 29.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1519,10 +1385,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 21; Ch. 5 (Evaluating Health and Physical Fitness), p. 212.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 69,
@@ -1534,17 +1398,15 @@ const EXAM_QUESTIONS = [
       "placing two fingers against the neck anterior to the sternocleidomastoid"
     ],
     "correctIndex": 1,
-    "explanation": "The proper technique for assessing the radial pulse is to place your index and middle finger along the thumb side of the client’s wrist. While assessing the radial pulse, the client does not talk and should be seated or lying in a supine position. To accurately identify a resting heart rate, the pulse should be taken for 60 seconds to avoid rounding errors. Do not use the thumb as it has a pulse and can cause calculation errors. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 3; Ch. 4 (Human Physiology), p. 6.",
+    "explanation": "The proper technique for assessing the radial pulse is to place your index and middle finger along the thumb side of the client\u2019s wrist. While assessing the radial pulse, the client does not talk and should be seated or lying in a supine position. To accurately identify a resting heart rate, the pulse should be taken for 60 seconds to avoid rounding errors. Do not use the thumb as it has a pulse and can cause calculation errors. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 3; Ch. 4 (Human Physiology), p. 6.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 3; Ch. 4 (Human Physiology), p. 6.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 70,
@@ -1563,8 +1425,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 68; Ch. 4 (Human Physiology), p. 34.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1585,8 +1445,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 11; Ch. 5 (Evaluating Health and Physical Fitness), p. 208.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1607,8 +1465,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 266; Ch. 10 (Body Composition), p. 450.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1629,10 +1485,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 23; Ch. 4 (Human Physiology), p. 29.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 74,
@@ -1644,15 +1498,13 @@ const EXAM_QUESTIONS = [
       "Atherosclerosis"
     ],
     "correctIndex": 2,
-    "explanation": "Ischemia is defined as an insufficient supply of O2 to tissues. During hard exercise, or vascular blockage, ischemia signals pain/discomfort as a communication to stop. Exercise ischemia is normal in voluntary muscles; dangerous ischemia is evident when restricted blood flow to the heart brings about chest pain (angina pectoris) or restricted delivery to the legs causes pain from peripheral vascular disease (most associated with diabetes). Routine aerobic training has been shown to improve myocardial ischemia by improving both coronary blood flow and oxygen utilization within the cardiac tissue. NCSF Manual reference: Ch. 4 (Human Physiology), p. 7; Ch. 6 (Physical Activity and Risk for Disease), p. 14.",
+    "explanation": "Ischemia is defined as an insufficient supply of O2\u00a0to tissues. During hard exercise, or vascular blockage, ischemia signals pain/discomfort as a communication to stop. Exercise ischemia is normal in voluntary muscles; dangerous ischemia is evident when restricted blood flow to the heart brings about chest pain (angina pectoris) or restricted delivery to the legs causes pain from peripheral vascular disease (most associated with diabetes). Routine aerobic training has been shown to improve myocardial ischemia by improving both coronary blood flow and oxygen utilization within the cardiac tissue. NCSF Manual reference: Ch. 4 (Human Physiology), p. 7; Ch. 6 (Physical Activity and Risk for Disease), p. 14.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 7; Ch. 6 (Physical Activity and Risk for Disease), p. 14.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1673,8 +1525,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 13; Ch. 13 (Anaerobic Resistance Training), p. 27.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1695,8 +1545,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 26; Ch. 2 (Functional Anatomy and Training Instruction), p. 68.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1710,17 +1558,15 @@ const EXAM_QUESTIONS = [
       "medications being taken"
     ],
     "correctIndex": 1,
-    "explanation": "The Health Status Questionnaire (HSQ) is an excellent assessment of a client’s health and medical history, lifestyle behaviors, previous injuries and medications being taken. It does not provide information regarding the client’s nutritional intake. The HSQ is best administered as an oral interview as it builds trust and rapport between the client and trainer, and helps identify symptoms and risk factors which may be overlooked. It is not the role of the personal trainer to diagnose disease; therefore, any suspicions should be referred to a medical professional. NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 14; Ch. 5 (Evaluating Health and Physical Fitness), p. 10.",
+    "explanation": "The Health Status Questionnaire (HSQ) is an excellent assessment of a client\u2019s health and medical history, lifestyle behaviors, previous injuries and medications being taken. It does not provide information regarding the client\u2019s nutritional intake. The HSQ is best administered as an oral interview as it builds trust and rapport between the client and trainer, and helps identify symptoms and risk factors which may be overlooked. It is not the role of the personal trainer to diagnose disease; therefore, any suspicions should be referred to a medical professional. NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 14; Ch. 5 (Evaluating Health and Physical Fitness), p. 10.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 14; Ch. 5 (Evaluating Health and Physical Fitness), p. 10.",
     "manualVerified": true,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 78,
@@ -1732,15 +1578,13 @@ const EXAM_QUESTIONS = [
       "completing continuing education coursework for recertification using an online test"
     ],
     "correctIndex": 2,
-    "explanation": "Diagnosing an injury and writing a rehab program targeting improvement is outside the scope of practice of a personal trainer; thus violating the personal trainer code of ethics and is actually illegal. It is not the trainer’s place to diagnose injuries or diseases, as both require a regulated medical professional. Violation of this guideline can result in criminal charges. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 25; Ch. 1 (Introduction to Personal Training), p. 2.",
+    "explanation": "Diagnosing an injury and writing a rehab program targeting improvement is outside the scope of practice of a personal trainer; thus violating the personal trainer code of ethics and is actually illegal. It is not the trainer\u2019s place to diagnose injuries or diseases, as both require a regulated medical professional. Violation of this guideline can result in criminal charges. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 25; Ch. 1 (Introduction to Personal Training), p. 2.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 25; Ch. 1 (Introduction to Personal Training), p. 2.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1754,15 +1598,13 @@ const EXAM_QUESTIONS = [
       "RPE scale"
     ],
     "correctIndex": 3,
-    "explanation": "Rate of perceived exertion (RPE) is a subjective measure of a client’s feelings related to their physical effort. RPE commonly uses the Borg scale (6-20) as the guide for effort - simply add a zero to the number for corresponding HR. While RPE varies between individuals, strong correlations have been found across large populations; cementing its usefulness in assessing client stress during exercise. RPE is specifically helpful among clients who take medications, including beta-blockers, that suppress the normal heart rate response to exercise. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 561; Ch. 14 (Cardiorespiratory Fitness), p. 6.",
+    "explanation": "Rate of perceived exertion (RPE) is a subjective measure of a client\u2019s feelings related to their physical effort. RPE commonly uses the Borg scale (6-20) as the guide for effort - simply add a zero to the number for corresponding HR. While RPE varies between individuals, strong correlations have been found across large populations; cementing its usefulness in assessing client stress during exercise. RPE is specifically helpful among clients who take medications, including beta-blockers, that suppress the normal heart rate response to exercise. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 561; Ch. 14 (Cardiorespiratory Fitness), p. 6.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 561; Ch. 14 (Cardiorespiratory Fitness), p. 6.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1783,8 +1625,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 32; Ch. 7 (Resting and Active Fitness Assessments), p. 36.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1805,10 +1645,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 41; Ch. 13 (Anaerobic Resistance Training), p. 550.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 82,
@@ -1827,10 +1665,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 42; Ch. 4 (Human Physiology), p. 39.",
     "manualVerified": true,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 83,
@@ -1849,10 +1685,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 4; Ch. 17 (Working with Special Populations), p. 2.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 84,
@@ -1871,8 +1705,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 266; Ch. 7 (Resting and Active Fitness Assessments), p. 292.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1893,8 +1725,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 266; Ch. 7 (Resting and Active Fitness Assessments), p. 34.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1915,8 +1745,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 9; Ch. 16 (Introduction to Exercise Programming), p. 638.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1937,10 +1765,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 21; Ch. 7 (Resting and Active Fitness Assessments), p. 29.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 88,
@@ -1959,8 +1785,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 42; Ch. 10 (Body Composition), p. 19.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -1981,10 +1805,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 17 (Working with Special Populations), p. 10.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 90,
@@ -1996,15 +1818,13 @@ const EXAM_QUESTIONS = [
       "Fats"
     ],
     "correctIndex": 2,
-    "explanation": "While many people consume protein because they exercise, protein only contributes up to 15% of the body’s energy needs - and that is during periods of extended aerobic training. Protein contributes to energy demands when available carbohydrates are insufficient, as the body can use circulating amino acids for calories. Most of the energy needs during aerobic exercise are met by carbohydrate and lipid stores in the body. During anaerobic resistance exercise it is solely carbohydrates. NCSF Manual reference: Ch. 4 (Human Physiology), p. 43; Ch. 8 (Understanding Nutrition), p. 4.",
+    "explanation": "While many people consume protein because they exercise, protein only contributes up to 15% of the body\u2019s energy needs - and that is during periods of extended aerobic training. Protein contributes to energy demands when available carbohydrates are insufficient, as the body can use circulating amino acids for calories. Most of the energy needs during aerobic exercise are met by carbohydrate and lipid stores in the body. During anaerobic resistance exercise it is solely carbohydrates. NCSF Manual reference: Ch. 4 (Human Physiology), p. 43; Ch. 8 (Understanding Nutrition), p. 4.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 43; Ch. 8 (Understanding Nutrition), p. 4.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2025,8 +1845,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 7; Ch. 8 (Understanding Nutrition), p. 300.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2047,10 +1865,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 11; Ch. 8 (Understanding Nutrition), p. 371.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 93,
@@ -2069,8 +1885,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 3; Ch. 8 (Understanding Nutrition), p. 28.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2091,10 +1905,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 379; Ch. 8 (Understanding Nutrition), p. 380.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 95,
@@ -2113,8 +1925,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 19; Ch. 9 (Exploring Dietary Supplements), p. 12.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2135,8 +1945,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 34; Ch. 6 (Physical Activity and Risk for Disease), p. 90.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2157,8 +1965,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 34; Ch. 8 (Understanding Nutrition), p. 10.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2179,8 +1985,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 5; Ch. 11 (Weight Management), p. 14.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2201,8 +2005,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 23; Ch. 8 (Understanding Nutrition), p. 371.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2223,10 +2025,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 15; Ch. 9 (Exploring Dietary Supplements), p. 20.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 101,
@@ -2245,8 +2045,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 4; Ch. 7 (Resting and Active Fitness Assessments), p. 6.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2267,8 +2065,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 20; Ch. 7 (Resting and Active Fitness Assessments), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2282,17 +2078,15 @@ const EXAM_QUESTIONS = [
       "Mod-heavy weight (70-80% 1RM) compound movements"
     ],
     "correctIndex": 2,
-    "explanation": "Light weight, high repetition, total-body movements would provide very limited effect on increasing lean mass. If the client’s goals are strength gains without mass, the focus should be on either training the nervous system using very low repetitions or training the metabolic system which requires high-repetition schematics. Moderate-repetition schemes of 6-12 seem to stimulate the greatest increases in lean mass. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 7; Ch. 2 (Functional Anatomy and Training Instruction), p. 67.",
+    "explanation": "Light weight, high repetition, total-body movements would provide very limited effect on increasing lean mass. If the client\u2019s goals are strength gains without mass, the focus should be on either training the nervous system using very low repetitions or training the metabolic system which requires high-repetition schematics. Moderate-repetition schemes of 6-12 seem to stimulate the greatest increases in lean mass. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 7; Ch. 2 (Functional Anatomy and Training Instruction), p. 67.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 7; Ch. 2 (Functional Anatomy and Training Instruction), p. 67.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 104,
@@ -2311,8 +2105,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 20; Ch. 10 (Body Composition), p. 11.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2333,8 +2125,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 658; Ch. 8 (Understanding Nutrition), p. 30.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2342,7 +2132,7 @@ const EXAM_QUESTIONS = [
     "id": 106,
     "question": "If a new exerciser works out twice per week with an exercise professional, what is a reasonable weight loss goal per week assuming the caloric expenditure is 250-300 kcal per hour?",
     "options": [
-      "½ pound",
+      "\u00bd pound",
       "1 pound",
       "2 pounds",
       "5 pounds"
@@ -2355,8 +2145,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 32; Ch. 7 (Resting and Active Fitness Assessments), p. 41.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2377,8 +2165,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 20; Ch. 10 (Body Composition), p. 2.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2399,8 +2185,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 32; Ch. 11 (Weight Management), p. 8.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2421,10 +2205,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 21; Ch. 8 (Understanding Nutrition), p. 30.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 110,
@@ -2443,8 +2225,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 20; Ch. 10 (Body Composition), p. 4.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2465,8 +2245,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 14; Ch. 17 (Working with Special Populations), p. 7.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2487,10 +2265,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 88; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 113,
@@ -2509,10 +2285,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 15 (Flexibility), p. 9; Ch. 15 (Flexibility), p. 18.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "imagePaths": [
       "images/questions/image14.png"
     ]
@@ -2534,8 +2308,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 35.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2556,8 +2328,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 5; Ch. 13 (Anaerobic Resistance Training), p. 13.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2578,8 +2348,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 16 (Introduction to Exercise Programming), p. 18.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2600,8 +2368,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 29; Ch. 16 (Introduction to Exercise Programming), p. 15.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2615,15 +2381,13 @@ const EXAM_QUESTIONS = [
       "60-80% of VO2max"
     ],
     "correctIndex": 1,
-    "explanation": "Prescribing aerobic training at 50-60% of VO2max is recommended due to the subject’s age, physical condition and body compositional factors. The recommended training intensity when using heart rate reserve in this case is equivalent (50-60% HRR) but jumps to roughly 65-75% of heart rate max. Higher intensities (a goal moving forward) are inappropriate at the beginning of a program as they are not well tolerated by previously-sedentary, overweight populations. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 8; Ch. 14 (Cardiorespiratory Fitness), p. 561.",
+    "explanation": "Prescribing aerobic training at 50-60% of VO2max is recommended due to the subject\u2019s age, physical condition and body compositional factors. The recommended training intensity when using heart rate reserve in this case is equivalent (50-60% HRR) but jumps to roughly 65-75% of heart rate max. Higher intensities (a goal moving forward) are inappropriate at the beginning of a program as they are not well tolerated by previously-sedentary, overweight populations. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 8; Ch. 14 (Cardiorespiratory Fitness), p. 561.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 8; Ch. 14 (Cardiorespiratory Fitness), p. 561.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2644,8 +2408,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 10; Ch. 14 (Cardiorespiratory Fitness), p. 584.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2659,15 +2421,13 @@ const EXAM_QUESTIONS = [
       "143 beats/min"
     ],
     "correctIndex": 0,
-    "explanation": "Using the Karvonen formula would yield the correct heart rate of 153 beats/min. Calculate predicted Max HR: 220 – 38 = 182. Calculate Heart Rate Reserve using Max HR – Resting: 182 – 85 = 97 Training HR = 70% of heart rate reserve: 97 x (0.70) = 67.9 Final step is to add the resting HR: 67.9 + 85 = 153 beats per minute. NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 7 (Resting and Active Fitness Assessments), p. 82.",
+    "explanation": "Using the Karvonen formula would yield the correct heart rate of 153 beats/min. Calculate predicted Max HR: 220 \u2013 38 = 182. Calculate Heart Rate Reserve using Max HR \u2013 Resting: 182 \u2013 85 = 97 Training HR = 70% of heart rate reserve: 97 x (0.70) = 67.9 Final step is to add the resting HR: 67.9 + 85 = 153 beats per minute. NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 7 (Resting and Active Fitness Assessments), p. 82.",
     "source": "questions.docx+quiz.txt",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 7 (Resting and Active Fitness Assessments), p. 82.",
     "manualVerified": true
   },
@@ -2688,10 +2448,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 27; Ch. 13 (Anaerobic Resistance Training), p. 30.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 122,
@@ -2710,10 +2468,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 2 (Functional Anatomy and Training Instruction), p. 17.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 123,
@@ -2732,8 +2488,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 38; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2754,10 +2508,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 125,
@@ -2776,10 +2528,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 525; Ch. 12 (Exercise Program Components), p. 496.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 126,
@@ -2798,10 +2548,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 18; Ch. 13 (Anaerobic Resistance Training), p. 22.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 127,
@@ -2813,15 +2561,13 @@ const EXAM_QUESTIONS = [
       "ejection fraction"
     ],
     "correctIndex": 0,
-    "explanation": "The (a-v)O2 difference is defined as the difference in oxygen concentration between arterial blood and venous blood. During exercise, the efficiency of the body’s oxygen extraction system can be measured by determining the amount of oxygen transferred through the capillaries and used by working tissue. Improvements in the (a-v)O2 difference occur following aerobic training as the increased oxygen demands of the exercising muscles promotes increased capillary and mitochondrial density. NCSF Manual reference: Ch. 4 (Human Physiology), p. 23; Ch. 14 (Cardiorespiratory Fitness), p. 11.",
+    "explanation": "The (a-v)O2\u00a0difference is defined as the difference in oxygen concentration between arterial blood and venous blood. During exercise, the efficiency of the body\u2019s oxygen extraction system can be measured by determining the amount of oxygen transferred through the capillaries and used by working tissue. Improvements in the (a-v)O2\u00a0difference occur following aerobic training as the increased oxygen demands of the exercising muscles promotes increased capillary and mitochondrial density. NCSF Manual reference: Ch. 4 (Human Physiology), p. 23; Ch. 14 (Cardiorespiratory Fitness), p. 11.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 23; Ch. 14 (Cardiorespiratory Fitness), p. 11.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2842,8 +2588,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 10; Ch. 14 (Cardiorespiratory Fitness), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2864,10 +2608,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 8; Ch. 13 (Anaerobic Resistance Training), p. 10.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 130,
@@ -2886,8 +2628,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 10; Ch. 15 (Flexibility), p. 22.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2908,8 +2648,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 21; Ch. 12 (Exercise Program Components), p. 20.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2930,8 +2668,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 15 (Flexibility), p. 15; Ch. 7 (Resting and Active Fitness Assessments), p. 72.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -2952,8 +2688,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 94; Ch. 2 (Functional Anatomy and Training Instruction), p. 97.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "optionImages": {
@@ -2980,8 +2714,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 22; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 27.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3002,8 +2734,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 93; Ch. 2 (Functional Anatomy and Training Instruction), p. 39.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3024,8 +2754,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 9; Ch. 12 (Exercise Program Components), p. 8.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3039,15 +2767,13 @@ const EXAM_QUESTIONS = [
       "Overload"
     ],
     "correctIndex": 3,
-    "explanation": "The principle of overload is defined as training stress which challenges a physiological system above the level to which it is accustomed. Intensity, duration, and rest intervals all impact overload. In the absence of adequate stress, the body will “hit a plateau” until further overload is experienced in a manner that warrants new adaptations from the body. The most common error in self-selected exercise intensity is inadequate stress. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 20; Ch. 1 (Introduction to Personal Training), p. 8.",
+    "explanation": "The principle of overload is defined as training stress which challenges a physiological system above the level to which it is accustomed. Intensity, duration, and rest intervals all impact overload. In the absence of adequate stress, the body will \u201chit a plateau\u201d until further overload is experienced in a manner that warrants new adaptations from the body. The most common error in self-selected exercise intensity is inadequate stress. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 20; Ch. 1 (Introduction to Personal Training), p. 8.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 20; Ch. 1 (Introduction to Personal Training), p. 8.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3068,8 +2794,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 72; Ch. 15 (Flexibility), p. 9.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3090,8 +2814,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15; Ch. 7 (Resting and Active Fitness Assessments), p. 40.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -3115,8 +2837,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 496; Ch. 13 (Anaerobic Resistance Training), p. 16.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3137,8 +2857,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 9; Ch. 14 (Cardiorespiratory Fitness), p. 17.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3159,8 +2877,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 672; Ch. 6 (Physical Activity and Risk for Disease), p. 244.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3174,15 +2890,13 @@ const EXAM_QUESTIONS = [
       ">18"
     ],
     "correctIndex": 2,
-    "explanation": "Typically, a value of 12-14 on the RPE scale correlates with roughly 60-80% heart rate reserve. When using the Borg rate of perceived exertion (RPE) scale, the number 17 corresponds with “very hard.” Recall that the Borg scale has 15 levels, ranging from 6-20, which correlate with heart rates ranging from ~60-200 beats per minute (bpm). NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 561; Ch. 14 (Cardiorespiratory Fitness), p. 584.",
+    "explanation": "Typically, a value of 12-14 on the RPE scale correlates with roughly 60-80% heart rate reserve. When using the Borg rate of perceived exertion (RPE) scale, the number 17 corresponds with \u201cvery hard.\u201d Recall that the Borg scale has 15 levels, ranging from 6-20, which correlate with heart rates ranging from ~60-200 beats per minute (bpm). NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 561; Ch. 14 (Cardiorespiratory Fitness), p. 584.",
     "source": "quiz.txt+questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 561; Ch. 14 (Cardiorespiratory Fitness), p. 584.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3203,8 +2917,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 7; Ch. 6 (Physical Activity and Risk for Disease), p. 11.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3225,10 +2937,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 316; Ch. 7 (Resting and Active Fitness Assessments), p. 35.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 88,
-    "commitTier": "COMMIT_HIGH"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 146,
@@ -3247,8 +2957,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 7; Ch. 17 (Working with Special Populations), p. 7.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3269,8 +2977,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 17; Ch. 17 (Working with Special Populations), p. 7.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3291,8 +2997,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 21; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 8.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3313,8 +3017,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 150; Ch. 17 (Working with Special Populations), p. 656.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3335,8 +3037,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 31; Ch. 14 (Cardiorespiratory Fitness), p. 26.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3350,13 +3050,11 @@ const EXAM_QUESTIONS = [
       "A very-low calorie diet"
     ],
     "correctIndex": 1,
-    "explanation": "Cardiovascular training can have a positive impact on all of this client’s issues and limitations via caloric expenditure and weight loss. Reduced sodium intake as well as increased potassium can also positively impact blood pressure over time. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 4; Ch. 5 (Evaluating Health and Physical Fitness), p. 212.",
+    "explanation": "Cardiovascular training can have a positive impact on all of this client\u2019s issues and limitations via caloric expenditure and weight loss. Reduced sodium intake as well as increased potassium can also positively impact blood pressure over time. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 4; Ch. 5 (Evaluating Health and Physical Fitness), p. 212.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 4; Ch. 5 (Evaluating Health and Physical Fitness), p. 212.",
@@ -3377,10 +3075,8 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "imagePaths": [
       "images/extraq/image1.png"
     ],
@@ -3402,8 +3098,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 16; Ch. 2 (Functional Anatomy and Training Instruction), p. 40.",
@@ -3426,8 +3120,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 33; Ch. 15 (Flexibility), p. 2.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3446,8 +3138,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -3473,8 +3163,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 600; Ch. 2 (Functional Anatomy and Training Instruction), p. 29.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3495,10 +3183,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 2 (Functional Anatomy and Training Instruction), p. 83.",
     "manualVerified": true,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 158,
@@ -3511,12 +3197,10 @@ const EXAM_QUESTIONS = [
     ],
     "correctIndex": 3,
     "explanation": "Scapular retraction supersedes arm extension during the row and is further promoted through hyper-extension of the shoulder as controlled by the rhomboids. While the rhomboids do not attach to the arm they are heavily involved in rowing exercises such as the seated row, bent-over row and one-arm row. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 80; Ch. 2 (Functional Anatomy and Training Instruction), p. 78.",
-    "source": "extraq.docx+youtube-video",
+    "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 80; Ch. 2 (Functional Anatomy and Training Instruction), p. 78.",
@@ -3537,8 +3221,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 16 (Introduction to Exercise Programming), p. 621.",
@@ -3559,8 +3241,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -3587,8 +3267,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 40; Ch. 13 (Anaerobic Resistance Training), p. 40.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3609,8 +3287,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15; Ch. 2 (Functional Anatomy and Training Instruction), p. 81.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3631,8 +3307,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 138; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 23.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3651,8 +3325,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -3676,8 +3348,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 20; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 2.",
@@ -3700,10 +3370,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 95; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 124.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 58,
-    "commitTier": "HOLD_REVIEW",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "imagePaths": [
       "images/extraq/image6.png",
       "images/extraq/image7.png"
@@ -3719,15 +3387,13 @@ const EXAM_QUESTIONS = [
       "rhomboids"
     ],
     "correctIndex": 3,
-    "explanation": "Concentric contraction of the rhomboids will cause the scapulae to retract, as seen during the correct performance of the bilateral row exercise. The rhomboids function to move the scapulae inward; providing the “squeezing sensation” felt in the upper back when activated properly. NCSF Manual reference: Ch. 15 (Flexibility), p. 19; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
+    "explanation": "Concentric contraction of the rhomboids will cause the scapulae to retract, as seen during the correct performance of the bilateral row exercise. The rhomboids function to move the scapulae inward; providing the \u201csqueezing sensation\u201d felt in the upper back when activated properly. NCSF Manual reference: Ch. 15 (Flexibility), p. 19; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
     "source": "extraq.docx+youtube-video",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 15 (Flexibility), p. 19; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -3751,8 +3417,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 9; Ch. 4 (Human Physiology), p. 11.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3773,8 +3437,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 45; Ch. 4 (Human Physiology), p. 186.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3795,8 +3457,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 15 (Flexibility), p. 22; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 131.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3815,8 +3475,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 4; Ch. 4 (Human Physiology), p. 5.",
@@ -3839,8 +3497,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 16; Ch. 2 (Functional Anatomy and Training Instruction), p. 91.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3854,13 +3510,11 @@ const EXAM_QUESTIONS = [
       "Decreased myostatin"
     ],
     "correctIndex": 2,
-    "explanation": "An influx of blood flow into working muscles gives the appearance of increased size via an acute “pump” action. Some supplements such as nitric oxide seek to increase this action as a vasodilator. All other adaptations or changes such as protein synthesis occur in the recovery period following the workout. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 13 (Anaerobic Resistance Training), p. 555.",
+    "explanation": "An influx of blood flow into working muscles gives the appearance of increased size via an acute \u201cpump\u201d action. Some supplements such as nitric oxide seek to increase this action as a vasodilator. All other adaptations or changes such as protein synthesis occur in the recovery period following the workout. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 13 (Anaerobic Resistance Training), p. 555.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 13 (Anaerobic Resistance Training), p. 555.",
@@ -3881,8 +3535,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 9; Ch. 4 (Human Physiology), p. 158.",
@@ -3905,8 +3557,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 17; Ch. 8 (Understanding Nutrition), p. 32.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3925,10 +3575,8 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 58,
-    "commitTier": "HOLD_REVIEW",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 34; Ch. 13 (Anaerobic Resistance Training), p. 19.",
     "manualVerified": true
   },
@@ -3949,8 +3597,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 35; Ch. 14 (Cardiorespiratory Fitness), p. 21.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -3969,8 +3615,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 104; Ch. 13 (Anaerobic Resistance Training), p. 18.",
@@ -3986,15 +3630,13 @@ const EXAM_QUESTIONS = [
       "nervous system"
     ],
     "correctIndex": 3,
-    "explanation": "The nervous system has the fastest adaptation rate. As an extension of the brain, its motor “learning” capabilities are significant. Rapid increases in movement performance or strength are commonly seen among untrained individuals within 3-5 weeks. This early adaptation process to training is the body’s response to finding the most efficient way to manage a stress while exerting the least amount of energy. Improvements in the nervous system will promote increases in motor unit firing rates, recruitment, and synchronicity within the musculature being targeted. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 11; Ch. 12 (Exercise Program Components), p. 20.",
+    "explanation": "The nervous system has the fastest adaptation rate. As an extension of the brain, its motor \u201clearning\u201d capabilities are significant. Rapid increases in movement performance or strength are commonly seen among untrained individuals within 3-5 weeks. This early adaptation process to training is the body\u2019s response to finding the most efficient way to manage a stress while exerting the least amount of energy. Improvements in the nervous system will promote increases in motor unit firing rates, recruitment, and synchronicity within the musculature being targeted. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 11; Ch. 12 (Exercise Program Components), p. 20.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 58,
-    "commitTier": "HOLD_REVIEW",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 11; Ch. 12 (Exercise Program Components), p. 20.",
     "manualVerified": true
   },
@@ -4013,8 +3655,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 13 (Anaerobic Resistance Training), p. 18.",
@@ -4037,10 +3677,8 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 17; Ch. 2 (Functional Anatomy and Training Instruction), p. 2.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 58,
-    "commitTier": "HOLD_REVIEW"
+    "commitTier": "APPROVED",
+    "commitConfidence": 100
   },
   {
     "id": 182,
@@ -4057,8 +3695,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 17; Ch. 9 (Exploring Dietary Supplements), p. 11.",
@@ -4079,8 +3715,6 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 10; Ch. 11 (Weight Management), p. 5.",
@@ -4103,8 +3737,6 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 6 (Physical Activity and Risk for Disease), p. 8.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
@@ -4125,87 +3757,59 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 15 (Flexibility), p. 12; Ch. 15 (Flexibility), p. 17.",
     "manualVerified": true,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM"
-  },
-  {
-    "id": 186,
-    "question": "What effect does routine moderate-intensity aerobic training have on blood lipid profile?",
-    "options": [
-      "Aerobic exercise does not affect circulating cholesterol",
-      "VLDL will increase",
-      "HDL will increase",
-      "LDL will increase"
-    ],
-    "correctIndex": 2,
-    "explanation": "An increase in HDL cholesterol can be seen with weekly aerobic training. High-density lipoproteins (HDL) are produced by the liver and serve a protective role in preventing arterial plaque formation, which can be increased with the presence of high LDL. An increase in HDL will facilitate increased transport of LDL cholesterol out of circulation. Specifically, HDL will carry LDL back to the liver (where it is formed); thwarting its immediate contribution to the progression of vascular disease. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 8; Ch. 6 (Physical Activity and Risk for Disease), p. 15.",
-    "source": "extraq.docx+youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 8; Ch. 6 (Physical Activity and Risk for Disease), p. 15.",
-    "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
   {
-    "id": 187,
+    "id": 186,
     "question": "Increased midsection girth with age is a concern because:",
     "options": [
       "the obesity gene is triggered during middle age",
+      "it indicates a low resting metabolism",
       "android obesity is linked with heart disease",
-      "gynoid obesity is linked with certain cancers",
-      "it indicates a low resting metabolism"
+      "gynoid obesity is linked with certain cancers"
     ],
-    "correctIndex": 1,
-    "explanation": "Android obesity is a term used to describe fat storage within the midsection of the human body, representing both subcutaneous and visceral fat. It is a major health concern based on its known relationship with heart disease. Android obesity is associated with an “apple-shape physique” and is dangerous because visceral fat cells release cytokines (chemicals) which promote systemic inflammation. NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 5 (Evaluating Health and Physical Fitness), p. 19.",
+    "correctIndex": 2,
+    "explanation": "Android obesity is a term used to describe fat storage within the midsection of the human body, representing both subcutaneous and visceral fat. It is a major health concern based on its known relationship with heart disease. Android obesity is associated with an \u201capple-shape physique\u201d and is dangerous because visceral fat cells release cytokines (chemicals) which promote systemic inflammation. NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 10 (Body Composition), p. 4.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 5 (Evaluating Health and Physical Fitness), p. 19.",
+    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 10 (Body Composition), p. 4.",
     "manualVerified": true
   },
   {
-    "id": 188,
+    "id": 187,
     "question": "What adaptation to aerobic exercise reduces heart rates at rest and during sub-maximal exercise?",
     "options": [
+      "decreased baroreception",
       "increased stroke volume",
       "decreased blood viscosity",
-      "decreased baroreception",
       "increased capillary density"
     ],
-    "correctIndex": 0,
-    "explanation": "Increased stroke volume is an adaptation of the heart associated with appropriately-prescribed aerobic training. Aerobic training is known to increase the left ventricle’s contractile strength which increases the volume of blood expelled per contraction (stroke volume). NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 14 (Cardiorespiratory Fitness), p. 10.",
+    "correctIndex": 1,
+    "explanation": "Increased stroke volume is an adaptation of the heart associated with appropriately-prescribed aerobic training. Aerobic training is known to increase the left ventricle\u2019s contractile strength which increases the volume of blood expelled per contraction (stroke volume). NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 14 (Cardiorespiratory Fitness), p. 10.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 14 (Cardiorespiratory Fitness), p. 10.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
   {
-    "id": 189,
+    "id": 188,
     "question": "What negative effect does trans fat have on blood lipid profiles?",
     "options": [
-      "reduced triglycerides",
-      "reduced LDL",
       "reduced HDL",
-      "reduced VLDL"
+      "reduced VLDL",
+      "reduced triglycerides",
+      "reduced LDL"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Trans fatty acids in the diet can lower HDL cholesterol and raise LDL cholesterol in the blood. The man-made fat is common in processed foods. Trans fat is used to adjust the textures of baked, fried and fast food products and should be avoided. The World Health Organization recommends it make up less than 1% of the diet. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 32; Ch. 8 (Understanding Nutrition), p. 371.",
     "source": "extraq.docx+youtube-video",
     "merged": true,
@@ -4213,65 +3817,59 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 32; Ch. 8 (Understanding Nutrition), p. 371.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
   {
-    "id": 190,
+    "id": 189,
     "question": "If your client presents with lower back pain, which assessment may be contraindicated during an initial assessment, especially if the cause of the pain is yet unknown?",
     "options": [
-      "Trunk extension test",
       "Thomas test",
-      "Single straight-leg hip flexion test",
-      "Apley back scratch test"
+      "Apley back scratch test",
+      "Trunk extension test",
+      "Single straight-leg hip flexion test"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "The trunk extension test may be contraindicated for a client with lower back pain of an unknown cause as the test requires hyperextension of the back. If there is a disc impingement issue this could easily be aggravated by the movement required. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 340; Ch. 7 (Resting and Active Fitness Assessments), p. 343.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 340; Ch. 7 (Resting and Active Fitness Assessments), p. 343.",
     "manualVerified": true
   },
   {
-    "id": 191,
+    "id": 190,
     "question": "What positive change can be expected from an aerobic exercise intervention for a hypertensive client lasting several months?",
     "options": [
       "a reduction of blood pressure by 10 points",
+      "a reduction of blood pressure by 25 points",
       "a reduction of blood pressure by 20 points",
-      "a reduction of blood pressure by 15 points",
-      "a reduction of blood pressure by 25 points"
+      "a reduction of blood pressure by 15 points"
     ],
     "correctIndex": 0,
-    "explanation": "With a properly-executed exercise program, 3 months of training would plausibly reduce blood pressure by 8-11 mmHg. It is believed that these changes are brought about by alterations in the sympathetic nervous system that reduce peripheral resistance and increases renal secretion of sodium. Basically, an individual’s arteries are able to expand slightly, decreasing pressure immediately, and the kidneys are able to reduce salt content in the blood to further reduce pressure. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 28; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
+    "explanation": "With a properly-executed exercise program, 3 months of training would plausibly reduce blood pressure by 8-11 mmHg. It is believed that these changes are brought about by alterations in the sympathetic nervous system that reduce peripheral resistance and increases renal secretion of sodium. Basically, an individual\u2019s arteries are able to expand slightly, decreasing pressure immediately, and the kidneys are able to reduce salt content in the blood to further reduce pressure. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 28; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 28; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "manualVerified": true
   },
   {
-    "id": 192,
+    "id": 191,
     "question": "What effect does chronic high blood insulin (hyperinsulinemia) have on body composition?",
     "options": [
-      "lowered body fat",
       "increased body fat",
       "lowered muscle mass",
+      "lowered body fat",
       "increased muscle mass"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "A problem with consuming sugar and processed carbohydrates is the high release of insulin. Hyperinsulinemia weakens the effectiveness of the hormone, increasing the risk for diabetes, and also inhibits lipolysis increasing fat storage patterns. Chronic hyperinsulinemia is associated with metabolic disease and premature death from heart disease. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 37; Ch. 10 (Body Composition), p. 4.",
     "source": "extraq.docx+youtube-video",
     "merged": true,
@@ -4279,13 +3877,11 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 37; Ch. 10 (Body Composition), p. 4.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
   {
-    "id": 193,
+    "id": 192,
     "question": "Which of the following exercises could be difficult to perform for a client with tightness in their latissimus dorsi and triceps?",
     "options": [
       "Modified deadlift",
@@ -4294,26 +3890,24 @@ const EXAM_QUESTIONS = [
       "DB reverse lunges"
     ],
     "correctIndex": 1,
-    "explanation": "The forward elbow position to maintain a safe rack for the bar during a front squat requires adequate mobility through shoulder and elbow flexion. Tightness in the shoulder and elbow extensors, namely the lats and triceps, can limit one’s ability to maintain the proper positioning throughout the movement. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 131; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
+    "explanation": "The forward elbow position to maintain a safe rack for the bar during a front squat requires adequate mobility through shoulder and elbow flexion. Tightness in the shoulder and elbow extensors, namely the lats and triceps, can limit one\u2019s ability to maintain the proper positioning throughout the movement. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 131; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 131; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
     "manualVerified": true
   },
   {
-    "id": 194,
+    "id": 193,
     "question": "How is sarcopenia prevented with advancing age?",
     "options": [
-      "proper diet with calcium and vitamin D",
+      "aerobic/balance training",
       "strength/power training",
       "flexibility/mobility training",
-      "aerobic/balance training"
+      "proper diet with calcium and vitamin D"
     ],
     "correctIndex": 1,
     "explanation": "Strength, power, and free-weight training is optimal for promoting healthy aging. As the body ages muscle mass will decline without adequate training. This is accelerated with advancing age so those over 65 should focus on strength training. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 26; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
@@ -4321,15 +3915,13 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 26; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "manualVerified": true
   },
   {
-    "id": 195,
+    "id": 194,
     "question": "What affect does vascular peripheral resistance have on physical health?",
     "options": [
       "Decreased contractile speeds during movement",
@@ -4343,20 +3935,18 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 4 (Human Physiology), p. 35.",
     "manualVerified": true
   },
   {
-    "id": 196,
+    "id": 195,
     "question": "What type of performance training is most associated with independence for older adults?",
     "options": [
-      "coordination",
-      "power",
       "balance",
+      "power",
+      "coordination",
       "agility"
     ],
     "correctIndex": 1,
@@ -4365,23 +3955,21 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 34; Ch. 17 (Working with Special Populations), p. 29.",
     "manualVerified": true
   },
   {
-    "id": 197,
+    "id": 196,
     "question": "Turbulent blood flow associated with hypertension often leads to what vascular damage?",
     "options": [
       "dyslipidemia",
-      "leukemia",
       "coronary artery disease",
+      "leukemia",
       "diabetes"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "When arteries narrow they increase the rate of blood flow much like placing a thumb on the end of a hose. This increase causes microtears in the vessel which start the cascade of events leading to coronary artery disease. NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 6 (Physical Activity and Risk for Disease), p. 2.",
     "source": "extraq.docx+youtube-video",
     "merged": true,
@@ -4389,63 +3977,57 @@ const EXAM_QUESTIONS = [
     "needsReview": false,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 6 (Physical Activity and Risk for Disease), p. 2.",
     "manualVerified": true,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
   },
   {
-    "id": 198,
+    "id": 197,
     "question": "Which of the following identifies the correct body fat classification for morbid obesity?",
     "options": [
       "Males - 25%; Females - 35%",
-      "Males - 30%; Females - 40%",
       "Males - 35%; Females - 45%",
+      "Males - 30%; Females - 40%",
       "Males - 20%; Females - 30%"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Body fat levels above 30% for males and 40% for females are classified as morbid obesity and require a medical referral. Stage 1 Obesity can be classified using a BMI score of 30 or by a body fat percentage of 25% for males and 32% for females - which do not warrant medical referral. Female threshold values are higher due to the sex characteristics that promote and require higher fat storage. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 8; Ch. 10 (Body Composition), p. 19.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 8; Ch. 10 (Body Composition), p. 19.",
     "manualVerified": true
   },
   {
-    "id": 199,
+    "id": 198,
     "question": "When working with elderly clients, what type of exercise is important to incorporate into the program?",
     "options": [
-      "machine-based resistance training",
+      "high-intensity interval training",
       "closed-chain balance training",
-      "plyometrics",
-      "high-intensity interval training"
+      "machine-based resistance training",
+      "plyometrics"
     ],
     "correctIndex": 1,
-    "explanation": "Closed-chain balance training should be incorporated into a comprehensive program for elderly clients due to their elevated risk for falling and related accidents. Closed-chain training, when appropriately applied, will greatly improve the nervous system’s ability to manage various forces, both in a static and dynamic nature. Programming dynamic balance will also help improve confidence, the client’s overall quality of life and performance during day-to-day activities. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 29; Ch. 17 (Working with Special Populations), p. 654.",
+    "explanation": "Closed-chain balance training should be incorporated into a comprehensive program for elderly clients due to their elevated risk for falling and related accidents. Closed-chain training, when appropriately applied, will greatly improve the nervous system\u2019s ability to manage various forces, both in a static and dynamic nature. Programming dynamic balance will also help improve confidence, the client\u2019s overall quality of life and performance during day-to-day activities. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 29; Ch. 17 (Working with Special Populations), p. 654.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 29; Ch. 17 (Working with Special Populations), p. 654.",
     "manualVerified": true
   },
   {
-    "id": 200,
+    "id": 199,
     "question": "Which of the following would NOT be considered part of a pre-activity screening protocol?",
     "options": [
-      "Asking a client about low back pain",
-      "Testing submaximal VO2",
       "Reviewing an HSQ for disease",
-      "Assessing body composition"
+      "Testing submaximal VO2",
+      "Assessing body composition",
+      "Asking a client about low back pain"
     ],
     "correctIndex": 1,
     "explanation": "VO2, or aerobic capacity, is assessed during exercise testing which requires appropriate clearance. Pre-exercise screening is used to reduce client risks and pave the way for personalized program development. Primary risk examples can include health status assessment of smoking, obesity, diabetes, cardiovascular disease, asthma, peripheral edema, chronic low back pain, orthopedic injuries, sickle cell anemia, and autoimmune disease. Compounding risk examples can include older age, high fat/sugar diet, unmanaged stress, excessive alcohol intake, poor sleeping habits, low fiber intake, and musculoskeletal imbalances. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 43; Ch. 7 (Resting and Active Fitness Assessments), p. 266.",
@@ -4453,241 +4035,219 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 43; Ch. 7 (Resting and Active Fitness Assessments), p. 266.",
     "manualVerified": true
   },
   {
-    "id": 201,
+    "id": 200,
     "question": "Why do some assessments of anaerobic fitness, such as the abdominal curl-up and 5-min step test, require the use of a metronome?",
     "options": [
-      "to count the repetitions completed",
       "to control the client's breathing",
+      "to maintain a constant pace of movement",
       "to ensure the client has rest intervals between repetitions",
-      "to maintain a constant pace of movement"
+      "to count the repetitions completed"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "The maintenance of a constant pattern of movement without rest is required in specific fitness assessments such as the abdominal curl-up and step tests to optimize movement control. Consistent movement timing reduces the risk of poor pacing and injury as well as prevents the use of momentum to aid in additional repetitions. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 3; Ch. 1 (Introduction to Personal Training), p. 13.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 3; Ch. 1 (Introduction to Personal Training), p. 13.",
     "manualVerified": true
   },
   {
-    "id": 202,
+    "id": 201,
     "question": "Which exercise requires the greatest activation of the posterior deltoids?",
     "options": [
-      "Lat pull-down behind the head",
-      "Reverse fly",
       "Seat row",
-      "DB chest fly"
+      "Lat pull-down behind the head",
+      "DB chest fly",
+      "Reverse fly"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "The reverse fly loads horizontal abduction, and the posterior deltoids are primary horizontal abductors. Chest flys do not activate the posterior deltoid, while upper back exercises do see contribution from the posterior deltoids depending on the pulling angle or grip used, but not to the extent seen during a reverse fly with extended elbows. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 93; Ch. 2 (Functional Anatomy and Training Instruction), p. 101.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 93; Ch. 2 (Functional Anatomy and Training Instruction), p. 101.",
     "manualVerified": true
   },
   {
-    "id": 203,
+    "id": 202,
     "question": "Your client indicates a previous surgery on her left knee when completing the Health Status Questionnaire. What is the appropriate course of action for the trainer?",
     "options": [
-      "perform only upper-body resistance training and non-impact aerobic exercise",
-      "start the client using corrective exercise and eccentric activities",
+      "send the client to their doctor for a medical referral prior to performing any measurements",
       "ask follow-up questions concerning the injury and any rehabilitation she completed",
-      "send the client to their doctor for a medical referral prior to performing any measurements"
+      "start the client using corrective exercise and eccentric activities",
+      "perform only upper-body resistance training and non-impact aerobic exercise"
     ],
-    "correctIndex": 2,
-    "explanation": "The appropriate response for the trainer would be to ask follow-up questions concerning the injury, surgery and rehabilitation. Answers to the follow-up questions are essential when planning the most appropriate course of action. The severity of the injury as well as the comprehensiveness of any rehab will determine the starting point for exercise prescription. However, further testing specific to the left knee joint (e.g., flexibility and stability testing) would be appropriate in creating the most effective program. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 17; Ch. 12 (Exercise Program Components), p. 496.",
+    "correctIndex": 1,
+    "explanation": "The appropriate response for the trainer would be to ask follow-up questions concerning the injury, surgery and rehabilitation. Answers to the follow-up questions are essential when planning the most appropriate course of action. The severity of the injury as well as the comprehensiveness of any rehab will determine the starting point for exercise prescription. However, further testing specific to the left knee joint (e.g., flexibility and stability testing) would be appropriate in creating the most effective program. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92; Ch. 7 (Resting and Active Fitness Assessments), p. 39.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 17; Ch. 12 (Exercise Program Components), p. 496.",
+    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92; Ch. 7 (Resting and Active Fitness Assessments), p. 39.",
     "manualVerified": true
   },
   {
-    "id": 204,
+    "id": 203,
     "question": "Identify the correct order of events when initiating activity for a new client.",
     "options": [
-      "informed consent, health status questionnaire, screening, exercise testing",
       "screening, health status questionnaire, informed consent, exercise testing",
-      "health status questionnaire, exercise testing, screening, informed consent",
-      "exercise testing, informed consent, screening, health status questionnaire"
+      "exercise testing, informed consent, screening, health status questionnaire",
+      "informed consent, health status questionnaire, screening, exercise testing",
+      "health status questionnaire, exercise testing, screening, informed consent"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "The correct order of events when working with a new client is to first implement the informed consent process, followed by the health status questionnaire (HSQ). The trainer can then perform any resting assessments and screen the client. Once cleared for exercise, the client can perform physical activity tests. The informed consent should always be first, as it informs and requests voluntary permission for health screening, fitness evaluations and exercise participation. This document will notify the participant of the inherent risks and facts about the subsequent testing/exercise. The HSQ is part of the screening process as it is used to help the trainer identify potential limitations and risks to activity participation. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 29; Ch. 5 (Evaluating Health and Physical Fitness), p. 10.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 29; Ch. 5 (Evaluating Health and Physical Fitness), p. 10.",
     "manualVerified": true
   },
   {
-    "id": 205,
+    "id": 204,
     "question": "Your new, 54 year-old male client is 250 lbs. and has 25% body fat. What should you recommend to him regarding his initial participation in aerobic activity to lose weight?",
     "options": [
-      "He needs to see a physician for clearance and recommendations",
-      "He should primarily use high-intensity interval training for 60 minutes",
+      "To reduce the risk for injury, start with low-impact activities using a steady-state heart rate to acclimate him to exercise",
       "Incorporate repeat anaerobic threshold circuits to maximize caloric expenditure",
-      "To reduce the risk for injury, start with low-impact activities using a steady-state heart rate to acclimate him to exercise"
+      "He needs to see a physician for clearance and recommendations",
+      "He should primarily use high-intensity interval training for 60 minutes"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "With individuals that have a high level of body fat and are new to exercise, it is prudent to perform any aerobic work using low-impact activities. High-impact activities such as running increase the risk for overuse and orthopedic injuries among new exercisers. Likewise, high-intensity programs are not well-tolerated and are often contraindicated for obese individuals. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 18; Ch. 2 (Functional Anatomy and Training Instruction), p. 7.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 18; Ch. 2 (Functional Anatomy and Training Instruction), p. 7.",
     "manualVerified": true
   },
   {
-    "id": 206,
+    "id": 205,
     "question": "Which assessment of aerobic fitness is most commonly used for a 14 year-old boy?",
     "options": [
       "200 m sprint test",
-      "1 mile run test",
+      "6 minute jump rope test",
       "300 yd shuttle test",
-      "6 minute jump rope test"
+      "1 mile run test"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "The most appropriate assessment of aerobic fitness for a 14 year-old boy would be the one mile run test. Children can perform short bouts (10 minutes) of intense aerobic exercise on an intermittent basis. Care should be provided to ensure conditions account for thermoregulation, as youths have a greater tendency to overheat. When using any running tests the participant should practice the distance to establish an appropriate pace. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 32; Ch. 7 (Resting and Active Fitness Assessments), p. 103.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 32; Ch. 7 (Resting and Active Fitness Assessments), p. 103.",
     "manualVerified": true
   },
   {
-    "id": 207,
+    "id": 206,
     "question": "Which of the following measures indicates the onset of hypertension?",
     "options": [
-      "130/80 mmHg",
       "125/75 mmHg",
+      "130/80 mmHg",
       "All of the above are negative indicators",
       "120/60 mmHg"
     ],
-    "correctIndex": 0,
-    "explanation": "Hypertension, or high blood pressure, is indicated with systolic blood pressure ≥130 mmHg and/or diastolic blood pressure ≥80 mmHg. Elevation in one value or the other is an indication of hypertension, it does not have to be both values. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 170.",
+    "correctIndex": 1,
+    "explanation": "Hypertension, or high blood pressure, is indicated with systolic blood pressure \u2265130 mmHg and/or diastolic blood pressure \u226580 mmHg. Elevation in one value or the other is an indication of hypertension, it does not have to be both values. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 170.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 170.",
     "manualVerified": true
   },
   {
-    "id": 208,
+    "id": 207,
     "question": "Your client just had knee surgery but wants to train while doing his rehabilitation. What is the correct course of action?",
     "options": [
-      "Just perform cardiovascular exercise with the lower limbs and resistance train the upper body",
       "Get medical clearance and recommendations from his physician",
+      "Just perform cardiovascular exercise with the lower limbs and resistance train the upper body",
       "Perform the exercise in a pool to prevent weight bearing",
       "Get the activities from their physical therapist to incorporate into the training"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "Any individual actively receiving care for a current injury from a medical professional should get clearance prior to engaging concurrent physiological systems. This clearance provides the \"do's and don'ts\", reducing both injury risk and trainer liability. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 656; Ch. 7 (Resting and Active Fitness Assessments), p. 292.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 656; Ch. 7 (Resting and Active Fitness Assessments), p. 292.",
     "manualVerified": true
   },
   {
-    "id": 209,
+    "id": 208,
     "question": "Which is a vital component of maintaining a professional certification credential?",
     "options": [
-      "continuing education",
       "complying with the profession's code of ethics",
       "All of the above are correct",
-      "maintaining a current CPR"
+      "maintaining a current CPR",
+      "continuing education"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Continuing education is a vital component of maintaining a professional credential and is mandated by the governing body to maintain certification status. Ethically, trainers should focus on continued education in their deficient areas and only represent the areas of knowledge for which they are competent. Additional professional requirements include maintaining CPR certification and complying with the code of ethics and professional practice. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 72; Ch. 5 (Evaluating Health and Physical Fitness), p. 11.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 72; Ch. 5 (Evaluating Health and Physical Fitness), p. 11.",
     "manualVerified": true
   },
   {
-    "id": 210,
+    "id": 209,
     "question": "What causes blood pressure to rise the most with exercise and is considered unsafe for hypertensive clients?",
     "options": [
-      "Heavy resistance training (>85%)",
-      "Circuit training without rest",
       "High-intensity cardio",
+      "Circuit training without rest",
+      "Heavy resistance training (>85%)",
       "Static stretching"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "Clients with hypertension should avoid performing heavy resistance training sets as well as holding their breath. This is due to the increased stress placed upon the heart and vascular system during high-intensity resistance training. Resistance training for individuals with high blood pressure should not exceed intensities associated with 12-15 repetitions, nor include heavy compressive exercises such as the leg press. NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 4 (Human Physiology), p. 5.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "CONFLICT",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 4 (Human Physiology), p. 5.",
     "manualVerified": true
   },
   {
-    "id": 211,
+    "id": 210,
     "question": "Professional standards and guidelines are dictated by all of the following, except:",
     "options": [
       "Personal interests of the practitioner",
-      "Governing bodies within the field",
       "Consumer expectations and safety",
-      "Employer requirements and procedures"
+      "Employer requirements and procedures",
+      "Governing bodies within the field"
     ],
     "correctIndex": 0,
     "explanation": "Fitness professionals may gain a wealth of practical experience as they work in the field, but personal interests and opinions cannot replace regulated standards and guidelines for the profession. Governmental entities (some involved in research), consumer expectations and safety, and employer requirements are all valid reference points for developing standards within the fitness field by reputable organizations and stakeholders. NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 4; Ch. 1 (Introduction to Personal Training), p. 2.",
@@ -4695,15 +4255,13 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 4; Ch. 1 (Introduction to Personal Training), p. 2.",
     "manualVerified": true
   },
   {
-    "id": 212,
+    "id": 211,
     "question": "Which agonist-antagonist group is recommended to have a strength balance ratio of 1:1?",
     "options": [
       "Trunk flexors and extensors",
@@ -4712,47 +4270,43 @@ const EXAM_QUESTIONS = [
       "Ankle plantar-flexors and dorsi-flexors"
     ],
     "correctIndex": 0,
-    "explanation": "The trunk flexors and extensors should have a strength balance ratio of 1:1 for core health and stability. The ankle plantar-flexors and dorsi-flexors should have a balance of 3:1 – while the knee and shoulder flexor-extensor relationships are recommended to be at 2:3. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 42; Ch. 13 (Anaerobic Resistance Training), p. 40.",
+    "explanation": "The trunk flexors and extensors should have a strength balance ratio of 1:1 for core health and stability. The ankle plantar-flexors and dorsi-flexors should have a balance of 3:1 \u2013 while the knee and shoulder flexor-extensor relationships are recommended to be at 2:3. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 42; Ch. 13 (Anaerobic Resistance Training), p. 40.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 42; Ch. 13 (Anaerobic Resistance Training), p. 40.",
     "manualVerified": true
   },
   {
-    "id": 213,
+    "id": 212,
     "question": "It is recommended that client files be maintained for at least 3 years upon their completion date due to:",
     "options": [
-      "Reference for training others of similar need",
-      "The likelihood they return to training",
+      "Statutes of liability limitations can carry out that long",
       "In the case the documents are needed by law",
-      "Statutes of liability limitations can carry out that long"
+      "Reference for training others of similar need",
+      "The likelihood they return to training"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Statutes vary from state-to-state, but in general, three years is the minimum safe duration of time. Electronic files and copies are considered appropriate forms to avoid paper work. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 21; Ch. 7 (Resting and Active Fitness Assessments), p. 29.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 21; Ch. 7 (Resting and Active Fitness Assessments), p. 29.",
     "manualVerified": true
   },
   {
-    "id": 214,
+    "id": 213,
     "question": "Bioelectrical impedance assessment results are impacted by which of the following?",
     "options": [
-      "Training status",
       "Age",
       "Sex",
+      "Training status",
       "Hydration status"
     ],
     "correctIndex": 3,
@@ -4761,20 +4315,18 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 309; Ch. 10 (Body Composition), p. 17.",
     "manualVerified": true
   },
   {
-    "id": 215,
+    "id": 214,
     "question": "Which document is a useful tool in reducing liability due to the understanding of risk?",
     "options": [
-      "Statute of limitation",
       "Member agreement",
       "Health risk appraisal",
+      "Statute of limitation",
       "Informed consent"
     ],
     "correctIndex": 3,
@@ -4783,43 +4335,39 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 23; Ch. 7 (Resting and Active Fitness Assessments), p. 29.",
     "manualVerified": true
   },
   {
-    "id": 216,
+    "id": 215,
     "question": "Which of the following is a key recommendation when creating an exercise prescription for an obese client?",
     "options": [
-      "select low-impact activities during aerobic exercise to minimize the risk of injury",
       "Increase high-impact plyometric training to maximize caloric burn",
+      "Use only static stretching as the primary mode of exercise",
       "Focus on maximal heavy resistance training above 90% 1RM initially",
-      "Use only static stretching as the primary mode of exercise"
+      "select low-impact activities during aerobic exercise to minimize the risk of injury"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Exercise prescription for an obese client should include low-impact activities during aerobic exercise to minimize the risk of injury and over-exertion common of new exercisers. High-impact exercises such as treadmill running can cause severe DOMS or overuse injuries (e.g., shin splints). Likewise, obese individuals often prefer slower speeds and higher resistance over faster activities - such as changes in grade over speed. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 21; Ch. 4 (Human Physiology), p. 170.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 21; Ch. 4 (Human Physiology), p. 170.",
     "manualVerified": true
   },
   {
-    "id": 217,
+    "id": 216,
     "question": "Your client hurts her knee while performing a step-up. She is in noticeable pain but does not want to stop the session. What is the correct course of action?",
     "options": [
       "Recommend she have a medical professional analyze the injury and document the incident",
-      "Stretch the muscles surrounding the knee and lighten the weight before continuing",
+      "Provide her with an anti-inflammatory if available and switch to upper-body exercises",
       "Evaluate the injury and attempt to diagnose the problem before making a decision",
-      "Provide her with an anti-inflammatory if available and switch to upper-body exercises"
+      "Stretch the muscles surrounding the knee and lighten the weight before continuing"
     ],
     "correctIndex": 0,
     "explanation": "When any injury occurs during a training session it should be formally documented for trainer protection. This includes documenting any witnesses. A follow-up by a medical professional can quickly ascertain problems, resolutions or provide clearance. Further injury is the greatest risk of an existing injury. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 41; Ch. 13 (Anaerobic Resistance Training), p. 550.",
@@ -4827,60 +4375,54 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 41; Ch. 13 (Anaerobic Resistance Training), p. 550.",
     "manualVerified": true
   },
   {
-    "id": 218,
+    "id": 217,
     "question": "The label on a nutrition bar states that it contains 40 grams of carbohydrates and 10 grams of sugar. What percentage of the carbohydrates represent sugars?",
     "options": [
-      "10%",
-      "75%",
       "25%",
-      "40%"
+      "75%",
+      "40%",
+      "10%"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Dividing 10 grams (sugar) by 40 grams (total carbs) would equal 0.25, or 25%. Sugar is always listed on the food label as part of the total carbohydrates included as well as an independent nutritional factor. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 2; Ch. 8 (Understanding Nutrition), p. 3.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 58,
-    "commitTier": "HOLD_REVIEW",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 2; Ch. 8 (Understanding Nutrition), p. 3.",
     "manualVerified": true
   },
   {
-    "id": 219,
+    "id": 218,
     "question": "Adequate intake of __________ is vital for individuals with hypertension due to its relationship with sodium.",
     "options": [
-      "potassium",
-      "magnesium",
       "calcium sulfate",
-      "L-arginine"
+      "L-arginine",
+      "potassium",
+      "magnesium"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "Sodium and potassium function cooperatively through nutrient balance. While potassium should usually be consumed at levels that surpass sodium, many people overconsume sodium and under-consume potassium. Potassium is essential for proper nerve and muscle function due to its role in cellular fluid and solute regulation throughout the body. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 2; Ch. 6 (Physical Activity and Risk for Disease), p. 6.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 2; Ch. 6 (Physical Activity and Risk for Disease), p. 6.",
     "manualVerified": true
   },
   {
-    "id": 220,
-    "question": "Which is a protein derived from cow’s milk?",
+    "id": 219,
+    "question": "Which is a protein derived from cow\u2019s milk?",
     "options": [
       "Whey",
       "Protease",
@@ -4888,70 +4430,64 @@ const EXAM_QUESTIONS = [
       "Phytonutrients"
     ],
     "correctIndex": 0,
-    "explanation": "Both whey and casein are quality sources of supplemental protein derived from cow’s milk. Albumen is derived from egg protein while protease is a protein enzyme. Phytonutrients are primarily found in colorful fruits and vegetables, so they are not contained in milk. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 4; Ch. 8 (Understanding Nutrition), p. 300.",
+    "explanation": "Both whey and casein are quality sources of supplemental protein derived from cow\u2019s milk. Albumen is derived from egg protein while protease is a protein enzyme. Phytonutrients are primarily found in colorful fruits and vegetables, so they are not contained in milk. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 4; Ch. 8 (Understanding Nutrition), p. 300.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 4; Ch. 8 (Understanding Nutrition), p. 300.",
     "manualVerified": true
   },
   {
-    "id": 221,
+    "id": 220,
     "question": "When Vitamin D, a fat-soluble vitamin, is ingested how many calories are absorbed per gram of vitamin D consumed?",
     "options": [
-      "4",
-      "9",
       "0",
-      "6"
+      "6",
+      "4",
+      "9"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Micronutrients do not contain any calories. Vitamins are fat-soluble or water-soluble which defines the transport and storage mechanism, not the caloric density. This is true for all vitamins and minerals. NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 7; Ch. 8 (Understanding Nutrition), p. 13.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 7; Ch. 8 (Understanding Nutrition), p. 13.",
     "manualVerified": true
   },
   {
-    "id": 222,
+    "id": 221,
     "question": "Your client has heard about the potential for quick weight loss associated with low-carbohydrate diets. Which response is accurate regarding these types of diets?",
     "options": [
       "the low carbohydrate intake will help burn more fat during anaerobic training",
+      "low carbohydrate intake will improve the body's ability to burn calories during aerobic training",
       "lean mass and central nervous system efficiency will be negatively impacted by a low-carbohydrate diet",
-      "metabolic rate is significantly increased in individuals who consume a low-carbohydrate diet",
-      "low carbohydrate intake will improve the body's ability to burn calories during aerobic training"
+      "metabolic rate is significantly increased in individuals who consume a low-carbohydrate diet"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Low-carbohydrate diets negatively affect the body by reducing glycogen reserves and decreasing plasma glucose; which in turn stimulates the production of new glucose in the liver via a process known as gluconeogenesis. During gluconeogenesis, glucose is synthesized from metabolites and amino acids. During glycogen-sparing, the body releases adrenal hormones to break down lean mass and fat mass for fuel; which is an undesirable effect. Low-carbohydrate diets are intended to cut sugar and processed carbs but tend to also reduce quality sources. Initial weight loss from low-carbohydrate diets is majorly due to a loss in total body water as glycogen stores are reduced. The central nervous system needs adequate systemic carbohydrates to run efficiently. Overall, this can reduce total work capacity. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 5; Ch. 9 (Exploring Dietary Supplements), p. 30.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 5; Ch. 9 (Exploring Dietary Supplements), p. 30.",
     "manualVerified": true
   },
   {
-    "id": 223,
+    "id": 222,
     "question": "What fat-soluble vitamin may create toxicity if supplemented in high doses?",
     "options": [
-      "Folic acid",
+      "Vitamin C",
       "Vitamin A",
-      "Thiamine",
-      "Vitamin C"
+      "Folic acid",
+      "Thiamine"
     ],
     "correctIndex": 1,
     "explanation": "Vitamin A, a fat-soluble vitamin along with vitamins E, K and D, are stored in adipose tissue. Due to their metabolic properties, supplemental fat-soluble vitamins can potentially cause toxicity when over-consumed. A well-balanced diet will generally meet the daily intake demands of all fat-soluble vitamins; providing little need for additional supplementation. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 379; Ch. 8 (Understanding Nutrition), p. 34.",
@@ -4959,63 +4495,57 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 379; Ch. 8 (Understanding Nutrition), p. 34.",
     "manualVerified": true
   },
   {
-    "id": 224,
+    "id": 223,
     "question": "Dehydration contributes to a reduction in blood plasma volume. How will this impact training performance?",
     "options": [
-      "it will reduce RPE values",
       "it will improve VO2max",
       "it will increase heart rate values during training",
+      "it will reduce RPE values",
       "it will increase muscle blood flow during resistance training"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Decreased blood plasma volume as a result of dehydration will impact training by increasing heart rates. This is due to reduced blood volume and subsequent reductions in cardiac output. The physiological explanation for this is that most of the fluid lost in sweat is supplied by blood plasma. If rehydration is not established, there is an increased possibility for kidney and heart dysfunction as well as heat stroke during exhaustive exercise. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 6; Ch. 12 (Exercise Program Components), p. 24.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 6; Ch. 12 (Exercise Program Components), p. 24.",
     "manualVerified": true
   },
   {
-    "id": 225,
+    "id": 224,
     "question": "Which of the following denotes low blood sodium?",
     "options": [
-      "Hypotension",
-      "Hypokalemia",
       "Hypoglycemia",
-      "Hyponatremia"
+      "Hypotension",
+      "Hyponatremia",
+      "Hypokalemia"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Hyponatremia is a term used to describe low blood sodium. This can be caused in severe cases where significant fluids replaced after high-volume training and dehydration do not contain any electrolytes such as sodium. Low blood electrolytes creates a dangerous situation which can cause neural and even cardiac muscle-related issues. NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 5; Ch. 8 (Understanding Nutrition), p. 41.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 5; Ch. 8 (Understanding Nutrition), p. 41.",
     "manualVerified": true
   },
   {
-    "id": 226,
+    "id": 225,
     "question": "Static stability would be challenged the most by which of the following exercises?",
     "options": [
-      "DB reverse lunge",
       "Seated machine overhead press",
+      "DB reverse lunge",
       "Cable lat pull-down",
       "Single-leg glute bridge"
     ],
@@ -5025,20 +4555,18 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 621; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 138.",
     "manualVerified": true
   },
   {
-    "id": 227,
+    "id": 226,
     "question": "____________ content lowers the insulin response to a meal.",
     "options": [
+      "Water",
       "Vitamin",
       "All the above",
-      "Water",
       "Fiber"
     ],
     "correctIndex": 3,
@@ -5047,81 +4575,73 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 11; Ch. 8 (Understanding Nutrition), p. 70.",
     "manualVerified": true
   },
   {
-    "id": 228,
+    "id": 227,
     "question": "All of the following statements concerning intermittent fasting is correct, except:",
     "options": [
-      "It has been shown to create cyclical fat gain due to reduced metabolism",
       "It can improve weight loss over time",
+      "All eating usually occurs over a period of 3-8 hours per day",
       "It has been shown to improve metabolic health",
-      "All eating usually occurs over a period of 3-8 hours per day"
+      "It has been shown to create cyclical fat gain due to reduced metabolism"
     ],
-    "correctIndex": 0,
-    "explanation": "Intermittent fasting appears to promote weight loss and may improve gut and metabolic health; the evidence is particularly strong when the eating pattern reduces or eliminates nighttime feeding. It includes several patterns of fasting and non-fasting over defined periods - independent of caloric restriction. Often all eating occurs over a period of 3-8 hours per day, which inherently creates intermittent ‘fasting periods’ between. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 233; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
+    "correctIndex": 3,
+    "explanation": "Intermittent fasting appears to promote weight loss and may improve gut and metabolic health; the evidence is particularly strong when the eating pattern reduces or eliminates nighttime feeding. It includes several patterns of fasting and non-fasting over defined periods - independent of caloric restriction. Often all eating occurs over a period of 3-8 hours per day, which inherently creates intermittent \u2018fasting periods\u2019 between. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 233; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "MEDIUM",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 233; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "manualVerified": true
   },
   {
-    "id": 229,
+    "id": 228,
     "question": "_________ is an amino acid which is purported to stimulate the growth hormone production.",
     "options": [
-      "Leucine",
-      "Valine",
       "L-arginine",
-      "Glutamine"
+      "Glutamine",
+      "Leucine",
+      "Valine"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "L-arginine is an amino acid that functions in the process of growth hormone management. Supplementation has not provided scientifically-significant ergogenic benefits to date. Glutamine is an anticorticoid agent protecting muscle protein while leucine and valine serve as two of the three branched-chain amino acids (BCAAs). NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 15; Ch. 13 (Anaerobic Resistance Training), p. 16.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 15; Ch. 13 (Anaerobic Resistance Training), p. 16.",
     "manualVerified": true
   },
   {
-    "id": 230,
+    "id": 229,
     "question": "Which of the following is true concerning circumference (girth) measurements when used as a body composition assessment?",
     "options": [
       "they are ideal for individuals who are very thin",
-      "they do not account for subcutaneous fat storage",
       "they are not designed to be used for obese individuals",
-      "they have limited accuracy for individuals with large amounts of muscle mass"
+      "they have limited accuracy for individuals with large amounts of muscle mass",
+      "they do not account for subcutaneous fat storage"
     ],
-    "correctIndex": 3,
-    "explanation": "While girth/circumference measurements are very applicable with overweight individuals; they have limited accuracy for individuals with large amounts of muscle mass inclusive of athletes. Girth/circumference measurements do not take into account the volume of each respective tissue at each site of measurement. For lean individuals with larger quantities of muscle, a skinfold assessment would be more appropriate. For those who are very muscular but also maintain higher fat, hydrostatic weighing would be more useful, and is generally the most accurate outside of DEXA scans. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 10 (Body Composition), p. 7.",
+    "correctIndex": 2,
+    "explanation": "While girth/circumference measurements are very applicable with overweight individuals; they have limited accuracy for individuals with large amounts of muscle mass inclusive of athletes. Girth/circumference measurements do not take into account the volume of each respective tissue at each site of measurement. For lean individuals with larger quantities of muscle, a skinfold assessment would be more appropriate. For those who are very muscular but also maintain higher fat, hydrostatic weighing would be more useful, and is generally the most accurate outside of DEXA scans. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 7 (Resting and Active Fitness Assessments), p. 20.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 10 (Body Composition), p. 7.",
+    "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 7 (Resting and Active Fitness Assessments), p. 20.",
     "manualVerified": true
   },
   {
-    "id": 231,
+    "id": 230,
     "question": "Your client is a 17 year-old male trying to add muscle mass. Which of the following would be a healthy dietary recommendation to support his resistance training program that includes four days of exercise each week?",
     "options": [
       "he should consume an additional 750-1,000 kcal a day above his calculated daily requirements",
@@ -5135,109 +4655,99 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 30; Ch. 8 (Understanding Nutrition), p. 21.",
     "manualVerified": true
   },
   {
-    "id": 232,
+    "id": 231,
     "question": "All of the following will increase testing accuracy for a skinfold assessment, except:",
     "options": [
       "Ensuring the calipers are calibrated",
       "Identifying and marking the skinfold sites",
-      "Pinching at least 7 sites",
-      "Assessing the fold in 2 secs and waiting at least 15 seconds before re-assessing"
+      "Assessing the fold in 2 secs and waiting at least 15 seconds before re-assessing",
+      "Pinching at least 7 sites"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Adding more sites to a skinfold assessment does not increase accuracy when proper density equations are use. In fact, 7- and 12-site measures are associated with increased tester error due to the amount of technician involvement. Repeat 3- and 4-fold sites have an estimation error of about 4% (3.5%). NCSF Manual reference: Ch. 10 (Body Composition), p. 15; Ch. 7 (Resting and Active Fitness Assessments), p. 20.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 15; Ch. 7 (Resting and Active Fitness Assessments), p. 20.",
     "manualVerified": true
   },
   {
-    "id": 233,
+    "id": 232,
     "question": "Which of the following is the most effective way to reduce the appearance of cellulite?",
     "options": [
       "Take conjugated linoleic acid (CLA)",
-      "Reduce total body fat via diet and exercise",
       "Avoid carbohydrates",
+      "Reduce total body fat via diet and exercise",
       "Perform high-volume exercises which target the areas cellulite is most visible"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Reducing total body fat and weight will reduce the appearance of cellulite. Changing the macronutrient content of the diet will not have an impact if a negative caloric balance is not attained. CLA has not demonstrated any efficacy and spot reduction of cellulite (e.g., performing numerous crunches to reduce belly cellulite) is not effective as it will only improve the muscle tonicity in the area, but you cannot force localized fat use. NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 11 (Weight Management), p. 19.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 11 (Weight Management), p. 19.",
     "manualVerified": true
   },
   {
-    "id": 234,
+    "id": 233,
     "question": "Which of the following statements concerning anorexia nervosa is correct?",
     "options": [
-      "It is associated with significant body image disorder",
-      "All of the above are correct",
       "It is most common among males",
-      "It has the lowest rate of mortality among psychiatric disorders"
+      "It is associated with significant body image disorder",
+      "It has the lowest rate of mortality among psychiatric disorders",
+      "All of the above are correct"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Anorexia nervosa is always associated with significant body image disorder, an intense fear of getting fat and a preoccupation with body weight. It is most common among females and has one of the highest rates of mortality among psychiatric conditions, often sadly due to suicide. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 28; Ch. 2 (Functional Anatomy and Training Instruction), p. 29.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 28; Ch. 2 (Functional Anatomy and Training Instruction), p. 29.",
     "manualVerified": true
   },
   {
-    "id": 235,
+    "id": 234,
     "question": "After calculating your client's resting metabolic rate to be ~2,200 calories/day, she performs a 24-hour food recall which indicates approximately 2,500 calories were consumed. What can you determine from this information?",
     "options": [
-      "your client's oxygen consumption is relatively high",
       "nothing until you calculate voluntary caloric expenditure",
+      "your client is in a positive caloric balance",
       "your client is in a negative caloric balance",
-      "your client is in a positive caloric balance"
+      "your client's oxygen consumption is relatively high"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "Resting metabolic rate and voluntary caloric expenditure are both required to determine daily caloric need. Resting metabolism will generally constitute 60-70% of total metabolism (and therefore energy needs), while physical activity and the thermic effect of food make up the difference based on individual choices. NCSF Manual reference: Ch. 11 (Weight Management), p. 14; Ch. 11 (Weight Management), p. 15.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 14; Ch. 11 (Weight Management), p. 15.",
     "manualVerified": true
   },
   {
-    "id": 236,
+    "id": 235,
     "question": "What would cause a disproportionately-low abdominal skinfold measurement on a middle-age male client with a visibly large abdominal area?",
     "options": [
-      "central hypertrophy of the rectus abdominis",
+      "above average sized internal organs",
       "excessive amounts of visceral fat storage",
       "excessive subcutaneous fat storage",
-      "above average sized internal organs"
+      "central hypertrophy of the rectus abdominis"
     ],
     "correctIndex": 1,
     "explanation": "Excessive visceral fat storage would cause a high central girth, which may occur in conjunction with relatively low abdominal skinfold measures. Some individuals present with limited subcutaneous measures but high levels of abdominal visceral fat; which can only be indirectly assessed with a central girth measurement. Visceral fat is associated with cardiovascular and metabolic disease. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 25; Ch. 8 (Understanding Nutrition), p. 20.",
@@ -5245,103 +4755,93 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 25; Ch. 8 (Understanding Nutrition), p. 20.",
     "manualVerified": true
   },
   {
-    "id": 237,
+    "id": 236,
     "question": "Your female client wants to tone up. While she has enough fat stored throughout her body to justify becoming leaner, she is at a visibly healthy body weight. What is the best field assessment to measure body fat given her appearance?",
     "options": [
-      "girth measurements",
-      "near-infrared scan",
+      "hydrostatic weighing",
       "skinfold measures",
-      "hydrostatic weighing"
+      "girth measurements",
+      "near-infrared scan"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Skinfold measures would be the most appropriate body fat assessment for this individual given their relatively lean body type. Skinfold measurements should not be used with overweight or obese populations, as the procedure is psychologically-invasive and the measurements will be skewed by the high fat content. This is particularly applicable in the trunk as visceral fat storage cannot be determined by using skinfolds. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 72; Ch. 7 (Resting and Active Fitness Assessments), p. 67.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 72; Ch. 7 (Resting and Active Fitness Assessments), p. 67.",
     "manualVerified": true
   },
   {
-    "id": 238,
+    "id": 237,
     "question": "How should you explain the need for regular aerobic activity within a weight loss program to your client who thinks they can simply alter their diet and perform resistance training twice a week to achieve the desired results?",
     "options": [
-      "increasing VO2max improves anaerobic training by reducing necessary rest interval time",
+      "aerobic exercise will help create a negative caloric balance",
       "fat cells are metabolized aerobically",
       "all of the above",
-      "aerobic exercise will help create a negative caloric balance"
+      "increasing VO2max improves anaerobic training by reducing necessary rest interval time"
     ],
     "correctIndex": 2,
-    "explanation": "All answers listed are adaptations to aerobic training that will aid in weight loss. While dietary modifications and resistance training twice a week will aid in weight reduction, the addition of aerobic training will greatly expedite results due to (1) additional caloric expenditure, (2) the additional use of fat as a fuel, and (3) the ability to increase the client’s work capacity during their resistance training sessions (due to improved recovery between sets) - which can eventually be progressed into more aggressive aerobic and anaerobic interval training. In general, high intensity exercise will be most effective for weight loss due to the caloric expenditure. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 14 (Cardiorespiratory Fitness), p. 13.",
+    "explanation": "All answers listed are adaptations to aerobic training that will aid in weight loss. While dietary modifications and resistance training twice a week will aid in weight reduction, the addition of aerobic training will greatly expedite results due to (1) additional caloric expenditure, (2) the additional use of fat as a fuel, and (3) the ability to increase the client\u2019s work capacity during their resistance training sessions (due to improved recovery between sets) - which can eventually be progressed into more aggressive aerobic and anaerobic interval training. In general, high intensity exercise will be most effective for weight loss due to the caloric expenditure. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 14 (Cardiorespiratory Fitness), p. 13.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 14 (Cardiorespiratory Fitness), p. 13.",
     "manualVerified": true
   },
   {
-    "id": 239,
+    "id": 238,
     "question": "You are working with a female client who does not want to \"bulk up\" from weight training. Which of the following set-rep schematics performed in three, 60-minute sessions per week would have the greatest desired adaptation effect?",
     "options": [
       "2 sets per exercise using 30-60% 1RM, 8-10 reps, 2 minute rest intervals, ballistic jumps and throws",
-      "3 sets per exercise at 80-90% 1RM, 4-8 reps, 75-90 second rest intervals, muscle group-specific exercise",
+      "5 sets per exercise using 70-80% 1RM, 10-12 reps, 60-75 second rest intervals, upper or lower body",
       "4 sets per exercise at 65% 1RM, 15 reps, 30-45 second rest intervals, total body emphasis",
-      "5 sets per exercise using 70-80% 1RM, 10-12 reps, 60-75 second rest intervals, upper or lower body"
+      "3 sets per exercise at 80-90% 1RM, 4-8 reps, 75-90 second rest intervals, muscle group-specific exercise"
     ],
     "correctIndex": 2,
-    "explanation": "Higher and very low repetition ranges reduce muscle architectural changes. Low reps at 1-3 works the nervous system while high reps over 15 work the metabolic system. 15 reps equal about 45 seconds of time-under-tension, with a 1:1 to 1:0.75 ratio. This type of training is specifically geared towards caloric expenditure with a side benefit of maintaining lean mass. However, due the elevated time-under-tension (>20 minutes), it may not be feasible for a novice client unaccustomed to resistance training. NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 4 (Human Physiology), p. 162.",
+    "explanation": "Higher and very low repetition ranges reduce muscle architectural changes. Low reps at 1-3 works the nervous system while high reps over 15 work the metabolic system. 15 reps equal about 45 seconds of time-under-tension, with a 1:1 to 1:0.75 ratio. This type of training is specifically geared towards caloric expenditure with a side benefit of maintaining lean mass. However, due the elevated time-under-tension (>20 minutes), it may not be feasible for a novice client unaccustomed to resistance training. NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 12 (Exercise Program Components), p. 496.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 4 (Human Physiology), p. 162.",
+    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 12 (Exercise Program Components), p. 496.",
     "manualVerified": true
   },
   {
-    "id": 240,
+    "id": 239,
     "question": "When reducing dietary fat intake, _________ should make up the majority of dietary lipids consumed?",
     "options": [
-      "Saturated fat",
-      "Monounsaturated fat",
+      "Trans fatty acids",
       "Polyunsaturated fat",
-      "Trans fatty acids"
+      "Monounsaturated fat",
+      "Saturated fat"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Monounsaturated fatty acids are cardiovascularly-benign. Common to the Mediterranean diet these fatty acids should represent between 15-20% of the fats in the diet. Saturated fat should be less than 10%, and polyunsaturated fats generally reach up to 15%. Trans fatty acids should be avoided. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 21; Ch. 8 (Understanding Nutrition), p. 24.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 21; Ch. 8 (Understanding Nutrition), p. 24.",
     "manualVerified": true
   },
   {
-    "id": 241,
+    "id": 240,
     "question": "Which of the following muscle groups require hip flexion and external rotation of the hip to properly stretch?",
     "options": [
       "Hamstrings",
@@ -5355,240 +4855,218 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 7; Ch. 2 (Functional Anatomy and Training Instruction), p. 68.",
     "manualVerified": true
   },
   {
-    "id": 242,
+    "id": 241,
     "question": "The risk of blood pooling after a high-intensity training session is minimized by ___________.",
     "options": [
       "a sauna",
-      "a hot shower",
       "a cool down segment",
+      "a hot shower",
       "an ice bath"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "An appropriate cool down will help minimize blood pooling after a high-intensity training session. A proper cool down should include full range of motion movements that mimic the exercises included in the resistance training bout to bring the body back to a pre-exercise state. The emphasis should be on fluid movements that are continuous enough to mobilize circulating blood in venous structures. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 8; Ch. 12 (Exercise Program Components), p. 489.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 8; Ch. 12 (Exercise Program Components), p. 489.",
     "manualVerified": true
   },
   {
-    "id": 243,
+    "id": 242,
     "question": "The device used to measure specific joint angles during a flexibility assessment is referred to as a ____________.",
     "options": [
       "spirometer",
-      "tape measure",
       "caliper",
-      "goniometer"
+      "goniometer",
+      "tape measure"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "The goniometer is a device used to directly measure joint angles. Goniometric measurements help identify range of motion deficits which can potentially contribute to injury. While valid and reliable as a form of assessment, successful readings are determined by protocol strictness and technician expertise. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 72; Ch. 10 (Body Composition), p. 445.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 72; Ch. 10 (Body Composition), p. 445.",
     "manualVerified": true
   },
   {
-    "id": 244,
+    "id": 243,
     "question": "Which of the following is a common caloric pitfall during cardiovascular training on aerobic machines?",
     "options": [
-      "Leaning one’s weight on the machine being used",
-      "All of the above",
       "Holding onto guiderails",
-      "Failing to comply with default RPMs"
+      "Failing to comply with default RPMs",
+      "Leaning one\u2019s weight on the machine being used",
+      "All of the above"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "Leaning into a Stairclimber or holding on to the treadmill reduces the caloric expenditure as a percentage of the body is being supported, thereby reducing the workload and intensity. This will also alter the accuracy of any machine calculation for caloric expenditure as it accounts for total body weight as part of the equation. Failing to comply with default RPMs will create the same discrepancy in caloric expenditure. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 6 (Physical Activity and Risk for Disease), p. 12.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 6 (Physical Activity and Risk for Disease), p. 12.",
     "manualVerified": true
   },
   {
-    "id": 245,
+    "id": 244,
     "question": "Which back exercise employs the biceps to the greatest degree?",
     "options": [
-      "One-arm row",
       "Pull-ups",
+      "Chin-ups",
       "Seated row",
-      "Chin-ups"
+      "One-arm row"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Switching from a pronated grip to a supinated grip will allow for greater biceps activation when performing back exercises. The chin-up uses a supinated grip which still targets the back musculature, but also increases demands placed upon the elbow flexors. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 13; Ch. 2 (Functional Anatomy and Training Instruction), p. 67.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 13; Ch. 2 (Functional Anatomy and Training Instruction), p. 67.",
     "manualVerified": true
   },
   {
-    "id": 246,
+    "id": 245,
     "question": "The _______________ are manipulated during proprioceptive neuromuscular facilitation stretches to enhance the attainable movement range.",
     "options": [
-      "Golgi tendon organs",
       "T-tubules",
+      "Muscle fiber mitochondria",
       "Motor neurons",
-      "Muscle fiber mitochondria"
+      "Golgi tendon organs"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Proprioceptive neuromuscular facilitation (PNF) stretches create high tension at the tendons where Golgi tendon organs adjust to allow a slight increase in movement range following maximal activation of the musculature involved. These stretches present an increased risk of injury via overstrain - and should only be implemented by a skilled trainer on healthy, experienced individuals. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 8; Ch. 15 (Flexibility), p. 594.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 8; Ch. 15 (Flexibility), p. 594.",
     "manualVerified": true
   },
   {
-    "id": 247,
+    "id": 246,
     "question": "Using _______ repetitions per set during a general fitness or preparation phase for a new, healthy client would be appropriate to develop baseline form and technique mastery.",
     "options": [
+      "10-15",
       "20-30",
       "8-10",
-      "10-15",
       "6-8"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "10-15 repetitions per set during a general fitness/preparation training program allows for enough movement practice to gain technique mastery and also allows for appropriate starting intensities to be applied. The 6-10 repetitions range would be more appropriate for strength or hypertrophy with elevated loads, while 20-30 repetition sets would delve into anaerobic threshold training depending on how it was applied. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 26; Ch. 16 (Introduction to Exercise Programming), p. 6.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 26; Ch. 16 (Introduction to Exercise Programming), p. 6.",
     "manualVerified": true
   },
   {
-    "id": 248,
+    "id": 247,
     "question": "Approximately how many calories does the body use per liter of consumed oxygen?",
     "options": [
-      "50 calories",
       "100 calories",
-      "1 calorie",
-      "5 calories"
+      "50 calories",
+      "5 calories",
+      "1 calorie"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Approximately 5 calories are utilized per liter of oxygen consumed. Oxygen consumption as a measure of caloric expenditure is simplified when using metabolic equivalents (METs). METs represent the amount of oxygen used by the body at a given time. For instance, rest = 1 MET; whereas walking = 2.8 METs. METS x .001 x BW (kg) x minutes performed x 5 kcal = Total calories burned NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 7; Ch. 11 (Weight Management), p. 15.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 47,
-    "commitTier": "CHANGE_CANDIDATE",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 7; Ch. 11 (Weight Management), p. 15.",
     "manualVerified": true
   },
   {
-    "id": 249,
+    "id": 248,
     "question": "Which of the following is the most important consideration when performing a heavy or complex exercise?",
     "options": [
+      "Client movement confidence",
       "Ground reaction force management",
-      "Form and technique",
       "Age of the client",
-      "Client movement confidence"
+      "Form and technique"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "No matter what exercise is performed form and technique must be properly adhered to prevent injury - particularly when using complex variations as the risk for injury may increase. Proper form and technique must be the baseline focus before any other considerations are addressed. Too much weight is a common programmatic error affecting performance regardless of age. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 47,
-    "commitTier": "CHANGE_CANDIDATE",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
     "manualVerified": true
   },
   {
-    "id": 250,
+    "id": 249,
     "question": "When designing an exercise program for a healthy novice client, resistance training exercises should be performed using which of the following set-repetition schematics?",
     "options": [
-      "3-4 sets of 8-10 repetitions",
       "1 set of 20-25 repetitions",
       "2-3 sets of 10-15 repetitions",
-      "2-4 sets of 3-5 repetitions"
+      "2-4 sets of 3-5 repetitions",
+      "3-4 sets of 8-10 repetitions"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "The most appropriate sets and reps for a novice client, when they are being introduced to resistance training, would 2-3 sets of 10-15 repetitions. Higher-repetition schemes improve neuromuscular efficiency and allow the client to perfect the movement pattern through rehearsal. Lower intensities reduce the risk of acute musculoskeletal injuries as well as discomfort from excessive soreness associated with heavy eccentric contractions. Once acclimated, the client can be further challenged with loading or movement variations. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 25; Ch. 17 (Working with Special Populations), p. 150.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 25; Ch. 17 (Working with Special Populations), p. 150.",
     "manualVerified": true
   },
   {
-    "id": 251,
+    "id": 250,
     "question": "What most affects the rate of detraining when switching from 4 days to two days of training per week?",
     "options": [
       "Total weekly time-under-tension",
-      "Duration of the workout",
       "Variety of modalities employed",
-      "Intensity of the exercise"
+      "Intensity of the exercise",
+      "Duration of the workout"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Increasing the training intensity (%) is necessary to minimize losses of strength and power when frequency is reduced. Exercise prescription should focus on the proper execution of intense and high-velocity activities. For less fit individuals, incorporating compound exercises would be preferred over isolated (machine) lifts. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 41.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 41.",
     "manualVerified": true
   },
   {
-    "id": 252,
+    "id": 251,
     "question": "Resistance machines are optimally suited for ______________ training due to the ability to isolate a muscle and aid in stability.",
     "options": [
+      "Power",
       "Strength",
       "Flexibility",
-      "Power",
       "Hypertrophy"
     ],
     "correctIndex": 3,
@@ -5597,41 +5075,37 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 18; Ch. 13 (Anaerobic Resistance Training), p. 19.",
     "manualVerified": true
   },
   {
-    "id": 253,
+    "id": 252,
     "question": "Groups of exercises performed in sequence with limited rest is called _________________.",
     "options": [
       "Compound set training",
+      "Fartlek training",
       "Contrast set training",
-      "Circuit training",
-      "Fartlek training"
+      "Circuit training"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "A circuit training bout sequences multiple exercises in descending order of difficulty with only transitional rest periods. Popular circuit training prescription involves the use of an exercise for each of the major muscle groups, but many variations exist. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 12 (Exercise Program Components), p. 11.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 12 (Exercise Program Components), p. 11.",
     "manualVerified": true
   },
   {
-    "id": 254,
+    "id": 253,
     "question": "Performing cardiovascular exercise for a duration of time with a consistent same heart rate is termed:",
     "options": [
-      "Fatmax training",
       "Long slow training",
+      "Fatmax training",
       "Steady state training",
       "Cardio-isolation training"
     ],
@@ -5641,21 +5115,19 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 14 (Cardiorespiratory Fitness), p. 9.",
     "manualVerified": true
   },
   {
-    "id": 255,
+    "id": 254,
     "question": "If a client has shoulder impingement they will likely be unable to perform:",
     "options": [
       "Lat pull-down",
-      "Side raises",
+      "Back squats",
       "Military press",
-      "Back squats"
+      "Side raises"
     ],
     "correctIndex": 2,
     "explanation": "Shoulder impingement occurs when the supraspinatus tendon and shoulder bursa get pinched at the acromion. This occurs when the arm is elevated, particularly with internal rotation. Avoiding overhead lifts such as the military press and internal rotation with shoulder flexion can alleviate pain. Pressing exercises and upright rows are common agitators. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 72; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 23.",
@@ -5663,241 +5135,219 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 72; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 23.",
     "manualVerified": true
   },
   {
-    "id": 256,
+    "id": 255,
     "question": "What indicates the amount of oxygen used by working tissue?",
     "options": [
       "Stroke volume",
-      "Heart rate",
+      "Mitochondrial density",
       "(a-v) O2 difference",
-      "Mitochondrial density"
+      "Heart rate"
     ],
     "correctIndex": 2,
-    "explanation": "Whereas stroke volume and heart rate represent cardiac output, the (a-v)O2 difference is the difference in oxygen concentration between arterial blood and venous blood; representing extraction. This is also referred to as oxygen uptake. During exercise, the efficiency of the body’s oxygen extraction system is based on the number of capillaries and available oxygen to working tissue to be used by mitochondria. Improvements in the (a-v)O2 difference occur following aerobic training as the increased oxygen demands of the exercising muscles promotes increased capillary and mitochondrial density. NCSF Manual reference: Ch. 4 (Human Physiology), p. 23; Ch. 4 (Human Physiology), p. 10.",
+    "explanation": "Whereas stroke volume and heart rate represent cardiac output, the (a-v)O2\u00a0difference is the difference in oxygen concentration between arterial blood and venous blood; representing extraction. This is also referred to as oxygen uptake. During exercise, the efficiency of the body\u2019s oxygen extraction system is based on the number of capillaries and available oxygen to working tissue to be used by mitochondria. Improvements in the (a-v)O2\u00a0difference occur following aerobic training as the increased oxygen demands of the exercising muscles promotes increased capillary and mitochondrial density. NCSF Manual reference: Ch. 4 (Human Physiology), p. 23; Ch. 4 (Human Physiology), p. 10.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 23; Ch. 4 (Human Physiology), p. 10.",
     "manualVerified": true
   },
   {
-    "id": 257,
+    "id": 256,
     "question": "What training intensity range is most effective for natural bodybuilding?",
     "options": [
-      "70-85% 1RM",
-      "85-100%1RM",
+      "55-70% 1RM",
       "30-55% 1RM",
-      "55-70% 1RM"
+      "70-85% 1RM",
+      "85-100%1RM"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "70-85% is the ideal training intensity for lifts used to promote protein synthesis. The goal of adding lean mass requires significant muscle recruitment and anabolic hormone release, which is best achieved with sets of 8-12 repetitions. Clients looking to add lean mass and gain significant strength may benefit from 6-10 repetitions. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 496; Ch. 13 (Anaerobic Resistance Training), p. 15.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 496; Ch. 13 (Anaerobic Resistance Training), p. 15.",
     "manualVerified": true
   },
   {
-    "id": 258,
+    "id": 257,
     "question": "Why does using only the heart rate max formula by itself create potential problems for training specificity when programming aerobic training zones (220-age)?",
     "options": [
-      "It has at least a 10-12 beat standard estimation error",
-      "It does not account for variations in fitness level among individuals",
       "All the above are correct",
-      "It assumes all people of equal age are the same"
+      "It does not account for variations in fitness level among individuals",
+      "It assumes all people of equal age are the same",
+      "It has at least a 10-12 beat standard estimation error"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "10-12 beats/min represents the standard deviation for the Heart Rate Max (HRM) formula, which is an important consideration for setting intensities during aerobic training. About 68% of people will have a maximal heart rate within 10-12 beats of the estimated number, 95% will have a maximal heart rate within 20-24 beats, and 99.7% of people should have a maximal heart rate within 30-36 beats. While the HRM formula is commonly used, it does assume everyone of a certain age has the same maximal heart rate, which is a dependent variable and therefore not actually true. The formula also includes no variables which take into account variations in fitness level among people of the same age. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 15.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 4 (Human Physiology), p. 15.",
     "manualVerified": true
   },
   {
-    "id": 259,
+    "id": 258,
     "question": "When a trainer accurately identifies the best exercise to address a desired affect they are using the principle of ___________.",
     "options": [
-      "Targeting",
-      "Efficiency",
       "Effectiveness",
-      "Specificity"
+      "Efficiency",
+      "Specificity",
+      "Targeting"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Specific adaptations occur based on the specificity of the demand. The principle of specificity suggests all the parameters of the activity must be synchronized to create the desired affect from the training. For example, a superset that emphasizes the same muscle group for the desired goal of muscle hypertrophy is employing the principle of specificity. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 16 (Introduction to Exercise Programming), p. 619.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 16 (Introduction to Exercise Programming), p. 619.",
     "manualVerified": true
   },
   {
-    "id": 260,
+    "id": 259,
     "question": "Diverse training speeds and terrains used for aerobic conditioning performed outside is a type of interval training termed _______.",
     "options": [
-      "Intermittent training",
-      "Fartlek training",
       "High-intensity interval training",
-      "Par course training"
+      "Par course training",
+      "Intermittent training",
+      "Fartlek training"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "The idea of combining jogging with sprinting over hills, plateaus, and declines describes Fartlek training. It provides diversity to the intensity across a broad range of stressors. This is common to keep distance exercise both engaging and relatively challenging. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 19; Ch. 14 (Cardiorespiratory Fitness), p. 17.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 19; Ch. 14 (Cardiorespiratory Fitness), p. 17.",
     "manualVerified": true
   },
   {
-    "id": 261,
+    "id": 260,
     "question": "Based on the neuro-metabolic system continuum, which training activities would be performed last when cross training?",
     "options": [
-      "Power",
       "Strength",
       "Aerobic endurance",
+      "Power",
       "Static flexibility"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Power and strength rely heavily on the phosphagen system, hypertrophy and anaerobic endurance rely on glycogen, whereas aerobic training uses the most efficient system - but at the cost of force production. Aerobic endurance training is performed last in the main bout of exercise. Dynamic flexibility is used during warm-up and cool down periods, followed by foam rolling and static stretching. NCSF Manual reference: Ch. 4 (Human Physiology), p. 52; Ch. 13 (Anaerobic Resistance Training), p. 39.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 52; Ch. 13 (Anaerobic Resistance Training), p. 39.",
     "manualVerified": true
   },
   {
-    "id": 262,
+    "id": 261,
     "question": "Approximately _______ hours of recovery should be allowed between intense or high-volume leg training sessions.",
     "options": [
-      "36",
-      "72",
       "24",
-      "48"
+      "36",
+      "48",
+      "72"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "The recovery period is defined as the duration of time between exercise sessions. It allows for energy system replenishment and adaptations to occur in response to the training stimulus. Inadequate recovery increases the risk for injury, illness, and overtraining while excess recovery limits fitness improvements. The minimum recovery period between intense leg training sessions is 48 hours (day off in between). This could vary based on other training and life variables as well as the condition of the client. NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 7; Ch. 9 (Exploring Dietary Supplements), p. 6.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 7; Ch. 9 (Exploring Dietary Supplements), p. 6.",
     "manualVerified": true
   },
   {
-    "id": 263,
+    "id": 262,
     "question": "Why do machines allow for more weight to be lifted than during free weight exercises?",
     "options": [
       "The actual weight is not lifted by the body",
+      "All the above contribute",
       "Mechanical advantage via lever systems",
-      "The body experiences significantly reduced stabilization",
-      "All the above contribute"
+      "The body requires significantly reduced stabilization"
     ],
-    "correctIndex": 2,
-    "explanation": "Machine-based resistance training reduces the requirement of the stabilizer muscles; allowing more weight to be placed upon the prime mover. Removing the stabilizers from the equation allows the targeted muscle to be further isolated, increasing total time-under-tension explaining why machines are used for hypertrophy training. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15.",
+    "correctIndex": 3,
+    "explanation": "Machine-based resistance training reduces the requirement of the stabilizer muscles; allowing more weight to be placed upon the prime mover. Removing the stabilizers from the equation allows the targeted muscle to be further isolated, increasing total time-under-tension explaining why machines are used for hypertrophy training. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 10; Ch. 4 (Human Physiology), p. 158.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15.",
+    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 10; Ch. 4 (Human Physiology), p. 158.",
     "manualVerified": true
   },
   {
-    "id": 264,
+    "id": 263,
     "question": "Which of the following allows muscles to pull upon bones for movement?",
     "options": [
       "Fascia",
-      "Sarcomeres",
       "Ligaments",
-      "Tendons"
+      "Tendons",
+      "Sarcomeres"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Tendons connect muscle to bone while ligaments primarily serve to attach bones to bones within a joint. Fascia is a type of connective tissue which encompasses skeletal muscle, providing shape. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 6; Ch. 2 (Functional Anatomy and Training Instruction), p. 8.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 6; Ch. 2 (Functional Anatomy and Training Instruction), p. 8.",
     "manualVerified": true
   },
   {
-    "id": 265,
+    "id": 264,
     "question": "Which of the following statements concerning negative sets is correct?",
     "options": [
+      "The eccentric phase is performed using 80-90% of maximum",
       "None of the above are correct",
       "They are useful for maximizing hypertrophy",
-      "They require a spot-assisted concentric phase",
-      "The eccentric phase is performed using 80-90% of maximum"
+      "They require a spot-assisted concentric phase"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Negative sets were popularized by early strength athletes to maximize force output and overcome training plateaus by increasing stability demands at high weight. The eccentric phase is performed using 110-130% of maximum, followed by a spot-assisted concentric phase. Using negative sets may not be appropriate for all clients due to the benefit-to-risk ratio and the effects on blood pressure; but it can be valuable during functional body-weight lifts such as Nordic hamstrings, push-ups, and pull-ups. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 4 (Human Physiology), p. 32.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 4 (Human Physiology), p. 32.",
     "manualVerified": true
   },
   {
-    "id": 266,
+    "id": 265,
     "question": "What common disease can benefit from programming resistance and aerobic exercise?",
     "options": [
-      "Diabetes",
       "Inflammatory obesity",
+      "Osteoporosis",
       "All the above",
-      "Osteoporosis"
+      "Diabetes"
     ],
     "correctIndex": 2,
     "explanation": "Both aerobic and anaerobic exercise can reduce the risk of developing disease. Strength training is particularly useful to excite both muscle and bone cells. Diabetes and obesity-related inflammation require both types of exercise, as the risk for heart disease is increased and aerobic training adds benefits to hormone management. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 9; Ch. 6 (Physical Activity and Risk for Disease), p. 8.",
@@ -5905,21 +5355,19 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 47,
-    "commitTier": "CHANGE_CANDIDATE",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 9; Ch. 6 (Physical Activity and Risk for Disease), p. 8.",
     "manualVerified": true
   },
   {
-    "id": 267,
+    "id": 266,
     "question": "You are training a healthy 35 year-old male who states his main goal is to add 20 lbs. of muscle. He is hoping to attain these gains by working with you twice a week for 60 minutes over the next 3 months. How should you advise this client?",
     "options": [
-      "the goal can be met with proper muscle group emphasis, but there is no time for cardiovascular training",
       "one-hour is not long enough for effective hypertrophy training",
+      "two sessions per week for a hypertrophy training goal would require the use of circuits for adequate volume",
       "the total training duration and volume per week is too low for the desired outcome",
-      "two sessions per week for a hypertrophy training goal would require the use of circuits for adequate volume"
+      "the goal can be met with proper muscle group emphasis, but there is no time for cardiovascular training"
     ],
     "correctIndex": 2,
     "explanation": "Hypertrophy-specific training requires a volume unattainable with only two resistance training sessions per week. Likewise adding 20 lbs. of muscle in 3 months is unlikely unless the individual is severely malnourished or on anabolic steroids. In this example, the total training duration and volume per week is too low for the desired outcome, and this should be clarified with the client. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 17; Ch. 13 (Anaerobic Resistance Training), p. 539.",
@@ -5927,52 +5375,46 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 17; Ch. 13 (Anaerobic Resistance Training), p. 539.",
     "manualVerified": true
   },
   {
-    "id": 268,
+    "id": 267,
     "question": "Which of the following will help a client improve their aerobic capacity at the fastest relative rate?",
     "options": [
-      "Steady-state training at 60-70% HRmax",
-      "\"Long, slow distance training at 40-50% HRmax\"",
       "Super-sets of paired muscles",
-      "Interval training reaching >80% HRmax"
+      "\"Long, slow distance training at 40-50% HRmax\"",
+      "Interval training reaching >80% HRmax",
+      "Steady-state training at 60-70% HRmax"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Interval training has been shown to yield the fastest positive aerobic adaptation responses. Steady-state and long, slow distance training yield benefits and can contribute to significant caloric expenditure, but the adaptation rate is not the same as the intensity is lower. Paired supersets can increase training volume and provide limited aerobic benefits, but the focus is still more on anaerobic adaptations. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 35; Ch. 14 (Cardiorespiratory Fitness), p. 19.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 35; Ch. 14 (Cardiorespiratory Fitness), p. 19.",
     "manualVerified": true
   },
   {
-    "id": 269,
+    "id": 268,
     "question": "Which of the following is being stretched in the image shown?",
     "options": [
-      "Rectus femoris",
+      "Adductor magnus",
       "Anterior tibialis",
-      "Gastrocnemius",
-      "Adductor magnus"
+      "Rectus femoris",
+      "Gastrocnemius"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "The gastrocnemius (calf) is being stretched in the image presented. Flexing the hip and dorsiflexing the ankle places stretching tension upon the plantar flexors. Note that the knee must be kept fully extended to stretch the gastrocnemius specifically, flexion of the knee involves more of the soleus. Also, keeping the alternate leg flat on the ground maintains a more aggressive stretch response, this is especially true if performing a hamstring stretch from a similar position. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 40; Ch. 15 (Flexibility), p. 615.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -5982,7 +5424,7 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 270,
+    "id": 269,
     "question": "What is the appropriate rest interval between 2 sets of power cleans using 85% 1RM?",
     "options": [
       "5-15 seconds",
@@ -5996,42 +5438,38 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 16 (Introduction to Exercise Programming), p. 19.",
     "manualVerified": true
   },
   {
-    "id": 271,
+    "id": 270,
     "question": "Which of the following statements regarding pyramid training is accurate?",
     "options": [
-      "The system is used for power development when integrated with plyometrics",
-      "The system is optimal for beginners seeking hypertrophy through motor rehearsal",
       "The system uses high repetitions and short rest intervals",
-      "The system is used for strength development as it provides progressive overload and neural enhancements"
+      "The system is used for power development when integrated with plyometrics",
+      "The system is used for strength development as it provides progressive overload and neural enhancements",
+      "The system is optimal for beginners seeking hypertrophy through motor rehearsal"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Pyramid training is ideal for strength development due to the progressive overload and neural enhancements it provides. This is seen applied with progressive increases in weight, and corresponding reductions in the repetitions performed each set. The repetitions generally progress downward into neuromuscular schemes of 3-5 repetitions (Example: 10, 8, 6, 5) NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 638; Ch. 16 (Introduction to Exercise Programming), p. 24.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 638; Ch. 16 (Introduction to Exercise Programming), p. 24.",
     "manualVerified": true
   },
   {
-    "id": 272,
+    "id": 271,
     "question": "What factor determines the adaptations that enhance muscular strength the most?",
     "options": [
-      "the number of days performed per week",
       "the number of muscles involved",
       "the gender of the client",
+      "the number of days performed per week",
       "intensity used in the exercise"
     ],
     "correctIndex": 3,
@@ -6040,87 +5478,79 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 13; Ch. 12 (Exercise Program Components), p. 487.",
     "manualVerified": true
   },
   {
-    "id": 273,
+    "id": 272,
     "question": "What training system is used to improve both strength and power simultaneously?",
     "options": [
-      "Circuit",
-      "Contrast sets",
       "Combination sets",
-      "Compound sets"
+      "Circuit",
+      "Compound sets",
+      "Contrast sets"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "Contrast sets exploit the neuromuscular crossover exhibited between strength and power training by maximizing fast-twitch fiber recruitment within the working muscle groups. Circuit training is most appropriate to decrease one's risk for metabolic syndrome and should not emphasize strength or high-intensity power output. Combination exercises are when two exercises are fused to form one, like a front squat to press - their emphasis is connectivity, function, and power. Compound sets are similar to combination sets, except that there is a pause between the movements, e.g. a Clean and Jerk. Compound sets generally have a greater emphasis on connectivity and power. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 25; Ch. 13 (Anaerobic Resistance Training), p. 22.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 25; Ch. 13 (Anaerobic Resistance Training), p. 22.",
     "manualVerified": true
   },
   {
-    "id": 274,
+    "id": 273,
     "question": "Which of the following training systems would provide the best adaptation for muscle hypertrophy?",
     "options": [
+      "Lactate tolerance circuit",
       "Supersets",
       "Negative sets",
-      "All work equally",
-      "Lactate tolerance circuit"
+      "All work equally"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Supersets are a useful tool for hypertrophy training as they allow for increased training volume and maximal fatigue/intensity placed upon the muscles of focus Negative sets are useful for strength and overcoming a lift-specific plateau. Lactate tolerance training is great for overall conditioning, but the loading and muscle-specific volume are not optimal for hypertrophy-specific adaptations. NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 14; Ch. 13 (Anaerobic Resistance Training), p. 2.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 14; Ch. 13 (Anaerobic Resistance Training), p. 2.",
     "manualVerified": true
   },
   {
-    "id": 275,
+    "id": 274,
     "question": "Which of the following is a combination exercise?",
     "options": [
-      "Hang clean to split jerk",
-      "Medicine ball floor slams",
       "Front squat to overhead press",
-      "Kettlebell overhead lunge"
+      "Medicine ball floor slams",
+      "Kettlebell overhead lunge",
+      "Hang clean to split jerk"
     ],
-    "correctIndex": 2,
-    "explanation": "Combination exercises by definition are single movements which combine two exercises into one – such as a lunge with rotation or front squat to overhead press. Both activities end at the same time combining force production. They are only feasible if the transition point between the two actions allows for continual movement from one to the other. Compound sets are similar, such as a clean and jerk, but there is a point between the two lifts where the action is stopped - and form is reset to begin the second action based on the desirable location of the load. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 517; Ch. 16 (Introduction to Exercise Programming), p. 17.",
+    "correctIndex": 0,
+    "explanation": "Combination exercises by definition are single movements which combine two exercises into one \u2013 such as a lunge with rotation or front squat to overhead press. Both activities end at the same time combining force production. They are only feasible if the transition point between the two actions allows for continual movement from one to the other. Compound sets are similar, such as a clean and jerk, but there is a point between the two lifts where the action is stopped - and form is reset to begin the second action based on the desirable location of the load. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 517; Ch. 16 (Introduction to Exercise Programming), p. 17.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 517; Ch. 16 (Introduction to Exercise Programming), p. 17.",
     "manualVerified": true
   },
   {
-    "id": 276,
+    "id": 275,
     "question": "Which selection would be the best choice for improving upper body power?",
     "options": [
+      "lunge to press with a dumbbell",
       "squat jumps superset with push-ups",
-      "alternating dumbbell press superset with dips",
       "incline medicine ball passes",
-      "lunge to press with a dumbbell"
+      "alternating dumbbell press superset with dips"
     ],
     "correctIndex": 2,
     "explanation": "If upper body power is the training goal, the most applicable exercise would be the incline medicine ball chest pass due to the velocity of the movement. If lower body power was the goal a good example could be box jumps for the same reason. Power is calculated by force x distance divided by time. Using 30-60% 1RM allows for peak power production as the lower weight allows for higher speeds of movement. For older clients, use relatively light resistance and focus on concentric-only throws to reduce the risk for injury. NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 8; Ch. 16 (Introduction to Exercise Programming), p. 18.",
@@ -6128,30 +5558,26 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 47,
-    "commitTier": "CHANGE_CANDIDATE",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 8; Ch. 16 (Introduction to Exercise Programming), p. 18.",
     "manualVerified": true
   },
   {
-    "id": 277,
+    "id": 276,
     "question": "What instruction should be made to correct the performance of the lat pull-down exercise in the picture?",
     "options": [
-      "have the client pull the bar in front of their head instead of behind",
-      "lean forward during the pulling phase",
       "instruct the client to flex the trunk at the terminal point to maximize the ROM",
-      "reduce the width of the hand position"
+      "reduce the width of the hand position",
+      "have the client pull the bar in front of their head instead of behind",
+      "lean forward during the pulling phase"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "For the situation presented in the picture, the appropriate course of action would be to instruct the client to pull the bar to their chest instead of behind the head. Performing the lat pull-down behind the neck is contraindicated and increases the risk for a cervical spine injury as well as soft-tissue injuries within the shoulder joints. Furthermore, this form will actually reduce contribution from the latissimus dorsi muscles when compared to pulling in front of the head. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92; Ch. 2 (Functional Anatomy and Training Instruction), p. 68.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "imagePaths": [
@@ -6161,79 +5587,73 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 278,
+    "id": 277,
     "question": "Lack of heat loss via ____________ while training in a hot and humid environment presents the greatest risk for heat-related illnesses.",
     "options": [
-      "Convection",
+      "Evaporation",
       "Radiation",
       "Conduction",
-      "Evaporation"
+      "Convection"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Heat loss via sweat evaporation, which is derived from blood plasma, is limited in humid environments. Hot environments make it difficult for the body to lose heat via radiation, convection and conduction as well. So, hot and humid environments can create a much greater risk for heat-related illnesses and severe dehydration. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 49; Ch. 14 (Cardiorespiratory Fitness), p. 21.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 49; Ch. 14 (Cardiorespiratory Fitness), p. 21.",
     "manualVerified": true
   },
   {
-    "id": 279,
+    "id": 278,
     "question": "What activity is used as a functional exercise for improving shoulder horizontal abduction?",
     "options": [
-      "Pull-up",
-      "Modified pull-up (feet on ground supine pull-up)",
+      "Modified push-up (hands on a bench decline push-up)",
       "Push-up",
-      "Modified push-up (hands on a bench decline push-up)"
+      "Pull-up",
+      "Modified pull-up (feet on ground supine pull-up)"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "The modified pull-up requires shoulder horizontal abduction. Rowing exercises where the humerus is abducted occur in the transverse plane and are useful for muscle balance and aid in performing body-weighted functional tasks. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 17; Ch. 2 (Functional Anatomy and Training Instruction), p. 47.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 17; Ch. 2 (Functional Anatomy and Training Instruction), p. 47.",
     "manualVerified": true
   },
   {
-    "id": 280,
+    "id": 279,
     "question": "What is the best exercise to strengthen the lats in the frontal plane?",
     "options": [
-      "Lat pull-down behind the head",
       "Chin-up",
       "Pull-up",
+      "Lat pull-down behind the head",
       "Pullover"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "The pull-up exercise is the best selection for training the lats in the frontal plane. The lat pull-down is performed in the frontal plane as well - and is therefore a valid choice for increasing strength in the humeral adductors - but pulling behind the head reduces lat activation and is contraindicated due to risk for injury. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 67; Ch. 7 (Resting and Active Fitness Assessments), p. 40.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 67; Ch. 7 (Resting and Active Fitness Assessments), p. 40.",
     "manualVerified": true
   },
   {
-    "id": 281,
+    "id": 280,
     "question": "What exercise most effectively trains the obliques?",
     "options": [
+      "Lateral step-ups",
       "Back extension",
-      "Hanging knee raises",
       "Medicine ball rotation pass",
-      "Lateral step-ups"
+      "Hanging knee raises"
     ],
     "correctIndex": 2,
     "explanation": "The obliques function to rotate and laterally flex the spine. Therefore, the medicine ball rotational pass would be the best choice to train the muscular system. Back extension works the erector spinae while hanging leg raises focus on the rectus abdominis. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 108; Ch. 1 (Introduction to Personal Training), p. 3.",
@@ -6241,65 +5661,59 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 108; Ch. 1 (Introduction to Personal Training), p. 3.",
     "manualVerified": true
   },
   {
-    "id": 282,
+    "id": 281,
     "question": "A neutral lumbar spine is desirable during overhead exercises, requiring it to maintain a ________.",
     "options": [
       "Kyphotic curve",
       "Lateral curve",
-      "Linear curve",
-      "Lordotic curve"
+      "Lordotic curve",
+      "Linear curve"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "The lumbar spine's natural position is a lordotic curve. It is undesirable to increase the curvature or flatten the back as it places undue stress on the spine. A common error with overhead lifts is to lean backwards to employ assistance from the chest causing lumbar lordosis; an undesirable exaggerated lumbar curve. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 9.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 9.",
     "manualVerified": true
   },
   {
-    "id": 283,
+    "id": 282,
     "question": "During pull-ups the correct position at the bottom requires the:",
     "options": [
+      "Knees to be flexed",
       "Shoulders to be extended",
-      "Arms remain straight",
       "Hips to be flexed",
-      "Knees to be flexed"
+      "Arms remain straight"
     ],
-    "correctIndex": 1,
-    "explanation": "The arms are fully flexed at the top of the movement and fully extended at the bottom of the movement. Flexing the arms before the complete descent is common to individuals who are weak as they attempt to rely on the biceps to assist the movement. If spotting is required to maintain proper form, make sure to provide assistance at the client’s waist or lower ribcage. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 75; Ch. 2 (Functional Anatomy and Training Instruction), p. 93.",
+    "correctIndex": 3,
+    "explanation": "The arms are fully flexed at the top of the movement and fully extended at the bottom of the movement. Flexing the arms before the complete descent is common to individuals who are weak as they attempt to rely on the biceps to assist the movement. If spotting is required to maintain proper form, make sure to provide assistance at the client\u2019s waist or lower ribcage. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 75; Ch. 2 (Functional Anatomy and Training Instruction), p. 93.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 75; Ch. 2 (Functional Anatomy and Training Instruction), p. 93.",
     "manualVerified": true
   },
   {
-    "id": 284,
+    "id": 283,
     "question": "What is the purpose of an AED during emergency situations?",
     "options": [
-      "To stabilize blood sugar",
+      "To stabilize a joint after a ligament tear",
       "To defibrillate a heart which has flatlined",
       "To minimize the impact of heat stroke",
-      "To stabilize a joint after a ligament tear"
+      "To stabilize blood sugar"
     ],
     "correctIndex": 1,
     "explanation": "An automatic external defibrillator (AED) is used on an individual in asystole. It does not have an impact on blood sugar, body temperature or joint stability. It is used to shock the heart back online. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 11; Ch. 7 (Resting and Active Fitness Assessments), p. 35.",
@@ -6307,131 +5721,119 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 11; Ch. 7 (Resting and Active Fitness Assessments), p. 35.",
     "manualVerified": true
   },
   {
-    "id": 285,
+    "id": 284,
     "question": "Which of the following exercises involves the deltoid as a prime mover?",
     "options": [
-      "Lat pull-down",
+      "Shrug",
       "Upright row",
       "Seated row",
-      "Shrug"
+      "Lat pull-down"
     ],
     "correctIndex": 1,
-    "explanation": "The upright row requires the humerus to be abducted to lift the load – which relies upon the anterior and medial deltoid. Shrugs primarily activate the trapezius while rows and pull-downs focus on latissimus dorsi and rhomboid activation. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15.",
+    "explanation": "The upright row requires the humerus to be abducted to lift the load \u2013 which relies upon the anterior and medial deltoid. Shrugs primarily activate the trapezius while rows and pull-downs focus on latissimus dorsi and rhomboid activation. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15.",
     "manualVerified": true
   },
   {
-    "id": 286,
+    "id": 285,
     "question": "Your new client is a 66 year-old female who is concerned about her bone health. What should be included in her program to address her concerns?",
     "options": [
       "circuits of non-impact aerobic exercises mixed with passive stretching",
-      "aerobic activities to minimize the risk of fractures and related injuries",
+      "resistance and power training using all major muscle groups",
       "flexibility training to balance out connective tissues",
-      "resistance and power training using all major muscle groups"
+      "aerobic activities to minimize the risk of fractures and related injuries"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Aging female clients are at risk for developing osteopenia/osteoporosis and sarcopenia; therefore, exercise bouts should include both resistance and power training using all major muscle groups. Weight-bearing activities have been shown to help improve bone health and reverse the age-related decline in bone density. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 29; Ch. 7 (Resting and Active Fitness Assessments), p. 55.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 29; Ch. 7 (Resting and Active Fitness Assessments), p. 55.",
     "manualVerified": true
   },
   {
-    "id": 287,
+    "id": 286,
     "question": "Your client is performing a seated leg extension on a machine and requires a spot to complete the final repetition. Where should you provide assistance?",
     "options": [
-      "under the client's ankles",
-      "at the pad or lever arm being moved",
       "at the cable of the machine",
-      "to the weight stack"
+      "under the client's ankles",
+      "to the weight stack",
+      "at the pad or lever arm being moved"
     ],
-    "correctIndex": 1,
-    "explanation": "In order to provide assistance when a client is performing the seated leg extension, the personal trainer should apply force to the pad or lever arm. Do not provide direct assistance to the client’s body as complete failure could result in injury to all involved. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
+    "correctIndex": 3,
+    "explanation": "In order to provide assistance when a client is performing the seated leg extension, the personal trainer should apply force to the pad or lever arm. Do not provide direct assistance to the client\u2019s body as complete failure could result in injury to all involved. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
     "manualVerified": true
   },
   {
-    "id": 288,
+    "id": 287,
     "question": "When constructing a program for your client, what intensity should you select for the leg press if you want them to complete eight (8) repetitions to volitional fatigue?",
     "options": [
       "60% 1RM",
-      "70% 1RM",
+      "80% 1RM",
       "90% 1RM",
-      "80% 1RM"
+      "70% 1RM"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Performing eight repetitions to volitional fatigue will correlate with 80% of the 1RM. Choosing the proper intensity is essential when trying to optimize the effectiveness and efficiency of a training program towards desired adaptations. The relative intensity along with rest interval and number of repetitions determine the outcome; whether it is endurance, muscle hypertrophy, strength, power or function. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 12 (Exercise Program Components), p. 5.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 12 (Exercise Program Components), p. 5.",
     "manualVerified": true
   },
   {
-    "id": 289,
+    "id": 288,
     "question": "What is the proper cue if a client presents with tibial translation (forward knee) during a back squat?",
     "options": [
-      "Increase ankle dorsi-flexion",
+      "Shorten your stance",
       "Elevate your chest",
-      "Push your hips back as you flex your knees",
-      "Shorten your stance"
+      "Increase ankle dorsi-flexion",
+      "Push your hips back as you flex your knees"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Tibial translation occurs when the knees cross the toes and can be detrimental to the knee joints during various loaded conditions - particularly back squats. If this occurs during a back squat the trainer can cue the client to push their hips back simultaneously as they flex the knees to reduce the excessive dorsi flexion. Additional flexion at the trunk or knees would be improper cues during this exercise and elevating the chest will not impact hip position as needed. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 38; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 38; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
     "manualVerified": true
   },
   {
-    "id": 290,
+    "id": 289,
     "question": "Which of the following exercises represents a functional task for the knee joint?",
     "options": [
-      "prone leg curl",
       "leg press",
+      "straight-leg deadlifts",
       "box step-up",
-      "straight-leg deadlifts"
+      "prone leg curl"
     ],
     "correctIndex": 2,
     "explanation": "The box step-up replicates a functional task of daily living. The other choices all use machines, or in the case of a straight-leg deadlift is contraindicated due to the locked leg position. Employing movements that replicate the use of muscle in real world applications provide for improvements in functional tasks such as climbing stairs. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 26; Ch. 2 (Functional Anatomy and Training Instruction), p. 27.",
@@ -6439,96 +5841,86 @@ const EXAM_QUESTIONS = [
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 26; Ch. 2 (Functional Anatomy and Training Instruction), p. 27.",
     "manualVerified": true
   },
   {
-    "id": 291,
+    "id": 290,
     "question": "Which of the following would need to be fixed during a cable fly exercise?",
     "options": [
-      "Slightly bending at the elbows",
-      "Maintaining an erect spine during the eccentric phase",
       "Using a split stance",
-      "Flexing at the spine during the concentric phase"
+      "Maintaining an erect spine during the eccentric phase",
+      "Flexing at the spine during the concentric phase",
+      "Slightly bending at the elbows"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "A split stance can be used to enhance stability as long as the hips or trunk do not move. Slightly bending at the elbows is appropriate as long as the mild angle is maintained. Flexing or extending the hips and trunk to assist the movement via momentum indicates the load may need to be lowered or technique is not mastered. The spine should not flex. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 2 (Functional Anatomy and Training Instruction), p. 79.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 2 (Functional Anatomy and Training Instruction), p. 79.",
     "manualVerified": true
   },
   {
-    "id": 292,
+    "id": 291,
     "question": "What is the ideal hand position when spotting the lat pull-down exercise?",
     "options": [
-      "at the bar",
-      "at the client's wrists",
+      "at the client's distal humerus",
       "at weight stack being used",
-      "at the client's distal humerus"
+      "at the client's wrists",
+      "at the bar"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "When spotting the lat pull-down exercise, the trainer should stand behind the client and place both hands on the bar using a pronated grip (palms down) to provide assistance as needed. Due to the nature of the lift, spotting at the implement is the safest and most effective option. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 67; Ch. 2 (Functional Anatomy and Training Instruction), p. 69.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 67; Ch. 2 (Functional Anatomy and Training Instruction), p. 69.",
     "manualVerified": true
   },
   {
-    "id": 293,
+    "id": 292,
     "question": "Range of motion limitations during overhead pressing movements are most likely caused by which of the following?",
     "options": [
-      "tightness in the rectus abdominis",
-      "weakness in the rhomboids",
       "tightness in the latissimus dorsi",
-      "weakness in the supraspinatus"
+      "weakness in the rhomboids",
+      "weakness in the supraspinatus",
+      "tightness in the rectus abdominis"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Tight latissimus dorsi limit the ability of the shoulder to attain full functional ranges over head. Tight lats can impact both shoulder flexion and abduction. Since the lat acts on the humerus in both the sagittal and front plane it affects military press and dumbbell presses alike. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 15; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24.",
     "manualVerified": true
   },
   {
-    "id": 294,
+    "id": 293,
     "question": "Which of the following exercises should not be performed due to the potential to cause serious injury?",
     "options": [
       "Leg curls using a stability ball",
-      "Push-ups using a stability ball instead of a bench",
       "Dumbbell shoulder press on a physioball",
-      "Barbell box squats using a stability ball instead of a box"
+      "Barbell box squats using a stability ball instead of a box",
+      "Push-ups using a stability ball instead of a bench"
     ],
-    "correctIndex": 3,
-    "explanation": "A stability ball can be used for a number of exercises but should not be used with back squats in place of another utility. The back squat is already a relatively difficult exercise and if the ball were to move or pop, the exerciser could be severely injured. As an exercise professional it is your job to assess the risk-benefit ratio of any activity. Any action that places the client at risk for injury with a missed repetition or movement of equipment – such as a supine leg press using a Smith machine – should be avoided. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 31.",
+    "correctIndex": 2,
+    "explanation": "A stability ball can be used for a number of exercises but should not be used with back squats in place of another utility. The back squat is already a relatively difficult exercise and if the ball were to move or pop, the exerciser could be severely injured. As an exercise professional it is your job to assess the risk-benefit ratio of any activity. Any action that places the client at risk for injury with a missed repetition or movement of equipment \u2013 such as a supine leg press using a Smith machine \u2013 should be avoided. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 31.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "optionImages": {
@@ -6541,148 +5933,136 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 295,
+    "id": 294,
     "question": "Which strengthening exercise for the pectoralis would be considered the most functional for a 65-year-old?",
     "options": [
-      "Incline barbell press",
-      "Push-ups off a bench",
       "Alternating machine chest press",
-      "DB chest press off a bench"
+      "Incline barbell press",
+      "DB chest press off a bench",
+      "Push-ups off a bench"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "Push-ups off the bench would be the most functional for this individual as it is a closed-chain activity that requires the exerciser to stabilize their core in a plank-like position while working their chest and triceps. DB or barbell bench presses are not as functional as they are open-chain exercises and stabilized. The same applies to a seated machine press, alternating or not. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 62; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 62; Ch. 2 (Functional Anatomy and Training Instruction), p. 33.",
     "manualVerified": true
   },
   {
-    "id": 296,
+    "id": 295,
     "question": "Atherosclerosis can lead to which of the following?",
     "options": [
-      "stroke",
       "myocardial infarction",
       "all of the above",
-      "hypertension"
+      "hypertension",
+      "stroke"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Atherosclerosis occurs when arteries become occluded due to the build-up of fatty substances; causing the eventual reduction of blood flow to tissues. Atherosclerosis can lead to stroke, hypertension and even myocardial infarction. Obesity, smoking, high cholesterol, physical inactivity and hypertension all increase the risk of atherosclerosis. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 6 (Physical Activity and Risk for Disease), p. 12.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 6 (Physical Activity and Risk for Disease), p. 12.",
     "manualVerified": true
   },
   {
-    "id": 297,
+    "id": 296,
     "question": "Which of the following is a primary risk for children compared to adults during exercise?",
     "options": [
       "Resistance exercise",
+      "All the above",
       "Heat injury",
-      "Bone injury",
-      "All the above"
+      "Bone injury"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Heat injuries are a primary risk for adolescent clients due to variations in their thermoregulatory system. Adolescents are not able to produce as much sweat as adults; potentially due to smaller sweat gland sizes, lower sensitivity to heat and a lower metabolic capacity. Therefore, monitoring children for overheating during exercise, especially in hot and humid environments, is recommended. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 32; Ch. 17 (Working with Special Populations), p. 644.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 32; Ch. 17 (Working with Special Populations), p. 644.",
     "manualVerified": true
   },
   {
-    "id": 298,
+    "id": 297,
     "question": "Which of the following can be conducted as a pre-activity assessment of risk for participation?",
     "options": [
-      "BMI",
-      "Central girth",
       "Body composition",
-      "All the above"
+      "All the above",
+      "Central girth",
+      "BMI"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Any measure of body composition or anthropometric evaluation can be performed as part of the pre-activity screening. BMI over 35, high central girth (males >40 inches, females >35 inches) and stage 2 or 3 obesity may warrant medical clearance. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 266; Ch. 7 (Resting and Active Fitness Assessments), p. 44.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 266; Ch. 7 (Resting and Active Fitness Assessments), p. 44.",
     "manualVerified": true
   },
   {
-    "id": 299,
+    "id": 298,
     "question": "What is the correct course of action for an individual who cannot reach the initial measure on the sit-and-reach test to identify an actual score?",
     "options": [
       "Recommend the client see a physical therapist to address any soft tissue issues",
+      "Recommend the client see a chiropractor to evaluate their back",
       "Stretch the client's hamstrings and low back before a second attempt",
-      "Document the individual as inflexible and ensure the program addresses the issue",
-      "Recommend the client see a chiropractor to evaluate their back"
+      "Document the individual as inflexible and ensure the program addresses the issue"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "It is not uncommon for people to have poor scores in the fitness-related component of fitness. Flexibility of the hamstrings and low back are often at very low levels among the general population. Failing the sit-and-reach means the client is inflexible in the posterior kinetic chain. They need to stretch, not see a physician. Document starting points and begin a client-specific approach to address the issue. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 19; Ch. 13 (Anaerobic Resistance Training), p. 22.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "HIGH",
-    "strictVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 19; Ch. 13 (Anaerobic Resistance Training), p. 22.",
     "manualVerified": true
   },
   {
-    "id": 300,
+    "id": 299,
     "question": "The transverse abdominis serves which of the following purposes?",
     "options": [
       "Extends the trunk",
-      "Stabilizes the spine",
       "Flexes the trunk",
+      "Stabilizes the spine",
       "Lateral flexes the spine"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "The transverse abdominis is a primary deep spinal stabilizer which helps protect the spine during loaded conditions. It also helps maintain proper posture and manage forces which traverse the kinetic chain during activity. The rectus abdominis and erector spinae regulate trunk flexion and extension, respectively while the obliques laterally flex the spine. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 3; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 116.",
     "source": "questions.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "strictConfidence": "LOW",
-    "strictVerified": false,
-    "commitConfidence": 82,
-    "commitTier": "COMMIT_MEDIUM",
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
     "manualReference": "NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 3; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 116.",
     "manualVerified": true
   },
   {
-    "id": 301,
+    "id": 300,
     "question": "The sliding filament theory relates to which of the following?",
     "options": [
-      "Type II muscle fibers must interlock with type I muscle fibers for a contraction to occur",
       "Fiber filaments must slide down the T-tubules to facilitate a contraction",
-      "Muscle contractions are facilitated by the largest fibers first",
-      "Thin actin filaments move over the thick myosin filaments during a muscle contraction"
+      "Thin actin filaments move over the thick myosin filaments during a muscle contraction",
+      "Type II muscle fibers must interlock with type I muscle fibers for a contraction to occur",
+      "Muscle contractions are facilitated by the largest fibers first"
     ],
-    "correctIndex": 3,
-    "explanation": "Sliding filament theory cascade of events: (1) an action potential travels down T-tubules to stimulate the sarcoplasmic reticulum to release calcium ions which unlock the bond between actin filaments and troponin; (2) when troponin is moved due to calcium activity, myosin can attach to actin - forming a cross bridge via its myosin head; and (3) ATP is split at the myosin-actin attachment site which releases energy and allows the myosin head to pull or “slide” the actin to shorten/contract the muscle fiber. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 26.",
+    "correctIndex": 1,
+    "explanation": "Sliding filament theory cascade of events: (1) an action potential travels down T-tubules to stimulate the sarcoplasmic reticulum to release calcium ions which unlock the bond between actin filaments and troponin; (2) when troponin is moved due to calcium activity, myosin can attach to actin - forming a cross bridge via its myosin head; and (3) ATP is split at the myosin-actin attachment site which releases energy and allows the myosin head to pull or \u201cslide\u201d the actin to shorten/contract the muscle fiber. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 26.",
     "source": "questions.docx",
     "merged": true,
     "crosscheckApproved": true,
@@ -6693,15 +6073,15 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 302,
+    "id": 301,
     "question": "A posterior pelvic tilt should be maintained during which of the following exercises?",
     "options": [
-      "Crunch on a stability ball",
+      "RDL",
       "Cable triceps push-down",
       "Bent-over row",
-      "RDL"
+      "Crunch on a stability ball"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Abdominal crunches require a posterior pelvic tilt for proper muscle activation of the rectus abdominis. An anterior or neutral tilt can allow for significant contribution from the hip flexors. Posterior pelvic tilting during the other exercise would not be appropriate for protecting the spine, especially during the RDL. NCSF Manual reference: Ch. 16 (Introduction to Exercise Programming), p. 2; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 131.",
     "source": "questions.docx",
     "merged": true,
@@ -6713,15 +6093,15 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 303,
+    "id": 302,
     "question": "Which of the following is a common error during stability ball leg curls?",
     "options": [
+      "Maintaining hip flexion during the concentric phase",
       "Leaving the arms by the sides instead of across the chest",
       "Keeping the trunk off the ground at all times during the set",
-      "Drawing the heels all the way to the glutes during the concentric phase",
-      "Maintaining hip flexion during the concentric phase"
+      "Drawing the heels all the way to the glutes during the concentric phase"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "During stability ball leg curls, the hips should be fully extended while drawing the heels to the glutes during the concentric phase. This allows for maximal activation of the hamstrings, as intended by the exercise to create force through hip extension and knee flexion at the same time. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 2 (Functional Anatomy and Training Instruction), p. 79.",
     "source": "questions.docx",
     "merged": true,
@@ -6733,12 +6113,12 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 304,
+    "id": 303,
     "question": "Which of the following is used to measure flexibility?",
     "options": [
-      "Sit-and-reach box",
       "Inclinometer",
       "Goniometer",
+      "Sit-and-reach box",
       "All the above"
     ],
     "correctIndex": 3,
@@ -6753,7 +6133,7 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 305,
+    "id": 304,
     "question": "Which of the following training systems involves performing 2-3 sets of the same exercise in a row with transitional rest?",
     "options": [
       "Supersets",
@@ -6762,7 +6142,7 @@ const EXAM_QUESTIONS = [
       "Drop sets"
     ],
     "correctIndex": 3,
-    "explanation": "Drop sets or strip sets on machines are used for hypertrophy and maximizing motor unit recruitment within the targeted muscle. 2-3 sets of the same exercise are commonly performed in a row - with only the time it takes to drop or “strip” the weight down serving as transitional rest between efforts. Each set is performed for a designated number of reps or volitional failure. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 13 (Anaerobic Resistance Training), p. 24.",
+    "explanation": "Drop sets or strip sets on machines are used for hypertrophy and maximizing motor unit recruitment within the targeted muscle. 2-3 sets of the same exercise are commonly performed in a row - with only the time it takes to drop or \u201cstrip\u201d the weight down serving as transitional rest between efforts. Each set is performed for a designated number of reps or volitional failure. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 30; Ch. 13 (Anaerobic Resistance Training), p. 24.",
     "source": "questions.docx",
     "merged": true,
     "crosscheckApproved": true,
@@ -6773,15 +6153,15 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 306,
+    "id": 305,
     "question": "Which of the following statements concerning periodization is correct?",
     "options": [
-      "All of the above are correct",
       "It uses phases of training for systemic adaptations",
       "It reflects a logical method of organizing training into cyclical time periods",
-      "It identifies that the body adapts more efficiently when adaptations are strategically built upon each other"
+      "It identifies that the body adapts more efficiently when adaptations are strategically built upon each other",
+      "All of the above are correct"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Periodization represents the concept that the body adapts more efficiently when adaptations are strategically built upon each other. It reflects a logical method of organizing training into sequential phases and cyclical time periods. This allows adaptation residuals to be strategically built upon each other for maximal gains over time. Desired adaptive responses associated with training are referred to as supercompensation - the supercompensation curve reflects a period of time when work capacity/performance is acutely elevated. Periodization organizes phases so that these effects are built upon each other. NCSF Manual reference: Ch. 4 (Human Physiology), p. 10; Ch. 12 (Exercise Program Components), p. 2.",
     "source": "questions.docx",
     "merged": true,
@@ -6793,15 +6173,15 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 307,
+    "id": 306,
     "question": "Which of the following represents correct exercise order when all implemented within a strength training session?",
     "options": [
-      "Single-leg calf raises, back squat, machine prone leg curl, leg press",
-      "Leg press, single-leg calf raises, back squat, machine prone leg curl",
+      "Back squat, leg press, machine prone leg curl, single-leg calf raises",
       "Machine prone leg curl, leg press, back squat, single-leg calf raises",
-      "Back squat, leg press, machine prone leg curl, single-leg calf raises"
+      "Single-leg calf raises, back squat, machine prone leg curl, leg press",
+      "Leg press, single-leg calf raises, back squat, machine prone leg curl"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "This selection provides the exercises in the proper order based on the intensity of the movement, loading possible for a strength phase, total volume of muscle mass used, and complexity of the action. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 324.",
     "source": "questions.docx",
     "merged": true,
@@ -6813,15 +6193,15 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 308,
+    "id": 307,
     "question": "Which of the following would be implemented first within a training session, assuming all are performed at 75% of 1RM?",
     "options": [
-      "Barbell front squat",
       "Single-leg stability ball leg curl",
       "Dumbbell RDL",
-      "Unilateral leg press"
+      "Unilateral leg press",
+      "Barbell front squat"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "The barbell front squat would be implemented first due to the loading possible, the intensity of the movement, the stability requirements and the total musculature involved. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 29; Ch. 16 (Introduction to Exercise Programming), p. 15.",
     "source": "questions.docx",
     "merged": true,
@@ -6833,15 +6213,15 @@ const EXAM_QUESTIONS = [
     "manualVerified": true
   },
   {
-    "id": 309,
+    "id": 308,
     "question": "A client has moderately elevated blood pressure, low VO2max, and high body fat. What would be most effective?",
     "options": [
+      "Cardiovascular training and reduced sodium intake",
       "High-intensity plyometrics with no dietary changes",
-      "Resistance training only with increased sodium intake",
       "Static stretching and increased caloric intake",
-      "Cardiovascular training and reduced sodium intake"
+      "Resistance training only with increased sodium intake"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Hypertension, poor aerobic fitness, and excess adiposity respond best to regular aerobic exercise (improves VO2max, aids weight loss) combined with dietary sodium reduction to help lower blood pressure. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 4; Ch. 5 (Evaluating Health and Physical Fitness), p. 212.",
     "source": "youtube-video",
     "merged": true,
@@ -6853,12 +6233,12 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 310,
+    "id": 309,
     "question": "Posterior pelvic tilt during bilateral leg exercises is commonly a result of what?",
     "options": [
-      "Weakness in the quadriceps",
       "Tightness in the hamstrings only",
       "Tightness in the hip flexors",
+      "Weakness in the quadriceps",
       "Tightness in the glutes"
     ],
     "correctIndex": 3,
@@ -6873,15 +6253,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 311,
+    "id": 310,
     "question": "Ankle dorsiflexion is caused by concentric contraction of which muscle?",
     "options": [
-      "Anterior tibialis",
       "Soleus",
+      "Plantaris",
       "Gastrocnemius",
-      "Plantaris"
+      "Anterior tibialis"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "The anterior tibialis is the primary dorsiflexor of the ankle, lifting the foot toward the shin during concentric action. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 40; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 116.",
     "source": "youtube-video",
     "merged": true,
@@ -6893,13 +6273,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 312,
+    "id": 311,
     "question": "What exercise causes elevation of the shoulder complex?",
     "options": [
       "Barbell shrug",
       "Lateral raise",
-      "Upright row",
-      "Barbell bench press"
+      "Barbell bench press",
+      "Upright row"
     ],
     "correctIndex": 0,
     "explanation": "Shrugging movements primarily involve scapular elevation, making the barbell shrug the correct choice. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 74; Ch. 2 (Functional Anatomy and Training Instruction), p. 47.",
@@ -6913,15 +6293,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 313,
+    "id": 312,
     "question": "Which exercise requires the greatest contribution from trunk stabilizers when using 80% 1RM?",
     "options": [
-      "Bench press",
       "Barbell bent-over row",
+      "Bench press",
       "Leg press",
       "Seated leg extension"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "The bent-over row demands significant isometric trunk stabilization to maintain spinal position under heavy load, more than seated exercises. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 16 (Introduction to Exercise Programming), p. 621.",
     "source": "youtube-video",
     "merged": true,
@@ -6933,35 +6313,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 314,
-    "question": "What refers to the cumulative input of the nervous system that tells the body about positional movement?",
-    "options": [
-      "Nociception",
-      "Exteroception",
-      "Equilibrioception only",
-      "Proprioception"
-    ],
-    "correctIndex": 3,
-    "explanation": "Proprioception is the body's sense of position and movement via sensory receptors in muscles, tendons, and joints. NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 20; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 2.",
-    "source": "youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "manualReference": "NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 20; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 2.",
-    "manualVerified": true,
-    "commitTier": "APPROVED",
-    "commitConfidence": 100
-  },
-  {
-    "id": 315,
+    "id": 313,
     "question": "Creatine phosphate in the phosphagen system would be the primary energy system for what activity?",
     "options": [
+      "30-minute jog",
       "100-meter sprint",
       "2-hour cycling event",
-      "30-minute jog",
       "Marathon running"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Short maximal efforts (~10 seconds) rely primarily on the phosphagen (ATP-PC) system. NCSF Manual reference: Ch. 4 (Human Physiology), p. 4; Ch. 4 (Human Physiology), p. 2.",
     "source": "youtube-video",
     "merged": true,
@@ -6973,15 +6333,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 316,
+    "id": 314,
     "question": "Which of the following is NOT an immediate effect during a workout?",
     "options": [
-      "Increased heart rate",
       "Elevated core temperature",
-      "Acute increases in muscle size",
-      "Increased motor unit recruitment"
+      "Increased heart rate",
+      "Increased motor unit recruitment",
+      "Acute increases in muscle size"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Muscle hypertrophy is a chronic adaptation, not an immediate acute response to a single workout. NCSF Manual reference: Ch. 4 (Human Physiology), p. 194; Ch. 13 (Anaerobic Resistance Training), p. 555.",
     "source": "youtube-video",
     "merged": true,
@@ -6993,7 +6353,7 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 317,
+    "id": 315,
     "question": "What has the greatest impact on the intensity of exercise?",
     "options": [
       "Relative hormonal response",
@@ -7013,7 +6373,7 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 318,
+    "id": 316,
     "question": "Overhead reaching with a medicine ball would challenge what degree of spinal flexion?",
     "options": [
       "Maximal spinal extension",
@@ -7033,15 +6393,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 319,
+    "id": 317,
     "question": "What is the time course of exposure to a training stimulus for nervous system adaptation?",
     "options": [
-      "Immediately after one session",
       "Days to weeks",
       "Within minutes of training",
+      "Immediately after one session",
       "Months to years"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "Neural adaptations to resistance training occur relatively quickly, within days to weeks. NCSF Manual reference: Ch. 14 (Cardiorespiratory Fitness), p. 21; Ch. 12 (Exercise Program Components), p. 14.",
     "source": "youtube-video",
     "merged": true,
@@ -7053,15 +6413,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 320,
+    "id": 318,
     "question": "Delayed-onset muscle soreness (DOMS) generally appears how long after a training session ends?",
     "options": [
       "12-24 hours",
+      "1-3 hours after exercise",
       "24-48 hours",
-      "48-72 hours",
-      "1-3 hours after exercise"
+      "48-72 hours"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "DOMS typically peaks 24-48 hours post-exercise due to eccentric muscle damage and inflammation. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 489; Ch. 12 (Exercise Program Components), p. 484.",
     "source": "youtube-video",
     "merged": true,
@@ -7073,15 +6433,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 321,
+    "id": 319,
     "question": "Which postural muscle is characterized by relatively greater slow-twitch fiber density?",
     "options": [
+      "Plantaris",
       "Soleus",
-      "Gastrocnemius",
       "Tibialis anterior",
-      "Plantaris"
+      "Gastrocnemius"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "The soleus is postural and contains predominantly slow-twitch (Type I) fibers for endurance. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 17; Ch. 9 (Exploring Dietary Supplements), p. 11.",
     "source": "youtube-video",
     "merged": true,
@@ -7093,15 +6453,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 322,
+    "id": 320,
     "question": "Which recommendation would directly reduce the risk for heart disease?",
     "options": [
-      "Reducing flexibility training",
-      "Limiting aerobic activity",
       "Increasing dietary sodium",
-      "Reducing chronic psychological stress"
+      "Reducing chronic psychological stress",
+      "Limiting aerobic activity",
+      "Reducing flexibility training"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Chronic stress elevates cortisol and blood pressure, increasing cardiovascular disease risk. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 10; Ch. 11 (Weight Management), p. 5.",
     "source": "youtube-video",
     "merged": true,
@@ -7113,15 +6473,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 323,
+    "id": 321,
     "question": "Increased midsection girth with fat concentrated in the abdomen is linked with heart disease as what type of obesity?",
     "options": [
-      "Mesomorphic classification",
-      "Eutrophic body type",
+      "Android obesity",
       "Gynoid obesity",
-      "Android obesity"
+      "Mesomorphic classification",
+      "Eutrophic body type"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Android (apple-shaped) central obesity is strongly associated with cardiovascular disease risk. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 371; Ch. 10 (Body Composition), p. 4.",
     "source": "youtube-video",
     "merged": true,
@@ -7133,15 +6493,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 324,
+    "id": 322,
     "question": "If your client presents with lower back pain, which assessment is contraindicated during initial assessment, especially if the cause is unknown?",
     "options": [
-      "Hip flexor length test",
       "Shoulder flexibility test",
-      "Trunk extension test",
-      "Sit-and-reach test"
+      "Hip flexor length test",
+      "Sit-and-reach test",
+      "Trunk extension test"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Trunk extension can aggravate lumbar conditions; avoid when back pain etiology is unknown. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 340; Ch. 7 (Resting and Active Fitness Assessments), p. 343.",
     "source": "youtube-video",
     "merged": true,
@@ -7153,15 +6513,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 325,
+    "id": 323,
     "question": "What positive change is expected from aerobic exercise intervention for a hypertensive client lasting several months?",
     "options": [
-      "Reduction of blood pressure by 10 points",
       "Reduction of only 2 points",
       "No change in blood pressure",
-      "Increase of blood pressure by 10 points"
+      "Increase of blood pressure by 10 points",
+      "Reduction of blood pressure by 10 points"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Regular aerobic exercise can reduce resting blood pressure by approximately 5-10 mmHg. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 28; Ch. 6 (Physical Activity and Risk for Disease), p. 17.",
     "source": "youtube-video",
     "merged": true,
@@ -7173,15 +6533,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 326,
+    "id": 324,
     "question": "What exercise would be difficult to perform for a client with tightness in their hip flexors and anterior trunk?",
     "options": [
-      "Front squat",
-      "Leg press",
+      "Lat pull-down",
       "Seated calf raise",
-      "Lat pull-down"
+      "Front squat",
+      "Leg press"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "Front squat requires significant hip flexor and ankle mobility; tight hip flexors limit depth and form. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 131; Ch. 2 (Functional Anatomy and Training Instruction), p. 89.",
     "source": "youtube-video",
     "merged": true,
@@ -7193,15 +6553,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 327,
+    "id": 325,
     "question": "Sarcopenia can be prevented with advancing age through what type of training?",
     "options": [
-      "Static stretching only",
       "Strength/power training",
       "Low-intensity walking only",
-      "Sedentary activity"
+      "Sedentary activity",
+      "Static stretching only"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "Resistance and power training preserve muscle mass and function, countering age-related sarcopenia. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 672; Ch. 6 (Physical Activity and Risk for Disease), p. 26.",
     "source": "youtube-video",
     "merged": true,
@@ -7213,16 +6573,16 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 328,
+    "id": 326,
     "question": "What does increased vascular peripheral resistance have on physical health?",
     "options": [
       "Increased blood pressure",
-      "Decreased cardiac output",
       "Decreased blood pressure",
-      "Normal blood pressure"
+      "Normal blood pressure",
+      "Decreased cardiac output"
     ],
     "correctIndex": 0,
-    "explanation": "Higher peripheral resistance directly increases blood pressure (BP = CO × TPR). NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 4 (Human Physiology), p. 35.",
+    "explanation": "Higher peripheral resistance directly increases blood pressure (BP = CO \u00d7 TPR). NCSF Manual reference: Ch. 4 (Human Physiology), p. 28; Ch. 4 (Human Physiology), p. 35.",
     "source": "youtube-video",
     "merged": true,
     "crosscheckApproved": true,
@@ -7233,16 +6593,16 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 329,
+    "id": 327,
     "question": "Which type of performance is most associated with independence for older adults?",
     "options": [
+      "Flexibility",
       "Power",
-      "Balance only",
       "Body composition only",
-      "Flexibility"
+      "Balance only"
     ],
-    "correctIndex": 0,
-    "explanation": "Power (strength × speed) correlates strongly with functional independence in older adults. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 34; Ch. 17 (Working with Special Populations), p. 29.",
+    "correctIndex": 1,
+    "explanation": "Power (strength \u00d7 speed) correlates strongly with functional independence in older adults. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 34; Ch. 17 (Working with Special Populations), p. 29.",
     "source": "youtube-video",
     "merged": true,
     "crosscheckApproved": true,
@@ -7253,15 +6613,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 330,
+    "id": 328,
     "question": "What identifies correct body fat classification for morbid obesity?",
     "options": [
+      "Males >30%; females >40%",
       "Males >40%; females >50%",
       "Males >20%; females >25%",
-      "Males >30%; females >40%",
       "Males >15%; females >20%"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Morbid obesity is generally classified as body fat exceeding 30% in males and 40% in females. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 6; Ch. 7 (Resting and Active Fitness Assessments), p. 8.",
     "source": "youtube-video",
     "merged": true,
@@ -7273,15 +6633,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 331,
+    "id": 329,
     "question": "When working with elderly clients, what type of training should be incorporated into the program?",
     "options": [
-      "Open chain isolation only",
-      "Ballistic plyometrics only",
       "Closed chain balance training",
-      "Maximal eccentric loading"
+      "Maximal eccentric loading",
+      "Ballistic plyometrics only",
+      "Open chain isolation only"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Closed-chain balance exercises improve proprioception and functional stability for fall prevention. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 29; Ch. 17 (Working with Special Populations), p. 654.",
     "source": "youtube-video",
     "merged": true,
@@ -7293,15 +6653,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 332,
+    "id": 330,
     "question": "What would NOT be considered part of a pre-activity screening protocol?",
     "options": [
       "Resting heart rate assessment",
       "PAR-Q screening",
-      "Blood pressure measurement",
-      "Testing sub-maximal VO2"
+      "Testing sub-maximal VO2",
+      "Blood pressure measurement"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Sub-maximal VO2 testing is a fitness assessment, not a standard pre-activity screening component. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 266; Ch. 5 (Evaluating Health and Physical Fitness), p. 9.",
     "source": "youtube-video",
     "merged": true,
@@ -7313,15 +6673,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 333,
+    "id": 331,
     "question": "What is the only fuel source that can be used during anaerobic metabolism?",
     "options": [
-      "Water",
       "Fats only",
-      "Proteins only",
-      "Carbohydrates"
+      "Water",
+      "Carbohydrates",
+      "Proteins only"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Anaerobic glycolysis requires glucose/glycogen (carbohydrates); fats cannot be metabolized without oxygen. NCSF Manual reference: Ch. 4 (Human Physiology), p. 5; Ch. 4 (Human Physiology), p. 9.",
     "source": "youtube-video",
     "merged": true,
@@ -7333,15 +6693,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 334,
+    "id": 332,
     "question": "Carbohydrates, lipids (fats), and protein serve as fuel for exercise, while what is primarily used during rest and low-intensity activity?",
     "options": [
-      "Fats",
       "Vitamins",
+      "Carbohydrates only",
       "Protein only",
-      "Carbohydrates only"
+      "Fats"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "At rest and low intensity, fat oxidation is the primary energy source. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 3; Ch. 8 (Understanding Nutrition), p. 5.",
     "source": "youtube-video",
     "merged": true,
@@ -7353,15 +6713,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 335,
+    "id": 333,
     "question": "Aerobic metabolism can occur using what fuel sources?",
     "options": [
+      "Protein exclusively",
       "Carbohydrates only",
       "Fats only",
-      "Carbohydrates, fats, protein and various associated substrates",
-      "Protein exclusively"
+      "Carbohydrates, fats, protein and various associated substrates"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Aerobic metabolism oxidizes carbohydrates, fats, and proteins (and lactate, etc.) with oxygen. NCSF Manual reference: Ch. 4 (Human Physiology), p. 13; Ch. 4 (Human Physiology), p. 9.",
     "source": "youtube-video",
     "merged": true,
@@ -7373,15 +6733,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 336,
+    "id": 334,
     "question": "What is the primary fuel source during 1) a vertical jump, 2) a 3RM deadlift, and 3) a 10-second sprint?",
     "options": [
-      "Aerobic glycolysis",
       "Stored ATP and stored creatine phosphate",
+      "Protein metabolism",
       "Beta oxidation",
-      "Protein metabolism"
+      "Aerobic glycolysis"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "These maximal short-duration efforts rely on the phosphagen (ATP-PC) system. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 18; Ch. 4 (Human Physiology), p. 4.",
     "source": "youtube-video",
     "merged": true,
@@ -7393,13 +6753,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 337,
+    "id": 335,
     "question": "Glycogen is stored primarily in skeletal muscle (~400g) and where else in the body?",
     "options": [
       "The heart",
-      "Adipose tissue only",
+      "The kidneys",
       "The liver (~100g)",
-      "The kidneys"
+      "Adipose tissue only"
     ],
     "correctIndex": 2,
     "explanation": "Liver glycogen maintains blood glucose; muscle glycogen fuels local contraction. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 17; Ch. 8 (Understanding Nutrition), p. 20.",
@@ -7413,15 +6773,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 338,
+    "id": 336,
     "question": "How much rest is needed to fully recover from exercise that significantly drains creatine phosphate stores within muscle?",
     "options": [
-      "24-48 hours",
-      "10-15 minutes",
+      "30-60 seconds",
       "2-5 minutes",
-      "30-60 seconds"
+      "10-15 minutes",
+      "24-48 hours"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Phosphagen stores replenish within 2-5 minutes with rest between maximal efforts. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 18; Ch. 13 (Anaerobic Resistance Training), p. 22.",
     "source": "youtube-video",
     "merged": true,
@@ -7433,13 +6793,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 339,
+    "id": 337,
     "question": "A client increases her VO2max. She will have lower heart rate during any sub-maximal aerobic intensity. This is mainly attributed to what?",
     "options": [
       "Decreased stroke volume",
-      "Increased heart rate only",
+      "Decreased cardiac output",
       "Increased stroke volume",
-      "Decreased cardiac output"
+      "Increased heart rate only"
     ],
     "correctIndex": 2,
     "explanation": "Improved cardiac efficiency (higher stroke volume) lowers heart rate at given sub-maximal workloads. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 10; Ch. 4 (Human Physiology), p. 38.",
@@ -7453,16 +6813,16 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 340,
+    "id": 338,
     "question": "Cardiac output equals stroke volume times what?",
     "options": [
+      "Blood viscosity",
+      "Ejection fraction",
       "Heart rate",
-      "Peripheral resistance",
-      "Stroke volume",
-      "Blood viscosity"
+      "Peripheral resistance"
     ],
-    "correctIndex": 0,
-    "explanation": "CO = SV × HR is the fundamental cardiac output equation. NCSF Manual reference: Ch. 4 (Human Physiology), p. 9; Ch. 4 (Human Physiology), p. 23.",
+    "correctIndex": 2,
+    "explanation": "CO = SV \u00d7 HR is the fundamental cardiac output equation. NCSF Manual reference: Ch. 4 (Human Physiology), p. 9; Ch. 4 (Human Physiology), p. 23.",
     "source": "youtube-video",
     "merged": true,
     "crosscheckApproved": true,
@@ -7473,15 +6833,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 341,
+    "id": 339,
     "question": "Cellular metabolism using oxygen and various substrates for fuel occurs in the:",
     "options": [
+      "Lysosome",
       "Endoplasmic reticulum",
       "Mitochondria",
-      "Lysosome",
       "Peroxisome"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Mitochondria perform aerobic respiration and ATP synthesis. NCSF Manual reference: Ch. 4 (Human Physiology), p. 11; Ch. 4 (Human Physiology), p. 9.",
     "source": "youtube-video",
     "merged": true,
@@ -7493,15 +6853,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 342,
+    "id": 340,
     "question": "What muscle fiber type has the lowest capacity to produce force?",
     "options": [
-      "Type IIb only",
-      "Type IIa (fast oxidative)",
+      "Type I (slow-twitch oxidative)",
       "Type IIx (fast glycolytic)",
-      "Type I (slow-twitch oxidative)"
+      "Type IIa (fast oxidative)",
+      "Type IIb only"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Type I fibers produce less peak force than Type II fibers but have high endurance. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 17; Ch. 2 (Functional Anatomy and Training Instruction), p. 18.",
     "source": "youtube-video",
     "merged": true,
@@ -7513,7 +6873,7 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 343,
+    "id": 341,
     "question": "Sprints and jumps are primarily fueled via what metabolism?",
     "options": [
       "Oxidative phosphorylation",
@@ -7533,33 +6893,33 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 344,
-    "question": "Following high-intensity exercise, a client has consumed additional calories. This phenomenon is termed:",
+    "id": 342,
+    "question": "Following high-intensity exercise, a client has burned additional calories. This phenomenon is termed:",
     "options": [
-      "Muscle hypertrophy",
+      "Glycogen supercompensation",
       "DOMS",
-      "EPOC (Excess post-exercise oxygen consumption)",
-      "Glycogen supercompensation"
+      "Muscle hypertrophy",
+      "EPOC (Excess post-exercise oxygen consumption)"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "EPOC reflects elevated metabolism and oxygen consumption after intense exercise. NCSF Manual reference: Ch. 11 (Weight Management), p. 15; Ch. 11 (Weight Management), p. 35.",
     "source": "youtube-video",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
-    "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 15; Ch. 11 (Weight Management), p. 35.",
-    "manualVerified": true,
     "commitTier": "APPROVED",
-    "commitConfidence": 100
+    "commitConfidence": 100,
+    "manualReference": "NCSF Manual reference: Ch. 11 (Weight Management), p. 15; Ch. 11 (Weight Management), p. 35.",
+    "manualVerified": true
   },
   {
-    "id": 345,
+    "id": 343,
     "question": "What mineral released from the sarcoplasmic reticulum enables muscular contraction?",
     "options": [
       "Potassium",
       "Calcium",
-      "Magnesium",
-      "Sodium"
+      "Sodium",
+      "Magnesium"
     ],
     "correctIndex": 1,
     "explanation": "Calcium binds troponin, enabling actin-myosin cross-bridge formation. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 11; Ch. 4 (Human Physiology), p. 166.",
@@ -7573,15 +6933,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 346,
+    "id": 344,
     "question": "What type of fatigue is associated with reduced muscle glycogen stores following localized muscular work?",
     "options": [
-      "Peripheral fatigue",
-      "Central fatigue",
       "Psychological fatigue",
+      "Central fatigue",
+      "Peripheral fatigue",
       "Cardiovascular fatigue"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "Peripheral fatigue originates at the muscle level, including glycogen depletion. NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 15; Ch. 8 (Understanding Nutrition), p. 20.",
     "source": "youtube-video",
     "merged": true,
@@ -7593,15 +6953,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 347,
+    "id": 345,
     "question": "How is force production improved through neural adaptations?",
     "options": [
       "Via increased capillary density only",
-      "Via muscle hypertrophy only",
       "Via increased motor unit recruitment, faster firing rates, and improved motor unit synchrony",
-      "Via improved tendon elasticity only"
+      "Via improved tendon elasticity only",
+      "Via muscle hypertrophy only"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Neural adaptations improve motor unit coordination and recruitment without hypertrophy. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 14; Ch. 4 (Human Physiology), p. 158.",
     "source": "youtube-video",
     "merged": true,
@@ -7613,13 +6973,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 348,
+    "id": 346,
     "question": "Identify at least three primary causes of short-term (acute) muscular fatigue between sets:",
     "options": [
       "Insufficient oxygen, reduced enzyme activity, and tubular system disturbance",
-      "Increased neural inhibition only",
+      "Excess phosphagen availability",
       "Improved oxygen delivery only",
-      "Excess phosphagen availability"
+      "Increased neural inhibition only"
     ],
     "correctIndex": 0,
     "explanation": "Acute fatigue involves metabolic byproducts, oxygen deficit, and impaired excitation-contraction coupling. NCSF Manual reference: Ch. 4 (Human Physiology), p. 158; Ch. 11 (Weight Management), p. 14.",
@@ -7633,15 +6993,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 349,
+    "id": 347,
     "question": "What structure sends inhibitory signals to reduce motor unit activity and protect tissue from potential damage?",
     "options": [
       "Pacinian corpuscles",
-      "Meissner corpuscles",
       "Muscle spindles",
-      "Golgi tendon organs"
+      "Golgi tendon organs",
+      "Meissner corpuscles"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "GTOs detect excessive tension and inhibit contraction to prevent injury. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 8; Ch. 15 (Flexibility), p. 594.",
     "source": "youtube-video",
     "merged": true,
@@ -7653,15 +7013,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 350,
+    "id": 348,
     "question": "The hormone released from the pancreas helps control blood glucose levels and also inhibits fat use when in circulation:",
     "options": [
-      "Glucagon",
       "Insulin",
       "Thyroxine",
-      "Epinephrine"
+      "Epinephrine",
+      "Glucagon"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "Insulin promotes glucose uptake and storage while inhibiting lipolysis. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 20; Ch. 8 (Understanding Nutrition), p. 11.",
     "source": "youtube-video",
     "merged": true,
@@ -7673,15 +7033,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 351,
+    "id": 349,
     "question": "What adrenal hormone released in response to high physiological or psychological stress limits carbohydrate uptake, disrupts the protein-sparing mechanism, and can suppress immune function when chronically elevated?",
     "options": [
-      "Cortisol",
       "Growth hormone",
+      "Melatonin",
       "Insulin",
-      "Melatonin"
+      "Cortisol"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Chronic cortisol elevation has catabolic effects and impairs recovery and immunity. NCSF Manual reference: Ch. 11 (Weight Management), p. 5; Ch. 8 (Understanding Nutrition), p. 70.",
     "source": "youtube-video",
     "merged": true,
@@ -7693,15 +7053,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 352,
+    "id": 350,
     "question": "What hormone released from the liver in response to appropriately devised hypertrophy training signals the body to increase protein synthesis?",
     "options": [
       "Growth hormone only",
+      "Insulin-like growth factor-1 (IGF-1)",
       "Cortisol",
-      "Testosterone only",
-      "Insulin-like growth factor-1 (IGF-1)"
+      "Testosterone only"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "IGF-1 is a key anabolic hormone stimulating muscle protein synthesis. NCSF Manual reference: Ch. 4 (Human Physiology), p. 45; Ch. 12 (Exercise Program Components), p. 496.",
     "source": "youtube-video",
     "merged": true,
@@ -7713,15 +7073,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 353,
+    "id": 351,
     "question": "Heavy strenuous resistance training increases which hormones?",
     "options": [
-      "Aldosterone and renin",
       "Testosterone, growth hormone, and IGF-1",
       "Estrogen and progesterone only",
-      "Cortisol, insulin, and glucagon"
+      "Cortisol, insulin, and glucagon",
+      "Aldosterone and renin"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "High-intensity resistance training acutely elevates these anabolic hormones. NCSF Manual reference: Ch. 4 (Human Physiology), p. 35; Ch. 13 (Anaerobic Resistance Training), p. 16.",
     "source": "youtube-video",
     "merged": true,
@@ -7733,15 +7093,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 354,
+    "id": 352,
     "question": "Throwing a medicine ball for distance requires what type of neuromuscular contraction?",
     "options": [
-      "Passive",
-      "Ballistic",
       "Isometric",
-      "Isokinetic"
+      "Passive",
+      "Isokinetic",
+      "Ballistic"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "Ballistic contractions involve rapid stretch-shortening cycles for explosive movement. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 22; Ch. 15 (Flexibility), p. 17.",
     "source": "youtube-video",
     "merged": true,
@@ -7753,15 +7113,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 355,
+    "id": 353,
     "question": "What artery is being palpated under the chin/neck?",
     "options": [
+      "Brachial",
       "Carotid",
       "Radial",
-      "Femoral",
-      "Brachial"
+      "Femoral"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "The carotid artery is palpated in the neck to measure heart rate. NCSF Manual reference: Ch. 4 (Human Physiology), p. 33; Ch. 4 (Human Physiology), p. 31.",
     "source": "youtube-video",
     "merged": true,
@@ -7773,13 +7133,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 356,
+    "id": 354,
     "question": "Holding one's breath to create stability while lifting heavy weight is referred to as:",
     "options": [
       "Apical breathing",
       "The Valsalva maneuver",
-      "Pursed lip breathing",
-      "Diaphragmatic breathing"
+      "Diaphragmatic breathing",
+      "Pursed lip breathing"
     ],
     "correctIndex": 1,
     "explanation": "The Valsalva maneuver increases intra-abdominal pressure for spinal stability during heavy lifts. NCSF Manual reference: Ch. 4 (Human Physiology), p. 37; Ch. 4 (Human Physiology), p. 39.",
@@ -7793,16 +7153,16 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 357,
+    "id": 355,
     "question": "The RPP (rate pressure product) estimates myocardial oxygen demand and is calculated using:",
     "options": [
-      "Diastolic blood pressure × heart rate",
-      "Cardiac output ÷ blood pressure",
-      "Stroke volume ÷ heart rate",
-      "Systolic blood pressure × heart rate"
+      "Systolic blood pressure \u00d7 heart rate",
+      "Stroke volume \u00f7 heart rate",
+      "Diastolic blood pressure \u00d7 heart rate",
+      "Cardiac output \u00f7 blood pressure"
     ],
-    "correctIndex": 3,
-    "explanation": "RPP = SBP × HR approximates cardiac work and myocardial oxygen demand. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 553; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 23.",
+    "correctIndex": 0,
+    "explanation": "RPP = SBP \u00d7 HR approximates cardiac work and myocardial oxygen demand. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 553; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 23.",
     "source": "youtube-video",
     "merged": true,
     "crosscheckApproved": true,
@@ -7813,15 +7173,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 358,
+    "id": 356,
     "question": "What is the biomechanical term for movement of the shoulder during a frontal raise?",
     "options": [
-      "Shoulder extension",
-      "Shoulder abduction",
       "Shoulder external rotation",
-      "Shoulder flexion"
+      "Shoulder flexion",
+      "Shoulder abduction",
+      "Shoulder extension"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Raising the arm forward in the sagittal plane is shoulder flexion. NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 16; Ch. 2 (Functional Anatomy and Training Instruction), p. 45.",
     "source": "youtube-video",
     "merged": true,
@@ -7833,15 +7193,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 359,
+    "id": 357,
     "question": "What is the primary movement during the concentric phase of the pull-up exercise?",
     "options": [
-      "Shoulder flexion",
-      "Shoulder adduction",
+      "Shoulder abduction",
       "Shoulder external rotation",
-      "Shoulder abduction"
+      "Shoulder flexion",
+      "Shoulder adduction"
     ],
-    "correctIndex": 1,
+    "correctIndex": 3,
     "explanation": "Pull-ups involve shoulder adduction and elbow flexion to pull the body upward. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 67; Ch. 2 (Functional Anatomy and Training Instruction), p. 81.",
     "source": "youtube-video",
     "merged": true,
@@ -7853,12 +7213,12 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 360,
+    "id": 358,
     "question": "What is the primary movement performed during the concentric phase of the dumbbell Romanian deadlift?",
     "options": [
-      "Knee flexion",
-      "Hip abduction",
       "Hip flexion",
+      "Hip abduction",
+      "Knee flexion",
       "Hip extension"
     ],
     "correctIndex": 3,
@@ -7873,15 +7233,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 361,
+    "id": 359,
     "question": "What is the prime mover during the front squat exercise?",
     "options": [
+      "Gluteus maximus only",
       "Quadriceps",
-      "Hamstrings",
       "Gastrocnemius",
-      "Gluteus maximus only"
+      "Hamstrings"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Front squats emphasize quadriceps due to upright torso and knee-dominant mechanics. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 3.",
     "source": "youtube-video",
     "merged": true,
@@ -7893,12 +7253,12 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 362,
+    "id": 360,
     "question": "What type of pelvic tilt is used during abdominal exercises targeting the rectus abdominis?",
     "options": [
-      "Anterior pelvic tilt",
-      "Lateral pelvic tilt",
       "Neutral pelvis only",
+      "Lateral pelvic tilt",
+      "Anterior pelvic tilt",
       "Posterior pelvic tilt"
     ],
     "correctIndex": 3,
@@ -7913,15 +7273,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 363,
+    "id": 361,
     "question": "What muscle acts as the antagonist during the standing calf raise exercise?",
     "options": [
-      "Soleus",
-      "Plantaris",
+      "Anterior tibialis",
       "Gastrocnemius",
-      "Anterior tibialis"
+      "Plantaris",
+      "Soleus"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "The anterior tibialis dorsiflexes the ankle, opposing plantar flexion in calf raises. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 40; Ch. 2 (Functional Anatomy and Training Instruction), p. 76.",
     "source": "youtube-video",
     "merged": true,
@@ -7933,15 +7293,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 364,
+    "id": 362,
     "question": "What trunk muscle is the primary local stabilizer for the spine?",
     "options": [
-      "Erector spinae",
+      "Rectus abdominis only",
       "External oblique only",
-      "Transverse abdominis",
-      "Rectus abdominis only"
+      "Erector spinae",
+      "Transverse abdominis"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "The transverse abdominis provides deep segmental spinal stability via the corset mechanism. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 116; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 10.",
     "source": "youtube-video",
     "merged": true,
@@ -7953,7 +7313,7 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 365,
+    "id": 363,
     "question": "Where is the correct finishing pull position of the bar during the lat pull-down exercise?",
     "options": [
       "Above the head",
@@ -7973,15 +7333,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 366,
+    "id": 364,
     "question": "What is the weight-bearing bone of the lower leg?",
     "options": [
-      "Tibia",
-      "Fibula",
       "Talus",
-      "Femur"
+      "Femur",
+      "Tibia",
+      "Fibula"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "The tibia bears body weight; the fibula primarily provides muscle attachment. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 4; Ch. 6 (Physical Activity and Risk for Disease), p. 29.",
     "source": "youtube-video",
     "merged": true,
@@ -7993,12 +7353,12 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 367,
+    "id": 365,
     "question": "In addition to trunk rotation, the obliques are also responsible for what?",
     "options": [
-      "Rotation only",
-      "Flexion only",
       "Extension only",
+      "Flexion only",
+      "Rotation only",
       "Lateral flexion"
     ],
     "correctIndex": 3,
@@ -8013,15 +7373,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 368,
+    "id": 366,
     "question": "The reverse lunge is performed in which movement plane?",
     "options": [
-      "Transverse",
+      "Sagittal",
       "Frontal",
       "Horizontal",
-      "Sagittal"
+      "Transverse"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Forward/backward lunging occurs primarily in the sagittal plane. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 94; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 24.",
     "source": "youtube-video",
     "merged": true,
@@ -8033,12 +7393,12 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 369,
+    "id": 367,
     "question": "What action is promoted at the glenohumeral joint during the concentric phase of the dumbbell fly?",
     "options": [
-      "Vertical adduction",
       "Horizontal abduction",
       "Internal rotation only",
+      "Vertical adduction",
       "Horizontal adduction"
     ],
     "correctIndex": 3,
@@ -8053,11 +7413,11 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 370,
+    "id": 368,
     "question": "What type of contraction is performed by the erector spinae during the dumbbell bent-over row to maintain proper posture?",
     "options": [
-      "A concentric contraction",
       "An eccentric contraction",
+      "A concentric contraction",
       "A ballistic contraction",
       "An isometric contraction"
     ],
@@ -8073,15 +7433,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 371,
+    "id": 369,
     "question": "During the downward phase of the leg press exercise, the quadriceps must perform what type of contraction?",
     "options": [
-      "An eccentric contraction",
       "An isometric contraction",
       "A concentric contraction",
-      "An isokinetic contraction"
+      "An isokinetic contraction",
+      "An eccentric contraction"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Lowering the weight involves eccentric (lengthening) contraction of the quadriceps. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 16; Ch. 13 (Anaerobic Resistance Training), p. 24.",
     "source": "youtube-video",
     "merged": true,
@@ -8093,15 +7453,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 372,
+    "id": 370,
     "question": "An undesirable exaggerated curvature of the lumbar spine is termed:",
     "options": [
       "Kyphosis",
+      "Scoliosis",
       "Lordopenia",
-      "Lordosis",
-      "Scoliosis"
+      "Lordosis"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Excessive lumbar lordosis is hyperlordosis; normal lumbar curve is lordotic. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 14.",
     "source": "youtube-video",
     "merged": true,
@@ -8113,15 +7473,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 373,
+    "id": 371,
     "question": "Bones are connected together by what type of connective tissue?",
     "options": [
-      "Cartilage",
-      "Tendons",
       "Ligaments",
-      "Fascia"
+      "Fascia",
+      "Tendons",
+      "Cartilage"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Ligaments connect bone to bone across joints. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 41; Ch. 2 (Functional Anatomy and Training Instruction), p. 20.",
     "source": "youtube-video",
     "merged": true,
@@ -8133,13 +7493,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 374,
+    "id": 372,
     "question": "What rotator cuff muscle is responsible for internal rotation?",
     "options": [
       "Supraspinatus",
-      "Infraspinatus",
+      "Teres minor",
       "Subscapularis",
-      "Teres minor"
+      "Infraspinatus"
     ],
     "correctIndex": 2,
     "explanation": "The subscapularis is the primary internal rotator of the shoulder. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 45; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 17.",
@@ -8153,15 +7513,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 375,
+    "id": 373,
     "question": "The antagonist muscle group during the seated leg extension exercise is:",
     "options": [
-      "Hamstrings",
       "Hip flexors",
-      "Gastrocnemius",
-      "Quadriceps"
+      "Quadriceps",
+      "Hamstrings",
+      "Gastrocnemius"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "Hamstrings oppose knee extension and act as antagonists during leg extensions. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 27; Ch. 2 (Functional Anatomy and Training Instruction), p. 76.",
     "source": "youtube-video",
     "merged": true,
@@ -8173,15 +7533,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 376,
+    "id": 374,
     "question": "Identify leg muscles that cross more than one joint:",
     "options": [
-      "Gluteus maximus only (single-joint hip extensor)",
-      "Rectus femoris (hip flexor/knee extensor); Biceps femoris (knee flexor/hip extensor); Gastrocnemius (plantar flexor/knee flexor)",
       "Vastus medialis only (single-joint knee extensor)",
-      "Tibialis anterior only (single-joint dorsiflexor)"
+      "Tibialis anterior only (single-joint dorsiflexor)",
+      "Rectus femoris (hip flexor/knee extensor); Biceps femoris (knee flexor/hip extensor); Gastrocnemius (plantar flexor/knee flexor)",
+      "Gluteus maximus only (single-joint hip extensor)"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Biarticular muscles cross two joints and influence movement at both. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 40.",
     "source": "youtube-video",
     "merged": true,
@@ -8193,35 +7553,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 377,
-    "question": "Most injuries of the back occur in which portion of the spine?",
-    "options": [
-      "Thoracic region",
-      "Lumbar region",
-      "Sacral region only",
-      "Cervical region"
-    ],
-    "correctIndex": 1,
-    "explanation": "The lumbar spine bears the most load and has the greatest mobility, making it most injury-prone. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 13 (Anaerobic Resistance Training), p. 42.",
-    "source": "youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 13 (Anaerobic Resistance Training), p. 42.",
-    "manualVerified": true,
-    "commitTier": "APPROVED",
-    "commitConfidence": 100
-  },
-  {
-    "id": 378,
+    "id": 375,
     "question": "The hyoid bone is found within the neck and upper:",
     "options": [
+      "Cervical region",
       "Sacral region",
       "Lumbar region",
-      "Cervical region",
       "Thoracic region"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "The hyoid is a floating bone in the anterior cervical region. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 9.",
     "source": "youtube-video",
     "merged": true,
@@ -8233,15 +7573,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 379,
+    "id": 376,
     "question": "The majority of movement limitations associated with poor flexibility remain within what tissue?",
     "options": [
-      "Muscle fascia",
       "Adipose tissue only",
+      "Muscle fascia",
       "Bone tissue",
       "Nerve tissue"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Fascial restrictions are a primary limiter of flexibility beyond muscle length. NCSF Manual reference: Ch. 15 (Flexibility), p. 12; Ch. 15 (Flexibility), p. 594.",
     "source": "youtube-video",
     "merged": true,
@@ -8253,7 +7593,7 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 380,
+    "id": 377,
     "question": "What rotator cuff muscle performs the initial action of humeral abduction in the frontal plane before the deltoid takes over?",
     "options": [
       "Subscapularis",
@@ -8262,7 +7602,7 @@ const EXAM_QUESTIONS = [
       "Infraspinatus"
     ],
     "correctIndex": 1,
-    "explanation": "Supraspinatus initiates the first 15-30° of shoulder abduction. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 45; Ch. 2 (Functional Anatomy and Training Instruction), p. 72.",
+    "explanation": "Supraspinatus initiates the first 15-30\u00b0 of shoulder abduction. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 45; Ch. 2 (Functional Anatomy and Training Instruction), p. 72.",
     "source": "youtube-video",
     "merged": true,
     "crosscheckApproved": true,
@@ -8273,15 +7613,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 381,
+    "id": 378,
     "question": "The trunk flexors and extensors should maintain a strength balance ratio of what for optimal joint health?",
     "options": [
       "1:2",
+      "3:1",
       "1:1",
-      "2:1",
-      "3:1"
+      "2:1"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Balanced agonist-antagonist strength (1:1 ratio) protects spinal joint health. NCSF Manual reference: Ch. 1 (Introduction to Personal Training), p. 19; Ch. 7 (Resting and Active Fitness Assessments), p. 55.",
     "source": "youtube-video",
     "merged": true,
@@ -8293,12 +7633,12 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 382,
+    "id": 379,
     "question": "The shoulder flexors and extensors should maintain a strength balance ratio of what for optimal joint health?",
     "options": [
       "2:3",
-      "1:1",
       "1:3",
+      "1:1",
       "3:2"
     ],
     "correctIndex": 0,
@@ -8313,13 +7653,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 383,
+    "id": 380,
     "question": "What type of muscle tissue controls involuntary contractions within the vascular and digestive systems?",
     "options": [
       "Cardiac muscle only",
       "Smooth muscle",
-      "Skeletal muscle",
-      "Striated voluntary muscle"
+      "Striated voluntary muscle",
+      "Skeletal muscle"
     ],
     "correctIndex": 1,
     "explanation": "Smooth muscle is involuntary and found in blood vessels and digestive organs. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 8; Ch. 4 (Human Physiology), p. 32.",
@@ -8333,13 +7673,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 384,
+    "id": 381,
     "question": "What gluteal muscle(s) can function as hip abductors?",
     "options": [
-      "Tensor fasciae latae only",
+      "Piriformis only",
       "Gluteus medius and gluteus minimus",
       "Gluteus maximus only",
-      "Piriformis only"
+      "Tensor fasciae latae only"
     ],
     "correctIndex": 1,
     "explanation": "Gluteus medius and minimus are primary hip abductors and pelvic stabilizers. NCSF Manual reference: Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 124; Ch. 2 (Functional Anatomy and Training Instruction), p. 37.",
@@ -8353,15 +7693,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 385,
+    "id": 382,
     "question": "Rotation of the trunk occurs in which movement plane?",
     "options": [
-      "Frontal",
-      "Coronal only",
       "Transverse",
-      "Sagittal"
+      "Sagittal",
+      "Coronal only",
+      "Frontal"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Trunk rotation occurs in the horizontal/transverse plane. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 47; Ch. 2 (Functional Anatomy and Training Instruction), p. 108.",
     "source": "youtube-video",
     "merged": true,
@@ -8373,15 +7713,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 386,
+    "id": 383,
     "question": "What joint within the upper extremities is located distal to the elbow?",
     "options": [
-      "Wrist",
       "Shoulder",
+      "Wrist",
       "Elbow",
       "Ankle"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Distal to the elbow joint lies the radiocarpal (wrist) joint. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 72; Ch. 2 (Functional Anatomy and Training Instruction), p. 22.",
     "source": "youtube-video",
     "merged": true,
@@ -8393,15 +7733,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 387,
+    "id": 384,
     "question": "Internal rotation is also termed:",
     "options": [
-      "Supination",
       "External rotation",
       "Medial rotation",
-      "Lateral rotation"
+      "Lateral rotation",
+      "Supination"
     ],
-    "correctIndex": 2,
+    "correctIndex": 1,
     "explanation": "Internal (medial) rotation turns the limb toward the body's midline. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 81; Ch. 2 (Functional Anatomy and Training Instruction), p. 21.",
     "source": "youtube-video",
     "merged": true,
@@ -8413,11 +7753,11 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 388,
+    "id": 385,
     "question": "The term 'superior' when used anatomically means:",
     "options": [
-      "Posterior to another structure",
       "Lateral to another structure",
+      "Posterior to another structure",
       "Above or higher than another structure",
       "Below or lower than another structure"
     ],
@@ -8433,15 +7773,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 389,
+    "id": 386,
     "question": "The midline of the body splits it into two sides, while the mid-axillary line splits it into:",
     "options": [
-      "Superior and inferior halves",
       "Front and back halves",
-      "Proximal and distal halves",
-      "Left and right halves"
+      "Superior and inferior halves",
+      "Left and right halves",
+      "Proximal and distal halves"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "The mid-axillary line divides the body into anterior and posterior portions. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 21; Ch. 2 (Functional Anatomy and Training Instruction), p. 22.",
     "source": "youtube-video",
     "merged": true,
@@ -8453,15 +7793,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 390,
+    "id": 387,
     "question": "The shoulders and hips are categorized as what type of joints while the knees and elbows are categorized as hinge joints?",
     "options": [
-      "Hinge",
       "Saddle",
       "Pivot",
-      "Ball-and-socket"
+      "Ball-and-socket",
+      "Hinge"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Shoulders and hips are multiaxial ball-and-socket joints; knees and elbows are hinge joints. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 7; Ch. 2 (Functional Anatomy and Training Instruction), p. 47.",
     "source": "youtube-video",
     "merged": true,
@@ -8473,15 +7813,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 391,
+    "id": 388,
     "question": "One pound of body fat represents how many calories?",
     "options": [
       "1500 kcal",
-      "3500 kcal",
       "4500 kcal",
+      "3500 kcal",
       "2500 kcal"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "One pound of adipose tissue stores approximately 3500 kilocalories of energy. NCSF Manual reference: Ch. 7 (Resting and Active Fitness Assessments), p. 42; Ch. 8 (Understanding Nutrition), p. 7.",
     "source": "youtube-video",
     "merged": true,
@@ -8493,15 +7833,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 392,
+    "id": 389,
     "question": "The term that describes gradual increase in body fat as a person ages, often due to long-term positive caloric balance:",
     "options": [
-      "Creeping obesity",
       "Anorexia",
+      "Creeping obesity",
       "Ectomorphic classification",
       "Morbid obesity"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Creeping obesity is gradual weight gain over years from sustained caloric surplus. NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 21; Ch. 11 (Weight Management), p. 14.",
     "source": "youtube-video",
     "merged": true,
@@ -8513,12 +7853,12 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 393,
+    "id": 390,
     "question": "What are the essential body fat ranges for males and females, respectively?",
     "options": [
-      "1-2% for males; 5-7% for females",
       "8-10% for males; 18-20% for females",
       "10-15% for males; 20-25% for females",
+      "1-2% for males; 5-7% for females",
       "3-5% for males; 11-14% for females"
     ],
     "correctIndex": 3,
@@ -8533,15 +7873,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 394,
+    "id": 391,
     "question": "Gaining and losing body weight in a repeated fashion over time is termed:",
     "options": [
-      "Yo-yo dieting",
       "Orthorexia",
+      "Yo-yo dieting",
       "Binge eating disorder",
       "Bulimia nervosa"
     ],
-    "correctIndex": 0,
+    "correctIndex": 1,
     "explanation": "Weight cycling (yo-yo dieting) involves repeated loss and regain of body weight. NCSF Manual reference: Ch. 11 (Weight Management), p. 8; Ch. 11 (Weight Management), p. 9.",
     "source": "youtube-video",
     "merged": true,
@@ -8553,15 +7893,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 395,
+    "id": 392,
     "question": "Exercise increases daily average metabolic energy costs by how many kcals?",
     "options": [
+      "75-150 kcals",
       "10-25 kcals",
-      "300-500 kcals",
       "500-750 kcals",
-      "75-150 kcals"
+      "300-500 kcals"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Regular exercise modestly increases daily energy expenditure within this range. NCSF Manual reference: Ch. 11 (Weight Management), p. 14; Ch. 8 (Understanding Nutrition), p. 32.",
     "source": "youtube-video",
     "merged": true,
@@ -8573,11 +7913,11 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 396,
+    "id": 393,
     "question": "Resting metabolism contributes what percentage of daily caloric expenditure?",
     "options": [
-      "20-30% resting metabolic, 60-70% activity, 10% TEF",
       "40-50% resting metabolic, 40-50% activity, 10% TEF",
+      "20-30% resting metabolic, 60-70% activity, 10% TEF",
       "80-90% resting metabolic, 5-10% activity, 5% TEF",
       "60-70% (resting metabolic), 15-35% (physical activity), up to 10% (thermic effect of food)"
     ],
@@ -8593,15 +7933,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 397,
+    "id": 394,
     "question": "What is the main problem with the 'fat-burning zone' as it relates to losing weight?",
     "options": [
+      "The fat-burning zone is associated with lower training intensities and lower caloric expenditure; total calories burned are too low for effective weight loss",
       "Fat oxidation percentage is the only factor that determines weight loss",
       "Lower intensity always burns more total calories than higher intensity",
-      "The fat-burning zone is associated with lower training intensities and lower caloric expenditure; total calories burned are too low for effective weight loss",
       "The fat-burning zone maximizes total caloric expenditure at all intensities"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Higher intensity training burns more total calories despite lower fat percentage at lower intensities. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 29; Ch. 4 (Human Physiology), p. 152.",
     "source": "youtube-video",
     "merged": true,
@@ -8613,15 +7953,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 398,
+    "id": 395,
     "question": "Overconsumption of what energy nutrient type is most likely to increase body fat due to its negative effects on blood glucose?",
     "options": [
-      "Processed carbohydrates/simple sugars",
-      "Dietary fiber",
+      "Lean proteins",
       "Unsaturated fats",
-      "Lean proteins"
+      "Dietary fiber",
+      "Processed carbohydrates/simple sugars"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Refined carbs spike insulin and promote fat storage more than other macronutrients. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 20; Ch. 8 (Understanding Nutrition), p. 32.",
     "source": "youtube-video",
     "merged": true,
@@ -8633,16 +7973,16 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 399,
+    "id": 396,
     "question": "A BMI value above what category suggests disease, places persons overweight or obese at increased risk?",
     "options": [
       "18",
       "30",
-      "25",
-      "35"
+      "35",
+      "25"
     ],
-    "correctIndex": 2,
-    "explanation": "BMI ≥25 (overweight) is associated with increased health risks. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 29; Ch. 10 (Body Composition), p. 18.",
+    "correctIndex": 3,
+    "explanation": "BMI \u226525 (overweight) is associated with increased health risks. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 29; Ch. 10 (Body Composition), p. 18.",
     "source": "youtube-video",
     "merged": true,
     "crosscheckApproved": true,
@@ -8653,15 +7993,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 400,
+    "id": 397,
     "question": "Android obesity is characterized by greater storage in the upper body and trunk. It may be easier to lose but is linked with higher risk for:",
     "options": [
-      "Osteoporosis",
-      "Asthma",
       "Type I diabetes only",
-      "Heart disease"
+      "Asthma",
+      "Heart disease",
+      "Osteoporosis"
     ],
-    "correctIndex": 3,
+    "correctIndex": 2,
     "explanation": "Android obesity correlates strongly with metabolic syndrome and cardiovascular disease. NCSF Manual reference: Ch. 5 (Evaluating Health and Physical Fitness), p. 6; Ch. 6 (Physical Activity and Risk for Disease), p. 6.",
     "source": "youtube-video",
     "merged": true,
@@ -8673,15 +8013,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 401,
+    "id": 398,
     "question": "Weight gain of lean mass requires what two behavioral factors?",
     "options": [
-      "Caloric deficit with aerobic training only",
-      "Caloric balance with stretching only",
+      "Positive caloric balance combined with high-volume, progressive resistance training",
       "Negative caloric balance with power training",
-      "Positive caloric balance combined with high-volume, progressive resistance training"
+      "Caloric deficit with aerobic training only",
+      "Caloric balance with stretching only"
     ],
-    "correctIndex": 3,
+    "correctIndex": 0,
     "explanation": "Muscle gain requires caloric surplus plus progressive overload resistance training. NCSF Manual reference: Ch. 11 (Weight Management), p. 21; Ch. 13 (Anaerobic Resistance Training), p. 554.",
     "source": "youtube-video",
     "merged": true,
@@ -8693,15 +8033,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 402,
+    "id": 399,
     "question": "Identify the five categorized factors that can significantly impact a client's success during a weight loss program:",
     "options": [
+      "Genetic, anatomical, and chronological only",
       "Nutritional, hormonal, and metabolic only",
       "Social, economic, physiological, psychological, and emotional",
-      "Environmental and occupational only",
-      "Genetic, anatomical, and chronological only"
+      "Environmental and occupational only"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Successful weight management addresses multiple biopsychosocial factors. NCSF Manual reference: Ch. 11 (Weight Management), p. 2; Ch. 9 (Exploring Dietary Supplements), p. 6.",
     "source": "youtube-video",
     "merged": true,
@@ -8713,15 +8053,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 403,
+    "id": 400,
     "question": "What primarily represents the initial weight loss experienced with significant caloric restriction (acute starvation)?",
     "options": [
       "Adipose tissue only",
+      "Bone mineral content",
       "Plasma protein stores",
-      "Water and glycogen stores",
-      "Bone mineral content"
+      "Water and glycogen stores"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Early rapid weight loss is largely water and glycogen depletion, not fat. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 51; Ch. 8 (Understanding Nutrition), p. 362.",
     "source": "youtube-video",
     "merged": true,
@@ -8733,15 +8073,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 404,
+    "id": 401,
     "question": "What type of exercise is associated with the highest caloric expenditure per hour of training?",
     "options": [
       "Static stretching",
+      "Isolated balance drills only",
       "Passive rest",
-      "Aerobic training",
-      "Isolated balance drills only"
+      "Aerobic training"
     ],
-    "correctIndex": 2,
+    "correctIndex": 3,
     "explanation": "Continuous aerobic activity sustains high caloric burn over extended periods. NCSF Manual reference: Ch. 9 (Exploring Dietary Supplements), p. 17; Ch. 11 (Weight Management), p. 17.",
     "source": "youtube-video",
     "merged": true,
@@ -8753,15 +8093,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 405,
+    "id": 402,
     "question": "How does eating smaller, more frequent meals benefit weight loss?",
     "options": [
-      "By maximizing single large meals to reduce eating frequency",
-      "By fasting for 24 hours between workouts",
       "By eliminating carbohydrates entirely between meals",
-      "By optimally regulating blood glucose, reducing insulin surges, and lowering the risk for appetite-driven overeating throughout the day"
+      "By optimally regulating blood glucose, reducing insulin surges, and lowering the risk for appetite-driven overeating throughout the day",
+      "By fasting for 24 hours between workouts",
+      "By maximizing single large meals to reduce eating frequency"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Frequent small meals help stabilize blood sugar and control appetite. NCSF Manual reference: Ch. 8 (Understanding Nutrition), p. 361; Ch. 8 (Understanding Nutrition), p. 360.",
     "source": "youtube-video",
     "merged": true,
@@ -8773,15 +8113,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 406,
+    "id": 403,
     "question": "Performing crunches to lose abdominal fat is an example of what misconception?",
     "options": [
-      "Spot reduction",
+      "Muscle confusion",
       "Supercompensation",
-      "Periodization",
-      "Muscle confusion"
+      "Spot reduction",
+      "Periodization"
     ],
-    "correctIndex": 0,
+    "correctIndex": 2,
     "explanation": "Fat loss occurs systemically, not locally from exercising specific areas. NCSF Manual reference: Ch. 11 (Weight Management), p. 18; Ch. 9 (Exploring Dietary Supplements), p. 418.",
     "source": "youtube-video",
     "merged": true,
@@ -8793,13 +8133,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 407,
+    "id": 404,
     "question": "What disorder is often characterized by episodes of binge eating followed by efforts to purge before nutrients are absorbed?",
     "options": [
       "Anorexia nervosa",
-      "Binge eating disorder without purging",
+      "Orthorexia nervosa",
       "Bulimia nervosa",
-      "Orthorexia nervosa"
+      "Binge eating disorder without purging"
     ],
     "correctIndex": 2,
     "explanation": "Bulimia involves binge-purge cycles distinct from anorexia's restriction. NCSF Manual reference: Ch. 11 (Weight Management), p. 57; Ch. 11 (Weight Management), p. 476.",
@@ -8813,15 +8153,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 408,
+    "id": 405,
     "question": "Due to hormone changes, ligament laxity may be increased among pregnant clients, requiring extra precautions during exercise to prevent:",
     "options": [
-      "Joint-related injuries/laxity instability",
-      "Cardiovascular events",
       "Muscle strains only",
-      "Thermoregulatory failure"
+      "Thermoregulatory failure",
+      "Cardiovascular events",
+      "Joint-related injuries/laxity instability"
     ],
-    "correctIndex": 0,
+    "correctIndex": 3,
     "explanation": "Relaxin increases joint laxity during pregnancy, raising injury risk. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 21; Ch. 17 (Working with Special Populations), p. 658.",
     "source": "youtube-video",
     "merged": true,
@@ -8833,15 +8173,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 409,
+    "id": 406,
     "question": "Clients with what condition should avoid high-intensity exercise in cold, dry environments?",
     "options": [
-      "Osteoarthritis",
-      "Type II diabetes only",
       "Asthma",
+      "Type II diabetes only",
+      "Osteoarthritis",
       "Hypertension"
     ],
-    "correctIndex": 2,
+    "correctIndex": 0,
     "explanation": "Cold dry air triggers bronchoconstriction in exercise-induced asthma. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 45; Ch. 12 (Exercise Program Components), p. 484.",
     "source": "youtube-video",
     "merged": true,
@@ -8853,15 +8193,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 410,
+    "id": 407,
     "question": "What type of training prevents the functionally debilitating effects of sarcopenia?",
     "options": [
-      "Low-intensity walking only",
-      "Power training",
+      "Static stretching only",
       "Sedentary activity",
-      "Static stretching only"
+      "Power training",
+      "Low-intensity walking only"
     ],
-    "correctIndex": 1,
+    "correctIndex": 2,
     "explanation": "Power training preserves fast-twitch fibers and functional capacity critical for independence. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 673; Ch. 17 (Working with Special Populations), p. 29.",
     "source": "youtube-video",
     "merged": true,
@@ -8873,15 +8213,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 411,
+    "id": 408,
     "question": "What is the primary type of exercise recommended for a client diagnosed with coronary artery disease?",
     "options": [
-      "Ballistic plyometrics only",
       "Aerobic exercise",
+      "Ballistic plyometrics only",
       "Maximal heavy resistance training",
       "Isometric holds only"
     ],
-    "correctIndex": 1,
+    "correctIndex": 0,
     "explanation": "Aerobic exercise improves cardiovascular function and is cornerstone CAD rehabilitation. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 6; Ch. 6 (Physical Activity and Risk for Disease), p. 11.",
     "source": "youtube-video",
     "merged": true,
@@ -8893,13 +8233,13 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 412,
+    "id": 409,
     "question": "A client with hypertension is recommended to use sets of how many repetitions during resistance training, preferably in circuit format?",
     "options": [
       "20-25 repetitions",
-      "1-3 repetitions",
+      "30-40 repetitions",
       "12-15 repetitions",
-      "30-40 repetitions"
+      "1-3 repetitions"
     ],
     "correctIndex": 2,
     "explanation": "Moderate reps with lighter loads and circuit training minimize blood pressure spikes. NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 13 (Anaerobic Resistance Training), p. 30.",
@@ -8913,15 +8253,15 @@ const EXAM_QUESTIONS = [
     "commitConfidence": 100
   },
   {
-    "id": 413,
+    "id": 410,
     "question": "Due to their smaller size and immaturity, children demonstrate lower efficiency than adults and need well-regulated recovery during:",
     "options": [
-      "Maximal strength testing periods",
       "Heavy Valsalva lifting periods",
+      "Thermoregulatory periods",
       "Prolonged static stretching periods",
-      "Thermoregulatory periods"
+      "Maximal strength testing periods"
     ],
-    "correctIndex": 3,
+    "correctIndex": 1,
     "explanation": "Children have immature thermoregulation and need frequent hydration and rest. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 24; Ch. 17 (Working with Special Populations), p. 98.",
     "source": "youtube-video",
     "merged": true,
@@ -8931,5 +8271,105 @@ const EXAM_QUESTIONS = [
     "manualVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
+  },
+  {
+    "id": 411,
+    "question": "During resistance training programs for children, progressive overload should emphasize increased repetitions rather than:",
+    "options": [
+      "Static stretching program",
+      "Mass enlargement (hypertrophy focus)",
+      "Aerobic training only",
+      "Plyometric training only"
+    ],
+    "correctIndex": 1,
+    "explanation": "Children should focus on technique and motor learning, not maximal hypertrophy training. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 20; Ch. 13 (Anaerobic Resistance Training), p. 8.",
+    "source": "youtube-video",
+    "merged": true,
+    "crosscheckApproved": true,
+    "needsReview": false,
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
+    "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 20; Ch. 13 (Anaerobic Resistance Training), p. 8.",
+    "manualVerified": true
+  },
+  {
+    "id": 412,
+    "question": "Pregnant clients should avoid exercises in the supine position beyond the first trimester because it reduces cardiac output, thereby decreasing total blood flow to the:",
+    "options": [
+      "Static stretching program",
+      "Aerobic training only",
+      "Mother and unborn baby",
+      "Plyometric training only"
+    ],
+    "correctIndex": 2,
+    "explanation": "Supine position compresses the vena cava, reducing venous return and fetal/maternal perfusion. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 19; Ch. 17 (Working with Special Populations), p. 21.",
+    "source": "youtube-video",
+    "merged": true,
+    "crosscheckApproved": true,
+    "needsReview": false,
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
+    "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 19; Ch. 17 (Working with Special Populations), p. 21.",
+    "manualVerified": true
+  },
+  {
+    "id": 413,
+    "question": "If training an individual with Type II diabetes who suffers from retinopathy, what exercises must be avoided?",
+    "options": [
+      "Aerobic training only",
+      "Plyometric training only",
+      "Static stretching program",
+      "Exercises that significantly elevate blood pressure, are compressive in nature, require head below waist, or may jar the head"
+    ],
+    "correctIndex": 3,
+    "explanation": "Retinopathy contraindicates activities risking Valsalva, head-down positions, or impact. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 6 (Physical Activity and Risk for Disease), p. 25.",
+    "source": "youtube-video",
+    "merged": true,
+    "crosscheckApproved": true,
+    "needsReview": false,
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
+    "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 6 (Physical Activity and Risk for Disease), p. 25.",
+    "manualVerified": true
+  },
+  {
+    "id": 414,
+    "question": "Clients with very high blood pressure should avoid resistance training above what percentage of their 1RM?",
+    "options": [
+      "70%",
+      "60%",
+      "85%",
+      "50%"
+    ],
+    "correctIndex": 0,
+    "explanation": "Heavy lifting (>70% 1RM) causes dangerous blood pressure elevations in hypertensive clients. NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 4 (Human Physiology), p. 39.",
+    "source": "youtube-video",
+    "merged": true,
+    "crosscheckApproved": true,
+    "needsReview": false,
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
+    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 4 (Human Physiology), p. 39.",
+    "manualVerified": true
+  },
+  {
+    "id": 415,
+    "question": "Some clients with chronic diabetes may suffer from microvascular complications such as what, which has direct impact on kidney function?",
+    "options": [
+      "Static stretching program",
+      "Nephropathy",
+      "Aerobic training only",
+      "Plyometric training only"
+    ],
+    "correctIndex": 1,
+    "explanation": "Diabetic nephropathy is kidney damage from chronic hyperglycemia. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 17 (Working with Special Populations), p. 8.",
+    "source": "youtube-video",
+    "merged": true,
+    "crosscheckApproved": true,
+    "needsReview": false,
+    "commitTier": "APPROVED",
+    "commitConfidence": 100,
+    "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 17 (Working with Special Populations), p. 8.",
+    "manualVerified": true
   }
 ];
