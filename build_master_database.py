@@ -1,4 +1,4 @@
-"""Build unified NCSF question database from quiz.txt + YouTube video bank."""
+"""Build web/questions.js from the canonical questions_bank.json."""
 import importlib.util
 import json
 import os
@@ -17,23 +17,12 @@ _spec = importlib.util.spec_from_file_location(
 _pqt = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_pqt)
 
-# Load video question bank
-_vspec = importlib.util.spec_from_file_location(
-    "parse_ncsf", str(ROOT / "parse_ncsf_questions.py")
-)
-_ncsf = importlib.util.module_from_spec(_vspec)
-_vspec.loader.exec_module(_ncsf)
-
-INPUT = _pqt.INPUT
 OUTPUT = _pqt.OUTPUT
-MANUAL_REFS = _pqt.MANUAL_REFS
 STRICT_AUDIT = ROOT / "strict_audit_report.json"
 CROSSCHECK_JSON = ROOT / "crosscheck_report.json"
 MANIFEST_JSON = ROOT / "merged_database_manifest.json"
-EXTRAQ_DOCX = ROOT / "extraq.docx"
-QUESTIONS_DOCX = ROOT / "questions.docx"
 QUESTIONS_BANK_JSON = ROOT / "questions_bank.json"
-DATABASE_VERSION = "merged-questions-v6"
+DATABASE_VERSION = "unified-bank-v2"
 NEAR_DUPLICATE_THRESHOLD = 0.92
 
 
@@ -50,27 +39,6 @@ def load_strict_audit():
 
 def load_crosscheck():
     return load_json_by_id(CROSSCHECK_JSON)
-
-
-def _load_docx_parser():
-    _espec = importlib.util.spec_from_file_location(
-        "parse_extraq", str(ROOT / "parse_extraq_docx.py")
-    )
-    _parser = importlib.util.module_from_spec(_espec)
-    _espec.loader.exec_module(_parser)
-    return _parser
-
-
-def load_extraq_bank():
-    if not EXTRAQ_DOCX.exists():
-        return []
-    return _load_docx_parser().parse_docx_bank(EXTRAQ_DOCX, media_subdir="extraq")
-
-
-def load_questions_docx_bank():
-    if not QUESTIONS_DOCX.exists():
-        return []
-    return _load_docx_parser().parse_docx_bank(QUESTIONS_DOCX, media_subdir="questions")
 
 
 # Fix distractors that are category-mismatched or trivially obvious
@@ -240,7 +208,13 @@ def merge_docx_items(merged, seen, by_normalized, items, counters):
 
 
 def bank_record_to_item(record: dict) -> dict:
+    number = record.get("number")
+    if number is None:
+        raise ValueError(
+            f"Question missing stable number field: {record.get('question', '')[:80]}"
+        )
     item = {
+        "number": int(number),
         "q": record["question"],
         "a": record["answer"],
         "wrong": record["wrong"],
@@ -256,135 +230,27 @@ def bank_record_to_item(record: dict) -> dict:
 
 def load_questions_bank():
     if not QUESTIONS_BANK_JSON.exists():
-        return None
+        raise FileNotFoundError(
+            f"{QUESTIONS_BANK_JSON.name} not found. Run consolidate_question_bank.py first."
+        )
     payload = json.loads(QUESTIONS_BANK_JSON.read_text(encoding="utf-8"))
     questions = payload.get("questions")
     if not isinstance(questions, list) or not questions:
         raise ValueError(f"{QUESTIONS_BANK_JSON.name} has no questions array")
-    return [bank_record_to_item(record) for record in questions], payload.get("stats", {})
-
-
-def merge_quiz_docx_sources():
-    quiz_items = _pqt.parse_quiz(INPUT)
-    seen = set()
-    merged = []
-
-    for item in quiz_items:
-        nq = _pqt.normalize_question(item["q"])
-        if nq in seen:
-            continue
-        seen.add(nq)
-        merged.append({
-            "q": item["q"],
-            "a": item["a"],
-            "wrong": item["wrong"],
-            "base_exp": item["base_exp"],
-            "source": "quiz.txt",
-        })
-
-    quiz_count = len(merged)
-    by_normalized = {_pqt.normalize_question(m["q"]): m for m in merged}
-
-    extraq_counts = merge_docx_items(
-        merged,
-        seen,
-        by_normalized,
-        load_extraq_bank(),
-        ("extraq_added", "extraq_enhanced"),
-    )
-    questions_counts = merge_docx_items(
-        merged,
-        seen,
-        by_normalized,
-        load_questions_docx_bank(),
-        ("questions_docx_added", "questions_docx_enhanced"),
-    )
-
-    stats = {
-        "quiz_count": quiz_count,
-        "extraq_added": extraq_counts["extraq_added"],
-        "extraq_enhanced": extraq_counts["extraq_enhanced"],
-        "questions_docx_added": questions_counts["questions_docx_added"],
-        "questions_docx_enhanced": questions_counts["questions_docx_enhanced"],
-    }
-    return merged, stats
-
-
-def merge_question_banks():
-    bank = load_questions_bank()
-    if bank is not None:
-        merged, bank_stats = bank
-        quiz_count = bank_stats.get("quiz_count", sum(1 for m in merged if m.get("source") == "quiz.txt"))
-        extraq_added = bank_stats.get("extraq_added", 0)
-        extraq_enhanced = bank_stats.get("extraq_enhanced", 0)
-        questions_docx_added = bank_stats.get("questions_docx_added", 0)
-        questions_docx_enhanced = bank_stats.get("questions_docx_enhanced", 0)
-        print(f"Loaded {len(merged)} questions from {QUESTIONS_BANK_JSON.name}")
-    else:
-        merged, stats = merge_quiz_docx_sources()
-        merged, duplicates_removed = deduplicate_near_duplicates(merged)
-        if duplicates_removed:
-            print(
-                f"Combined quiz/docx sources: {len(merged)} questions "
-                f"({duplicates_removed} near-duplicates removed)"
-            )
-        quiz_count = stats["quiz_count"]
-        extraq_added = stats["extraq_added"]
-        extraq_enhanced = stats["extraq_enhanced"]
-        questions_docx_added = stats["questions_docx_added"]
-        questions_docx_enhanced = stats["questions_docx_enhanced"]
-
-    seen = {_pqt.normalize_question(item["q"]) for item in merged}
-    start_count = len(merged)
-
-    for v in _ncsf.ALL:
-        nq = _pqt.normalize_question(v["q"])
-        if nq in seen:
-            continue
-        seen.add(nq)
-        wrong = _ncsf.get_distractors(v["a"], v["q"], v)
-        merged.append({
-            "q": v["q"],
-            "a": v["a"],
-            "wrong": wrong,
-            "base_exp": v.get("exp", ""),
-            "source": "youtube-video",
-        })
-
-    video_count = len(merged) - start_count
-
-    return (
-        merged,
-        quiz_count,
-        video_count,
-        extraq_added,
-        extraq_enhanced,
-        questions_docx_added,
-        questions_docx_enhanced,
-    )
+    merged = [bank_record_to_item(record) for record in questions]
+    return merged, payload.get("stats", {}), payload.get("version", "")
 
 
 def main():
-    (
-        merged,
-        quiz_count,
-        video_count,
-        extraq_count,
-        extraq_enhanced,
-        questions_docx_count,
-        questions_docx_enhanced,
-    ) = merge_question_banks()
+    merged, bank_stats, bank_version = load_questions_bank()
     pre_dedup_count = len(merged)
     merged, duplicates_removed = deduplicate_near_duplicates(merged)
-    print(f"Merged database: {len(merged)} questions")
+    print(f"Loaded {pre_dedup_count} questions from {QUESTIONS_BANK_JSON.name}")
+    if bank_version:
+        print(f"  bank version: {bank_version}")
+    print(f"  output: {len(merged)} questions")
     if duplicates_removed:
-        print(f"  near-duplicates removed: {duplicates_removed} (from {pre_dedup_count})")
-    print(f"  quiz.txt: {quiz_count}")
-    print(f"  youtube-video (unique): {video_count}")
-    print(f"  extraq.docx (new): {extraq_count}")
-    print(f"  extraq.docx (enhanced existing): {extraq_enhanced}")
-    print(f"  questions.docx (new): {questions_docx_count}")
-    print(f"  questions.docx (enhanced existing): {questions_docx_enhanced}")
+        print(f"  WARNING: removed {duplicates_removed} near-duplicates — fix questions_bank.json")
 
     manual_by_question = _pqt.load_manual_references()
     strict_by_id = load_strict_audit()
@@ -394,12 +260,13 @@ def main():
     with_ref = 0
     strict_high = 0
 
-    for idx, item in enumerate(merged, 1):
+    for item in merged:
         apply_distractor_fixes(item)
         nq = _pqt.normalize_question(item["q"])
+        qnum = item["number"]
         manual_ref = manual_by_question.get(nq)
-        strict = strict_by_id.get(idx, {})
-        crosscheck = crosscheck_by_id.get(idx, {})
+        strict = strict_by_id.get(qnum, {})
+        crosscheck = crosscheck_by_id.get(qnum, {})
         if manual_ref:
             with_ref += 1
             if manual_ref.get("verified"):
@@ -425,11 +292,11 @@ def main():
 
     random.seed(42)
     output = []
-    for idx, item in enumerate(items, 1):
+    for item in sorted(items, key=lambda x: x["number"]):
         options = item["wrong"] + [item["a"]]
         random.shuffle(options)
         entry = {
-            "id": idx,
+            "id": item["number"],
             "question": item["q"],
             "options": options,
             "correctIndex": options.index(item["a"]),
@@ -462,27 +329,21 @@ def main():
     with_images = sum(1 for q in output if q.get("imagePaths"))
     with_option_images = sum(1 for q in output if q.get("optionImages"))
 
+    numbers = [q["id"] for q in output]
     manifest = {
         "version": DATABASE_VERSION,
+        "bank_version": bank_version,
         "total_questions": len(output),
-        "quiz_txt_count": quiz_count,
-        "youtube_video_count": video_count,
-        "extraq_docx_count": extraq_count,
-        "extraq_docx_enhanced": extraq_enhanced,
-        "questions_docx_count": questions_docx_count,
-        "questions_docx_enhanced": questions_docx_enhanced,
+        "number_min": min(numbers) if numbers else None,
+        "number_max": max(numbers) if numbers else None,
+        "bank_stats": bank_stats,
         "pre_dedup_count": pre_dedup_count,
         "duplicates_removed": duplicates_removed,
         "questions_with_images": with_images,
         "questions_with_option_images": with_option_images,
         "merged": True,
         "approved": True,
-        "sources": [
-            "questions_bank.json (quiz.txt + extraq.docx + questions.docx)"
-            if QUESTIONS_BANK_JSON.exists()
-            else "quiz.txt + extraq.docx + questions.docx (live merge)",
-            "youtube-video (NCSF exam video OCR bank)",
-        ],
+        "sources": ["questions_bank.json"],
         "verification": {
             "manual_references": with_ref,
             "strict_high": strict_high,

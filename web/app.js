@@ -484,9 +484,13 @@ function buildQuestionImagesHtml(imagePaths) {
     .join("")}</div>`;
 }
 
+function formatPoolQuestionId(id) {
+  return `Q${id}`;
+}
+
 function renderQuestionContent(q) {
   const container = document.getElementById("question-content");
-  container.innerHTML = `<p class="question-text">${formatTextWithMuscles(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
+  container.innerHTML = `<p class="question-pool-id" title="Pool question number (stable across exam attempts)">${formatPoolQuestionId(q.id)}</p><p class="question-text">${formatTextWithMuscles(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
 }
 
 function buildImmediateFeedbackHtml(d) {
@@ -531,7 +535,7 @@ function renderQuestion() {
 
   document.getElementById("progress-bar").style.width = `${progress}%`;
   document.getElementById("question-counter").textContent =
-    `Question ${currentIndex + 1} of ${TOTAL_QUESTIONS}`;
+    `${formatPoolQuestionId(q.id)} · ${currentIndex + 1} of ${TOTAL_QUESTIONS}`;
   renderQuestionContent(q);
 
   const optionsList = document.getElementById("options-list");
@@ -686,7 +690,7 @@ function showResults(options = {}) {
 function buildReviewHtml(d) {
   const q = d.question;
   const { body, reference } = splitExplanationAndReference(q);
-  let html = `<h3>Q${q.id}: ${formatTextWithMuscles(q.question)}</h3>`;
+  let html = `<h3>${formatPoolQuestionId(q.id)}: ${formatTextWithMuscles(q.question)}</h3>`;
   html += buildQuestionImagesHtml(q.imagePaths);
 
   html += `<p class="correct-answer-block"><strong>Correct answer:</strong> ${formatTextWithMuscles(d.correctText)}</p>`;

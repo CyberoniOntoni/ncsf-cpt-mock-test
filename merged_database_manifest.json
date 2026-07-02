@@ -1,21 +1,28 @@
 {
-  "version": "merged-questions-v6",
+  "version": "unified-bank-v2",
+  "bank_version": "unified-v2",
   "total_questions": 410,
-  "quiz_txt_count": 150,
-  "youtube_video_count": 114,
-  "extraq_docx_count": 150,
-  "extraq_docx_enhanced": 0,
-  "questions_docx_count": 10,
-  "questions_docx_enhanced": 148,
-  "pre_dedup_count": 421,
-  "duplicates_removed": 11,
+  "number_min": 1,
+  "number_max": 410,
+  "bank_stats": {
+    "total": 410,
+    "number_min": 1,
+    "number_max": 410,
+    "sources": {
+      "extraq.docx": 149,
+      "questions.docx": 158,
+      "quiz.txt": 150,
+      "youtube-video": 114
+    }
+  },
+  "pre_dedup_count": 410,
+  "duplicates_removed": 0,
   "questions_with_images": 18,
   "questions_with_option_images": 2,
   "merged": true,
   "approved": true,
   "sources": [
-    "questions_bank.json (quiz.txt + extraq.docx + questions.docx)",
-    "youtube-video (NCSF exam video OCR bank)"
+    "questions_bank.json"
   ],
   "verification": {
     "manual_references": 272,
