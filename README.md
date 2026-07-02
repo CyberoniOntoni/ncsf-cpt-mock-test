@@ -7,7 +7,7 @@ Free practice exam for the NCSF Certified Personal Trainer (CPT) certification.
 ## Features
 
 - 150 randomized questions per attempt from the full practice pool
-- Sources: Quizlet bank, YouTube video questions, `extraq.docx`, and `questions.docx`
+- 409-question verified practice pool (`questions_bank.json`)
 - Shuffled answer options every attempt
 - Instant feedback with detailed explanations for wrong answers
 - 70% passing score (105/150 correct)
@@ -23,16 +23,13 @@ npx wrangler pages dev .
 
 ## Rebuild question database
 
-Combine the three primary source files into one bank, then build the exam:
+Edit `questions_bank.json`, then rebuild:
 
 ```bash
-python merge_question_sources.py   # quiz.txt + extraq.docx + questions.docx → questions_bank.json
-python build_master_database.py    # questions_bank.json + youtube bank → web/questions.js (auto PDF backfill)
+python build_master_database.py    # questions_bank.json → web/questions.js (auto PDF backfill)
 ```
 
-`questions_bank.json` is the single merged source for the Quizlet export and both Word banks. Re-run `merge_question_sources.py` after editing any of `quiz.txt`, `extraq.docx`, or `questions.docx`.
-
-Requires `quiz.txt`, `extraq.docx`, `questions.docx`, and `manual_references.json` in the repo root.
+Each question has a stable `number` field (e.g. Q80). Retired numbers are listed in `retired_numbers`.
 
 ## Deploy to Cloudflare Pages
 

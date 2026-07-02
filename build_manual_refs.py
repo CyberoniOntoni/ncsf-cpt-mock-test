@@ -6,7 +6,7 @@ from pathlib import Path
 import fitz
 
 MANUAL_DIR = Path(r"C:\Users\r413\OneDrive\Desktop\NCSF")
-QUIZ_TXT = Path(r"D:\Software\Grok\quiz.txt")
+QUESTIONS_BANK_JSON = Path(r"D:\Software\Grok\questions_bank.json")
 OUTPUT_JSON = Path(r"D:\Software\Grok\manual_references.json")
 REPORT_PATH = Path(r"D:\Software\Grok\manual_verification_report.txt")
 
@@ -231,8 +231,20 @@ def format_reference_line(refs):
     return "NCSF Manual reference: " + "; ".join(parts) + "."
 
 
+def load_questions_bank():
+    payload = json.loads(QUESTIONS_BANK_JSON.read_text(encoding="utf-8"))
+    return [
+        {
+            "id": record["number"],
+            "question": record["question"],
+            "correct": record["answer"],
+        }
+        for record in payload["questions"]
+    ]
+
+
 def main():
-    items = parse_quiz(QUIZ_TXT)
+    items = load_questions_bank()
     print(f"Indexing manuals in {MANUAL_DIR}...")
     pages = build_manual_index()
     print(f"Indexed {len(pages)} pages across {len(set(p['chapter'] for p in pages))} chapters")
@@ -241,15 +253,16 @@ def main():
     verified_count = 0
     weak = []
 
-    for i, item in enumerate(items, 1):
+    for item in items:
+        qid = item["id"]
         refs, verified, search_terms = find_references(item, pages)
         if verified:
             verified_count += 1
         else:
-            weak.append((i, item["question"][:80], item["correct"]))
+            weak.append((qid, item["question"][:80], item["correct"]))
 
         results.append({
-            "id": i,
+            "id": qid,
             "question": item["question"],
             "correct": item["correct"],
             "verified": verified,
