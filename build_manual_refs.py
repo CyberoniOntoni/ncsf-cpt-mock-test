@@ -40,40 +40,6 @@ TOPIC_CHAPTERS = [
 ]
 
 
-def parse_quiz(path):
-    lines = path.read_text(encoding="utf-8").splitlines()
-    blocks, cur = [], []
-    for line in lines:
-        if line.strip() == "":
-            if cur:
-                blocks.append(cur)
-                cur = []
-        else:
-            cur.append(line.strip())
-    if cur:
-        blocks.append(cur)
-
-    items = []
-    for block in blocks:
-        if len(block) < 6:
-            continue
-        ans = block[-1].lower()
-        opts, qparts = {}, []
-        for line in block[:-1]:
-            m = re.match(r"^([a-d])\.\s*(.+)$", line, re.I)
-            if m:
-                opts[m.group(1).lower()] = m.group(2).strip()
-            else:
-                qparts.append(line)
-        if len(opts) == 4 and ans in opts:
-            items.append({
-                "question": " ".join(qparts),
-                "correct": opts[ans],
-                "options": opts,
-            })
-    return items
-
-
 def chapter_num_from_filename(name):
     m = re.search(r"Chapter_(\d+)", name)
     return int(m.group(1)) if m else 0
