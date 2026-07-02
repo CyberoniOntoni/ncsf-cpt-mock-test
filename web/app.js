@@ -490,7 +490,7 @@ function formatPoolQuestionId(id) {
 
 function renderQuestionContent(q) {
   const container = document.getElementById("question-content");
-  container.innerHTML = `<p class="question-pool-id" title="Pool question number (stable across exam attempts)">${formatPoolQuestionId(q.id)}</p><p class="question-text">${formatTextWithMuscles(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
+  container.innerHTML = `<p class="question-text"><span class="question-pool-id" title="Pool question number (stable across exam attempts)">${formatPoolQuestionId(q.id)}:</span> ${formatTextWithMuscles(q.question)}</p>${buildQuestionImagesHtml(q.imagePaths)}`;
 }
 
 function buildImmediateFeedbackHtml(d) {
@@ -535,7 +535,7 @@ function renderQuestion() {
 
   document.getElementById("progress-bar").style.width = `${progress}%`;
   document.getElementById("question-counter").textContent =
-    `${formatPoolQuestionId(q.id)} · ${currentIndex + 1} of ${TOTAL_QUESTIONS}`;
+    `${currentIndex + 1} of ${TOTAL_QUESTIONS}`;
   renderQuestionContent(q);
 
   const optionsList = document.getElementById("options-list");
