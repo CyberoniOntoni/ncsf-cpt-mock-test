@@ -43,11 +43,6 @@ cd web && npm run deploy
 | `manual_references.json` | NCSF manual reference metadata |
 | `consolidate_question_bank.py` | Recovery: re-export bank from `questions.js` |
 
-## DNS (Cloudflare)
-
-| Type | Name | Target | Proxied |
-|------|------|--------|---------|
-| CNAME | `ncsf` | `ncsf-mock-exam.pages.dev` | Yes |
 
 ## License
 
