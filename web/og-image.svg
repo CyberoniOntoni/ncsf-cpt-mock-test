@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="NCSF CPT Free Mock Test">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5b21b6"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="72" y="260" fill="#ffffff" font-family="system-ui,Segoe UI,sans-serif" font-size="64" font-weight="700">NCSF CPT Free Mock Test</text>
+  <text x="72" y="340" fill="#e9d5ff" font-family="system-ui,Segoe UI,sans-serif" font-size="34">150 questions per attempt · 409-question pool</text>
+  <text x="72" y="400" fill="#ddd6fe" font-family="system-ui,Segoe UI,sans-serif" font-size="28">Instant feedback · 3-hour timer · 70% to pass</text>
+  <text x="72" y="560" fill="#c4b5fd" font-family="system-ui,Segoe UI,sans-serif" font-size="26">ncsf.50bar.app</text>
+</svg>
