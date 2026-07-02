@@ -3770,14 +3770,14 @@ const EXAM_QUESTIONS = [
       "gynoid obesity is linked with certain cancers"
     ],
     "correctIndex": 2,
-    "explanation": "Android obesity is a term used to describe fat storage within the midsection of the human body, representing both subcutaneous and visceral fat. It is a major health concern based on its known relationship with heart disease. Android obesity is associated with an \u201capple-shape physique\u201d and is dangerous because visceral fat cells release cytokines (chemicals) which promote systemic inflammation. NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 10 (Body Composition), p. 4.",
+    "explanation": "Android obesity is a term used to describe fat storage within the midsection of the human body, representing both subcutaneous and visceral fat. It is a major health concern based on its known relationship with heart disease. Android obesity is associated with an \u201capple-shape physique\u201d and is dangerous because visceral fat cells release cytokines (chemicals) which promote systemic inflammation. NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 5 (Evaluating Health and Physical Fitness), p. 19.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 10 (Body Composition), p. 4.",
+    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 2; Ch. 5 (Evaluating Health and Physical Fitness), p. 19.",
     "manualVerified": true
   },
   {
@@ -4090,14 +4090,14 @@ const EXAM_QUESTIONS = [
       "perform only upper-body resistance training and non-impact aerobic exercise"
     ],
     "correctIndex": 1,
-    "explanation": "The appropriate response for the trainer would be to ask follow-up questions concerning the injury, surgery and rehabilitation. Answers to the follow-up questions are essential when planning the most appropriate course of action. The severity of the injury as well as the comprehensiveness of any rehab will determine the starting point for exercise prescription. However, further testing specific to the left knee joint (e.g., flexibility and stability testing) would be appropriate in creating the most effective program. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92; Ch. 7 (Resting and Active Fitness Assessments), p. 39.",
+    "explanation": "The appropriate response for the trainer would be to ask follow-up questions concerning the injury, surgery and rehabilitation. Answers to the follow-up questions are essential when planning the most appropriate course of action. The severity of the injury as well as the comprehensiveness of any rehab will determine the starting point for exercise prescription. However, further testing specific to the left knee joint (e.g., flexibility and stability testing) would be appropriate in creating the most effective program. NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 21.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92; Ch. 7 (Resting and Active Fitness Assessments), p. 39.",
+    "manualReference": "NCSF Manual reference: Ch. 10 (Body Composition), p. 19; Ch. 3 (Kinetic Chain Function, Dysfunction, and Corrective Exercise), p. 21.",
     "manualVerified": true
   },
   {
@@ -4630,14 +4630,14 @@ const EXAM_QUESTIONS = [
       "they do not account for subcutaneous fat storage"
     ],
     "correctIndex": 2,
-    "explanation": "While girth/circumference measurements are very applicable with overweight individuals; they have limited accuracy for individuals with large amounts of muscle mass inclusive of athletes. Girth/circumference measurements do not take into account the volume of each respective tissue at each site of measurement. For lean individuals with larger quantities of muscle, a skinfold assessment would be more appropriate. For those who are very muscular but also maintain higher fat, hydrostatic weighing would be more useful, and is generally the most accurate outside of DEXA scans. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 7 (Resting and Active Fitness Assessments), p. 20.",
+    "explanation": "While girth/circumference measurements are very applicable with overweight individuals; they have limited accuracy for individuals with large amounts of muscle mass inclusive of athletes. Girth/circumference measurements do not take into account the volume of each respective tissue at each site of measurement. For lean individuals with larger quantities of muscle, a skinfold assessment would be more appropriate. For those who are very muscular but also maintain higher fat, hydrostatic weighing would be more useful, and is generally the most accurate outside of DEXA scans. NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 10 (Body Composition), p. 7.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 7 (Resting and Active Fitness Assessments), p. 20.",
+    "manualReference": "NCSF Manual reference: Ch. 13 (Anaerobic Resistance Training), p. 16; Ch. 10 (Body Composition), p. 7.",
     "manualVerified": true
   },
   {
@@ -4810,14 +4810,14 @@ const EXAM_QUESTIONS = [
       "3 sets per exercise at 80-90% 1RM, 4-8 reps, 75-90 second rest intervals, muscle group-specific exercise"
     ],
     "correctIndex": 2,
-    "explanation": "Higher and very low repetition ranges reduce muscle architectural changes. Low reps at 1-3 works the nervous system while high reps over 15 work the metabolic system. 15 reps equal about 45 seconds of time-under-tension, with a 1:1 to 1:0.75 ratio. This type of training is specifically geared towards caloric expenditure with a side benefit of maintaining lean mass. However, due the elevated time-under-tension (>20 minutes), it may not be feasible for a novice client unaccustomed to resistance training. NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 12 (Exercise Program Components), p. 496.",
+    "explanation": "Higher and very low repetition ranges reduce muscle architectural changes. Low reps at 1-3 works the nervous system while high reps over 15 work the metabolic system. 15 reps equal about 45 seconds of time-under-tension, with a 1:1 to 1:0.75 ratio. This type of training is specifically geared towards caloric expenditure with a side benefit of maintaining lean mass. However, due the elevated time-under-tension (>20 minutes), it may not be feasible for a novice client unaccustomed to resistance training. NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 4 (Human Physiology), p. 162.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 12 (Exercise Program Components), p. 496.",
+    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 159; Ch. 4 (Human Physiology), p. 162.",
     "manualVerified": true
   },
   {
@@ -5573,7 +5573,7 @@ const EXAM_QUESTIONS = [
       "lean forward during the pulling phase"
     ],
     "correctIndex": 2,
-    "explanation": "For the situation presented in the picture, the appropriate course of action would be to instruct the client to pull the bar to their chest instead of behind the head. Performing the lat pull-down behind the neck is contraindicated and increases the risk for a cervical spine injury as well as soft-tissue injuries within the shoulder joints. Furthermore, this form will actually reduce contribution from the latissimus dorsi muscles when compared to pulling in front of the head. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92; Ch. 2 (Functional Anatomy and Training Instruction), p. 68.",
+    "explanation": "For the situation presented in the picture, the appropriate course of action would be to instruct the client to pull the bar to their chest instead of behind the head. Performing the lat pull-down behind the neck is contraindicated and increases the risk for a cervical spine injury as well as soft-tissue injuries within the shoulder joints. Furthermore, this form will actually reduce contribution from the latissimus dorsi muscles when compared to pulling in front of the head. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
@@ -5583,7 +5583,7 @@ const EXAM_QUESTIONS = [
     "imagePaths": [
       "images/extraq/image10.png"
     ],
-    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92; Ch. 2 (Functional Anatomy and Training Instruction), p. 68.",
+    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 92.",
     "manualVerified": true
   },
   {
@@ -5776,14 +5776,14 @@ const EXAM_QUESTIONS = [
       "at the pad or lever arm being moved"
     ],
     "correctIndex": 3,
-    "explanation": "In order to provide assistance when a client is performing the seated leg extension, the personal trainer should apply force to the pad or lever arm. Do not provide direct assistance to the client\u2019s body as complete failure could result in injury to all involved. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
+    "explanation": "In order to provide assistance when a client is performing the seated leg extension, the personal trainer should apply force to the pad or lever arm. Do not provide direct assistance to the client\u2019s body as complete failure could result in injury to all involved. NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 70.",
     "source": "extraq.docx",
     "merged": true,
     "crosscheckApproved": true,
     "needsReview": false,
     "commitTier": "APPROVED",
     "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 90.",
+    "manualReference": "NCSF Manual reference: Ch. 2 (Functional Anatomy and Training Instruction), p. 68; Ch. 2 (Functional Anatomy and Training Instruction), p. 70.",
     "manualVerified": true
   },
   {
@@ -8271,105 +8271,5 @@ const EXAM_QUESTIONS = [
     "manualVerified": true,
     "commitTier": "APPROVED",
     "commitConfidence": 100
-  },
-  {
-    "id": 411,
-    "question": "During resistance training programs for children, progressive overload should emphasize increased repetitions rather than:",
-    "options": [
-      "Static stretching program",
-      "Mass enlargement (hypertrophy focus)",
-      "Aerobic training only",
-      "Plyometric training only"
-    ],
-    "correctIndex": 1,
-    "explanation": "Children should focus on technique and motor learning, not maximal hypertrophy training. NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 20; Ch. 13 (Anaerobic Resistance Training), p. 8.",
-    "source": "youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "commitTier": "APPROVED",
-    "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 12 (Exercise Program Components), p. 20; Ch. 13 (Anaerobic Resistance Training), p. 8.",
-    "manualVerified": true
-  },
-  {
-    "id": 412,
-    "question": "Pregnant clients should avoid exercises in the supine position beyond the first trimester because it reduces cardiac output, thereby decreasing total blood flow to the:",
-    "options": [
-      "Static stretching program",
-      "Aerobic training only",
-      "Mother and unborn baby",
-      "Plyometric training only"
-    ],
-    "correctIndex": 2,
-    "explanation": "Supine position compresses the vena cava, reducing venous return and fetal/maternal perfusion. NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 19; Ch. 17 (Working with Special Populations), p. 21.",
-    "source": "youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "commitTier": "APPROVED",
-    "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 17 (Working with Special Populations), p. 19; Ch. 17 (Working with Special Populations), p. 21.",
-    "manualVerified": true
-  },
-  {
-    "id": 413,
-    "question": "If training an individual with Type II diabetes who suffers from retinopathy, what exercises must be avoided?",
-    "options": [
-      "Aerobic training only",
-      "Plyometric training only",
-      "Static stretching program",
-      "Exercises that significantly elevate blood pressure, are compressive in nature, require head below waist, or may jar the head"
-    ],
-    "correctIndex": 3,
-    "explanation": "Retinopathy contraindicates activities risking Valsalva, head-down positions, or impact. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 6 (Physical Activity and Risk for Disease), p. 25.",
-    "source": "youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "commitTier": "APPROVED",
-    "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 6 (Physical Activity and Risk for Disease), p. 25.",
-    "manualVerified": true
-  },
-  {
-    "id": 414,
-    "question": "Clients with very high blood pressure should avoid resistance training above what percentage of their 1RM?",
-    "options": [
-      "70%",
-      "60%",
-      "85%",
-      "50%"
-    ],
-    "correctIndex": 0,
-    "explanation": "Heavy lifting (>70% 1RM) causes dangerous blood pressure elevations in hypertensive clients. NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 4 (Human Physiology), p. 39.",
-    "source": "youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "commitTier": "APPROVED",
-    "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 4 (Human Physiology), p. 34; Ch. 4 (Human Physiology), p. 39.",
-    "manualVerified": true
-  },
-  {
-    "id": 415,
-    "question": "Some clients with chronic diabetes may suffer from microvascular complications such as what, which has direct impact on kidney function?",
-    "options": [
-      "Static stretching program",
-      "Nephropathy",
-      "Aerobic training only",
-      "Plyometric training only"
-    ],
-    "correctIndex": 1,
-    "explanation": "Diabetic nephropathy is kidney damage from chronic hyperglycemia. NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 17 (Working with Special Populations), p. 8.",
-    "source": "youtube-video",
-    "merged": true,
-    "crosscheckApproved": true,
-    "needsReview": false,
-    "commitTier": "APPROVED",
-    "commitConfidence": 100,
-    "manualReference": "NCSF Manual reference: Ch. 6 (Physical Activity and Risk for Disease), p. 90; Ch. 17 (Working with Special Populations), p. 8.",
-    "manualVerified": true
   }
 ];

@@ -245,9 +245,10 @@ SUPPLEMENT = [
     {"q": "What is the NCSF passing score requirement for the certification exam?", "a": "70%", "wrong": ["50%", "60%", "85%"], "exp": "The NCSF Personal Trainer certification exam requires a minimum score of 70% to pass."},
 ]
 
-# Video contains 130 questions only (no supplemental items)
-ALL = QUESTIONS[:130]
-assert len(ALL) == 130, f"Expected 130 video questions, got {len(ALL)}"
+# Video bank: first 125 entries (5 near-duplicates removed from the original 130;
+# slicing at 125 prevents the next 5 items from backfilling into the active set)
+ALL = QUESTIONS[:125]
+assert len(ALL) == 125, f"Expected 125 video questions, got {len(ALL)}"
 
 # Plausible wrong answers keyed by correct answer (from video source)
 CUSTOM_DISTRACTORS = {
