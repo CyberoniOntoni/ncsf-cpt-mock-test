@@ -3,9 +3,10 @@
   "generated_at": "2026-07-02T03:30:36.134347+00:00",
   "description": "Canonical NCSF CPT question bank. Edit this file, then run build_master_database.py to regenerate web/questions.js.",
   "stats": {
-    "total": 410,
+    "total": 409,
     "number_min": 1,
     "number_max": 410,
+    "retired_numbers": [205],
     "sources": {
       "extraq.docx": 149,
       "questions.docx": 158,
@@ -2521,18 +2522,6 @@
         "He should primarily use high-intensity interval training for 60 minutes"
       ],
       "explanation": "With individuals that have a high level of body fat and are new to exercise, it is prudent to perform any aerobic work using low-impact activities. High-impact activities such as running increase the risk for overuse and orthopedic injuries among new exercisers. Likewise, high-intensity programs are not well-tolerated and are often contraindicated for obese individuals.",
-      "source": "extraq.docx"
-    },
-    {
-      "number": 205,
-      "question": "Which assessment of aerobic fitness is most commonly used for a 14 year-old boy?",
-      "answer": "1 mile run test",
-      "wrong": [
-        "200 m sprint test",
-        "6 minute jump rope test",
-        "300 yd shuttle test"
-      ],
-      "explanation": "The most appropriate assessment of aerobic fitness for a 14 year-old boy would be the one mile run test. Children can perform short bouts (10 minutes) of intense aerobic exercise on an intermittent basis. Care should be provided to ensure conditions account for thermoregulation, as youths have a greater tendency to overheat. When using any running tests the participant should practice the distance to establish an appropriate pace.",
       "source": "extraq.docx"
     },
     {

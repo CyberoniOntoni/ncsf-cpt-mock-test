@@ -126,6 +126,8 @@ def semantic_duplicate_key(item):
             return "male-resting-hr-medical-referral"
     if "blood lipid profile" in q and a == "hdl will increase":
         return "moderate-aerobic-blood-lipid-hdl"
+    if "mile run" in a and ("year-old" in q or "year old" in q):
+        return "child-aerobic-one-mile-run-assessment"
     return None
 
 

@@ -1,13 +1,16 @@
 {
   "version": "unified-bank-v2",
   "bank_version": "unified-v2",
-  "total_questions": 410,
+  "total_questions": 409,
   "number_min": 1,
   "number_max": 410,
   "bank_stats": {
-    "total": 410,
+    "total": 409,
     "number_min": 1,
     "number_max": 410,
+    "retired_numbers": [
+      205
+    ],
     "sources": {
       "extraq.docx": 149,
       "questions.docx": 158,
@@ -15,7 +18,7 @@
       "youtube-video": 114
     }
   },
-  "pre_dedup_count": 410,
+  "pre_dedup_count": 409,
   "duplicates_removed": 0,
   "questions_with_images": 18,
   "questions_with_option_images": 2,
@@ -27,7 +30,7 @@
   "verification": {
     "manual_references": 272,
     "strict_high": 0,
-    "crosscheck_approved": 410
+    "crosscheck_approved": 409
   },
   "output": "web/questions.js"
 }
