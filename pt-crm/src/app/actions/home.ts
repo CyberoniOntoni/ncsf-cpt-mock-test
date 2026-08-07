@@ -25,7 +25,8 @@ export type HomeNeedsYouItem = {
     | "no_program"
     | "low_package"
     | "upcoming_appt"
-    | "quiet_lead";
+    | "quiet_lead"
+    | "open_task";
   title: string;
   subtitle: string;
   href: string;
@@ -33,6 +34,15 @@ export type HomeNeedsYouItem = {
   actionLabel?: string;
   clientId?: string | null;
   urgency: "high" | "medium" | "low";
+};
+
+export type HomeAgendaItem = {
+  appointmentId: string;
+  clientId: string;
+  clientName: string;
+  title: string;
+  startsAt: Date | string;
+  href: string;
 };
 
 export type HomeClientProgram = {
@@ -220,9 +230,19 @@ export async function getHomeDashboardAction() {
     }
   }
 
-  // CRM signals: low packages, upcoming appts (48h), quiet leads
+  // CRM signals: low packages, upcoming appts (48h), quiet leads, open tasks
   const signals = await listOrgCrmSignalsAction();
   const fourHours = 4 * 60 * 60 * 1000;
+
+  // Today agenda = upcoming appointments (first-class Home surface)
+  const agenda: HomeAgendaItem[] = signals.upcomingAppts.map((a) => ({
+    appointmentId: a.appointmentId,
+    clientId: a.clientId,
+    clientName: a.name,
+    title: a.title || "Session",
+    startsAt: a.startsAt,
+    href: `/clients/${a.clientId}#crm-appointments`,
+  }));
 
   for (const p of signals.lowPackages) {
     const left = p.remaining;
@@ -241,9 +261,11 @@ export async function getHomeDashboardAction() {
     });
   }
 
+  // Keep high-urgency appts in Needs you only when within 4h (rest live on Agenda)
   for (const a of signals.upcomingAppts) {
     const starts = new Date(a.startsAt);
     const ms = starts.getTime() - now;
+    if (ms > fourHours) continue;
     const when = starts.toLocaleString(undefined, {
       weekday: "short",
       month: "short",
@@ -259,7 +281,29 @@ export async function getHomeDashboardAction() {
       href: `/clients/${a.clientId}#crm-appointments`,
       actionLabel: "View booking",
       clientId: a.clientId,
-      urgency: ms <= fourHours ? "high" : "medium",
+      urgency: "high",
+    });
+  }
+
+  for (const t of signals.openTasks) {
+    const due = t.dueAt ? new Date(t.dueAt) : null;
+    const overdue = due != null && due.getTime() < now;
+    const dueLabel = due
+      ? due.toLocaleDateString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })
+      : "No due date";
+    needsYou.push({
+      id: `tk-${t.taskId}`,
+      kind: "open_task",
+      title: t.name,
+      subtitle: `${t.title} · ${overdue ? "Overdue · " : ""}${dueLabel}`,
+      href: `/clients/${t.clientId}#crm-tasks`,
+      actionLabel: overdue ? "Do now" : "Open task",
+      clientId: t.clientId,
+      urgency: overdue ? "high" : "medium",
     });
   }
 
@@ -279,11 +323,12 @@ export async function getHomeDashboardAction() {
   // One row per client (keep highest-priority kind); orphan sessions keep all
   const KIND_RANK: Record<HomeNeedsYouItem["kind"], number> = {
     in_progress: 0,
-    low_package: 1,
-    upcoming_appt: 2,
-    no_program: 3,
-    quiet_client: 4,
-    quiet_lead: 5,
+    open_task: 1,
+    low_package: 2,
+    upcoming_appt: 3,
+    no_program: 4,
+    quiet_client: 5,
+    quiet_lead: 6,
   };
   const urgencyRank = { high: 0, medium: 1, low: 2 } as const;
 
@@ -332,6 +377,7 @@ export async function getHomeDashboardAction() {
 
   return {
     inProgress,
+    agenda,
     needsYou: needsYouCapped,
     clientCount: clientList.length,
     quietDays: QUIET_DAYS,

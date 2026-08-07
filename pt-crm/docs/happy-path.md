@@ -10,9 +10,10 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 
 1. Open **/** (Home).
 2. Pick or search a client (sticky chip follows you).
-3. **Needs you** — always on Home (**All clear** when empty). Action labels deep-link (`#crm-pack`, `#crm-checkin`, etc.).
-4. Primary CTA: **Resume session** or **Start session** (one emerald action).
-5. With a client selected: **Log check-in** on the launch card (clears quiet-lead when saved).
+3. **Agenda** — booked sessions in the next ~48h (deep-link `#crm-appointments`). Full list lives here so Needs you stays action-focused.
+4. **Needs you** — always on Home (**All clear** when empty). Includes open **tasks**, low/empty packs, quiet leads/clients, sessions in progress. Appointments only appear here when starting within **~4 hours**. Action labels deep-link (`#crm-pack`, `#crm-tasks`, `#crm-checkin`, etc.).
+5. Primary CTA: **Resume session** or **Start session** (one emerald action).
+6. With a client selected: **Log check-in** on the launch card (clears quiet-lead when saved).
 
 ---
 
@@ -61,7 +62,9 @@ On the client page, **Packages & schedule**:
 | Action | Where |
 |--------|--------|
 | Remaining sessions | Summary strip + package card |
+| **Renew pack** | When no active pack (and a prior pack exists) — one-tap prefills name/total; or Needs you **Renew pack** → `#crm-pack` |
 | Book / complete / cancel booking | Appointments (forms collapse until you open them) |
+| **Follow-ups** | Tasks with optional due date; mark done / remove. Open tasks surface on Home Needs you (`#crm-tasks`) |
 | Touch log | **Log check-in** (message / call / in person) + short **templates** (copy into WhatsApp yourself — no send) |
 | Stage | **Change stage** |
 

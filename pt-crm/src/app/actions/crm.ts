@@ -7,6 +7,7 @@ import {
   clientAppointments,
   clientCheckIns,
   clientPackages,
+  clientTasks,
   clients,
 } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
@@ -372,13 +373,91 @@ export async function createClientCheckInAction(input: {
   return { id: checkInId };
 }
 
+// ── Tasks / follow-ups ─────────────────────────────────────────────
+
+export async function createClientTaskAction(input: {
+  clientId: string;
+  title: string;
+  dueAt?: string | null;
+}) {
+  const session = await requireSession();
+  await assertClientInOrg(input.clientId, session.organizationId);
+  const title = input.title.trim();
+  if (!title) throw new Error("Task title is required");
+  let due: Date | null = null;
+  if (input.dueAt) {
+    due = new Date(input.dueAt);
+    if (Number.isNaN(due.getTime())) throw new Error("Invalid due date");
+  }
+  const db = await getDb();
+  const taskId = id("tsk");
+  await db.insert(clientTasks).values({
+    id: taskId,
+    organizationId: session.organizationId,
+    clientId: input.clientId,
+    title,
+    dueAt: due,
+    status: "open",
+  });
+  revalidateClient(input.clientId);
+  return { id: taskId };
+}
+
+export async function setClientTaskDoneAction(
+  taskId: string,
+  clientId: string,
+  done: boolean
+) {
+  const session = await requireSession();
+  await assertClientInOrg(clientId, session.organizationId);
+  const db = await getDb();
+  const [row] = await db
+    .select()
+    .from(clientTasks)
+    .where(
+      and(
+        eq(clientTasks.id, taskId),
+        eq(clientTasks.clientId, clientId),
+        eq(clientTasks.organizationId, session.organizationId)
+      )
+    )
+    .limit(1);
+  if (!row) throw new Error("Task not found");
+  await db
+    .update(clientTasks)
+    .set({
+      status: done ? "done" : "open",
+      completedAt: done ? new Date() : null,
+    })
+    .where(eq(clientTasks.id, taskId));
+  revalidateClient(clientId);
+  return { ok: true as const };
+}
+
+export async function deleteClientTaskAction(taskId: string, clientId: string) {
+  const session = await requireSession();
+  await assertClientInOrg(clientId, session.organizationId);
+  const db = await getDb();
+  await db
+    .delete(clientTasks)
+    .where(
+      and(
+        eq(clientTasks.id, taskId),
+        eq(clientTasks.clientId, clientId),
+        eq(clientTasks.organizationId, session.organizationId)
+      )
+    );
+  revalidateClient(clientId);
+  return { ok: true as const };
+}
+
 /** CRM snapshot for client detail header + panel */
 export async function getClientCrmSnapshotAction(clientId: string) {
   const session = await requireSession();
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
 
-  const [packages, appointments, checkIns, nextAppt] = await Promise.all([
+  const [packages, appointments, checkIns, nextAppt, tasks] = await Promise.all([
     db
       .select()
       .from(clientPackages)
@@ -408,6 +487,12 @@ export async function getClientCrmSnapshotAction(clientId: string) {
       )
       .orderBy(asc(clientAppointments.startsAt))
       .limit(1),
+    db
+      .select()
+      .from(clientTasks)
+      .where(eq(clientTasks.clientId, clientId))
+      .orderBy(asc(clientTasks.dueAt), desc(clientTasks.createdAt))
+      .limit(20),
   ]);
 
   const activePkgs = packages.filter((p) => p.status === "active");
@@ -426,12 +511,22 @@ export async function getClientCrmSnapshotAction(clientId: string) {
       }
     : null;
 
+  // Last purchased pack (any status) for one-tap renew prefill
+  const lastPackage = packages[0]
+    ? {
+        name: packages[0].name,
+        totalSessions: packages[0].totalSessions,
+      }
+    : null;
+
   return {
     packages,
     appointments,
     checkIns,
+    tasks,
     nextAppointment: nextAppt[0] ?? null,
     activePackage,
+    lastPackage,
   };
 }
 
@@ -467,6 +562,13 @@ export async function listOrgCrmSignalsAction() {
         appointmentId: string;
       }>,
       quietLeads: [] as Array<{ clientId: string; name: string }>,
+      openTasks: [] as Array<{
+        taskId: string;
+        clientId: string;
+        name: string;
+        title: string;
+        dueAt: Date | null;
+      }>,
     };
   }
 
@@ -647,5 +749,54 @@ export async function listOrgCrmSignalsAction() {
     }
   }
 
-  return { lowPackages, upcomingAppts, quietLeads };
+  // Open follow-ups (due within 7 days, overdue, or no due date) — cap 15
+  const openTaskRows = await db
+    .select({
+      id: clientTasks.id,
+      clientId: clientTasks.clientId,
+      title: clientTasks.title,
+      dueAt: clientTasks.dueAt,
+    })
+    .from(clientTasks)
+    .where(
+      and(
+        eq(clientTasks.organizationId, orgId),
+        eq(clientTasks.status, "open")
+      )
+    )
+    .orderBy(asc(clientTasks.dueAt))
+    .limit(40);
+
+  const weekAhead = now + week;
+  const openTasks: Array<{
+    taskId: string;
+    clientId: string;
+    name: string;
+    title: string;
+    dueAt: Date | null;
+  }> = [];
+  for (const t of openTaskRows) {
+    if (openTasks.length >= 15) break;
+    const c = clientById.get(t.clientId);
+    if (
+      !c ||
+      c.status === "inactive" ||
+      c.status === "draft"
+    ) {
+      continue;
+    }
+    if (t.dueAt) {
+      const dueMs = new Date(t.dueAt).getTime();
+      if (dueMs > weekAhead) continue;
+    }
+    openTasks.push({
+      taskId: t.id,
+      clientId: t.clientId,
+      name: `${c.firstName} ${c.lastName || ""}`.trim(),
+      title: t.title,
+      dueAt: t.dueAt ? (t.dueAt as Date) : null,
+    });
+  }
+
+  return { lowPackages, upcomingAppts, quietLeads, openTasks };
 }

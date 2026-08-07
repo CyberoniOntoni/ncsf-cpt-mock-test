@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -193,6 +193,20 @@ async function ensureSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS checkins_client_idx ON client_check_ins(client_id);
+
+    CREATE TABLE IF NOT EXISTS client_tasks (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      due_at TIMESTAMPTZ,
+      status TEXT NOT NULL DEFAULT 'open',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      completed_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS tasks_org_idx ON client_tasks(organization_id);
+    CREATE INDEX IF NOT EXISTS tasks_client_idx ON client_tasks(client_id);
+    CREATE INDEX IF NOT EXISTS tasks_due_idx ON client_tasks(due_at);
 
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,

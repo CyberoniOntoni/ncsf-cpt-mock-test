@@ -14,6 +14,9 @@ import {
   createClientAppointmentAction,
   createClientCheckInAction,
   createClientPackageAction,
+  createClientTaskAction,
+  deleteClientTaskAction,
+  setClientTaskDoneAction,
   updateAppointmentStatusAction,
   updateClientStageAction,
 } from "@/app/actions/crm";
@@ -56,6 +59,15 @@ export type CrmCheckInRow = {
   authorUserId?: string | null;
 };
 
+export type CrmTaskRow = {
+  id: string;
+  title: string;
+  dueAt?: Date | string | null;
+  status: string;
+  createdAt?: Date | string | null;
+  completedAt?: Date | string | null;
+};
+
 export type CrmActivePackage = {
   id: string;
   name: string;
@@ -68,8 +80,11 @@ export type CrmSnapshot = {
   packages: CrmPackageRow[];
   appointments: CrmAppointmentRow[];
   checkIns: CrmCheckInRow[];
+  tasks?: CrmTaskRow[];
   nextAppointment: CrmAppointmentRow | null;
   activePackage: CrmActivePackage;
+  /** Prefill for one-tap renew when no active pack */
+  lastPackage?: { name: string; totalSessions: number } | null;
 };
 
 const PIPELINE_STAGES: ClientStage[] = [
@@ -205,6 +220,7 @@ export function ClientCrmPanel({
   const [showAddPack, setShowAddPack] = useState(false);
   const [showBookForm, setShowBookForm] = useState(false);
   const [showCheckInForm, setShowCheckInForm] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
 
   // Package form
   const [pkgName, setPkgName] = useState("");
@@ -220,6 +236,10 @@ export function ClientCrmPanel({
   const [channel, setChannel] = useState<CheckInChannel>("message");
   const [checkInBody, setCheckInBody] = useState("");
 
+  // Task form
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDue, setTaskDue] = useState("");
+
   useEffect(() => {
     const next = (initialStatus || "lead").trim().toLowerCase();
     setStage(next);
@@ -234,7 +254,7 @@ export function ClientCrmPanel({
   const lowRemaining =
     !!activePackage && activePackage.remaining <= 2;
 
-  // Deep links from home needs-you: #crm-pack | #crm-appointments | #crm-checkin
+  // Deep links from home needs-you: #crm-pack | #crm-appointments | #crm-checkin | #crm-tasks
   useEffect(() => {
     function scrollToId(id: string, focusSelector?: string) {
       const run = () => {
@@ -258,10 +278,16 @@ export function ClientCrmPanel({
       if (typeof window === "undefined") return;
       const hash = window.location.hash.replace(/^#/, "");
       if (hash === "crm-pack") {
-        // Open add-pack when nothing active; otherwise scroll to package section
+        // No active pack: prefill renew from last pack when available
         if (!snapshot.activePackage) {
+          const last = snapshot.lastPackage;
+          if (last) {
+            setPkgName(last.name || "Session pack");
+            setPkgTotal(String(last.totalSessions || 10));
+            setPkgUsed("0");
+          }
           setShowAddPack(true);
-          scrollToId("crm-pack", 'input[name="pkg-name"], input, textarea');
+          scrollToId("crm-pack", "input, textarea");
         } else {
           scrollToId("crm-pack");
         }
@@ -280,13 +306,21 @@ export function ClientCrmPanel({
       } else if (hash === "crm-checkin") {
         setShowCheckInForm(true);
         scrollToId("crm-checkin", "textarea");
+      } else if (hash === "crm-tasks") {
+        setShowTaskForm(true);
+        scrollToId("crm-tasks", "input, textarea");
       }
     }
 
     applyHash();
     window.addEventListener("hashchange", applyHash);
     return () => window.removeEventListener("hashchange", applyHash);
-  }, [snapshot.activePackage, snapshot.nextAppointment, clientId]);
+  }, [
+    snapshot.activePackage,
+    snapshot.nextAppointment,
+    snapshot.lastPackage,
+    clientId,
+  ]);
 
   const stageButtons = useMemo(() => {
     const list = [...PIPELINE_STAGES];
@@ -301,6 +335,8 @@ export function ClientCrmPanel({
     [snapshot.appointments]
   );
   const checkInList = snapshot.checkIns.slice(0, 8);
+  const taskList = (snapshot.tasks || []).slice(0, 12);
+  const openTasks = taskList.filter((t) => t.status === "open");
 
   const packPct = activePackage
     ? Math.min(
@@ -352,6 +388,14 @@ export function ClientCrmPanel({
         throw e;
       }
     });
+  }
+
+  function startRenewPack() {
+    const last = snapshot.lastPackage;
+    setPkgName(last?.name || "Session pack");
+    setPkgTotal(String(last?.totalSessions || 10));
+    setPkgUsed("0");
+    setShowAddPack(true);
   }
 
   function onCreatePackage(e: FormEvent) {
@@ -705,19 +749,34 @@ export function ClientCrmPanel({
           !showAddPack && (
             <div className="space-y-2">
               <p className="text-xs text-zinc-500">
-                No active pack — add one to track remaining sessions.
+                {hadExhaustedPack
+                  ? "No active pack — renew to keep tracking sessions."
+                  : "No active pack — add one to track remaining sessions."}
               </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                disabled={pending}
-                aria-expanded={showAddPack}
-                onClick={() => setShowAddPack(true)}
-                className="min-h-9"
-              >
-                Add package
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {hadExhaustedPack || snapshot.lastPackage ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pending}
+                    onClick={startRenewPack}
+                    className="min-h-9"
+                  >
+                    Renew pack
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={pending}
+                  aria-expanded={showAddPack}
+                  onClick={() => setShowAddPack(true)}
+                  className="min-h-9"
+                >
+                  Add package
+                </Button>
+              </div>
             </div>
           )
         )}
@@ -973,6 +1032,172 @@ export function ClientCrmPanel({
               );
             })}
           </ul>
+        )}
+      </section>
+
+      {/* Follow-ups / tasks */}
+      <section
+        id="crm-tasks"
+        className="scroll-mt-client space-y-2 border-t border-zinc-800/80 pt-4"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            Follow-ups
+            {openTasks.length > 0 && (
+              <span className="ml-1.5 font-normal normal-case text-amber-400/90">
+                {openTasks.length} open
+              </span>
+            )}
+          </p>
+          <button
+            type="button"
+            className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
+            aria-expanded={showTaskForm}
+            onClick={() => setShowTaskForm((v) => !v)}
+          >
+            {showTaskForm ? "Done" : "Add task"}
+          </button>
+        </div>
+
+        {taskList.length === 0 ? (
+          <p className="text-xs text-zinc-600">
+            No follow-ups — add a due task for rebook, renew, or check-in.
+          </p>
+        ) : (
+          <ul className="space-y-1.5" aria-label="Client tasks">
+            {taskList.map((t) => {
+              const done = t.status === "done";
+              const due = t.dueAt ? new Date(t.dueAt) : null;
+              const overdue =
+                !done && due != null && due.getTime() < Date.now();
+              return (
+                <li
+                  key={t.id}
+                  className={cn(
+                    "flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2",
+                    done
+                      ? "border-zinc-800/60 bg-zinc-950/30 opacity-70"
+                      : overdue
+                        ? "border-amber-900/40 bg-amber-950/20"
+                        : "border-zinc-800 bg-zinc-950/40"
+                  )}
+                >
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() =>
+                      run(async () => {
+                        await setClientTaskDoneAction(t.id, clientId, !done);
+                      })
+                    }
+                    className={cn(
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-xs font-bold",
+                      done
+                        ? "border-emerald-800/50 bg-emerald-950/40 text-emerald-300"
+                        : "border-zinc-700 text-zinc-500 hover:border-zinc-500"
+                    )}
+                    aria-label={done ? "Mark open" : "Mark done"}
+                  >
+                    {done ? "✓" : ""}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={cn(
+                        "text-xs font-medium",
+                        done
+                          ? "text-zinc-500 line-through"
+                          : "text-zinc-200"
+                      )}
+                    >
+                      {t.title}
+                    </p>
+                    {due && (
+                      <p
+                        className={cn(
+                          "text-[10px] tabular-nums",
+                          overdue ? "text-amber-300/90" : "text-zinc-600"
+                        )}
+                      >
+                        {overdue ? "Overdue · " : "Due "}
+                        {due.toLocaleDateString(undefined, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={pending}
+                    className="text-[10px] text-zinc-600 hover:text-red-300"
+                    onClick={() =>
+                      run(async () => {
+                        await deleteClientTaskAction(t.id, clientId);
+                      })
+                    }
+                  >
+                    Remove
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {showTaskForm && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!taskTitle.trim()) {
+                setError("Task title is required");
+                return;
+              }
+              run(async () => {
+                await createClientTaskAction({
+                  clientId,
+                  title: taskTitle.trim(),
+                  dueAt: taskDue || null,
+                });
+                setTaskTitle("");
+                setTaskDue("");
+                setShowTaskForm(false);
+              });
+            }}
+            className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/40 p-2.5"
+          >
+            <Input
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+              placeholder="e.g. Rebook next week"
+              disabled={pending}
+              className="min-h-11 text-sm"
+              aria-label="Task title"
+              required
+            />
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-wide text-zinc-600">
+                Due (optional)
+              </label>
+              <Input
+                type="date"
+                value={taskDue}
+                onChange={(e) => setTaskDue(e.target.value)}
+                disabled={pending}
+                className="mt-1 min-h-11 text-sm"
+                aria-label="Due date"
+              />
+            </div>
+            <Button
+              type="submit"
+              size="sm"
+              loading={pending}
+              disabled={pending || !taskTitle.trim()}
+              className="min-h-11"
+            >
+              Save task
+            </Button>
+          </form>
         )}
       </section>
 

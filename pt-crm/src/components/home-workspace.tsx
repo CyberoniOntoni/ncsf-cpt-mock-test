@@ -12,6 +12,7 @@ import { getClientAction } from "@/app/actions/clients";
 import {
   getHomeClientProgramsAction,
   getHomeDashboardAction,
+  type HomeAgendaItem,
   type HomeClientProgram,
   type HomeInProgressSession,
   type HomeNeedsYouItem,
@@ -73,6 +74,7 @@ function needsYouBadge(kind: HomeNeedsYouItem["kind"]): {
   if (kind === "no_program") return { label: "Design", tone: "default" };
   if (kind === "low_package") return { label: "Pack", tone: "amber" };
   if (kind === "upcoming_appt") return { label: "Appt", tone: "sky" };
+  if (kind === "open_task") return { label: "Task", tone: "amber" };
   if (kind === "quiet_lead") return { label: "Lead", tone: "default" };
   // quiet_client fallback (actionLabel usually "Start session")
   return { label: "Start session", tone: "default" };
@@ -92,6 +94,7 @@ export function HomeWorkspace({
   const [panelOpen, setPanelOpen] = useState(false);
 
   const [inProgress, setInProgress] = useState<HomeInProgressSession[]>([]);
+  const [agenda, setAgenda] = useState<HomeAgendaItem[]>([]);
   const [needsYou, setNeedsYou] = useState<HomeNeedsYouItem[]>([]);
   const [clientCount, setClientCount] = useState(0);
   const [dashLoading, setDashLoading] = useState(true);
@@ -139,6 +142,7 @@ export function HomeWorkspace({
     try {
       const d = await getHomeDashboardAction();
       setInProgress(d.inProgress);
+      setAgenda(d.agenda || []);
       setNeedsYou(d.needsYou);
       setClientCount(d.clientCount);
       // Always show header; expand only when there is work (collapsed "All clear")
@@ -315,6 +319,51 @@ export function HomeWorkspace({
           <p className="mt-1 max-w-xl text-sm text-zinc-500">{headerHint}</p>
         </div>
       </header>
+
+      {/* Today agenda — booked sessions next 48h */}
+      {(dashLoading || agenda.length > 0) && (
+        <section aria-label="Today agenda">
+          <SectionLabel className="mb-1.5">
+            Agenda
+            {agenda.length > 0 && (
+              <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-600">
+                ({agenda.length})
+              </span>
+            )}
+          </SectionLabel>
+          {dashLoading && agenda.length === 0 ? (
+            <Skeleton className="h-14 w-full rounded-xl" />
+          ) : (
+            <ul className="space-y-1.5">
+              {agenda.map((a) => {
+                const when = new Date(a.startsAt).toLocaleString(undefined, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                return (
+                  <li key={a.appointmentId}>
+                    <ListRow
+                      href={a.href}
+                      tone="default"
+                      title={a.clientName}
+                      subtitle={`${a.title} · ${when}`}
+                      trailing={<Badge tone="sky">Booked</Badge>}
+                      onClick={() => {
+                        setSelectedId(a.clientId);
+                        setStoredActiveClient(a.clientId, a.clientName);
+                        syncActiveClientUrl(a.clientId);
+                      }}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* Open sessions (in progress) */}
       <section aria-label="Open sessions">

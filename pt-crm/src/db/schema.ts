@@ -225,6 +225,31 @@ export const clientCheckIns = pgTable(
   (t) => [index("checkins_client_idx").on(t.clientId)]
 );
 
+/** Trainer follow-ups / admin tasks on a client (Phase B) */
+export const clientTasks = pgTable(
+  "client_tasks",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    /** open | done */
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("tasks_org_idx").on(t.organizationId),
+    index("tasks_client_idx").on(t.clientId),
+    index("tasks_due_idx").on(t.dueAt),
+  ]
+);
+
 export const conversations = pgTable(
   "conversations",
   {
