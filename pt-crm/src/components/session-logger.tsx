@@ -43,6 +43,7 @@ import {
   buildSessionSummaryText,
   formatRelativeSessionDay,
 } from "@/lib/session-summary";
+import { isProgramMetaDump } from "@/lib/session-notes";
 import {
   applyUndoToLogs,
   SessionUndoStack,
@@ -623,7 +624,14 @@ export function SessionLogger({
     }
     markDirty();
     const curSet = log?.setLogs?.find((s) => s.setIndex === setIndex);
-    let willHaveOpenSets = false;
+    // Compute open-set outcome from current log (do not rely on setState updater side effects)
+    const willHaveOpenSets = (() => {
+      if (!log) return false;
+      const nextSets = (log.setLogs || []).map((s) =>
+        s.setIndex === setIndex ? { ...s, completed: done } : s
+      );
+      return nextSets.some((s) => !s.completed);
+    })();
     setLogs((prev) =>
       prev.map((l) => {
         if (l.id !== logId) return l;
@@ -654,7 +662,6 @@ export function SessionLogger({
           }
         }
         const allDone = setLogs.length > 0 && setLogs.every((s) => s.completed);
-        willHaveOpenSets = setLogs.some((s) => !s.completed);
         return { ...l, setLogs, completed: allDone };
       })
     );
@@ -680,8 +687,10 @@ export function SessionLogger({
         mode: emom ? "emom" : "rest",
         subtitle: emom ? log.exerciseName : undefined,
       });
-      // This exercise finished; more work remains elsewhere
-      if (!willHaveOpenSets) {
+      if (willHaveOpenSets) {
+        flash("Set done", "success");
+      } else {
+        // This exercise finished; more work remains elsewhere
         flash(`${log.exerciseName} complete`, "success");
       }
     } else if (done && !willHaveOpenSets && !otherOpen) {
@@ -2453,14 +2462,9 @@ export function SessionLogger({
                     </div>
                   )}
 
-                  {/* Quiet notes: collapsed when long program meta is prefilled */}
+                  {/* Quiet notes: collapsed when program meta dump is prefilled */}
                   {(() => {
-                    const note = (log.notes || "").trim();
-                    const longMeta =
-                      note.length > 80 ||
-                      /mesocycle:|deload week|reverse pyramid:|tempo sets:|drop sets:/i.test(
-                        note
-                      );
+                    const longMeta = isProgramMetaDump(log.notes);
                     if (longMeta && !readonly) {
                       return (
                         <details className="rounded-lg border border-zinc-800/80 bg-zinc-950/30">
