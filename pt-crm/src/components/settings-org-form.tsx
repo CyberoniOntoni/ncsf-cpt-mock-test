@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { updateOrganizationAction } from "@/app/actions/auth";
-import { Alert, Button, Input, Label } from "@/components/ui";
+import { Alert, Button, Input, Label, Select } from "@/components/ui";
 
 export function SettingsOrgForm({
   initial,
@@ -15,6 +16,7 @@ export function SettingsOrgForm({
   };
   canEdit: boolean;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
     null
@@ -24,6 +26,18 @@ export function SettingsOrgForm({
     initial.unitSystem === "imperial" ? "imperial" : "metric"
   );
   const [timezone, setTimezone] = useState(initial.timezone || "UTC");
+
+  useEffect(() => {
+    setName(initial.name);
+    setUnitSystem(initial.unitSystem === "imperial" ? "imperial" : "metric");
+    setTimezone(initial.timezone || "UTC");
+  }, [initial.name, initial.unitSystem, initial.timezone]);
+
+  useEffect(() => {
+    if (!msg || msg.tone !== "ok") return;
+    const t = window.setTimeout(() => setMsg(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [msg]);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -40,6 +54,7 @@ export function SettingsOrgForm({
         return;
       }
       setMsg({ tone: "ok", text: "Studio settings saved" });
+      router.refresh();
     });
   }
 
@@ -52,7 +67,7 @@ export function SettingsOrgForm({
         </div>
         <div>
           <dt className="text-zinc-500">Units</dt>
-          <dd className="text-zinc-200">{initial.unitSystem}</dd>
+          <dd className="capitalize text-zinc-200">{initial.unitSystem}</dd>
         </div>
         <div>
           <dt className="text-zinc-500">Timezone</dt>
@@ -77,6 +92,7 @@ export function SettingsOrgForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          minLength={2}
           disabled={pending}
           className="mt-0.5"
         />
@@ -84,18 +100,18 @@ export function SettingsOrgForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <Label htmlFor="org-units">Units</Label>
-          <select
+          <Select
             id="org-units"
             value={unitSystem}
             onChange={(e) =>
               setUnitSystem(e.target.value === "imperial" ? "imperial" : "metric")
             }
             disabled={pending}
-            className="mt-0.5 min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            className="mt-0.5"
           >
             <option value="metric">Metric (kg)</option>
             <option value="imperial">Imperial (lb)</option>
-          </select>
+          </Select>
         </div>
         <div>
           <Label htmlFor="org-tz">Timezone</Label>

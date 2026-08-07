@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import {
   changePasswordAction,
   updateProfileAction,
@@ -17,7 +18,9 @@ export function SettingsProfileForm({
     title: string;
   };
 }) {
-  const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const [profilePending, startProfile] = useTransition();
+  const [pwPending, startPw] = useTransition();
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
     null
   );
@@ -30,16 +33,31 @@ export function SettingsProfileForm({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // Keep form in sync after server refresh
+  useEffect(() => {
+    setName(initial.name);
+    setEmail(initial.email);
+    setPhone(initial.phone);
+    setTitle(initial.title);
+  }, [initial.name, initial.email, initial.phone, initial.title]);
+
+  useEffect(() => {
+    if (!msg || msg.tone !== "ok") return;
+    const t = window.setTimeout(() => setMsg(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [msg]);
+
   function onSaveProfile(e: FormEvent) {
     e.preventDefault();
     setMsg(null);
-    startTransition(async () => {
+    startProfile(async () => {
       const res = await updateProfileAction({ name, email, phone, title });
       if ("error" in res && res.error) {
         setMsg({ tone: "err", text: res.error });
         return;
       }
       setMsg({ tone: "ok", text: "Profile saved" });
+      router.refresh();
     });
   }
 
@@ -50,7 +68,11 @@ export function SettingsProfileForm({
       setMsg({ tone: "err", text: "New passwords do not match" });
       return;
     }
-    startTransition(async () => {
+    if (newPassword.length < 8) {
+      setMsg({ tone: "err", text: "Password must be at least 8 characters" });
+      return;
+    }
+    startPw(async () => {
       const res = await changePasswordAction({
         currentPassword,
         newPassword,
@@ -65,6 +87,8 @@ export function SettingsProfileForm({
       setMsg({ tone: "ok", text: "Password updated" });
     });
   }
+
+  const busy = profilePending || pwPending;
 
   return (
     <div className="space-y-6">
@@ -82,7 +106,8 @@ export function SettingsProfileForm({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              disabled={pending}
+              minLength={2}
+              disabled={busy}
               className="mt-0.5"
               autoComplete="name"
             />
@@ -93,7 +118,7 @@ export function SettingsProfileForm({
               id="profile-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              disabled={pending}
+              disabled={busy}
               placeholder="e.g. NCSF-CPT"
               className="mt-0.5"
             />
@@ -108,7 +133,7 @@ export function SettingsProfileForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={pending}
+              disabled={busy}
               className="mt-0.5"
               autoComplete="email"
             />
@@ -120,13 +145,19 @@ export function SettingsProfileForm({
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              disabled={pending}
+              disabled={busy}
               className="mt-0.5"
               autoComplete="tel"
             />
           </div>
         </div>
-        <Button type="submit" size="sm" loading={pending} className="min-h-11">
+        <Button
+          type="submit"
+          size="sm"
+          loading={profilePending}
+          disabled={busy}
+          className="min-h-11"
+        >
           Save profile
         </Button>
       </form>
@@ -136,6 +167,9 @@ export function SettingsProfileForm({
         className="space-y-3 border-t border-zinc-800 pt-5"
       >
         <h3 className="text-sm font-medium text-zinc-200">Change password</h3>
+        <p className="text-[11px] text-zinc-600">
+          At least 8 characters. You’ll stay signed in after changing.
+        </p>
         <div>
           <Label htmlFor="current-password">Current password</Label>
           <Input
@@ -144,7 +178,7 @@ export function SettingsProfileForm({
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             required
-            disabled={pending}
+            disabled={busy}
             className="mt-0.5"
             autoComplete="current-password"
           />
@@ -159,7 +193,7 @@ export function SettingsProfileForm({
               onChange={(e) => setNewPassword(e.target.value)}
               required
               minLength={8}
-              disabled={pending}
+              disabled={busy}
               className="mt-0.5"
               autoComplete="new-password"
             />
@@ -173,7 +207,7 @@ export function SettingsProfileForm({
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={8}
-              disabled={pending}
+              disabled={busy}
               className="mt-0.5"
               autoComplete="new-password"
             />
@@ -183,7 +217,8 @@ export function SettingsProfileForm({
           type="submit"
           size="sm"
           variant="secondary"
-          loading={pending}
+          loading={pwPending}
+          disabled={busy}
           className="min-h-11"
         >
           Update password

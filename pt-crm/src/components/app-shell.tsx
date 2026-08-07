@@ -136,12 +136,18 @@ function mobileAreaActive(pathname: string, href: string): boolean {
 export function AppShell({
   children,
   userName,
+  userTitle,
   orgName,
 }: {
   children: React.ReactNode;
   userName: string;
+  /** Optional credentials (e.g. NCSF-CPT) under the name */
+  userTitle?: string | null;
   orgName: string;
 }) {
+  const userLine = userTitle?.trim()
+    ? `${userName} · ${userTitle.trim()}`
+    : userName;
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -178,7 +184,9 @@ export function AppShell({
           <div className="mt-0.5 truncate text-sm font-medium text-zinc-100">
             {orgName}
           </div>
-          <div className="truncate text-xs text-zinc-500">{userName}</div>
+          <div className="truncate text-xs text-zinc-500" title={userLine}>
+            {userLine}
+          </div>
         </div>
         <div className="border-b border-zinc-800 px-2 py-2">
           <StickyClientChip />
@@ -229,7 +237,9 @@ export function AppShell({
           <div className="min-w-0">
             <BrandMark href="/" onNavigate={() => setDrawerOpen(false)} />
             <div className="mt-0.5 truncate text-sm font-medium">{orgName}</div>
-            <div className="truncate text-xs text-zinc-500">{userName}</div>
+            <div className="truncate text-xs text-zinc-500" title={userLine}>
+              {userLine}
+            </div>
           </div>
           <button
             type="button"

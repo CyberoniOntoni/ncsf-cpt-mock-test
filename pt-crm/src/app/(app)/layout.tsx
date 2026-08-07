@@ -9,7 +9,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!session) redirect("/login");
 
   return (
-    <AppShell userName={session.name} orgName={session.organizationName}>
+    <AppShell
+      userName={session.name}
+      userTitle={session.title}
+      orgName={session.organizationName}
+    >
       {children}
     </AppShell>
   );

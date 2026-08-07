@@ -10,6 +10,8 @@ export type SessionPayload = {
   userId: string;
   email: string;
   name: string;
+  /** Optional credentials line (e.g. NCSF-CPT) for shell / profile */
+  title?: string | null;
   organizationId: string;
   organizationName: string;
   role: string;

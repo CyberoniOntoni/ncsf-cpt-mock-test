@@ -5,6 +5,7 @@ import type {
   InputHTMLAttributes,
   LabelHTMLAttributes,
   ReactNode,
+  SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
 
@@ -286,10 +287,30 @@ export function Alert({
   }[tone];
   return (
     <div
-      role="status"
+      role={tone === "error" || tone === "warning" ? "alert" : "status"}
+      aria-live={tone === "error" ? "assertive" : "polite"}
       className={cn("rounded-lg border px-3 py-2 text-sm", tones, className)}
     >
       {children}
     </div>
+  );
+}
+
+/** Shared select styling (auth + settings). */
+export function Select({
+  className,
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      className={cn(
+        "min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-50",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </select>
   );
 }

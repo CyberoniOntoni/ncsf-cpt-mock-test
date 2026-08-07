@@ -99,16 +99,13 @@ export default async function SettingsPage() {
             — floor OS for personal trainers
           </span>
         </p>
-        <p className="mt-2 text-xs text-zinc-600">
-          Demo login (seed):{" "}
-          <span className="text-zinc-400">pt@demo.local</span> /{" "}
-          <span className="text-zinc-400">trainer123</span>
-          {" · "}
-          Or create a studio at{" "}
-          <a href="/register" className="text-emerald-400 hover:underline">
-            /register
-          </a>
-        </p>
+        {process.env.NODE_ENV !== "production" && (
+          <p className="mt-2 text-xs text-zinc-600">
+            Dev seed:{" "}
+            <span className="text-zinc-400">pt@demo.local</span> /{" "}
+            <span className="text-zinc-400">trainer123</span>
+          </p>
+        )}
       </Card>
 
       <Card>
