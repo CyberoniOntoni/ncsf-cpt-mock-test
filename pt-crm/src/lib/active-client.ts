@@ -4,10 +4,12 @@
  * Design system Phase 2: global chip in AppShell + home workspace.
  */
 
-const STORAGE_KEY = "ptcrm:activeClientId";
-const STORAGE_NAME_KEY = "ptcrm:activeClientName";
+const STORAGE_KEY = "floorscribe:activeClientId";
+const STORAGE_NAME_KEY = "floorscribe:activeClientName";
+const LEGACY_STORAGE_KEY = "ptcrm:activeClientId";
+const LEGACY_STORAGE_NAME_KEY = "ptcrm:activeClientName";
 /** Same-tab listeners (storage event only fires across tabs). */
-export const ACTIVE_CLIENT_EVENT = "ptcrm:active-client";
+export const ACTIVE_CLIENT_EVENT = "floorscribe:active-client";
 
 export type StoredActiveClient = {
   id: string;
@@ -23,24 +25,35 @@ function emitActiveClientChange() {
   }
 }
 
-export function getStoredActiveClientId(): string | null {
-  if (typeof window === "undefined") return null;
+function readStorage(primary: string, legacy: string): string | null {
   try {
-    const v = window.localStorage.getItem(STORAGE_KEY);
-    return v && v.trim() ? v.trim() : null;
+    const v = window.localStorage.getItem(primary);
+    if (v && v.trim()) return v.trim();
+    const old = window.localStorage.getItem(legacy);
+    if (old && old.trim()) {
+      // One-time migrate from pre-rebrand keys
+      try {
+        window.localStorage.setItem(primary, old.trim());
+        window.localStorage.removeItem(legacy);
+      } catch {
+        // ignore
+      }
+      return old.trim();
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
+export function getStoredActiveClientId(): string | null {
+  if (typeof window === "undefined") return null;
+  return readStorage(STORAGE_KEY, LEGACY_STORAGE_KEY);
+}
+
 export function getStoredActiveClientName(): string | null {
   if (typeof window === "undefined") return null;
-  try {
-    const v = window.localStorage.getItem(STORAGE_NAME_KEY);
-    return v && v.trim() ? v.trim() : null;
-  } catch {
-    return null;
-  }
+  return readStorage(STORAGE_NAME_KEY, LEGACY_STORAGE_NAME_KEY);
 }
 
 export function getStoredActiveClient(): StoredActiveClient | null {
@@ -62,12 +75,16 @@ export function setStoredActiveClient(
   try {
     if (clientId) {
       window.localStorage.setItem(STORAGE_KEY, clientId.trim());
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY);
       if (name != null && String(name).trim()) {
         window.localStorage.setItem(STORAGE_NAME_KEY, String(name).trim());
+        window.localStorage.removeItem(LEGACY_STORAGE_NAME_KEY);
       }
     } else {
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.removeItem(STORAGE_NAME_KEY);
+      window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+      window.localStorage.removeItem(LEGACY_STORAGE_NAME_KEY);
     }
     emitActiveClientChange();
   } catch {
@@ -82,6 +99,8 @@ export function subscribeActiveClient(onChange: () => void): () => void {
     if (
       e.key === STORAGE_KEY ||
       e.key === STORAGE_NAME_KEY ||
+      e.key === LEGACY_STORAGE_KEY ||
+      e.key === LEGACY_STORAGE_NAME_KEY ||
       e.key === null
     ) {
       onChange();

@@ -1,4 +1,4 @@
-# Multi-stage production image for PT CRM (Next.js standalone + PGlite)
+# Multi-stage production image for FloorScribe (Next.js standalone + PGlite)
 FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -29,8 +29,9 @@ COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 # Backup helper inside image (also available on host under scripts/)
-COPY --chown=node:node scripts/docker-backup.sh /usr/local/bin/ptcrm-backup
-RUN chmod +x /usr/local/bin/ptcrm-backup
+COPY --chown=node:node scripts/docker-backup.sh /usr/local/bin/floorscribe-backup
+RUN chmod +x /usr/local/bin/floorscribe-backup \
+  && ln -sf /usr/local/bin/floorscribe-backup /usr/local/bin/ptcrm-backup
 
 USER node
 EXPOSE 3000

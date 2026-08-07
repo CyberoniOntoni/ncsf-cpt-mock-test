@@ -4,6 +4,7 @@ import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import {
+  clientAppointments,
   clients,
   clientNotes,
   exercises,
@@ -47,19 +48,158 @@ export async function findInProgressSessionForDayAction(programDayId: string) {
   return row || null;
 }
 
+/** Bidirectional booking ↔ floor log link (idempotent). */
+async function linkSessionAndAppointment(
+  sessionId: string,
+  appointmentId: string,
+  clientId: string | null | undefined
+) {
+  const db = await getDb();
+  await db
+    .update(trainingSessions)
+    .set({ appointmentId, updatedAt: new Date() })
+    .where(eq(trainingSessions.id, sessionId));
+  await db
+    .update(clientAppointments)
+    .set({ sessionId })
+    .where(
+      clientId
+        ? and(
+            eq(clientAppointments.id, appointmentId),
+            eq(clientAppointments.clientId, clientId)
+          )
+        : eq(clientAppointments.id, appointmentId)
+    );
+  revalidatePath("/calendar");
+  revalidatePath("/");
+  if (clientId) revalidatePath(`/clients/${clientId}`);
+}
+
+/**
+ * Start (or resume) a floor session from a booked appointment.
+ * Uses the client's active program first day when no session is linked yet.
+ */
+export async function startSessionFromAppointmentAction(appointmentId: string) {
+  const session = await requireSession();
+  const db = await getDb();
+  const orgId = session.organizationId;
+
+  const [appt] = await db
+    .select({
+      appt: clientAppointments,
+      clientOrg: clients.organizationId,
+    })
+    .from(clientAppointments)
+    .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
+    .where(eq(clientAppointments.id, appointmentId))
+    .limit(1);
+
+  if (!appt || appt.clientOrg !== orgId) {
+    throw new Error("Appointment not found");
+  }
+  const row = appt.appt;
+  if (row.status === "cancelled") {
+    throw new Error("This booking was cancelled");
+  }
+
+  // Resume linked in-progress session
+  if (row.sessionId) {
+    const [linked] = await db
+      .select()
+      .from(trainingSessions)
+      .where(
+        and(
+          eq(trainingSessions.id, row.sessionId),
+          eq(trainingSessions.organizationId, orgId)
+        )
+      )
+      .limit(1);
+    if (linked?.status === "in_progress") {
+      return {
+        sessionId: linked.id,
+        resumed: true as const,
+        clientId: row.clientId,
+      };
+    }
+    if (linked?.status === "completed") {
+      // Point trainer at the log instead of starting a second floor day
+      return {
+        sessionId: linked.id,
+        resumed: false as const,
+        clientId: row.clientId,
+        alreadyCompleted: true as const,
+      };
+    }
+    // Cancelled / missing log — clear stale link and continue to start
+    if (!linked || linked.status === "cancelled") {
+      await db
+        .update(clientAppointments)
+        .set({ sessionId: null })
+        .where(eq(clientAppointments.id, row.id));
+    }
+  }
+
+  // Active program → first day
+  const [program] = await db
+    .select()
+    .from(programs)
+    .where(
+      and(
+        eq(programs.organizationId, orgId),
+        eq(programs.clientId, row.clientId),
+        eq(programs.status, "active")
+      )
+    )
+    .orderBy(desc(programs.updatedAt))
+    .limit(1);
+
+  if (!program) {
+    throw new Error(
+      "No active program for this client — design a plan before starting from the booking"
+    );
+  }
+
+  const [day] = await db
+    .select()
+    .from(programDays)
+    .where(eq(programDays.programId, program.id))
+    .orderBy(asc(programDays.dayIndex))
+    .limit(1);
+  if (!day) {
+    throw new Error("Program has no days");
+  }
+
+  const res = await startSessionFromProgramDayAction(day.id, {
+    appointmentId: row.id,
+  });
+  revalidatePath("/calendar");
+  revalidatePath(`/clients/${row.clientId}`);
+  revalidatePath("/");
+  return {
+    sessionId: res.sessionId,
+    resumed: res.resumed,
+    clientId: row.clientId,
+  };
+}
+
 /**
  * Start a new session for a program day, or resume an existing in-progress one.
  */
 export async function startSessionFromProgramDayAction(
   programDayId: string,
-  opts?: { forceNew?: boolean }
+  opts?: { forceNew?: boolean; appointmentId?: string | null }
 ) {
   const session = await requireSession();
   const db = await getDb();
+  const appointmentId = opts?.appointmentId?.trim() || null;
 
   if (!opts?.forceNew) {
     const existing = await findInProgressSessionForDayAction(programDayId);
     if (existing) {
+      // Attach booking to an already-open day log when starting from calendar
+      if (appointmentId && !existing.appointmentId) {
+        await linkSessionAndAppointment(existing.id, appointmentId, existing.clientId);
+      }
       return { sessionId: existing.id, resumed: true as const };
     }
   }
@@ -108,7 +248,12 @@ export async function startSessionFromProgramDayAction(
     title,
     status: "in_progress",
     performedAt: new Date(),
+    appointmentId: appointmentId,
   });
+
+  if (appointmentId) {
+    await linkSessionAndAppointment(sessionId, appointmentId, program.clientId);
+  }
 
   const { initSetLogsFromScheme } = await import("@/lib/set-schemes");
 
@@ -778,6 +923,20 @@ export async function completeSessionAction(
     }
   }
 
+  // Close linked booking when the floor log completes
+  if (wasInProgress && row.appointmentId) {
+    try {
+      await db
+        .update(clientAppointments)
+        .set({ status: "completed", sessionId: sessionId })
+        .where(eq(clientAppointments.id, row.appointmentId));
+      revalidatePath("/calendar");
+      if (row.clientId) revalidatePath(`/clients/${row.clientId}`);
+    } catch {
+      // booking update optional
+    }
+  }
+
   // Coach-facing note only when there's something to remember (pain / free notes).
   // Full set logs live on the session — not in Notes & recommendations.
   if (row.clientId) {
@@ -1067,8 +1226,22 @@ export async function cancelSessionAction(sessionId: string) {
     .set({ status: "cancelled", updatedAt: new Date() })
     .where(eq(trainingSessions.id, sessionId));
 
+  // Unlink booking so CRM doesn't show Resume on a dead log
+  if (row.appointmentId) {
+    try {
+      await db
+        .update(clientAppointments)
+        .set({ sessionId: null })
+        .where(eq(clientAppointments.id, row.appointmentId));
+    } catch {
+      // optional
+    }
+  }
+
   revalidatePath(`/sessions/${sessionId}`);
   revalidatePath("/sessions");
+  revalidatePath("/calendar");
+  if (row.clientId) revalidatePath(`/clients/${row.clientId}`);
   return { ok: true };
 }
 
@@ -1094,6 +1267,17 @@ export async function deleteSessionAction(sessionId: string) {
   const clientId = row.clientId;
   const wasCompleted = row.status === "completed";
 
+  if (row.appointmentId) {
+    try {
+      await db
+        .update(clientAppointments)
+        .set({ sessionId: null })
+        .where(eq(clientAppointments.id, row.appointmentId));
+    } catch {
+      // optional
+    }
+  }
+
   await db.delete(trainingSessions).where(eq(trainingSessions.id, sessionId));
 
   let packRestored = false;
@@ -1111,6 +1295,7 @@ export async function deleteSessionAction(sessionId: string) {
 
   revalidatePath("/sessions");
   revalidatePath("/");
+  revalidatePath("/calendar");
   if (clientId) revalidatePath(`/clients/${clientId}`);
   if (row.programId) revalidatePath(`/programs/${row.programId}`);
 

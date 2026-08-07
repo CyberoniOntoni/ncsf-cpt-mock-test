@@ -24,6 +24,77 @@ function revalidateClient(clientId: string) {
   revalidatePath(`/clients/${clientId}`);
   revalidatePath("/clients");
   revalidatePath("/");
+  revalidatePath("/calendar");
+}
+
+export type CalendarAppointmentItem = {
+  id: string;
+  clientId: string;
+  clientName: string;
+  title: string;
+  startsAt: Date | string;
+  endsAt: Date | string | null;
+  status: string;
+  sessionId: string | null;
+};
+
+/**
+ * Org appointments in a range for the month calendar.
+ * @param rangeStartIso ISO start (inclusive)
+ * @param rangeEndIso ISO end (inclusive)
+ */
+export async function listCalendarAppointmentsAction(
+  rangeStartIso: string,
+  rangeEndIso: string
+): Promise<CalendarAppointmentItem[]> {
+  const session = await requireSession();
+  const rangeStart = new Date(rangeStartIso);
+  const rangeEnd = new Date(rangeEndIso);
+  if (Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) {
+    throw new Error("Invalid calendar range");
+  }
+  // Guard absurd ranges (e.g. > 90 days)
+  if (rangeEnd.getTime() - rangeStart.getTime() > 90 * 24 * 60 * 60 * 1000) {
+    throw new Error("Calendar range too large");
+  }
+
+  const db = await getDb();
+  const orgId = session.organizationId;
+
+  const rows = await db
+    .select({
+      id: clientAppointments.id,
+      clientId: clientAppointments.clientId,
+      title: clientAppointments.title,
+      startsAt: clientAppointments.startsAt,
+      endsAt: clientAppointments.endsAt,
+      status: clientAppointments.status,
+      sessionId: clientAppointments.sessionId,
+      firstName: clients.firstName,
+      lastName: clients.lastName,
+    })
+    .from(clientAppointments)
+    .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
+    .where(
+      and(
+        eq(clients.organizationId, orgId),
+        gte(clientAppointments.startsAt, rangeStart),
+        lte(clientAppointments.startsAt, rangeEnd)
+      )
+    )
+    .orderBy(asc(clientAppointments.startsAt))
+    .limit(500);
+
+  return rows.map((r) => ({
+    id: r.id,
+    clientId: r.clientId,
+    clientName: [r.firstName, r.lastName].filter(Boolean).join(" ").trim(),
+    title: r.title,
+    startsAt: r.startsAt,
+    endsAt: r.endsAt,
+    status: r.status,
+    sessionId: r.sessionId ?? null,
+  }));
 }
 
 // ── Stage ──────────────────────────────────────────────────────────
@@ -481,14 +552,14 @@ export async function getClientCrmSnapshotAction(clientId: string) {
       .where(eq(clientCheckIns.clientId, clientId))
       .orderBy(desc(clientCheckIns.createdAt))
       .limit(12),
+    // Next booking = earliest still-scheduled (includes past-due so floor can start)
     db
       .select()
       .from(clientAppointments)
       .where(
         and(
           eq(clientAppointments.clientId, clientId),
-          eq(clientAppointments.status, "scheduled"),
-          gte(clientAppointments.startsAt, new Date())
+          eq(clientAppointments.status, "scheduled")
         )
       )
       .orderBy(asc(clientAppointments.startsAt))

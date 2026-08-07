@@ -2,11 +2,13 @@ import { eq, or, isNull, asc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { playbooks } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import {
   KnowledgeBrowser,
   type KnowledgePlaybook,
 } from "@/components/knowledge-browser";
 import { PageShell } from "@/components/page-shell";
+import { PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +49,12 @@ export default async function KnowledgePage({
   }));
 
   return (
-    <PageShell>
+    <PageShell className="space-y-4">
+      <PageHeader
+        title="Knowledge"
+        eyebrow={<AreaEyebrow areaId="studio" current="Knowledge" />}
+        description="Playbooks for coaching decisions — open from Studio or Coach sources."
+      />
       <KnowledgeBrowser
         playbooks={playbookList}
         initialQuery={params.q || ""}

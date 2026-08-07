@@ -69,7 +69,7 @@ export function StickyClientFilterBanner({
           href={`/?client=${encodeURIComponent(client.id)}`}
           className="font-medium text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-sm"
         >
-          Home
+          Today
         </Link>
         <Link
           href={`/clients/${client.id}`}

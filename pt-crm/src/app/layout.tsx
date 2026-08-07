@@ -13,9 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PT CRM — Coach workspace",
+  title: {
+    default: "FloorScribe",
+    template: "%s · FloorScribe",
+  },
   description:
-    "Multi-tenant CRM for personal trainers with client intake and AI coach assistant",
+    "Floor OS for personal trainers — log sessions, keep clients, run the day.",
+  applicationName: "FloorScribe",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

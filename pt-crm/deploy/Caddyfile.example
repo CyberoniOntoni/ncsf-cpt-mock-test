@@ -1,10 +1,10 @@
-# Example reverse proxy for PT CRM on a Proxmox LXC / VPS
+# Example reverse proxy for FloorScribe on a Proxmox LXC / VPS
 # Install Caddy, point DNS at this host, then:
 #   caddy run --config /etc/caddy/Caddyfile
 #
-# Replace pt-crm.example.com with your domain.
+# Replace floorscribe.example.com with your domain.
 
-pt-crm.example.com {
+floorscribe.example.com {
 	encode gzip
 	reverse_proxy 127.0.0.1:3000
 
@@ -17,6 +17,6 @@ pt-crm.example.com {
 	}
 
 	log {
-		output file /var/log/caddy/pt-crm.log
+		output file /var/log/caddy/floorscribe.log
 	}
 }

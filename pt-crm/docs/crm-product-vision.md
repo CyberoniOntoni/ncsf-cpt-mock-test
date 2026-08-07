@@ -1,4 +1,4 @@
-# pt-crm Product Vision — CRM Rethink
+# FloorScribe Product Vision
 
 **Status:** Strategic draft (multi-agent brainstorm, 2026-08-06)  
 **Agents:** Product strategy · Workflow IA · Domain/data · UX simplification  
@@ -10,7 +10,7 @@
 
 ### Primary identity
 
-**Floor OS for freelance personal trainers** — not a client portal, not an AI chat product, not a pure program studio.
+**FloorScribe** — floor OS for freelance personal trainers: not a client portal, not an AI chat product, not a pure program studio.
 
 | Identity | Role |
 |----------|------|

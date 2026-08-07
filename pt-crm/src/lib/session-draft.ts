@@ -30,6 +30,10 @@ export type SessionDraftPayload = {
 };
 
 export function storageKey(sessionId: string): string {
+  return `floorscribe:session-draft:${sessionId}`;
+}
+
+function legacyStorageKey(sessionId: string): string {
   return `pt-crm:session-draft:${sessionId}`;
 }
 
@@ -37,6 +41,11 @@ export function saveSessionDraft(payload: SessionDraftPayload): boolean {
   if (typeof window === "undefined") return false;
   try {
     window.localStorage.setItem(storageKey(payload.sessionId), JSON.stringify(payload));
+    try {
+      window.localStorage.removeItem(legacyStorageKey(payload.sessionId));
+    } catch {
+      // ignore
+    }
     return true;
   } catch {
     return false;
@@ -46,7 +55,19 @@ export function saveSessionDraft(payload: SessionDraftPayload): boolean {
 export function loadSessionDraft(sessionId: string): SessionDraftPayload | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(storageKey(sessionId));
+    let raw = window.localStorage.getItem(storageKey(sessionId));
+    if (!raw) {
+      raw = window.localStorage.getItem(legacyStorageKey(sessionId));
+      if (raw) {
+        // Migrate offline draft from pre-rebrand key
+        try {
+          window.localStorage.setItem(storageKey(sessionId), raw);
+          window.localStorage.removeItem(legacyStorageKey(sessionId));
+        } catch {
+          // ignore
+        }
+      }
+    }
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SessionDraftPayload;
     if (!parsed || typeof parsed !== "object" || parsed.sessionId !== sessionId) {
@@ -62,6 +83,7 @@ export function clearSessionDraft(sessionId: string): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(storageKey(sessionId));
+    window.localStorage.removeItem(legacyStorageKey(sessionId));
   } catch {
     // private mode / quota — ignore
   }

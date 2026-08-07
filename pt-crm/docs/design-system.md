@@ -1,15 +1,15 @@
-# pt-crm Design System
+# FloorScribe Design System
 
 **Status:** Adopted  
 **Date:** 2026-08-06  
-**Scope:** Product UI for the multi-tenant PT CRM (floor + desk).  
+**Scope:** Product UI for FloorScribe (floor + desk).  
 **Sources:** Multi-agent design brainstorm (system, IA, brand, code feasibility).
 
 ---
 
 ## 1. Product framing
 
-pt-crm is a **client-context floor workbench** for freelance personal trainers—not a content portal, wellness app, or AI chat home.
+FloorScribe is a **client-context floor workbench** for freelance personal trainers—not a content portal, wellness app, or AI chat home.
 
 | Question home/session must answer | Not the job of chrome |
 |-----------------------------------|------------------------|
@@ -187,8 +187,16 @@ Use shared `section-label` / `<SectionLabel>` for “In progress”, “Client�
 ## 7. Navigation & global chrome
 
 ### 7.1 Bottom nav (mobile primary)
-Home · Clients · Sessions · Programs  
-**More/overflow:** Library, Knowledge, History, Settings.
+**Today · People · Plans · Studio** (four areas only).
+
+| Area | Primary route | Secondary (sidebar) |
+|------|---------------|---------------------|
+| Today | `/` | — |
+| People | `/clients` | Clients, Calendar |
+| Plans | `/programs` | Programs, Sessions |
+| Studio | `/studio` | Library, Knowledge, Coach history, Settings |
+
+Sessions open from Today / Client / Plans → Sessions, not as a 5th peer tab.
 
 ### 7.2 Badge rules
 - Dot/number only for action required (in-progress count, needs-you).

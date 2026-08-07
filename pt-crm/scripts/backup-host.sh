@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Host-side backup of the Docker volume used by PT CRM.
+# Host-side backup of the Docker volume used by FloorScribe.
 # Run on the Proxmox LXC / Docker host (not inside the app for volume dumps).
 #
 # Usage:
 #   ./scripts/backup-host.sh
-#   ./scripts/backup-host.sh /var/backups/pt-crm
+#   ./scripts/backup-host.sh /var/backups/floorscribe
 #
 # Env:
 #   COMPOSE_PROJECT  default current dir name / compose project
-#   VOLUME_NAME      default ptcrm_data
+#   VOLUME_NAME      default ptcrm_data (stable volume name; do not rename lightly)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

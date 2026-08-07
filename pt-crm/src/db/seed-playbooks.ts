@@ -131,7 +131,7 @@ function playbookSourceNotes(slug: string) {
   if (slug.startsWith("ncsf-")) {
     return "NCSF-informed coaching playbook — synthesized concepts for coach support only; not curriculum reprint, certification material, or medical advice.";
   }
-  return "Curated PT CRM playbook — coaching support, not medical diagnosis.";
+  return "Curated FloorScribe playbook — coaching support, not medical diagnosis.";
 }
 
 function chunkText(pb: PlaybookDef) {

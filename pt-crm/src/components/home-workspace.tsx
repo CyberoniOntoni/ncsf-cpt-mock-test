@@ -76,8 +76,8 @@ function needsYouBadge(kind: HomeNeedsYouItem["kind"]): {
   if (kind === "upcoming_appt") return { label: "Appt", tone: "sky" };
   if (kind === "open_task") return { label: "Task", tone: "amber" };
   if (kind === "quiet_lead") return { label: "Lead", tone: "default" };
-  // quiet_client fallback (actionLabel usually "Start session")
-  return { label: "Start session", tone: "default" };
+  // quiet_client fallback (actionLabel usually "Open on floor")
+  return { label: "Quiet", tone: "default" };
 }
 
 export function HomeWorkspace({
@@ -150,6 +150,18 @@ export function HomeWorkspace({
       if (!opts?.soft) {
         setNeedsOpen(d.needsYou.length > 0);
       }
+      // Soft return-to-tab: also refresh launch-card programs for sticky client
+      if (opts?.soft) {
+        const sticky = getStoredActiveClientId();
+        if (sticky) {
+          try {
+            const rows = await getHomeClientProgramsAction(sticky);
+            setClientPrograms(rows);
+          } catch {
+            // keep prior programs
+          }
+        }
+      }
     } catch {
       // Keep prior data — don't wipe Needs you / open sessions on a transient failure
     } finally {
@@ -162,22 +174,25 @@ export function HomeWorkspace({
     void loadDashboard();
   }, [hydrated, loadDashboard]);
 
-  // Keep Agenda / Needs you / open sessions fresh when returning to the tab or Home
+  // Soft refresh when returning to the tab (debounce visibility + focus double-fire)
   useEffect(() => {
     if (!hydrated) return;
-    function onVisible() {
-      if (document.visibilityState === "visible") {
+    let t: ReturnType<typeof setTimeout> | null = null;
+    function softRefresh() {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
         void loadDashboard({ soft: true });
-      }
+      }, 280);
     }
-    function onFocus() {
-      void loadDashboard({ soft: true });
+    function onVisible() {
+      if (document.visibilityState === "visible") softRefresh();
     }
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onFocus);
+    window.addEventListener("focus", softRefresh);
     return () => {
+      if (t) clearTimeout(t);
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("focus", softRefresh);
     };
   }, [hydrated, loadDashboard]);
 
@@ -336,22 +351,29 @@ export function HomeWorkspace({
             })}
           </p>
           <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-zinc-50">
-            {hasClient && clientName ? clientName : "Home"}
+            {hasClient && clientName ? clientName : "Today"}
           </h1>
           <p className="mt-1 max-w-xl text-sm text-zinc-500">{headerHint}</p>
         </div>
       </header>
 
       {/* Today agenda — booked sessions next 48h (always visible) */}
-      <section aria-label="Today agenda">
-        <SectionLabel className="mb-1.5">
-          Agenda
-          {agenda.length > 0 && (
+      <section aria-label="Agenda, next 48 hours">
+        <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+          <SectionLabel className="mb-0">
+            Agenda
             <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-600">
-              ({agenda.length})
+              (48h
+              {agenda.length > 0 ? ` · ${agenda.length}` : ""})
             </span>
-          )}
-        </SectionLabel>
+          </SectionLabel>
+          <Link
+            href="/calendar"
+            className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400/90 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-sm"
+          >
+            Full calendar →
+          </Link>
+        </div>
         {dashLoading && agenda.length === 0 ? (
           <Skeleton className="h-14 w-full rounded-xl" />
         ) : agenda.length === 0 ? (

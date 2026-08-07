@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   BookOpen,
+  CalendarDays,
   ClipboardList,
   Dumbbell,
   History,
   Home,
+  LayoutGrid,
   LogOut,
   Menu,
   Settings,
@@ -17,76 +19,118 @@ import {
   X,
 } from "lucide-react";
 import { setStoredActiveClient } from "@/lib/active-client";
+import {
+  MOBILE_PRIMARY,
+  NAV_AREAS,
+  isAreaActive,
+  isLeafActive,
+  type NavArea,
+} from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/app/actions/auth";
+import { BrandMark } from "./brand-mark";
 import { StickyClientChip } from "./sticky-client-chip";
 
-const nav = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/programs", label: "Programs", icon: ClipboardList },
-  { href: "/sessions", label: "Sessions", icon: Timer },
-  { href: "/library", label: "Library", icon: Dumbbell },
-  { href: "/history", label: "History", icon: History },
-  { href: "/knowledge", label: "Knowledge", icon: BookOpen },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+const AREA_ICONS = {
+  today: Home,
+  people: Users,
+  plans: ClipboardList,
+  studio: LayoutGrid,
+} as const;
 
-/** Bottom bar — design system floor order: Home · Clients · Sessions · Programs */
-const mobilePrimary = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/sessions", label: "Sessions", icon: Timer },
-  { href: "/programs", label: "Programs", icon: ClipboardList },
-];
+const LEAF_ICONS: Record<string, typeof Home> = {
+  "/clients": Users,
+  "/calendar": CalendarDays,
+  "/programs": ClipboardList,
+  "/sessions": Timer,
+  "/library": Dumbbell,
+  "/knowledge": BookOpen,
+  "/history": History,
+  "/settings": Settings,
+};
 
-/** True when this nav item should appear active for the current path. */
-function isNavActive(pathname: string, href: string): boolean {
-  if (href === "/") {
-    return pathname === "/";
-  }
-  if (pathname === href) return true;
-  if (!pathname.startsWith(`${href}/`)) return false;
-  // Prefer the longest matching top-level segment so nested routes
-  // (e.g. /clients/[id]/assessments, /library/equipment, /sessions/[id]) highlight correctly.
-  return true;
-}
-
-function NavLinks({
+function AreaNav({
   pathname,
   onNavigate,
-  compact,
 }: {
   pathname: string;
   onNavigate?: () => void;
-  compact?: boolean;
 }) {
   return (
-    <>
-      {nav.map((item) => {
-        const active = isNavActive(pathname, item.href);
-        const Icon = item.icon;
+    <div className="flex flex-col gap-1">
+      {NAV_AREAS.map((area) => {
+        const areaActive = isAreaActive(pathname, area);
+        const children = area.children;
+        const childActive =
+          children?.some((leaf) => isLeafActive(pathname, leaf)) ?? false;
+        // Parent wash only when this area is active and no child owns the route
+        // (or area has no children). Avoid double emerald on People + Clients.
+        const parentStrong = areaActive && !childActive;
+        const parentSoft = areaActive && childActive;
+        const Icon = AREA_ICONS[area.id];
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex min-h-11 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50",
-              active
-                ? "bg-emerald-600/15 font-medium text-emerald-300"
-                : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100",
-              compact && "justify-center px-2"
+          <div key={area.id} className="pb-1">
+            <Link
+              href={area.href}
+              onClick={onNavigate}
+              aria-current={parentStrong ? "page" : undefined}
+              className={cn(
+                "flex min-h-11 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50",
+                parentStrong &&
+                  "bg-emerald-600/15 font-medium text-emerald-300",
+                parentSoft && "font-medium text-emerald-400/90",
+                !areaActive &&
+                  "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" aria-hidden />
+              <span>{area.label}</span>
+            </Link>
+            {children && children.length > 0 && (
+              <div
+                className="mt-0.5 ml-3 space-y-0.5 border-l border-zinc-800/80 pl-2"
+                role="group"
+                aria-label={`${area.label} links`}
+              >
+                {children.map((leaf) => {
+                  const leafActive = isLeafActive(pathname, leaf);
+                  const LeafIcon = LEAF_ICONS[leaf.href];
+                  return (
+                    <Link
+                      key={leaf.href}
+                      href={leaf.href}
+                      onClick={onNavigate}
+                      aria-current={leafActive ? "page" : undefined}
+                      className={cn(
+                        "flex min-h-11 items-center gap-2 rounded-md px-2.5 py-2 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:min-h-10",
+                        leafActive
+                          ? "bg-emerald-600/12 font-medium text-emerald-300"
+                          : "text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200"
+                      )}
+                    >
+                      {LeafIcon && (
+                        <LeafIcon
+                          className="h-3.5 w-3.5 shrink-0 opacity-80"
+                          aria-hidden
+                        />
+                      )}
+                      {leaf.label}
+                    </Link>
+                  );
+                })}
+              </div>
             )}
-          >
-            <Icon className="h-4 w-4 shrink-0" aria-hidden />
-            <span className={cn(compact && "sr-only")}>{item.label}</span>
-          </Link>
+          </div>
         );
       })}
-    </>
+    </div>
   );
+}
+
+function mobileAreaActive(pathname: string, href: string): boolean {
+  const area = NAV_AREAS.find((a) => a.href === href);
+  if (!area) return false;
+  return isAreaActive(pathname, area);
 }
 
 export function AppShell({
@@ -101,22 +145,10 @@ export function AppShell({
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Close drawer on route change
   useEffect(() => {
     setDrawerOpen(false);
   }, [pathname]);
 
-  // Escape closes drawer
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDrawerOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [drawerOpen]);
-
-  // Lock body scroll when drawer open
   useEffect(() => {
     if (drawerOpen) {
       document.body.style.overflow = "hidden";
@@ -128,15 +160,22 @@ export function AppShell({
     };
   }, [drawerOpen]);
 
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+
   return (
     <div className="flex min-h-dvh bg-zinc-950 text-zinc-100">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95 backdrop-blur md:flex">
         <div className="border-b border-zinc-800 px-4 py-4">
-          <div className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-            PT CRM
-          </div>
-          <div className="mt-1 truncate text-sm font-medium text-zinc-100">
+          <BrandMark href="/" />
+          <div className="mt-0.5 truncate text-sm font-medium text-zinc-100">
             {orgName}
           </div>
           <div className="truncate text-xs text-zinc-500">{userName}</div>
@@ -144,8 +183,11 @@ export function AppShell({
         <div className="border-b border-zinc-800 px-2 py-2">
           <StickyClientChip />
         </div>
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2" aria-label="Main">
-          <NavLinks pathname={pathname} />
+        <nav
+          className="flex flex-1 flex-col overflow-y-auto p-2"
+          aria-label="Main"
+        >
+          <AreaNav pathname={pathname} />
         </nav>
         <form
           action={logoutAction}
@@ -172,20 +214,21 @@ export function AppShell({
         />
       )}
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — full area tree */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-[min(18rem,85vw)] flex-col border-r border-zinc-800 bg-zinc-950 shadow-xl transition-transform duration-200 md:hidden",
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        role="dialog"
+        aria-modal={drawerOpen}
+        aria-label="Navigation menu"
         aria-hidden={!drawerOpen}
       >
         <div className="flex items-start justify-between border-b border-zinc-800 px-4 py-4">
           <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-widest text-emerald-400">
-              PT CRM
-            </div>
-            <div className="mt-1 truncate text-sm font-medium">{orgName}</div>
+            <BrandMark href="/" onNavigate={() => setDrawerOpen(false)} />
+            <div className="mt-0.5 truncate text-sm font-medium">{orgName}</div>
             <div className="truncate text-xs text-zinc-500">{userName}</div>
           </div>
           <button
@@ -200,8 +243,14 @@ export function AppShell({
         <div className="border-b border-zinc-800 px-2 py-2">
           <StickyClientChip />
         </div>
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2" aria-label="Main">
-          <NavLinks pathname={pathname} onNavigate={() => setDrawerOpen(false)} />
+        <nav
+          className="flex flex-1 flex-col overflow-y-auto p-2"
+          aria-label="Main"
+        >
+          <AreaNav
+            pathname={pathname}
+            onNavigate={() => setDrawerOpen(false)}
+          />
         </nav>
         <form
           action={logoutAction}
@@ -219,7 +268,6 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile top bar */}
         <header
           data-shell-mobile-header
           className="sticky top-0 z-30 flex items-center gap-2 border-b border-zinc-800 bg-zinc-950/90 px-3 py-2 backdrop-blur md:hidden"
@@ -234,9 +282,7 @@ export function AppShell({
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-zinc-100">
-              PT CRM
-            </div>
+            <BrandMark href="/" className="truncate" />
             <div className="truncate text-[11px] text-zinc-500">{orgName}</div>
           </div>
           <StickyClientChip compact className="max-w-[42%]" />
@@ -246,15 +292,16 @@ export function AppShell({
           {children}
         </main>
 
-        {/* Mobile bottom nav — ≥44px touch targets */}
+        {/* Mobile: four areas only — no More */}
         <nav
           className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-800 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
           aria-label="Primary"
         >
-          <div className="grid grid-cols-5 gap-0.5 px-1 py-1">
-            {mobilePrimary.map((item) => {
-              const active = isNavActive(pathname, item.href);
-              const Icon = item.icon;
+          <div className="grid grid-cols-4 gap-0.5 px-1 py-1">
+            {MOBILE_PRIMARY.map((item) => {
+              const active = mobileAreaActive(pathname, item.href);
+              const area = NAV_AREAS.find((a) => a.id === item.id) as NavArea;
+              const Icon = AREA_ICONS[area.id];
               return (
                 <Link
                   key={item.href}
@@ -268,25 +315,13 @@ export function AppShell({
                   )}
                 >
                   <Icon
-                    className={cn(
-                      "h-5 w-5",
-                      active && "text-emerald-400"
-                    )}
+                    className={cn("h-5 w-5", active && "text-emerald-400")}
                     aria-hidden
                   />
                   {item.label}
                 </Link>
               );
             })}
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-[10px] font-medium text-zinc-500 hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-inset"
-              aria-label="Open more navigation"
-            >
-              <Menu className="h-5 w-5" aria-hidden />
-              More
-            </button>
           </div>
         </nav>
       </div>

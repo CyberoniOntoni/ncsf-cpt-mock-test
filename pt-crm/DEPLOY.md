@@ -1,6 +1,8 @@
-# Deploy PT CRM on Proxmox (LXC) with Docker
+# Deploy FloorScribe on Proxmox (LXC) with Docker
 
-Self-host the web CRM in a single container. Data lives in a Docker volume (`ptcrm_data`) using embedded PGlite — one volume to back up.
+Self-host FloorScribe in a single container. Data lives in a Docker volume (`ptcrm_data`) using embedded PGlite — one volume to back up.
+
+> Product name: **FloorScribe**. Repo/folder may still be `pt-crm`.
 
 ## 1. Create an LXC
 
@@ -49,8 +51,9 @@ nano .env
 AUTH_SECRET=$(openssl rand -base64 48)
 # put that value into .env
 
-APP_URL=https://pt-crm.example.com   # or http://YOUR_LXC_IP:3000
-PTCRM_PORT=3000
+APP_URL=https://floorscribe.example.com   # or http://YOUR_LXC_IP:3000
+FLOORSCRIBE_PORT=3000
+# PTCRM_PORT still accepted as a legacy alias
 ```
 
 **Optional AI:**
@@ -161,6 +164,6 @@ PGlite is single-node embedded Postgres-compatible storage. Fine for a freelance
 |---------|-----|
 | `AUTH_SECRET` compose error | Set `AUTH_SECRET` in `.env` (required) |
 | Health 503 | `docker compose logs app` — DB path permissions |
-| Port in use | Change `PTCRM_PORT` in `.env` |
+| Port in use | Change `FLOORSCRIBE_PORT` (or legacy `PTCRM_PORT`) in `.env` |
 | Lost clients after recreate | Volume removed with `-v`; restore from backup |
 | Stale session after wipe | Sign out / clear cookies; re-login |

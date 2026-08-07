@@ -2,14 +2,14 @@
 
 **Date:** 2026-08-07  
 **Status:** Implemented  
-**Product:** pt-crm Floor OS  
+**Product:** FloorScribe  
 **Related:** [crm-product-vision.md](../../crm-product-vision.md), [happy-path.md](../../happy-path.md), [design-system.md](../../design-system.md)
 
 ---
 
 ## 1. Problem
 
-Trainers use pt-crm under gym noise. Recent work shipped close-loop, cues, Apply progression, and shortcuts, but daily friction remains:
+Trainers use FloorScribe under gym noise. Recent work shipped close-loop, cues, Apply progression, and shortcuts, but daily friction remains:
 
 1. **Too much density** — multiple exercises expanded; current set competes with noise.
 2. **Slow first set** — last loads often exist but progression is a second tap; start still feels like setup work.

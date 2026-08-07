@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { loginAction } from "@/app/actions/auth";
+import { BrandMark } from "@/components/brand-mark";
 import { Alert, Button, Card, Input, Label } from "@/components/ui";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to FloorScribe — the floor OS for personal trainers.",
+};
 
 export default async function LoginPage({
   searchParams,
@@ -21,14 +28,15 @@ export default async function LoginPage({
       />
       <div className="relative w-full max-w-md animate-in">
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-900/40 bg-emerald-950/30 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-emerald-400">
-            PT CRM
+          <div className="inline-flex items-center rounded-full border border-emerald-900/40 bg-emerald-950/30 px-3.5 py-1.5">
+            <BrandMark size="sm" />
           </div>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
             Sign in
           </h1>
           <p className="mt-1.5 text-sm text-zinc-500">
-            Coach workspace — clients, programs, sessions &amp; AI assist
+            The floor OS for personal trainers — sessions, clients, programs &amp;
+            coach
           </p>
         </div>
         <Card className="border-zinc-800/80 p-5 shadow-xl shadow-black/40">
@@ -42,7 +50,7 @@ export default async function LoginPage({
                 defaultValue="pt@demo.local"
                 required
                 autoComplete="username"
-                className="mt-0.5"
+                className="mt-0.5 min-h-11"
               />
             </div>
             <div>
@@ -54,13 +62,13 @@ export default async function LoginPage({
                 defaultValue="trainer123"
                 required
                 autoComplete="current-password"
-                className="mt-0.5"
+                className="mt-0.5 min-h-11"
               />
             </div>
             {params.error && (
               <Alert tone="error">{params.error}</Alert>
             )}
-            <Button type="submit" className="w-full" size="lg">
+            <Button type="submit" className="w-full min-h-11" size="lg">
               Sign in
             </Button>
           </form>

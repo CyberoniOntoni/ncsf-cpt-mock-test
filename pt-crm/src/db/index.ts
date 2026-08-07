@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 11; // 11 = client_tasks (Phase B)
+const SCHEMA_VERSION = 12; // 12 = appointment ↔ session link
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -179,10 +179,12 @@ async function ensureSchema() {
       status TEXT NOT NULL DEFAULT 'scheduled',
       notes TEXT,
       location TEXT,
+      session_id TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS appointments_client_idx ON client_appointments(client_id);
     CREATE INDEX IF NOT EXISTS appointments_starts_idx ON client_appointments(starts_at);
+    CREATE INDEX IF NOT EXISTS appointments_session_idx ON client_appointments(session_id);
 
     CREATE TABLE IF NOT EXISTS client_check_ins (
       id TEXT PRIMARY KEY,
@@ -368,12 +370,14 @@ async function ensureSchema() {
       overall_rpe TEXT,
       pain_notes TEXT,
       notes TEXT,
+      appointment_id TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS sessions_org_idx ON training_sessions(organization_id);
     CREATE INDEX IF NOT EXISTS sessions_client_idx ON training_sessions(client_id);
     CREATE INDEX IF NOT EXISTS sessions_program_idx ON training_sessions(program_id);
+    CREATE INDEX IF NOT EXISTS sessions_appointment_idx ON training_sessions(appointment_id);
 
     CREATE TABLE IF NOT EXISTS session_exercise_logs (
       id TEXT PRIMARY KEY,
@@ -426,6 +430,10 @@ async function ensureSchema() {
     ALTER TABLE session_exercise_logs ADD COLUMN IF NOT EXISTS rest_between_rounds_sec INTEGER;
     ALTER TABLE session_exercise_logs ADD COLUMN IF NOT EXISTS group_role TEXT;
     ALTER TABLE equipment_items ADD COLUMN IF NOT EXISTS description TEXT;
+    ALTER TABLE client_appointments ADD COLUMN IF NOT EXISTS session_id TEXT;
+    ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS appointment_id TEXT;
+    CREATE INDEX IF NOT EXISTS appointments_session_idx ON client_appointments(session_id);
+    CREATE INDEX IF NOT EXISTS sessions_appointment_idx ON training_sessions(appointment_id);
   `);
 }
 

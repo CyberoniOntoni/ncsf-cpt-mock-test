@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-07  
 **Status:** Implemented  
-**Product:** pt-crm Floor OS  
+**Product:** FloorScribe  
 **Related:** [crm-product-vision.md](../../crm-product-vision.md), [happy-path.md](../../happy-path.md), Phase A floor daily
 
 ---

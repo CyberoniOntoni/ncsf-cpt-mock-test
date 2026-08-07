@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listEquipmentAction, listExercisesAction } from "@/app/actions/library";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import { LibraryEquipment } from "@/components/library-equipment";
 import { PageShell } from "@/components/page-shell";
 import { PageHeader } from "@/components/ui";
@@ -36,17 +37,18 @@ export default async function EquipmentPage() {
 
   return (
     <PageShell>
-      <div className="mb-2">
-        <Link
-          href="/library"
-          className="text-xs text-emerald-400 hover:underline"
-        >
-          ← Exercise library
-        </Link>
-      </div>
       <PageHeader
         title="Equipment inventory"
+        eyebrow={<AreaEyebrow areaId="studio" current="Equipment" />}
         description="Toggle what is on the floor. Coach and program design only suggest exercises that match this inventory. Bodyweight is always available."
+        actions={
+          <Link
+            href="/library"
+            className="text-sm font-medium text-emerald-400 hover:underline"
+          >
+            ← Exercise library
+          </Link>
+        }
       />
       <LibraryEquipment initial={rows} exerciseReqs={exerciseReqs} />
     </PageShell>

@@ -206,7 +206,7 @@ export async function getHomeDashboardAction() {
           title: name,
           subtitle: "Has program · no completed session yet",
           href: `/?client=${c.id}`,
-          actionLabel: "Start session",
+          actionLabel: "Open on floor",
           clientId: c.id,
           urgency: "medium",
         });
@@ -223,7 +223,7 @@ export async function getHomeDashboardAction() {
         title: name,
         subtitle: `No session in ${days} days`,
         href: `/?client=${c.id}`,
-        actionLabel: "Start session",
+        actionLabel: "Open on floor",
         clientId: c.id,
         urgency: days >= 21 ? "high" : "medium",
       });
@@ -320,7 +320,7 @@ export async function getHomeDashboardAction() {
     });
   }
 
-  // One row per client (keep highest-priority kind); orphan sessions keep all
+  // One primary row per client + always keep ≤4h bookings (time-critical)
   const KIND_RANK: Record<HomeNeedsYouItem["kind"], number> = {
     in_progress: 0,
     open_task: 1,
@@ -334,9 +334,17 @@ export async function getHomeDashboardAction() {
 
   const orphans: HomeNeedsYouItem[] = [];
   const byClient = new Map<string, HomeNeedsYouItem>();
+  const apptByClient = new Map<string, HomeNeedsYouItem>();
   for (const item of needsYou) {
     if (!item.clientId) {
       orphans.push(item);
+      continue;
+    }
+    if (item.kind === "upcoming_appt") {
+      // Keep at most one appt row per client (first wins = earliest from signals)
+      if (!apptByClient.has(item.clientId)) {
+        apptByClient.set(item.clientId, item);
+      }
       continue;
     }
     const prev = byClient.get(item.clientId);
@@ -344,7 +352,6 @@ export async function getHomeDashboardAction() {
       byClient.set(item.clientId, item);
       continue;
     }
-    // Prefer higher urgency first (high > medium > low); then KIND_RANK
     const betterUrgency =
       urgencyRank[item.urgency] < urgencyRank[prev.urgency];
     const sameUrgencyBetterKind =
@@ -355,7 +362,11 @@ export async function getHomeDashboardAction() {
     }
   }
 
-  const deduped = [...orphans, ...byClient.values()];
+  const deduped = [
+    ...orphans,
+    ...byClient.values(),
+    ...apptByClient.values(),
+  ];
   deduped.sort((a, b) => {
     const u = urgencyRank[a.urgency] - urgencyRank[b.urgency];
     if (u !== 0) return u;
@@ -396,7 +407,8 @@ export async function getHomeClientProgramsAction(clientId: string) {
     .where(
       and(
         eq(programs.organizationId, session.organizationId),
-        eq(programs.clientId, clientId)
+        eq(programs.clientId, clientId),
+        or(eq(programs.status, "active"), eq(programs.status, "draft"))
       )
     )
     .orderBy(desc(programs.updatedAt))

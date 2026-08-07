@@ -15,6 +15,8 @@ import {
 import { ClientCrmPanel } from "@/components/client-crm-panel";
 import { ClientProgressDashboard } from "@/components/client-progress-dashboard";
 import { ClientStickySync } from "@/components/client-sticky-sync";
+import { ClientTimeline } from "@/components/client-timeline";
+import { buildClientTimeline } from "@/lib/client-timeline";
 import { QuickAddMeasurement } from "@/components/quick-add-measurement";
 import { ClientDeactivateControl } from "@/components/client-deactivate-control";
 import { StartSessionButton } from "@/components/start-session-button";
@@ -213,6 +215,47 @@ export default async function ClientDetailPage({
   const sessionsShown = clientSessions.slice(0, SESSIONS_VISIBLE);
   const sessionsOverflow = clientSessions.length - sessionsShown.length;
 
+  const timelineItems = buildClientTimeline({
+    sessions: clientSessions.map((s) => ({
+      id: s.id,
+      title: s.title,
+      status: s.status,
+      performedAt: s.performedAt,
+      updatedAt: s.updatedAt,
+      durationMin: s.durationMin,
+      overallRpe: s.overallRpe,
+    })),
+    appointments: (crm.appointments || []).map((a) => ({
+      id: a.id,
+      title: a.title,
+      status: a.status,
+      startsAt: a.startsAt,
+      sessionId: a.sessionId,
+    })),
+    tasks: (crm.tasks || []).map((t) => ({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      dueAt: t.dueAt,
+      createdAt: t.createdAt,
+      completedAt: t.completedAt,
+    })),
+    checkIns: (crm.checkIns || []).map((c) => ({
+      id: c.id,
+      channel: c.channel,
+      body: c.body,
+      createdAt: c.createdAt,
+    })),
+    notes: notes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      kind: n.kind,
+      body: n.body,
+      createdAt: n.createdAt,
+    })),
+    limit: 40,
+  });
+
   const secondaryLifestyle = [
     { label: "Occupation", value: client.occupation },
     { label: "Lifestyle", value: client.lifestyleNotes },
@@ -231,14 +274,14 @@ export default async function ClientDetailPage({
   const stageTone = clientStageTone(client.status);
 
   const hadExhaustedPack = crm.packages.some((p) => p.status === "exhausted");
-  /** Match CRM summary strip wording (N left / Package empty / Renew package) */
+  /** Match CRM summary strip wording (N left / Pack empty / Renew pack) */
   const packageChip = (() => {
     if (crm.activePackage) {
       const n = crm.activePackage.remaining;
-      if (n === 0) return "Package empty";
+      if (n === 0) return "Pack empty";
       return `${n} left`;
     }
-    if (hadExhaustedPack) return "Renew package";
+    if (hadExhaustedPack) return "Renew pack";
     return null;
   })();
   const packageChipTone =
@@ -337,7 +380,7 @@ export default async function ClientDetailPage({
           href={`/?client=${encodeURIComponent(client.id)}`}
           className="inline-flex min-h-9 items-center text-xs font-medium text-zinc-500 hover:text-emerald-400 hover:underline"
         >
-          Floor workspace
+          Today
         </Link>
       </div>
 
@@ -750,6 +793,11 @@ export default async function ClientDetailPage({
           )}
         </Card>
       </div>
+
+      {/* Relationship diary — sessions + bookings + tasks + check-ins */}
+      <Card padding="sm" className="border-zinc-800/80">
+        <ClientTimeline items={timelineItems} clientId={client.id} />
+      </Card>
 
       {/* CRM spine — packages, calendar, check-ins (after floor work) */}
       <div id="crm" className="scroll-mt-client">

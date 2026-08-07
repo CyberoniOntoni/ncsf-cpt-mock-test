@@ -1,4 +1,4 @@
-# PT CRM — production-oriented compose for Proxmox LXC / Docker hosts
+# FloorScribe — production-oriented compose for Proxmox LXC / Docker hosts
 # Usage:
 #   cp .env.example .env   # set AUTH_SECRET (required)
 #   docker compose up -d --build
@@ -9,10 +9,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: pt-crm:latest
-    container_name: pt-crm
+    image: floorscribe:latest
+    container_name: floorscribe
     ports:
-      - "${PTCRM_PORT:-3000}:3000"
+      - "${FLOORSCRIBE_PORT:-${PTCRM_PORT:-3000}}:3000"
     environment:
       NODE_ENV: production
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env — use a long random string}

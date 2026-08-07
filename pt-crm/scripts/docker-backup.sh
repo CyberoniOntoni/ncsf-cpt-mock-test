@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Backup PGlite data dir from inside the container (or bind-mounted host path).
-# Usage (in container): ptcrm-backup
+# Usage (in container): floorscribe-backup (or ptcrm-backup alias)
 # Env:
 #   PGLITE_DATA_DIR  default /data/pglite
 #   BACKUP_DIR       default /backups

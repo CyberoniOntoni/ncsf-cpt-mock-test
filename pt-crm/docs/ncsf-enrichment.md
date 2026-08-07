@@ -1,4 +1,4 @@
-# NCSF-informed enrichment (pt-crm)
+# NCSF-informed enrichment (FloorScribe)
 
 ## Purpose
 
@@ -6,7 +6,7 @@ Coach-facing playbooks, assessment templates, and retrieval phrase boosts were e
 
 ## Chapters / topic areas that informed enrichment
 
-| Area | Typical NCSF focus (CPT / related) | How it shows up in pt-crm |
+| Area | Typical NCSF focus (CPT / related) | How it shows up in FloorScribe |
 |------|------------------------------------|---------------------------|
 | Movement / posture | Kinetic chain, posture patterns (upper/lower cross language), local stabilizers, form vs force closure | Screens (plank, wall angel, single-leg bridge, seated posture) + corrective playbooks |
 | Prep / programming | Needs analysis, preparation phase, functional warm-up, cool-down, progressive preparation, FITT | Programming playbooks + `PHRASE_BOOSTS` |

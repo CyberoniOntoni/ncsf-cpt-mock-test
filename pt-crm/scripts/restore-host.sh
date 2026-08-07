@@ -16,8 +16,8 @@ if [[ -z "$ARCHIVE" || ! -f "$ARCHIVE" ]]; then
   exit 1
 fi
 
-if docker ps --format '{{.Names}}' | grep -qx 'pt-crm'; then
-  echo "ERROR: container pt-crm is running. Run: docker compose down" >&2
+if docker ps --format '{{.Names}}' | grep -Eqx 'floorscribe|pt-crm'; then
+  echo "ERROR: app container is running (floorscribe/pt-crm). Run: docker compose down" >&2
   exit 1
 fi
 

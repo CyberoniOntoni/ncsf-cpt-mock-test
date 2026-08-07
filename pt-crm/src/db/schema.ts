@@ -200,11 +200,14 @@ export const clientAppointments = pgTable(
     status: text("status").notNull().default("scheduled"),
     notes: text("notes"),
     location: text("location"),
+    /** Linked floor session when started from this booking */
+    sessionId: text("session_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("appointments_client_idx").on(t.clientId),
     index("appointments_starts_idx").on(t.startsAt),
+    index("appointments_session_idx").on(t.sessionId),
   ]
 );
 
@@ -512,6 +515,8 @@ export const trainingSessions = pgTable(
     overallRpe: text("overall_rpe"),
     painNotes: text("pain_notes"),
     notes: text("notes"),
+    /** Booking this floor log was started from (optional) */
+    appointmentId: text("appointment_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -519,6 +524,7 @@ export const trainingSessions = pgTable(
     index("sessions_org_idx").on(t.organizationId),
     index("sessions_client_idx").on(t.clientId),
     index("sessions_program_idx").on(t.programId),
+    index("sessions_appointment_idx").on(t.appointmentId),
   ]
 );
 

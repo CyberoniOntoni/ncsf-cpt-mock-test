@@ -2,11 +2,22 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const COOKIE = "ptcrm_session";
+const COOKIE = "floorscribe_session";
+const LEGACY_COOKIE = "ptcrm_session";
 
 function secret() {
-  const s = process.env.AUTH_SECRET || "dev-only-change-me-pt-crm-secret-key";
+  const s = process.env.AUTH_SECRET || "dev-only-change-me-floorscribe-secret-key";
   return new TextEncoder().encode(s);
+}
+
+function clearAuthCookies(res: NextResponse) {
+  for (const name of [COOKIE, LEGACY_COOKIE]) {
+    res.cookies.set(name, "", {
+      httpOnly: true,
+      path: "/",
+      maxAge: 0,
+    });
+  }
 }
 
 export async function middleware(req: NextRequest) {
@@ -18,7 +29,8 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon");
 
-  const token = req.cookies.get(COOKIE)?.value;
+  const token =
+    req.cookies.get(COOKIE)?.value ?? req.cookies.get(LEGACY_COOKIE)?.value;
   let valid = false;
   if (token) {
     try {
@@ -34,13 +46,7 @@ export async function middleware(req: NextRequest) {
     url.pathname = "/login";
     const res = NextResponse.redirect(url);
     // Drop broken JWT so we don't keep retrying with a bad cookie
-    if (token) {
-      res.cookies.set(COOKIE, "", {
-        httpOnly: true,
-        path: "/",
-        maxAge: 0,
-      });
-    }
+    if (token) clearAuthCookies(res);
     return res;
   }
 

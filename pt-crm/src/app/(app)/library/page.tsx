@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listEquipmentAction, listExercisesAction } from "@/app/actions/library";
 import { LibraryExercises } from "@/components/library-exercises";
 import { PageShell } from "@/components/page-shell";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import { Badge, Button, Card, PageHeader, SectionLabel } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export default async function LibraryPage() {
     <PageShell>
       <PageHeader
         title="Exercise library"
+        eyebrow={<AreaEyebrow areaId="studio" current="Library" />}
         description="Global exercise bank with coaching cues — filtered by your studio inventory for program design and the coach."
         actions={
           <Link href="/library/equipment">

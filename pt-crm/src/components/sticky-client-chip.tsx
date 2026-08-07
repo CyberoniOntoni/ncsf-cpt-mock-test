@@ -82,8 +82,8 @@ export function StickyClientChip({
           compact || iconOnly ? "px-1 py-1 text-[11px]" : "px-1.5 py-1 text-xs",
           iconOnly && "flex-none"
         )}
-        title={`Open home workspace for ${label}`}
-        aria-label={`Open home workspace for ${label}`}
+        title={`Open Today for ${label}`}
+        aria-label={`Open Today for ${label}`}
       >
         <User
           className={cn(

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { COOKIE } from "@/lib/session";
+import { COOKIE, LEGACY_COOKIE } from "@/lib/session";
 
 /**
  * Clear session cookie outside RSC (cookies can only be mutated in
@@ -10,12 +10,14 @@ export async function GET(req: Request) {
   const url = new URL("/login", req.url);
   url.searchParams.set("error", "Session expired — sign in again");
   const res = NextResponse.redirect(url);
-  res.cookies.set(COOKIE, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
+  for (const name of [COOKIE, LEGACY_COOKIE]) {
+    res.cookies.set(name, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+  }
   return res;
 }

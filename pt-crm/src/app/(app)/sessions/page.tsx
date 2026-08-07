@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listSessionsAction } from "@/app/actions/sessions";
 import { getClientAction } from "@/app/actions/clients";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import {
   Badge,
   Button,
@@ -54,6 +55,7 @@ export default async function SessionsPage({
     <PageShell>
       <PageHeader
         title="Sessions"
+        eyebrow={<AreaEyebrow areaId="plans" current="Sessions" />}
         description="Floor logs · resume unfinished · remove past sessions you don’t need"
         actions={
           <Link href={programsHref}>

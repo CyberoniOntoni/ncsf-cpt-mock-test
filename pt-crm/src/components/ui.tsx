@@ -4,6 +4,7 @@ import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
   LabelHTMLAttributes,
+  ReactNode,
   TextareaHTMLAttributes,
 } from "react";
 
@@ -29,9 +30,9 @@ export function Button({
     danger: "bg-red-700 text-white hover:bg-red-600 active:bg-red-700",
   }[variant];
   const sizes = {
-    sm: "px-2.5 py-1.5 text-xs rounded-md gap-1.5",
-    md: "px-3.5 py-2 text-sm rounded-lg gap-2",
-    lg: "px-4 py-2.5 text-sm rounded-lg gap-2",
+    sm: "min-h-9 px-2.5 py-1.5 text-xs rounded-md gap-1.5",
+    md: "min-h-11 px-3.5 py-2 text-sm rounded-lg gap-2",
+    lg: "min-h-11 px-4 py-2.5 text-sm rounded-lg gap-2",
   }[size];
   return (
     <button
@@ -44,7 +45,7 @@ export function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+      {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
       {children}
     </button>
   );
@@ -54,7 +55,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-50",
+        "min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-50",
         className
       )}
       {...props}
@@ -229,8 +230,8 @@ export function PageHeader({
   description?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
-  /** Optional small label above title (e.g. “Floor”) */
-  eyebrow?: string;
+  /** Optional small label above title (e.g. “People”, or a breadcrumb) */
+  eyebrow?: ReactNode;
   /** Sits on the same row as the title (e.g. compact chart next to name) */
   titleAside?: React.ReactNode;
 }) {
@@ -242,8 +243,8 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0 flex-1">
-        {eyebrow && (
-          <p className="section-label mb-1 text-emerald-500/90">{eyebrow}</p>
+        {eyebrow != null && eyebrow !== false && (
+          <div className="section-label mb-1 text-emerald-500/90">{eyebrow}</div>
         )}
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">

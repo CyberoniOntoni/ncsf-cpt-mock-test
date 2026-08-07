@@ -81,7 +81,7 @@ export function buildSessionSummaryText(input: {
   if (row.notes) {
     lines.push("", `Notes: ${row.notes}`);
   }
-  lines.push("", "— logged in PT CRM");
+  lines.push("", "— logged in FloorScribe");
   return lines.join("\n");
 }
 

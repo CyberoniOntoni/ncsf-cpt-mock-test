@@ -1,7 +1,10 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const COOKIE = "ptcrm_session";
+/** Auth cookie name (FloorScribe). */
+const COOKIE = "floorscribe_session";
+/** Pre-rebrand cookie — still accepted so existing sessions stay signed in. */
+const LEGACY_COOKIE = "ptcrm_session";
 
 export type SessionPayload = {
   userId: string;
@@ -14,7 +17,7 @@ export type SessionPayload = {
 };
 
 function secret() {
-  const s = process.env.AUTH_SECRET || "dev-only-change-me-pt-crm-secret-key";
+  const s = process.env.AUTH_SECRET || "dev-only-change-me-floorscribe-secret-key";
   return new TextEncoder().encode(s);
 }
 
@@ -28,7 +31,7 @@ export async function createSessionToken(payload: SessionPayload) {
 
 export async function readSession(): Promise<SessionPayload | null> {
   const jar = await cookies();
-  const token = jar.get(COOKIE)?.value;
+  const token = jar.get(COOKIE)?.value ?? jar.get(LEGACY_COOKIE)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret());
@@ -47,11 +50,14 @@ export async function setSessionCookie(token: string) {
     path: "/",
     maxAge: 60 * 60 * 24 * 14,
   });
+  // Drop legacy name so we don't keep two auth cookies around
+  jar.delete(LEGACY_COOKIE);
 }
 
 export async function clearSessionCookie() {
   const jar = await cookies();
   jar.delete(COOKIE);
+  jar.delete(LEGACY_COOKIE);
 }
 
-export { COOKIE };
+export { COOKIE, LEGACY_COOKIE };

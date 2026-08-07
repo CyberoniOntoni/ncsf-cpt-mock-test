@@ -1,4 +1,4 @@
-# Happy path — train a client (daily use)
+# FloorScribe — happy path (train a client)
 
 Demo login: **`pt@demo.local`** / **`trainer123`**
 
@@ -8,9 +8,9 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 
 ## 1. Start the day (Floor)
 
-1. Open **/** (Home).
+1. Open **/** (**Today** — floor command board).
 2. Pick or search a client (sticky chip follows you).
-3. **Agenda** — booked sessions in the next ~48h (deep-link `#crm-appointments`). Full list lives here so Needs you stays action-focused.
+3. **Agenda** — booked sessions in the next ~48h (deep-link `#crm-appointments`). **Full calendar →** opens `/calendar` under **People**.
 4. **Needs you** — always on Home (**All clear** when empty). Includes open **tasks**, low/empty packs, quiet leads/clients, sessions in progress. Appointments only appear here when starting within **~4 hours**. Action labels deep-link (`#crm-pack`, `#crm-tasks`, `#crm-checkin`, etc.).
 5. Primary CTA: **Resume session** or **Start session** (one emerald action).
 6. With a client selected: **Log check-in** on the launch card (clears quiet-lead when saved).
@@ -32,7 +32,7 @@ Cold path — no sticky client, no open session:
 
 **Deactivate** when they leave the roster (keeps history; **Reactivate** anytime). Inactive clients are hidden from the floor picker and Needs you.
 
-After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **11** = `client_tasks`).
+After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **12** = appointment ↔ session link).
 
 ---
 
@@ -60,6 +60,8 @@ After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_V
 ---
 
 ## 4. Between sessions (CRM)
+
+On the client page, **Timeline** (below Sessions) merges sessions, bookings, tasks, check-ins, and coach notes newest-first. Deep links jump to `#crm-appointments`, `#crm-tasks`, `#crm-checkin`, or the session log.
 
 On the client page, **Packages & schedule**:
 
@@ -128,6 +130,8 @@ Browser checklist:
 - [ ] Coach “add … to program” → Apply mutates plan
 - [ ] Mid-session **Add exercise** → after Complete **Add to plan** keeps it on the day  
 - [ ] Book appointment appears on Home Agenda (~48h); Needs you only if ≤4h
+- [ ] Calendar month grid loads; book day prefill works; booking appears on grid  
+- [ ] **Start session** from booking (client Next up or calendar day) opens floor log; complete marks booking done  
 - [ ] Floor: Focus current / Prep open sets; after Complete, close-loop Share + Book next
 - [ ] Follow-up task appears on Needs you; #crm-tasks deep link works
 - [ ] Home Agenda / Needs you refresh when returning to the tab  
@@ -139,11 +143,10 @@ Browser checklist:
 
 | Layer | Job |
 |-------|-----|
-| **Floor** | Start / resume / log sessions |
-| **Plan** | Active program, design when empty |
-| **Packages & schedule** | Pack, booking, stage, check-ins |
-| **Progress** | Proof (metrics, loads, screens) |
-| **Notes** | Coach memory only |
-| **Knowledge / Coach** | Playbooks & AI assist |
+| **Today** | Who to train, agenda, needs-you, coach |
+| **People** | Clients + calendar |
+| **Plans** | Programs + session logs |
+| **Studio** | Library, knowledge, history, settings |
+| **Floor session** | Log the hour (from Today / client / booking) |
 
 One primary CTA for floor work. Everything else is quieter chrome.

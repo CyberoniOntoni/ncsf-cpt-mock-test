@@ -1670,7 +1670,7 @@ export function SessionLogger({
             </Button>
             <Link href="/">
               <Button type="button" size="sm" variant="secondary">
-                Home
+                Today
               </Button>
             </Link>
           </div>
@@ -1885,7 +1885,7 @@ export function SessionLogger({
                 href="/"
                 className="inline-flex min-h-9 items-center hover:text-emerald-400 hover:underline"
               >
-                Home
+                Today
               </Link>
               {(program?.id || session.programId) && (
                 <Link

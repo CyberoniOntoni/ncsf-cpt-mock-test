@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listProgramsAction } from "@/app/actions/programs";
 import { getClientAction } from "@/app/actions/clients";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import {
   Badge,
   Button,
@@ -42,6 +43,7 @@ export default async function ProgramsPage({
     <PageShell>
       <PageHeader
         title="Programs"
+        eyebrow={<AreaEyebrow areaId="plans" current="Programs" />}
         description="Guided designs from your exercise bank and available equipment"
         actions={
           <Link href={newHref}>

@@ -1,6 +1,8 @@
-# PT CRM
+# FloorScribe
 
-Multi-tenant CRM for **gym personal trainers** — floor-first (sessions + programs + coach), with a light **business spine** (packages, appointments, stage, check-ins).
+**FloorScribe** — the floor OS for personal trainers: sessions, programs, and coach assist, with a light **business spine** (packages, appointments, stage, check-ins).
+
+> Repo folder is still `pt-crm/` for now; product name is **FloorScribe**.
 
 - **Home (Floor)** — sticky client, open sessions, needs-you, coach assistant  
 - **Clients** — stage pipeline, packages, bookings, check-ins, progress  
@@ -43,8 +45,12 @@ See **[docs/happy-path.md](./docs/happy-path.md)** — train a client end-to-end
 
 | Area | Route |
 |------|--------|
-| Floor workspace + coach | `/` |
-| Client list (stage filter) | `/clients` |
+| Today (floor command board) | `/` |
+| People · Clients | `/clients` |
+| People · Calendar | `/calendar` |
+| Plans · Programs | `/programs` |
+| Plans · Sessions | `/sessions` |
+| Studio hub | `/studio` |
 | Guided intake | `/clients/new` |
 | Client profile (plan, sessions, CRM, progress, notes) | `/clients/[id]` |
 | Movement screens | `/clients/[id]/assessments` |
@@ -79,7 +85,7 @@ docker compose up -d --build
 curl -s http://127.0.0.1:3000/api/health
 ```
 
-Data volume: `ptcrm_data`. Backup: `./scripts/backup-host.sh /var/backups/pt-crm`
+Data volume: `ptcrm_data` (stable name). Backup: `./scripts/backup-host.sh /var/backups/floorscribe`
 
 ## Docs
 

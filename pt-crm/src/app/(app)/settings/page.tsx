@@ -3,6 +3,7 @@ import { getDb } from "@/db";
 import { organizations } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
 import { aiEnabled } from "@/lib/ai/client";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import { PageShell } from "@/components/page-shell";
 import { Card, Badge, PageHeader } from "@/components/ui";
 
@@ -13,6 +14,7 @@ function authSecretStatus() {
   if (!s) return { ok: false, label: "Missing" };
   if (
     s === "change-me-in-production" ||
+    s === "dev-only-change-me-floorscribe-secret-key" ||
     s === "dev-only-change-me-pt-crm-secret-key" ||
     s.length < 24
   ) {
@@ -36,7 +38,22 @@ export default async function SettingsPage() {
 
   return (
     <PageShell className="space-y-4">
-      <PageHeader title="Settings" />
+      <PageHeader
+        title="Settings"
+        eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
+        description="Organization, deploy, and AI for FloorScribe"
+      />
+      <Card>
+        <h2 className="font-medium">Product</h2>
+        <p className="mt-2 text-sm text-zinc-300">
+          <span className="font-semibold text-emerald-400">FloorScribe</span>
+          <span className="text-zinc-500"> — floor OS for personal trainers</span>
+        </p>
+        <p className="mt-2 text-xs text-zinc-600">
+          Demo login stays <span className="text-zinc-400">pt@demo.local</span> /{" "}
+          <span className="text-zinc-400">trainer123</span>
+        </p>
+      </Card>
       <Card>
         <h2 className="font-medium">Organization</h2>
         <dl className="mt-3 space-y-2 text-sm">

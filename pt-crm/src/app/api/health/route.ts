@@ -21,6 +21,7 @@ export async function GET() {
     const weakAuth =
       !authSecret ||
       authSecret === "change-me-in-production" ||
+      authSecret === "dev-only-change-me-floorscribe-secret-key" ||
       authSecret === "dev-only-change-me-pt-crm-secret-key" ||
       authSecret.length < 24;
 

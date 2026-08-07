@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listConversationsAction } from "@/app/actions/coach";
 import { PageShell } from "@/components/page-shell";
 import { ListRow } from "@/components/list-row";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import {
   Badge,
   Button,
@@ -17,16 +18,17 @@ export default async function HistoryPage() {
     <PageShell>
       <PageHeader
         title="Coach history"
+        eyebrow={<AreaEyebrow areaId="studio" current="Coach history" />}
         description="Past assistant conversations"
       />
       {rows.length === 0 ? (
         <EmptyState
           icon={<MessageSquare className="h-5 w-5" />}
           title="No conversations yet"
-          description="Open Home and expand Coach to ask about a client, program, or playbook."
+          description="Open Today and expand Coach to ask about a client, program, or playbook."
           action={
             <Link href="/">
-              <Button>Go to Home</Button>
+              <Button>Go to Today</Button>
             </Link>
           }
         />

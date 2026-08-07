@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listClientsAction } from "@/app/actions/clients";
+import { AreaEyebrow } from "@/components/area-eyebrow";
 import { Button, EmptyState, PageHeader } from "@/components/ui";
 import { PageShell } from "@/components/page-shell";
 import { StickyClientFilterBanner } from "@/components/sticky-client-filter-banner";
@@ -16,6 +17,7 @@ export default async function ClientsPage() {
     <PageShell>
       <PageHeader
         title="Clients"
+        eyebrow={<AreaEyebrow areaId="people" current="Clients" />}
         description={`${rows.length} in this organization`}
         actions={
           <div className="flex flex-wrap items-center gap-2">

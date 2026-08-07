@@ -7,6 +7,7 @@ import {
   useTransition,
   type FormEvent,
 } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   adjustPackageUsedAction,
@@ -28,6 +29,7 @@ import {
 } from "@/lib/crm-constants";
 import { cn } from "@/lib/utils";
 import { CheckInTemplates } from "./check-in-templates";
+import { StartFromAppointmentButton } from "./start-from-appointment-button";
 import { Badge, Button, Card, Input, SectionLabel, Textarea } from "./ui";
 
 export type CrmPackageRow = {
@@ -49,6 +51,7 @@ export type CrmAppointmentRow = {
   status: string;
   notes?: string | null;
   location?: string | null;
+  sessionId?: string | null;
 };
 
 export type CrmCheckInRow = {
@@ -155,6 +158,18 @@ function defaultAppointmentLocal() {
   const d = new Date();
   d.setMinutes(0, 0, 0);
   d.setHours(d.getHours() + 1);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Accept calendar deep-link ?bookAt=YYYY-MM-DDTHH:mm (datetime-local shape). */
+function parseBookAtParam(raw: string | null): string | null {
+  if (!raw) return null;
+  const v = raw.trim();
+  // YYYY-MM-DDTHH:mm or with seconds
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v)) return null;
+  const d = new Date(v);
+  if (!Number.isFinite(d.getTime())) return null;
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -288,14 +303,42 @@ export function ClientCrmPanel({
           scrollToId("crm-pack");
         }
       } else if (hash === "crm-appointments") {
-        // View booking: open form only when nothing upcoming
-        if (!snapshot.nextAppointment) {
+        const bookAt = parseBookAtParam(
+          typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("bookAt")
+            : null
+        );
+        if (bookAt) {
+          setApptStart(bookAt);
+          setShowBookForm(true);
+          scrollToId(
+            "crm-appointments",
+            'input[type="datetime-local"], input, textarea'
+          );
+          // Drop bookAt from URL so refresh doesn't re-open a stale prefill
+          try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.has("bookAt")) {
+              url.searchParams.delete("bookAt");
+              const qs = url.searchParams.toString();
+              window.history.replaceState(
+                {},
+                "",
+                `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`
+              );
+            }
+          } catch {
+            // ignore
+          }
+        } else if (!snapshot.nextAppointment) {
+          // No open scheduled booking (including past-due) — offer book form
           setShowBookForm(true);
           scrollToId(
             "crm-appointments",
             'input[type="datetime-local"], input, textarea'
           );
         } else {
+          // Has scheduled work (maybe past-due) — show list, don't force book form
           setShowBookForm(false);
           scrollToId("crm-appointments");
         }
@@ -364,7 +407,7 @@ export function ClientCrmPanel({
       ? "Package empty"
       : `${activePackage.remaining} left`
     : hadExhaustedPack
-      ? "Renew package"
+      ? "Renew pack"
       : "No package";
   const summaryBooking = nextAppointment
     ? fmtDateShort(nextAppointment.startsAt) || fmtWhen(nextAppointment.startsAt)
@@ -750,6 +793,7 @@ export function ClientCrmPanel({
                   disabled={pending || activePackage.used <= 0}
                   onClick={() => onAdjustUsed(-1)}
                   aria-label="Undo one used session"
+                  className="min-h-11"
                 >
                   −1 used
                 </Button>
@@ -762,6 +806,7 @@ export function ClientCrmPanel({
                   }
                   onClick={() => onAdjustUsed(1)}
                   aria-label="Mark one session used"
+                  className="min-h-11"
                 >
                   +1 used
                 </Button>
@@ -771,6 +816,7 @@ export function ClientCrmPanel({
                   variant="ghost"
                   disabled={pending}
                   onClick={onCancelPackage}
+                  className="min-h-11"
                 >
                   Cancel pack
                 </Button>
@@ -931,12 +977,29 @@ export function ClientCrmPanel({
               {fmtWhen(nextAppointment.startsAt)}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
+              {nextAppointment.status === "scheduled" && (
+                <StartFromAppointmentButton
+                  appointmentId={nextAppointment.id}
+                  clientId={clientId}
+                  clientName={clientName}
+                  hasLinkedSession={!!nextAppointment.sessionId}
+                />
+              )}
+              {nextAppointment.sessionId && (
+                <Link
+                  href={`/sessions/${nextAppointment.sessionId}`}
+                  className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-100 hover:bg-zinc-700"
+                >
+                  Open log
+                </Link>
+              )}
               <Button
                 type="button"
                 size="sm"
                 variant="secondary"
                 disabled={pending}
                 className="min-h-11"
+                title="Closes the booking only — does not burn a pack session"
                 onClick={() =>
                   onApptStatus(
                     nextAppointment.id,
@@ -945,7 +1008,7 @@ export function ClientCrmPanel({
                   )
                 }
               >
-                Mark complete
+                Close booking
               </Button>
               <Button
                 type="button"
@@ -1076,17 +1139,33 @@ export function ClientCrmPanel({
                   </div>
                   {a.status === "scheduled" && !isNext && (
                     <div className="flex flex-wrap gap-1">
+                      <StartFromAppointmentButton
+                        appointmentId={a.id}
+                        clientId={clientId}
+                        clientName={clientName}
+                        hasLinkedSession={!!a.sessionId}
+                        className="min-h-11"
+                      />
+                      {a.sessionId && (
+                        <Link
+                          href={`/sessions/${a.sessionId}`}
+                          className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-100 hover:bg-zinc-700"
+                        >
+                          Open log
+                        </Link>
+                      )}
                       <Button
                         type="button"
                         size="sm"
                         variant="secondary"
                         disabled={pending}
                         className="min-h-11"
+                        title="Closes the booking only — does not burn a pack session"
                         onClick={() =>
                           onApptStatus(a.id, "completed", a.title)
                         }
                       >
-                        Complete
+                        Close booking
                       </Button>
                       <Button
                         type="button"
@@ -1113,6 +1192,14 @@ export function ClientCrmPanel({
                         Cancel
                       </Button>
                     </div>
+                  )}
+                  {a.status !== "scheduled" && a.sessionId && (
+                    <Link
+                      href={`/sessions/${a.sessionId}`}
+                      className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400 hover:underline"
+                    >
+                      Open log →
+                    </Link>
                   )}
                 </li>
               );
