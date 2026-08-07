@@ -34,6 +34,10 @@ import {
   mergeDraftIntoLogs,
   saveSessionDraft,
 } from "@/lib/session-draft";
+import {
+  defaultExerciseCollapsed,
+  groupContainsCurrent,
+} from "@/lib/session-focus";
 import { applyPreviousWeights, ensureSetLogs } from "@/lib/session-sets";
 import {
   buildSessionSummaryText,
@@ -1233,14 +1237,29 @@ export function SessionLogger({
   }
 
   function toggleCollapse(id: string) {
-    setCollapsed((c) => ({ ...c, [id]: !c[id] }));
+    setCollapsed((c) => {
+      const log = logs.find((l) => l.id === id);
+      const currently = log
+        ? defaultExerciseCollapsed({
+            readonly,
+            logId: id,
+            currentExId,
+            completed: !!log.completed,
+            userOverride: c[id],
+          })
+        : !!c[id];
+      return { ...c, [id]: !currently };
+    });
   }
 
   function isCollapsed(log: Log) {
-    if (collapsed[log.id] !== undefined) return collapsed[log.id];
-    // Default: collapse completed exercises when actively logging
-    if (!readonly && log.completed && log.id !== currentExId) return true;
-    return false;
+    return defaultExerciseCollapsed({
+      readonly,
+      logId: log.id,
+      currentExId,
+      completed: log.completed,
+      userOverride: collapsed[log.id],
+    });
   }
 
   return (
@@ -1344,13 +1363,12 @@ export function SessionLogger({
             />
           </div>
           {session.status === "in_progress" && (
-            <p className="mt-2 text-[11px] text-zinc-500">
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-zinc-500">
               <span className="text-zinc-400">
                 Space set · A apply · N/P move · +/− load
               </span>
               {lastSavedAt && !isDirty ? (
                 <span>
-                  {" "}
                   · saved{" "}
                   {new Date(lastSavedAt).toLocaleTimeString([], {
                     hour: "2-digit",
@@ -1358,6 +1376,22 @@ export function SessionLogger({
                   })}
                 </span>
               ) : null}
+              {!readonly && currentExId && (
+                <button
+                  type="button"
+                  className="text-[11px] font-medium text-zinc-500 hover:text-emerald-400 hover:underline"
+                  onClick={() => {
+                    setCollapsed({});
+                    // effect will open currentExId on next current change; defaults re-apply now
+                    document.getElementById(`ex-${currentExId}`)?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "nearest",
+                    });
+                  }}
+                >
+                  Focus current
+                </button>
+              )}
             </p>
           )}
         </div>
@@ -2338,6 +2372,12 @@ export function SessionLogger({
           };
 
           if (block.type === "group") {
+            const memberIds = block.members.map((m) => m.id);
+            const groupOpen =
+              readonly ||
+              groupContainsCurrent(memberIds, currentExId) ||
+              block.members.some((m) => collapsed[m.id] === false);
+            const groupDone = block.members.every((m) => m.completed);
             return (
               <div
                 key={block.groupId}
@@ -2353,38 +2393,48 @@ export function SessionLogger({
                   <span className="text-[11px] tabular-nums text-zinc-500">
                     {block.rounds} rounds
                   </span>
-                </div>
-                <div className="rounded-lg border border-amber-900/30 bg-zinc-950/50 px-2.5 py-2 text-[11px] leading-relaxed text-zinc-400">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                    Each round
-                  </div>
-                  <div className="mt-0.5 font-medium text-zinc-200">
-                    {formatGroupFlow(block.members)}
-                  </div>
-                  <div className="mt-1 text-zinc-500">
-                    Log set 1 on A, then set 1 on B… After the round:{" "}
-                    <span className="font-medium text-zinc-300">
-                      {formatRestLabel(block.restBetweenRoundsSec)}
+                  {!groupOpen && (
+                    <span className="text-[11px] text-zinc-500">
+                      · {block.members.length} exercises
+                      {groupDone ? " · done" : " · collapsed"}
                     </span>
-                  </div>
-                  {block.howTo && (
-                    <p className="mt-1.5 border-t border-zinc-800 pt-1.5 text-zinc-500">
-                      {block.howTo}
-                    </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  {block.members.map((m, mi) =>
-                    renderExerciseCard(m, mi, true)
-                  )}
-                </div>
-                <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-2.5 py-1.5 text-center text-[11px] text-zinc-500">
-                  End of round ·{" "}
-                  <span className="font-medium text-zinc-300">
-                    {formatRestLabel(block.restBetweenRoundsSec)}
-                  </span>{" "}
-                  · then set 2…
-                </div>
+                {groupOpen && (
+                  <>
+                    <div className="rounded-lg border border-amber-900/30 bg-zinc-950/50 px-2.5 py-2 text-[11px] leading-relaxed text-zinc-400">
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                        Each round
+                      </div>
+                      <div className="mt-0.5 font-medium text-zinc-200">
+                        {formatGroupFlow(block.members)}
+                      </div>
+                      <div className="mt-1 text-zinc-500">
+                        Log set 1 on A, then set 1 on B… After the round:{" "}
+                        <span className="font-medium text-zinc-300">
+                          {formatRestLabel(block.restBetweenRoundsSec)}
+                        </span>
+                      </div>
+                      {block.howTo && (
+                        <p className="mt-1.5 border-t border-zinc-800 pt-1.5 text-zinc-500">
+                          {block.howTo}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {block.members.map((m, mi) =>
+                        renderExerciseCard(m, mi, true)
+                      )}
+                    </div>
+                    <div className="rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-2.5 py-1.5 text-center text-[11px] text-zinc-500">
+                      End of round ·{" "}
+                      <span className="font-medium text-zinc-300">
+                        {formatRestLabel(block.restBetweenRoundsSec)}
+                      </span>{" "}
+                      · then set 2…
+                    </div>
+                  </>
+                )}
               </div>
             );
           }
