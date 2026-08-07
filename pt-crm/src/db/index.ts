@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 13; // 13 = client_invoices
+const SCHEMA_VERSION = 14; // 14 = user profile fields (phone, title, updated_at)
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -61,8 +61,11 @@ async function ensureSchema() {
       email TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
+      phone TEXT,
+      title TEXT,
       is_platform_admin BOOLEAN NOT NULL DEFAULT FALSE,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS memberships (
@@ -452,6 +455,10 @@ async function ensureSchema() {
     ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS appointment_id TEXT;
     CREATE INDEX IF NOT EXISTS appointments_session_idx ON client_appointments(session_id);
     CREATE INDEX IF NOT EXISTS sessions_appointment_idx ON training_sessions(appointment_id);
+    -- User profile (SCHEMA 14)
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS title TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
   `);
 }
 

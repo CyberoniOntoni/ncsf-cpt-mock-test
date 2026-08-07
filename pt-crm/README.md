@@ -22,7 +22,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-**Demo login:** `pt@demo.local` / `trainer123`
+**Demo login:** `pt@demo.local` / `trainer123`  
+**New studio:** [http://localhost:3000/register](http://localhost:3000/register)
 
 Restart the dev server after pulls so schema + seed upserts apply (`SCHEMA_VERSION` in `src/db/index.ts`).
 

@@ -1,6 +1,7 @@
 # FloorScribe — happy path (train a client)
 
-Demo login: **`pt@demo.local`** / **`trainer123`**
+**Accounts:** create a studio at **`/register`**, or demo seed **`pt@demo.local`** / **`trainer123`**.  
+**Profile:** **Settings** — name, email, phone, credentials, password, studio name/units/timezone.
 
 After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` and reseeds playbooks/templates.
 

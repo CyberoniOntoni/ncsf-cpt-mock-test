@@ -1,11 +1,13 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { organizations } from "@/db/schema";
-import { requireSession } from "@/lib/auth";
+import { getUserProfile } from "@/lib/auth";
 import { aiEnabled } from "@/lib/ai/client";
 import { AreaEyebrow } from "@/components/area-eyebrow";
 import { PageShell } from "@/components/page-shell";
-import { Card, Badge, PageHeader } from "@/components/ui";
+import { SettingsOrgForm } from "@/components/settings-org-form";
+import { SettingsProfileForm } from "@/components/settings-profile-form";
+import { Badge, Card, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +26,7 @@ function authSecretStatus() {
 }
 
 export default async function SettingsPage() {
-  const session = await requireSession();
+  const { session, user } = await getUserProfile();
   const db = await getDb();
   const [org] = await db
     .select()
@@ -35,54 +37,85 @@ export default async function SettingsPage() {
   const auth = authSecretStatus();
   const nodeEnv = process.env.NODE_ENV || "development";
   const appUrl = process.env.APP_URL || "(not set)";
+  const canEditOrg = session.role === "owner" || session.role === "admin";
 
   return (
     <PageShell className="space-y-4">
       <PageHeader
         title="Settings"
         eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
-        description="Organization, deploy, and AI for FloorScribe"
+        description="Your profile, studio, deploy, and AI"
       />
+
+      <Card>
+        <h2 className="font-medium">Account</h2>
+        <p className="mt-1 text-xs text-zinc-600">
+          Signed in as{" "}
+          <span className="text-zinc-400">{session.email}</span>
+          {user?.title ? (
+            <>
+              {" "}
+              · <span className="text-zinc-400">{user.title}</span>
+            </>
+          ) : null}
+          {" · "}
+          <Badge>{session.role}</Badge>
+        </p>
+        <div className="mt-4">
+          <SettingsProfileForm
+            initial={{
+              name: user?.name || session.name,
+              email: user?.email || session.email,
+              phone: user?.phone || "",
+              title: user?.title || "",
+            }}
+          />
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="font-medium">Studio</h2>
+        <p className="mt-1 text-xs text-zinc-600">
+          Organization shown in the sidebar and on reports.
+        </p>
+        <div className="mt-4">
+          <SettingsOrgForm
+            canEdit={canEditOrg}
+            initial={{
+              name: org?.name || session.organizationName,
+              unitSystem: org?.unitSystem || "metric",
+              timezone: org?.timezone || "UTC",
+            }}
+          />
+        </div>
+      </Card>
+
       <Card>
         <h2 className="font-medium">Product</h2>
         <p className="mt-2 text-sm text-zinc-300">
           <span className="font-semibold text-emerald-400">FloorScribe</span>
-          <span className="text-zinc-500"> — floor OS for personal trainers</span>
+          <span className="text-zinc-500">
+            {" "}
+            — floor OS for personal trainers
+          </span>
         </p>
         <p className="mt-2 text-xs text-zinc-600">
-          Demo login stays <span className="text-zinc-400">pt@demo.local</span> /{" "}
+          Demo login (seed):{" "}
+          <span className="text-zinc-400">pt@demo.local</span> /{" "}
           <span className="text-zinc-400">trainer123</span>
+          {" · "}
+          Or create a studio at{" "}
+          <a href="/register" className="text-emerald-400 hover:underline">
+            /register
+          </a>
         </p>
-      </Card>
-      <Card>
-        <h2 className="font-medium">Organization</h2>
-        <dl className="mt-3 space-y-2 text-sm">
-          <div>
-            <dt className="text-zinc-500">Name</dt>
-            <dd>{org?.name}</dd>
-          </div>
-          <div>
-            <dt className="text-zinc-500">Units</dt>
-            <dd>{org?.unitSystem}</dd>
-          </div>
-          <div>
-            <dt className="text-zinc-500">Timezone</dt>
-            <dd>{org?.timezone}</dd>
-          </div>
-          <div>
-            <dt className="text-zinc-500">Your role</dt>
-            <dd>
-              <Badge>{session.role}</Badge>
-            </dd>
-          </div>
-        </dl>
       </Card>
 
       <Card>
         <h2 className="font-medium">Deployment</h2>
         <dl className="mt-3 space-y-2 text-sm">
           <div className="flex flex-wrap items-center gap-2">
-            <dt className="text-zinc-500 w-32">Environment</dt>
+            <dt className="w-32 text-zinc-500">Environment</dt>
             <dd>
               <Badge tone={nodeEnv === "production" ? "green" : "amber"}>
                 {nodeEnv}
@@ -90,17 +123,17 @@ export default async function SettingsPage() {
             </dd>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <dt className="text-zinc-500 w-32">APP_URL</dt>
-            <dd className="text-zinc-300 break-all">{appUrl}</dd>
+            <dt className="w-32 text-zinc-500">APP_URL</dt>
+            <dd className="break-all text-zinc-300">{appUrl}</dd>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <dt className="text-zinc-500 w-32">AUTH_SECRET</dt>
+            <dt className="w-32 text-zinc-500">AUTH_SECRET</dt>
             <dd>
               <Badge tone={auth.ok ? "green" : "amber"}>{auth.label}</Badge>
             </dd>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <dt className="text-zinc-500 w-32">Health</dt>
+            <dt className="w-32 text-zinc-500">Health</dt>
             <dd className="text-zinc-400">
               <code className="text-xs">GET /api/health</code> (no login)
             </dd>

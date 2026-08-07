@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { loginAction } from "@/app/actions/auth";
 import { BrandMark } from "@/components/brand-mark";
 import { Alert, Button, Card, Input, Label } from "@/components/ui";
@@ -47,9 +48,9 @@ export default async function LoginPage({
                 id="email"
                 name="email"
                 type="email"
-                defaultValue="pt@demo.local"
                 required
                 autoComplete="username"
+                placeholder="you@studio.com"
                 className="mt-0.5 min-h-11"
               />
             </div>
@@ -59,7 +60,6 @@ export default async function LoginPage({
                 id="password"
                 name="password"
                 type="password"
-                defaultValue="trainer123"
                 required
                 autoComplete="current-password"
                 className="mt-0.5 min-h-11"
@@ -73,9 +73,18 @@ export default async function LoginPage({
             </Button>
           </form>
           <p className="mt-5 border-t border-zinc-800 pt-4 text-center text-xs text-zinc-600">
-            Demo account:{" "}
-            <span className="text-zinc-400">pt@demo.local</span> /{" "}
-            <span className="text-zinc-400">trainer123</span>
+            New trainer?{" "}
+            <Link
+              href="/register"
+              className="font-medium text-emerald-400 hover:underline"
+            >
+              Create a studio account
+            </Link>
+          </p>
+          <p className="mt-2 text-center text-[11px] text-zinc-700">
+            Local demo seed:{" "}
+            <span className="text-zinc-500">pt@demo.local</span> /{" "}
+            <span className="text-zinc-500">trainer123</span>
           </p>
         </Card>
       </div>

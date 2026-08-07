@@ -2,8 +2,8 @@
 
 Goal: run your real training day on local FloorScribe without relying on GitHub publish.
 
-**Demo login:** `pt@demo.local` / `trainer123`  
-**SCHEMA_VERSION:** 13 (includes simple invoices)
+**Demo login:** `pt@demo.local` / `trainer123` · or **`/register`** for a real studio  
+**SCHEMA_VERSION:** 14 (user profile fields + invoices)
 
 ---
 

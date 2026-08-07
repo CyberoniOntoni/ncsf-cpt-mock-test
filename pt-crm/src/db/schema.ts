@@ -24,8 +24,13 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
+  /** Optional phone for PT profile */
+  phone: text("phone"),
+  /** Optional credentials / title line e.g. "NCSF-CPT" */
+  title: text("title"),
   isPlatformAdmin: boolean("is_platform_admin").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const memberships = pgTable(

@@ -40,6 +40,13 @@ async function main() {
   assert(zeroFailed, "reject zero amount");
   console.log("ok money helpers");
 
+  // Auth validation (no cookies)
+  const { normalizeEmail, validatePassword } = await import("../src/lib/auth");
+  assert(normalizeEmail("  PT@Demo.Local ") === "pt@demo.local", "normalize email");
+  assert(validatePassword("short") != null, "reject short password");
+  assert(validatePassword("longenough") == null, "accept 8+ password");
+  console.log("ok auth validators");
+
   // Isolated data dir — safe alongside dev server
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "floorscribe-pilot-"));
   process.env.PGLITE_DATA_DIR = tmpDir;

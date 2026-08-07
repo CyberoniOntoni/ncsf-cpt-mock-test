@@ -24,6 +24,7 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isPublic =
     pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
     pathname.startsWith("/api/health") ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/_next") ||
@@ -50,7 +51,7 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  if (valid && pathname === "/login") {
+  if (valid && (pathname === "/login" || pathname === "/register")) {
     const url = req.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
