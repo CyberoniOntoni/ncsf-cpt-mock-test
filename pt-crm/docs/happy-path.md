@@ -76,15 +76,17 @@ Header whisper links (package left · next booking) jump to `#crm`.
 
 1. Home **Coach** with client selected — e.g. “older adult training”, “needs analysis”.
 2. With an **active program**: ask “insert correctives”, “deload this program”, or “advance mesocycle” → one-tap Apply mutates the plan.
-3. **Knowledge** — filter **NCSF**, or open `/knowledge?slug=…` / `?q=…` from coach **Sources** links.
-4. Save recs from Coach → they show under **Notes & recommendations** (not session dumps).
+3. **Append exercise:** “add face pulls to day 1” / “add X to program” → **Apply** appends a bank match to that day (or first day). Unavailable equipment is rejected.
+4. **Knowledge** — filter **NCSF**, or open `/knowledge?slug=…` / `?q=…` from coach **Sources** links.
+5. Save recs from Coach → they show under **Notes & recommendations** (not session dumps).
 
-## 5b. Program mesocycle (desk)
+## 5b. Program edit & mesocycle (desk)
 
 1. Open **Programs →** a plan.
-2. **Mesocycle** chips W1–W6 (deload = amber). Selecting does not write until **Apply**.
-3. Progress `n / threshold` sessions + auto-advance on/off.
-4. **Advance** steps week; session complete may auto-advance when on.
+2. Per day: **Add exercise** opens the bank picker (append only — no full regen). Swap / edit / remove still work per row.
+3. **Mesocycle** chips W1–W6 (deload = amber). Selecting does not write until **Apply**.
+4. Progress `n / threshold` sessions + auto-advance on/off.
+5. **Advance** steps week; session complete may auto-advance when on.
 
 ---
 
@@ -106,6 +108,7 @@ cd pt-crm
 npm run smoke          # seed + coach retrieval demo
 npx tsx scripts/verify-db.ts
 npx tsx scripts/smoke-library.ts
+npx tsx scripts/smoke-programming.ts   # constraints, meso, append helpers
 npx tsc --noEmit
 ```
 
@@ -115,6 +118,8 @@ Browser checklist:
 - [ ] Client open → Start session → log → Complete  
 - [ ] Pack remaining drops by 1 after complete  
 - [ ] Sessions list shows the session; Notes does **not** show full set dump  
+- [ ] Program day **Add exercise** appends from bank  
+- [ ] Coach “add … to program” → Apply mutates plan
 - [ ] Book appointment appears on Home needs-you within 48h  
 - [ ] Knowledge NCSF filter works  
 
