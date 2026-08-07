@@ -51,7 +51,7 @@ export function ListRow({
   );
 
   const base = cn(
-    "flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition",
+    "flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
     tones,
     className

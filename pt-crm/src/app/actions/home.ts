@@ -329,7 +329,7 @@ export async function getHomeDashboardAction() {
       title: inv.name,
       subtitle: `${inv.title} · ${formatMoney(inv.amountCents, inv.currency, { compact: true })} unpaid`,
       href: `/clients/${inv.clientId}#crm-invoices`,
-      actionLabel: "Mark paid",
+      actionLabel: "Open invoice",
       clientId: inv.clientId,
       urgency: "high",
     });
@@ -351,6 +351,8 @@ export async function getHomeDashboardAction() {
   const orphans: HomeNeedsYouItem[] = [];
   const byClient = new Map<string, HomeNeedsYouItem>();
   const apptByClient = new Map<string, HomeNeedsYouItem>();
+  /** in_progress already has Open sessions — keep commercial signals separate */
+  const alwaysKeep = new Map<string, HomeNeedsYouItem>();
   for (const item of needsYou) {
     if (!item.clientId) {
       orphans.push(item);
@@ -362,6 +364,19 @@ export async function getHomeDashboardAction() {
         apptByClient.set(item.clientId, item);
       }
       continue;
+    }
+    // Always surface unpaid / low pack even when client also has in_progress
+    if (item.kind === "unpaid_invoice" || item.kind === "low_package") {
+      const key = `${item.kind}:${item.clientId}`;
+      const prevKeep = alwaysKeep.get(key);
+      if (
+        !prevKeep ||
+        urgencyRank[item.urgency] < urgencyRank[prevKeep.urgency]
+      ) {
+        alwaysKeep.set(key, item);
+      }
+      // Still compete for primary if nothing more urgent — don't double-list
+      // unless primary is only in_progress (handled below)
     }
     const prev = byClient.get(item.clientId);
     if (!prev) {
@@ -378,9 +393,22 @@ export async function getHomeDashboardAction() {
     }
   }
 
+  // If primary is in_progress, still attach alwaysKeep commercial rows
+  const extraCommercial: HomeNeedsYouItem[] = [];
+  for (const item of alwaysKeep.values()) {
+    const primary = byClient.get(item.clientId!);
+    if (!primary || primary.kind === "in_progress" || primary.id === item.id) {
+      if (primary?.id === item.id) continue; // already primary
+      if (primary?.kind === "in_progress") {
+        extraCommercial.push(item);
+      }
+    }
+  }
+
   const deduped = [
     ...orphans,
     ...byClient.values(),
+    ...extraCommercial,
     ...apptByClient.values(),
   ];
   deduped.sort((a, b) => {

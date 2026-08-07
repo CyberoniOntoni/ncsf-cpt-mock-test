@@ -45,7 +45,7 @@ const tiles = [
   {
     href: "/settings",
     title: "Settings",
-    blurb: "Org, deploy health, AI provider.",
+    blurb: "Profile, studio, deploy, and AI.",
     icon: Settings,
   },
 ] as const;

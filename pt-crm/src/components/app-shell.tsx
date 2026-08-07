@@ -11,14 +11,12 @@ import {
   History,
   Home,
   LayoutGrid,
-  LogOut,
   Menu,
   Settings,
   Timer,
   Users,
   X,
 } from "lucide-react";
-import { setStoredActiveClient } from "@/lib/active-client";
 import {
   MOBILE_PRIMARY,
   NAV_AREAS,
@@ -27,8 +25,8 @@ import {
   type NavArea,
 } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-import { logoutAction } from "@/app/actions/auth";
 import { BrandMark } from "./brand-mark";
+import { SignOutButton } from "./sign-out-button";
 import { StickyClientChip } from "./sticky-client-chip";
 
 const AREA_ICONS = {
@@ -197,19 +195,7 @@ export function AppShell({
         >
           <AreaNav pathname={pathname} />
         </nav>
-        <form
-          action={logoutAction}
-          onSubmit={() => setStoredActiveClient(null)}
-          className="border-t border-zinc-800 p-2"
-        >
-          <button
-            type="submit"
-            className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-zinc-400 transition hover:bg-zinc-900 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          >
-            <LogOut className="h-4 w-4" aria-hidden />
-            Sign out
-          </button>
-        </form>
+        <SignOutButton />
       </aside>
 
       {/* Mobile drawer backdrop */}
@@ -228,10 +214,12 @@ export function AppShell({
           "fixed inset-y-0 left-0 z-50 flex w-[min(18rem,85vw)] flex-col border-r border-zinc-800 bg-zinc-950 shadow-xl transition-transform duration-200 md:hidden",
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        id="mobile-nav-drawer"
         role="dialog"
         aria-modal={drawerOpen}
         aria-label="Navigation menu"
         aria-hidden={!drawerOpen}
+        {...(!drawerOpen ? ({ inert: "" } as Record<string, string>) : {})}
       >
         <div className="flex items-start justify-between border-b border-zinc-800 px-4 py-4">
           <div className="min-w-0">
@@ -262,19 +250,7 @@ export function AppShell({
             onNavigate={() => setDrawerOpen(false)}
           />
         </nav>
-        <form
-          action={logoutAction}
-          onSubmit={() => setStoredActiveClient(null)}
-          className="border-t border-zinc-800 p-2"
-        >
-          <button
-            type="submit"
-            className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-          >
-            <LogOut className="h-4 w-4" aria-hidden />
-            Sign out
-          </button>
-        </form>
+        <SignOutButton />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -288,6 +264,8 @@ export function AppShell({
             onClick={() => setDrawerOpen(true)}
             aria-label="Open menu"
             aria-expanded={drawerOpen}
+            aria-controls="mobile-nav-drawer"
+            aria-haspopup="dialog"
           >
             <Menu className="h-5 w-5" />
           </button>

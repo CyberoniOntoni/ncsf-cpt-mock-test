@@ -622,16 +622,23 @@ export async function voidClientInvoiceAction(
   const session = await requireSession();
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
-  await db
-    .update(clientInvoices)
-    .set({ status: "void", paidAt: null })
+  const [row] = await db
+    .select()
+    .from(clientInvoices)
     .where(
       and(
         eq(clientInvoices.id, invoiceId),
         eq(clientInvoices.clientId, clientId),
         eq(clientInvoices.organizationId, session.organizationId)
       )
-    );
+    )
+    .limit(1);
+  if (!row) throw new Error("Invoice not found");
+  if (row.status === "void") return { ok: true as const };
+  await db
+    .update(clientInvoices)
+    .set({ status: "void", paidAt: null })
+    .where(eq(clientInvoices.id, invoiceId));
   revalidateClient(clientId);
   return { ok: true as const };
 }

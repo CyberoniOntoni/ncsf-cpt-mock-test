@@ -59,7 +59,23 @@ export default async function SettingsPage() {
             </>
           ) : null}
           {" · "}
-          <Badge>{session.role}</Badge>
+          <Badge
+            tone={
+              session.role === "owner" || session.role === "admin"
+                ? "green"
+                : "default"
+            }
+          >
+            {session.role === "owner"
+              ? "Owner"
+              : session.role === "admin"
+                ? "Admin"
+                : session.role === "front_desk"
+                  ? "Front desk"
+                  : session.role === "trainer"
+                    ? "Trainer"
+                    : session.role}
+          </Badge>
         </p>
         <div className="mt-4">
           <SettingsProfileForm

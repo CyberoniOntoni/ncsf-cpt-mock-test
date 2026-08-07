@@ -138,37 +138,66 @@ export function HomeWorkspace({
     });
   }, []);
 
-  const loadDashboard = useCallback(async (opts?: { soft?: boolean }) => {
-    // Soft refresh (focus/visibility) keeps prior UI — avoid Needs you “…” flicker
-    if (!opts?.soft) setDashLoading(true);
+  const loadDetail = useCallback(async (clientId: string) => {
+    setLoadingDetail(true);
     try {
-      const d = await getHomeDashboardAction();
-      setInProgress(d.inProgress);
-      setAgenda(d.agenda || []);
-      setNeedsYou(d.needsYou);
-      setClientCount(d.clientCount);
-      // Always show header; expand only when there is work (collapsed "All clear")
-      if (!opts?.soft) {
-        setNeedsOpen(d.needsYou.length > 0);
-      }
-      // Soft return-to-tab: also refresh launch-card programs for sticky client
-      if (opts?.soft) {
-        const sticky = getStoredActiveClientId();
-        if (sticky) {
-          try {
-            const rows = await getHomeClientProgramsAction(sticky);
-            setClientPrograms(rows);
-          } catch {
-            // keep prior programs
-          }
-        }
+      const data = await getClientAction(clientId);
+      if (data) {
+        const d = data as ActiveClientDetail;
+        setDetail(d);
+        setStoredActiveClient(
+          clientId,
+          fullName(d.client.firstName, d.client.lastName)
+        );
+      } else {
+        setDetail(null);
+        setSelectedId(null);
+        setStoredActiveClient(null);
+        syncActiveClientUrl(null);
       }
     } catch {
-      // Keep prior data — don't wipe Needs you / open sessions on a transient failure
+      setDetail(null);
     } finally {
-      if (!opts?.soft) setDashLoading(false);
+      setLoadingDetail(false);
     }
   }, []);
+
+  const loadDashboard = useCallback(
+    async (opts?: { soft?: boolean }) => {
+      // Soft refresh (focus/visibility) keeps prior UI — avoid Needs you “…” flicker
+      if (!opts?.soft) setDashLoading(true);
+      try {
+        const d = await getHomeDashboardAction();
+        setInProgress(d.inProgress);
+        setAgenda(d.agenda || []);
+        setNeedsYou(d.needsYou);
+        setClientCount(d.clientCount);
+        // Always show header; expand only when there is work (collapsed "All clear")
+        if (!opts?.soft) {
+          setNeedsOpen(d.needsYou.length > 0);
+        }
+        // Soft return-to-tab: also refresh launch-card programs for sticky client
+        if (opts?.soft) {
+          const sticky = getStoredActiveClientId();
+          if (sticky) {
+            try {
+              // Refresh launch-card programs + client detail (flags/goals)
+              void loadDetail(sticky);
+              const rows = await getHomeClientProgramsAction(sticky);
+              setClientPrograms(rows);
+            } catch {
+              // keep prior programs
+            }
+          }
+        }
+      } catch {
+        // Keep prior data — don't wipe Needs you / open sessions on a transient failure
+      } finally {
+        if (!opts?.soft) setDashLoading(false);
+      }
+    },
+    [loadDetail]
+  );
 
   useEffect(() => {
     if (!hydrated) return;
@@ -196,30 +225,6 @@ export function HomeWorkspace({
       window.removeEventListener("focus", softRefresh);
     };
   }, [hydrated, loadDashboard]);
-
-  const loadDetail = useCallback(async (clientId: string) => {
-    setLoadingDetail(true);
-    try {
-      const data = await getClientAction(clientId);
-      if (data) {
-        const d = data as ActiveClientDetail;
-        setDetail(d);
-        setStoredActiveClient(
-          clientId,
-          fullName(d.client.firstName, d.client.lastName)
-        );
-      } else {
-        setDetail(null);
-        setSelectedId(null);
-        setStoredActiveClient(null);
-        syncActiveClientUrl(null);
-      }
-    } catch {
-      setDetail(null);
-    } finally {
-      setLoadingDetail(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -323,7 +328,7 @@ export function HomeWorkspace({
   }, [selectedId, openSession, anyProgram, programDayId]);
 
   const headerHint = !hasClient
-    ? "Resume open sessions, clear needs-you, or pick a client."
+    ? "Resume open sessions, clear Needs you, or pick a client."
     : openSession
       ? "Resume session, or open the program without resuming."
       : anyProgram
@@ -439,14 +444,24 @@ export function HomeWorkspace({
             <p className="text-sm text-zinc-500">
               No open sessions. {openSessionsEmpty}
             </p>
-            {!hasClient && (
-              <Link
-                href="/sessions"
-                className="mt-2 inline-block text-xs font-medium text-emerald-400 hover:underline"
-              >
-                Browse sessions →
-              </Link>
-            )}
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+              {!hasClient && (
+                <Link
+                  href="/sessions"
+                  className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400 hover:underline"
+                >
+                  Browse sessions →
+                </Link>
+              )}
+              {hasClient && !anyProgram && selectedId && (
+                <Link
+                  href={`/programs/new?client=${selectedId}`}
+                  className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400 hover:underline"
+                >
+                  Design program →
+                </Link>
+              )}
+            </div>
           </Card>
         ) : (
           <ul className="space-y-2">
@@ -647,20 +662,20 @@ export function HomeWorkspace({
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                   <Link
                     href={`/clients/${selectedId}`}
-                    className="font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+                    className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
                   >
                     Profile
                   </Link>
                   <Link
                     href={`/clients/${selectedId}/assessments`}
-                    className="inline-flex items-center gap-1 font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+                    className="inline-flex min-h-11 items-center gap-1 font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
                   >
                     <ClipboardList className="h-3 w-3" aria-hidden />
                     Screens
                   </Link>
                   <Link
                     href={`/clients/${selectedId}#progress`}
-                    className="font-medium text-zinc-500 hover:text-emerald-400 hover:underline"
+                    className="inline-flex min-h-11 items-center font-medium text-zinc-500 hover:text-emerald-400 hover:underline"
                   >
                     Progress
                   </Link>
@@ -669,7 +684,7 @@ export function HomeWorkspace({
                       clientId={selectedId}
                       clientName={clientName ?? undefined}
                       onSaved={() => {
-                        void loadDashboard();
+                        void loadDashboard({ soft: true });
                       }}
                     />
                   )}

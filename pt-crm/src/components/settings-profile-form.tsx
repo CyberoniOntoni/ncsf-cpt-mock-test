@@ -21,9 +21,14 @@ export function SettingsProfileForm({
   const router = useRouter();
   const [profilePending, startProfile] = useTransition();
   const [pwPending, startPw] = useTransition();
-  const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
-    null
-  );
+  const [profileMsg, setProfileMsg] = useState<{
+    tone: "ok" | "err";
+    text: string;
+  } | null>(null);
+  const [passwordMsg, setPasswordMsg] = useState<{
+    tone: "ok" | "err";
+    text: string;
+  } | null>(null);
   const [name, setName] = useState(initial.name);
   const [email, setEmail] = useState(initial.email);
   const [phone, setPhone] = useState(initial.phone);
@@ -42,34 +47,43 @@ export function SettingsProfileForm({
   }, [initial.name, initial.email, initial.phone, initial.title]);
 
   useEffect(() => {
-    if (!msg || msg.tone !== "ok") return;
-    const t = window.setTimeout(() => setMsg(null), 3200);
+    if (!profileMsg || profileMsg.tone !== "ok") return;
+    const t = window.setTimeout(() => setProfileMsg(null), 3200);
     return () => window.clearTimeout(t);
-  }, [msg]);
+  }, [profileMsg]);
+
+  useEffect(() => {
+    if (!passwordMsg || passwordMsg.tone !== "ok") return;
+    const t = window.setTimeout(() => setPasswordMsg(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [passwordMsg]);
 
   function onSaveProfile(e: FormEvent) {
     e.preventDefault();
-    setMsg(null);
+    setProfileMsg(null);
     startProfile(async () => {
       const res = await updateProfileAction({ name, email, phone, title });
       if ("error" in res && res.error) {
-        setMsg({ tone: "err", text: res.error });
+        setProfileMsg({ tone: "err", text: res.error });
         return;
       }
-      setMsg({ tone: "ok", text: "Profile saved" });
+      setProfileMsg({ tone: "ok", text: "Profile saved" });
       router.refresh();
     });
   }
 
   function onChangePassword(e: FormEvent) {
     e.preventDefault();
-    setMsg(null);
+    setPasswordMsg(null);
     if (newPassword !== confirmPassword) {
-      setMsg({ tone: "err", text: "New passwords do not match" });
+      setPasswordMsg({ tone: "err", text: "New passwords do not match" });
       return;
     }
     if (newPassword.length < 8) {
-      setMsg({ tone: "err", text: "Password must be at least 8 characters" });
+      setPasswordMsg({
+        tone: "err",
+        text: "Password must be at least 8 characters",
+      });
       return;
     }
     startPw(async () => {
@@ -78,13 +92,13 @@ export function SettingsProfileForm({
         newPassword,
       });
       if ("error" in res && res.error) {
-        setMsg({ tone: "err", text: res.error });
+        setPasswordMsg({ tone: "err", text: res.error });
         return;
       }
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setMsg({ tone: "ok", text: "Password updated" });
+      setPasswordMsg({ tone: "ok", text: "Password updated" });
     });
   }
 
@@ -92,12 +106,13 @@ export function SettingsProfileForm({
 
   return (
     <div className="space-y-6">
-      {msg && (
-        <Alert tone={msg.tone === "ok" ? "success" : "error"}>{msg.text}</Alert>
-      )}
-
       <form onSubmit={onSaveProfile} className="space-y-3">
         <h3 className="text-sm font-medium text-zinc-200">Your profile</h3>
+        {profileMsg && (
+          <Alert tone={profileMsg.tone === "ok" ? "success" : "error"}>
+            {profileMsg.text}
+          </Alert>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label htmlFor="profile-name">Name</Label>
@@ -167,6 +182,11 @@ export function SettingsProfileForm({
         className="space-y-3 border-t border-zinc-800 pt-5"
       >
         <h3 className="text-sm font-medium text-zinc-200">Change password</h3>
+        {passwordMsg && (
+          <Alert tone={passwordMsg.tone === "ok" ? "success" : "error"}>
+            {passwordMsg.text}
+          </Alert>
+        )}
         <p className="text-[11px] text-zinc-600">
           At least 8 characters. You’ll stay signed in after changing.
         </p>

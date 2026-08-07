@@ -107,16 +107,15 @@ export function ClientDetailStickyBar({
     };
   }, []);
 
-  // Publish scroll-offset CSS vars for in-page anchors under stacked chrome
-  useEffect(() => {
-    if (!show) {
-      setShellCssVars(shellMobileHeaderHeight(), 0);
-      return;
-    }
+  // Always reserve sticky height for #crm-* anchors (bar may appear mid-scroll)
+  const STICKY_RESERVE_PX = 56;
 
+  useEffect(() => {
     const measure = () => {
       const shellH = shellMobileHeaderHeight();
-      const stickyH = barRef.current?.getBoundingClientRect().height ?? 0;
+      const stickyH = show
+        ? barRef.current?.getBoundingClientRect().height || STICKY_RESERVE_PX
+        : STICKY_RESERVE_PX;
       setTopPx(shellH);
       setShellCssVars(shellH, stickyH);
     };
@@ -125,7 +124,7 @@ export function ClientDetailStickyBar({
 
     const barEl = barRef.current;
     let ro: ResizeObserver | null = null;
-    if (barEl && typeof ResizeObserver !== "undefined") {
+    if (show && barEl && typeof ResizeObserver !== "undefined") {
       ro = new ResizeObserver(measure);
       ro.observe(barEl);
     }

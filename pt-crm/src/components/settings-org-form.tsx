@@ -74,7 +74,7 @@ export function SettingsOrgForm({
           <dd className="text-zinc-200">{initial.timezone}</dd>
         </div>
         <p className="text-xs text-zinc-600">
-          Only studio owners can edit organization settings.
+          Only studio owners and admins can edit organization settings.
         </p>
       </dl>
     );

@@ -458,30 +458,28 @@ export function ClientCrmPanel({
   const checkInList = snapshot.checkIns.slice(0, 8);
   const taskList = (snapshot.tasks || []).slice(0, 12);
   const openTasks = taskList.filter((t) => t.status === "open");
-  // Unpaid first, then paid, then void; newest issued within group
-  const invoiceList = useMemo(() => {
+  // Sort all invoices; cap visible non-void list so voids aren't starved out
+  const allInvoicesSorted = useMemo(() => {
     const rank = (s: string) =>
       s === "unpaid" ? 0 : s === "paid" ? 1 : 2;
-    return [...(snapshot.invoices || [])]
-      .sort((a, b) => {
-        const ra = rank((a.status || "").toLowerCase());
-        const rb = rank((b.status || "").toLowerCase());
-        if (ra !== rb) return ra - rb;
-        const ta = a.issuedAt ? new Date(a.issuedAt).getTime() : 0;
-        const tb = b.issuedAt ? new Date(b.issuedAt).getTime() : 0;
-        return tb - ta;
-      })
-      .slice(0, 12);
+    return [...(snapshot.invoices || [])].sort((a, b) => {
+      const ra = rank((a.status || "").toLowerCase());
+      const rb = rank((b.status || "").toLowerCase());
+      if (ra !== rb) return ra - rb;
+      const ta = a.issuedAt ? new Date(a.issuedAt).getTime() : 0;
+      const tb = b.issuedAt ? new Date(b.issuedAt).getTime() : 0;
+      return tb - ta;
+    });
   }, [snapshot.invoices]);
-  const unpaidInvoices = invoiceList.filter((i) => i.status === "unpaid");
-  const voidInvoices = invoiceList.filter((i) => i.status === "void");
-  const visibleInvoices = useMemo(
-    () =>
-      showVoidInvoices
-        ? invoiceList
-        : invoiceList.filter((i) => i.status !== "void"),
-    [invoiceList, showVoidInvoices]
-  );
+  const voidInvoices = allInvoicesSorted.filter((i) => i.status === "void");
+  const nonVoidInvoices = allInvoicesSorted
+    .filter((i) => i.status !== "void")
+    .slice(0, 12);
+  const invoiceList = showVoidInvoices
+    ? [...nonVoidInvoices, ...voidInvoices]
+    : nonVoidInvoices;
+  const unpaidInvoices = allInvoicesSorted.filter((i) => i.status === "unpaid");
+  const visibleInvoices = invoiceList;
   const unpaidTotalCents = unpaidInvoices.reduce(
     (s, i) => s + (i.amountCents || 0),
     0
@@ -512,7 +510,7 @@ export function ClientCrmPanel({
   // Align wording with client header package chip
   const summaryPack = activePackage
     ? activePackage.remaining === 0
-      ? "Package empty"
+      ? "Pack empty"
       : `${activePackage.remaining} left`
     : hadExhaustedPack
       ? "Renew pack"
@@ -689,6 +687,15 @@ export function ClientCrmPanel({
     }
     if (status === "no_show") {
       if (!window.confirm(`Mark “${title}” as no-show?`)) return;
+    }
+    if (status === "completed") {
+      if (
+        !window.confirm(
+          `Close booking “${title}”?\n\nCloses the calendar slot only — does not burn a pack session.`
+        )
+      ) {
+        return;
+      }
     }
     run(async () => {
       await updateAppointmentStatusAction(appointmentId, clientId, status);
@@ -1143,14 +1150,30 @@ export function ClientCrmPanel({
         </div>
 
         {nextAppointment ? (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
+          (() => {
+            const nextStartMs = new Date(nextAppointment.startsAt).getTime();
+            const nextOverdue =
+              nextAppointment.status === "scheduled" &&
+              Number.isFinite(nextStartMs) &&
+              nextStartMs < now - 60_000;
+            return (
+          <div
+            className={cn(
+              "rounded-lg border px-3 py-2.5",
+              nextOverdue
+                ? "border-amber-900/40 bg-amber-950/20"
+                : "border-zinc-800 bg-zinc-950/40"
+            )}
+          >
             <div className="flex flex-wrap items-center gap-1.5">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
                 Next up
               </p>
-              <Badge tone="green">
-                {APPT_STATUS_LABEL[nextAppointment.status] ||
-                  nextAppointment.status.replaceAll("_", " ")}
+              <Badge tone={nextOverdue ? "amber" : "green"}>
+                {nextOverdue
+                  ? "Past due"
+                  : APPT_STATUS_LABEL[nextAppointment.status] ||
+                    nextAppointment.status.replaceAll("_", " ")}
               </Badge>
             </div>
             <p className="mt-0.5 text-sm font-medium text-zinc-100">
@@ -1227,6 +1250,8 @@ export function ClientCrmPanel({
               </Button>
             </div>
           </div>
+            );
+          })()
         ) : (
           <p className="text-xs text-zinc-500">
             {showBookForm
@@ -1401,15 +1426,7 @@ export function ClientCrmPanel({
             Invoices
             {unpaidInvoices.length > 0 && (
               <span className="ml-1.5 font-normal normal-case tabular-nums text-amber-400/90">
-                {unpaidInvoices.length === 1
-                  ? formatMoney(
-                      unpaidInvoices[0].amountCents,
-                      unpaidInvoices[0].currency,
-                      { compact: true }
-                    )
-                  : unpaidSameCurrency
-                    ? `${unpaidInvoices.length} · ${formatMoney(unpaidTotalCents, unpaidCurrency, { compact: true })}`
-                    : `${unpaidInvoices.length} unpaid`}
+                {summaryUnpaid}
               </span>
             )}
           </p>
@@ -1566,15 +1583,22 @@ export function ClientCrmPanel({
                             className="min-h-11"
                             title="Move back to unpaid (e.g. payment bounced)"
                             aria-label={`Reopen ${inv.title} as unpaid`}
-                            onClick={() =>
+                            onClick={() => {
+                              if (
+                                !window.confirm(
+                                  `Reopen “${inv.title}” as unpaid?\n\nUse if payment bounced or was marked paid by mistake.`
+                                )
+                              ) {
+                                return;
+                              }
                               run(async () => {
                                 await setClientInvoicePaidAction(
                                   inv.id,
                                   clientId,
                                   false
                                 );
-                              })
-                            }
+                              });
+                            }}
                           >
                             Reopen
                           </Button>
@@ -1587,13 +1611,15 @@ export function ClientCrmPanel({
                           className="min-h-11 text-zinc-500"
                           aria-label={`Void ${inv.title}`}
                           onClick={() => {
-                            if (
-                              !window.confirm(
-                                `Void “${inv.title}” (${formatMoney(inv.amountCents, inv.currency, { compact: true })})?\n\nIt stays in history but no longer counts as owed.`
-                              )
-                            ) {
-                              return;
-                            }
+                            const money = formatMoney(
+                              inv.amountCents,
+                              inv.currency,
+                              { compact: true }
+                            );
+                            const msg = paid
+                              ? `Void paid invoice “${inv.title}” (${money})?\n\nIt was marked paid — void only if you should not have recorded this payment.`
+                              : `Void “${inv.title}” (${money})?\n\nIt stays in history but no longer counts as owed.`;
+                            if (!window.confirm(msg)) return;
                             run(async () => {
                               await voidClientInvoiceAction(inv.id, clientId);
                             });

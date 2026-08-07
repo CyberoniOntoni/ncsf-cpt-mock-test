@@ -220,7 +220,9 @@ export async function updateOrganizationProfile(input: {
 }) {
   const session = await requireSession();
   if (session.role !== "owner" && session.role !== "admin") {
-    return { error: "Only studio owners can update organization settings" as const };
+    return {
+      error: "Only studio owners and admins can update organization settings" as const,
+    };
   }
   const name = input.name.trim();
   if (!name || name.length < 2) {
