@@ -219,7 +219,7 @@ export function AppShell({
         aria-modal={drawerOpen}
         aria-label="Navigation menu"
         aria-hidden={!drawerOpen}
-        {...(!drawerOpen ? ({ inert: "" } as Record<string, string>) : {})}
+        inert={!drawerOpen ? true : undefined}
       >
         <div className="flex items-start justify-between border-b border-zinc-800 px-4 py-4">
           <div className="min-w-0">
