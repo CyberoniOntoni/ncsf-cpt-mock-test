@@ -36,11 +36,16 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 ## 3. On the floor (session)
 
 1. Header / sticky: **Start session** (or Resume).
-2. Log sets, RPE, pain as needed.
+2. Log sets, RPE, pain as needed. Expanded exercises show a quiet **Cue** line (bank / pattern).
 3. **Complete session**:
    - Burns **one pack session** when a pack is active.
    - Full set log stays on the **session** (and under **Sessions**).
    - **Notes & recommendations** only gets a note if you entered **pain** or **session notes**.
+4. **Close the loop** (Session complete card):
+   - **Copy summary** / Share (primary)
+   - **Book next** appointment (collapsed form)
+   - **Open client** · **Log check-in**
+   - Meta: Home · Program · All sessions
 
 ---
 
@@ -73,6 +78,7 @@ On the client page, **Progress**:
 
 - KPI strip (sessions / volume / weight / screen trends).
 - Compact trio: **Body metrics · Best loads · Screens**.
+- **Copy** — plain-text progress snapshot for WhatsApp / notes.
 - Add measurement under body metrics when needed.
 
 ---

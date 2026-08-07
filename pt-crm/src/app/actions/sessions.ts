@@ -1,11 +1,12 @@
 "use server";
 
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import {
   clients,
   clientNotes,
+  exercises,
   programDays,
   programExercises,
   programs,
@@ -14,6 +15,7 @@ import {
   type SessionSetLog,
 } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
+import { defaultExerciseCues } from "@/lib/exercise-meta";
 import { aggregateFromSetLogs, ensureSetLogs } from "@/lib/session-sets";
 import {
   formatLastPerformance,
@@ -310,6 +312,92 @@ export async function getPreviousLoadsForSessionAction(sessionId: string) {
     };
   }
   return out;
+}
+
+export type ExerciseCueEntry = {
+  cue: string;
+  source: "notes" | "bank" | "pattern";
+};
+
+/**
+ * Floor coaching cues per session log: coach notes → bank cues → pattern default.
+ * Fail-soft: empty map on error / missing catalog.
+ */
+export async function getExerciseCuesForSessionAction(
+  sessionId: string
+): Promise<Record<string, ExerciseCueEntry>> {
+  try {
+    const session = await requireSession();
+    const db = await getDb();
+    const [row] = await db
+      .select({ id: trainingSessions.id })
+      .from(trainingSessions)
+      .where(
+        and(
+          eq(trainingSessions.id, sessionId),
+          eq(trainingSessions.organizationId, session.organizationId)
+        )
+      )
+      .limit(1);
+    if (!row) return {};
+
+    const logs = await db
+      .select({
+        id: sessionExerciseLogs.id,
+        exerciseId: sessionExerciseLogs.exerciseId,
+        notes: sessionExerciseLogs.notes,
+        movementPattern: sessionExerciseLogs.movementPattern,
+      })
+      .from(sessionExerciseLogs)
+      .where(eq(sessionExerciseLogs.sessionId, sessionId));
+
+    const exerciseIds = [
+      ...new Set(
+        logs
+          .map((l) => l.exerciseId)
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+      ),
+    ];
+
+    const bankById = new Map<string, string | null>();
+    if (exerciseIds.length > 0) {
+      const rows = await db
+        .select({
+          id: exercises.id,
+          cues: exercises.cues,
+          movementPattern: exercises.movementPattern,
+        })
+        .from(exercises)
+        .where(inArray(exercises.id, exerciseIds));
+      for (const e of rows) {
+        bankById.set(e.id, e.cues);
+      }
+    }
+
+    const out: Record<string, ExerciseCueEntry> = {};
+    for (const log of logs) {
+      const note = log.notes?.trim();
+      if (note) {
+        out[log.id] = { cue: note, source: "notes" };
+        continue;
+      }
+      if (log.exerciseId) {
+        const bank = bankById.get(log.exerciseId)?.trim();
+        if (bank) {
+          out[log.id] = { cue: bank, source: "bank" };
+          continue;
+        }
+      }
+      const pattern = (log.movementPattern || "other").trim() || "other";
+      const fallback = defaultExerciseCues(pattern).trim();
+      if (fallback) {
+        out[log.id] = { cue: fallback, source: "pattern" };
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 async function loadLastSetLogsMapDetailed(

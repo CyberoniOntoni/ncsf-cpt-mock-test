@@ -4,16 +4,22 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  createClientAppointmentAction,
+} from "@/app/actions/crm";
+import {
   cancelSessionAction,
   deleteSessionAction,
   completeSessionAction,
+  getExerciseCuesForSessionAction,
   getLastWeightsForExerciseAction,
   getPreviousLoadsForSessionAction,
   getSessionSummaryTextAction,
   saveSessionProgressAction,
+  type ExerciseCueEntry,
   type PreviousLoadEntry,
   type SessionExerciseUpdate,
 } from "@/app/actions/sessions";
+import { HomeQuickCheckIn } from "@/components/home-quick-checkin";
 import type { SessionSetLog } from "@/db/schema";
 import {
   emomRestSeconds,
@@ -87,6 +93,15 @@ import {
 const RPE_PRESETS = ["6", "7", "7.5", "8", "8.5", "9", "10"];
 const SESSION_RPE = ["5", "6", "7", "8", "9", "10"];
 const DEFAULT_REST_SEC = 90;
+
+/** Next whole hour local datetime-local value */
+function defaultNextHourLocal() {
+  const d = new Date();
+  d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() + 1);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 const SUGGESTION_TONE: Record<string, string> = {
   load: "border-emerald-800/50 bg-emerald-950/30 text-emerald-100",
@@ -205,6 +220,14 @@ export function SessionLogger({
   const [prevLoads, setPrevLoads] = useState<Record<string, PreviousLoadEntry>>(
     {}
   );
+  const [exerciseCues, setExerciseCues] = useState<
+    Record<string, ExerciseCueEntry>
+  >({});
+  const [showBookNext, setShowBookNext] = useState(false);
+  const [bookStart, setBookStart] = useState(() => defaultNextHourLocal());
+  const [bookTitle, setBookTitle] = useState("");
+  const [bookDuration, setBookDuration] = useState("60");
+  const [bookedLine, setBookedLine] = useState<string | null>(null);
   const [restActive, setRestActive] = useState<{
     seconds: number;
     label: string;
@@ -323,6 +346,17 @@ export function SessionLogger({
       cancelled = true;
     };
   }, [session.id, client?.id]);
+
+  // Floor coaching cues (bank / notes / pattern default)
+  useEffect(() => {
+    let cancelled = false;
+    void getExerciseCuesForSessionAction(session.id).then((map) => {
+      if (!cancelled) setExerciseCues(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [session.id]);
 
   // Prefill summary when viewing completed/cancelled
   useEffect(() => {
@@ -926,8 +960,48 @@ export function SessionLogger({
           "success"
         );
         router.refresh();
+        // Scroll close-loop into view after complete
+        requestAnimationFrame(() => {
+          document
+            .getElementById("session-close-loop")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
       } catch (e) {
         flash(e instanceof Error ? e.message : "Complete failed", "error");
+      }
+    });
+  }
+
+  function bookNext(e?: { preventDefault?: () => void }) {
+    e?.preventDefault?.();
+    if (!client?.id) return;
+    const startsAt = bookStart.trim();
+    if (!startsAt) {
+      flash("Pick a date and time", "error");
+      return;
+    }
+    const mins = Math.max(15, Math.min(240, Number(bookDuration) || 60));
+    startTransition(async () => {
+      try {
+        await createClientAppointmentAction({
+          clientId: client.id,
+          startsAt: new Date(startsAt).toISOString(),
+          durationMin: mins,
+          title: bookTitle.trim() || "Session",
+        });
+        const when = new Date(startsAt).toLocaleString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        setBookedLine(`Next: ${when}`);
+        setShowBookNext(false);
+        setBookTitle("");
+        flash(`Booked · ${when}`, "success");
+      } catch (err) {
+        flash(err instanceof Error ? err.message : "Could not book", "error");
       }
     });
   }
@@ -1152,31 +1226,12 @@ export function SessionLogger({
         </div>
       )}
 
-      {readonly &&
-        (session.status === "completed" || session.status === "cancelled") && (
-        <div
-          className={cn(
-            "flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2.5",
-            session.status === "completed"
-              ? "border-emerald-800/50 bg-emerald-950/30"
-              : "border-zinc-800 bg-zinc-950/40"
-          )}
-        >
-          <div
-            className={
-              session.status === "completed"
-                ? "text-sm text-emerald-100"
-                : "text-sm text-zinc-300"
-            }
-          >
-            {session.status === "completed"
-              ? "Session complete"
-              : "Session cancelled"}
+      {readonly && session.status === "cancelled" && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
+          <div className="text-sm text-zinc-300">
+            Session cancelled
             {durationMin ? (
               <span className="opacity-70"> · {durationMin} min</span>
-            ) : null}
-            {overallRpe ? (
-              <span className="opacity-70"> · RPE {overallRpe}</span>
             ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1191,23 +1246,171 @@ export function SessionLogger({
               Remove
             </Button>
             <Link href="/">
-              <Button type="button" size="sm">
+              <Button type="button" size="sm" variant="secondary">
                 Home
               </Button>
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Lane C: post-session close loop — one emerald CTA = share summary */}
+      {readonly && session.status === "completed" && (
+        <div id="session-close-loop" className="scroll-mt-20">
+        <Card
+          className="space-y-3 border-emerald-800/40 bg-emerald-950/20"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-emerald-100">
+                Session complete
+              </h3>
+              <p className="mt-0.5 text-xs text-emerald-200/70">
+                {stats.doneSets > 0 ? `${stats.doneSets} sets` : "Logged"}
+                {durationMin ? ` · ${durationMin} min` : ""}
+                {overallRpe ? ` · RPE ${overallRpe}` : ""}
+                {bookedLine ? ` · ${bookedLine}` : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                loading={pending}
+                onClick={() => void shareSummary()}
+                className="min-h-11"
+              >
+                <Copy className="h-3.5 w-3.5" aria-hidden />
+                Copy summary
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={pending}
+                onClick={() => void shareSummary({ native: true })}
+                className="min-h-11"
+              >
+                <Share2 className="h-3.5 w-3.5" aria-hidden />
+                Share
+              </Button>
+            </div>
+          </div>
+
+          {client?.id && (
+            <div className="space-y-2 border-t border-emerald-900/40 pt-2.5">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBookNext((v) => !v);
+                  }}
+                  aria-expanded={showBookNext}
+                  className="min-h-11 font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+                >
+                  {showBookNext ? "Cancel book" : "Book next"}
+                </button>
+                <Link
+                  href={`/clients/${client.id}`}
+                  className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+                >
+                  Open client
+                </Link>
+                <HomeQuickCheckIn
+                  clientId={client.id}
+                  clientName={fullName(client.firstName, client.lastName)}
+                  onSaved={() => flash("Check-in saved", "success")}
+                />
+              </div>
+
+              {showBookNext && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    bookNext();
+                  }}
+                  className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/50 p-2.5"
+                >
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="book-next-start">When</Label>
+                      <Input
+                        id="book-next-start"
+                        type="datetime-local"
+                        value={bookStart}
+                        onChange={(e) => setBookStart(e.target.value)}
+                        disabled={pending}
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="book-next-dur">Minutes</Label>
+                      <Input
+                        id="book-next-dur"
+                        type="number"
+                        min={15}
+                        max={240}
+                        step={15}
+                        value={bookDuration}
+                        onChange={(e) => setBookDuration(e.target.value)}
+                        disabled={pending}
+                        className="mt-1 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="book-next-title">Title (optional)</Label>
+                    <Input
+                      id="book-next-title"
+                      value={bookTitle}
+                      onChange={(e) => setBookTitle(e.target.value)}
+                      placeholder="Session"
+                      disabled={pending}
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant="secondary"
+                    loading={pending}
+                    className="min-h-11"
+                  >
+                    Book
+                  </Button>
+                </form>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-emerald-900/40 pt-2 text-xs text-zinc-500">
+            <Link href="/" className="hover:text-emerald-400 hover:underline">
+              Home
+            </Link>
             {program && (
-              <Link href={`/programs/${program.id}`}>
-                <Button type="button" variant="secondary" size="sm">
-                  Program
-                </Button>
+              <Link
+                href={`/programs/${program.id}`}
+                className="hover:text-emerald-400 hover:underline"
+              >
+                Program
               </Link>
             )}
-            <Link href="/sessions">
-              <Button type="button" variant="ghost" size="sm">
-                All sessions
-              </Button>
+            <Link
+              href="/sessions"
+              className="hover:text-emerald-400 hover:underline"
+            >
+              All sessions
             </Link>
+            <button
+              type="button"
+              onClick={removeSession}
+              disabled={pending}
+              className="text-zinc-600 hover:text-red-300 hover:underline"
+            >
+              Remove
+            </button>
           </div>
+        </Card>
         </div>
       )}
 
@@ -1449,6 +1652,14 @@ export function SessionLogger({
                         </span>
                       )}
                     </div>
+                  )}
+
+                  {/* Floor coaching cue (bank / notes / pattern) */}
+                  {exerciseCues[log.id]?.cue && (
+                    <p className="line-clamp-2 text-[11px] leading-relaxed text-zinc-400">
+                      <span className="font-medium text-zinc-500">Cue · </span>
+                      {exerciseCues[log.id].cue}
+                    </p>
                   )}
 
                   {/* Last time + progression */}

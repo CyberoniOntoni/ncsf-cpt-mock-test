@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ClientProgressData } from "@/app/actions/progress";
 import { getFieldDef } from "@/lib/measurements";
 import { cn } from "@/lib/utils";
+import { ProgressShareButton } from "./progress-share-button";
 import { Badge, Card, EmptyState, SectionLabel } from "./ui";
 import { BarChart, Sparkline } from "./sparkline";
 import {
@@ -529,16 +530,19 @@ export function ClientProgressDashboard({
               {!hideWeeklyVolume ? " · volume" : ""}
             </p>
           </div>
-          {stats.lastSessionAt && (
-            <span className="shrink-0 text-[11px] tabular-nums text-zinc-500">
-              Last session{" "}
-              {new Date(stats.lastSessionAt).toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </span>
-          )}
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {stats.lastSessionAt && (
+              <span className="text-[11px] tabular-nums text-zinc-500">
+                Last session{" "}
+                {new Date(stats.lastSessionAt).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </span>
+            )}
+            <ProgressShareButton data={data} />
+          </div>
         </div>
 
         {/* Dense KPI strip — always visible */}

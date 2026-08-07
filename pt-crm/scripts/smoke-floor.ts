@@ -101,6 +101,59 @@ async function main() {
     throw new Error("buildSessionSummaryText failed");
   }
 
+  // Lane C: progress share text builder
+  const { buildClientProgressShareText } = await import(
+    "../src/lib/progress-share"
+  );
+  const progressText = buildClientProgressShareText({
+    clientId: "cli_test",
+    clientName: "Test Client",
+    metrics: [
+      {
+        key: "weightKg",
+        label: "Weight",
+        unit: "kg",
+        points: [],
+        latest: 80,
+        first: 82,
+        delta: -2,
+        deltaPct: null,
+      },
+    ],
+    assessments: [],
+    sessionVolumes: [],
+    weeklyVolume: [],
+    exerciseBests: [
+      {
+        exerciseName: "Goblet squat",
+        bestWeightKg: 32,
+        bestReps: "8",
+        lastSeenAt: null,
+        timesLogged: 3,
+      },
+    ],
+    stats: {
+      sessionsTotal: 10,
+      sessionsCompleted: 9,
+      sessionsLast30: 4,
+      volumeLast30Kg: 1200,
+      volumeAllKg: 5000,
+      screensWithRetest: 0,
+      screensImproved: 0,
+      screensDeclined: 0,
+      lastSessionAt: new Date().toISOString(),
+      activeDaysSpan: 30,
+    },
+  });
+  if (
+    !progressText.includes("Test Client") ||
+    !progressText.includes("Goblet squat") ||
+    !progressText.includes("progress snapshot")
+  ) {
+    throw new Error("buildClientProgressShareText failed");
+  }
+  console.log("progress-share: OK");
+
   // coach isolation helper (dynamic import of coach internals via public path)
   await loadClientContextIsolation(orgA.id, mine[0]?.id);
 
