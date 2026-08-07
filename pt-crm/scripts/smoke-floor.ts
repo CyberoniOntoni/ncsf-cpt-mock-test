@@ -1,0 +1,115 @@
+/**
+ * Lane A smoke: tenant isolation, progression helpers, last-load map shape.
+ * Run: npx tsx scripts/smoke-floor.ts
+ */
+import { seedIfNeeded } from "../src/db/seed";
+import { getDb } from "../src/db";
+import { clients, organizations } from "../src/db/schema";
+import { getClientInOrg } from "../src/lib/tenant";
+import {
+  formatLastPerformance,
+  parseRepRange,
+  suggestProgression,
+} from "../src/lib/progression";
+import {
+  buildSessionSummaryText,
+  formatRelativeSessionDay,
+} from "../src/lib/session-summary";
+import { loadClientContextIsolation } from "./_smoke-helpers";
+
+async function main() {
+  await seedIfNeeded();
+  const db = await getDb();
+  const orgs = await db.select().from(organizations);
+  if (orgs.length < 1) throw new Error("No orgs after seed");
+
+  const orgA = orgs[0];
+  // Fake foreign org id must not see orgA clients
+  const allClients = await db.select().from(clients);
+  const mine = allClients.filter((c) => c.organizationId === orgA.id);
+  if (!mine.length) {
+    console.log("No clients in demo org — skip client isolation pair");
+  } else {
+    const c = mine[0];
+    const ok = await getClientInOrg(c.id, orgA.id);
+    if (!ok) throw new Error("getClientInOrg failed for own org");
+    const cross = await getClientInOrg(c.id, "org_does_not_exist");
+    if (cross) throw new Error("Cross-tenant client leak");
+    console.log("tenant: client scoped OK", c.firstName);
+  }
+
+  // Progression rules
+  const range = parseRepRange("8-10");
+  if (!range || range.high !== 10) throw new Error("parseRepRange failed");
+
+  const bump = suggestProgression({
+    plannedReps: "8-10",
+    lastSets: [
+      { setIndex: 1, reps: "10", weightKg: 40, rpe: "7", completed: true },
+      { setIndex: 2, reps: "10", weightKg: 40, rpe: "7", completed: true },
+      { setIndex: 3, reps: "10", weightKg: 40, rpe: "7", completed: true },
+    ],
+  });
+  if (!bump || bump.kind !== "load" || bump.suggestedKg !== 42) {
+    throw new Error(`Expected load bump to 42, got ${JSON.stringify(bump)}`);
+  }
+
+  const hold = suggestProgression({
+    plannedReps: "5",
+    lastSets: [
+      { setIndex: 1, reps: "5", weightKg: 100, rpe: "9.5", completed: true },
+    ],
+  });
+  if (!hold || hold.kind !== "hold") {
+    throw new Error(`Expected hold at high RPE, got ${JSON.stringify(hold)}`);
+  }
+
+  const line = formatLastPerformance([
+    { setIndex: 1, reps: "8", weightKg: 50, rpe: "7", completed: true },
+    { setIndex: 2, reps: "8", weightKg: 50, rpe: "8", completed: true },
+  ]);
+  if (!line?.includes("50")) throw new Error("formatLastPerformance failed");
+
+  const rel = formatRelativeSessionDay(new Date());
+  if (rel !== "today") throw new Error(`expected today, got ${rel}`);
+
+  const summary = buildSessionSummaryText({
+    session: {
+      title: "Day A",
+      durationMin: 45,
+      overallRpe: "7",
+      performedAt: new Date(),
+    },
+    clientName: "Test Client",
+    logs: [
+      {
+        exerciseName: "Goblet squat",
+        completed: true,
+        setLogs: [
+          {
+            setIndex: 1,
+            reps: "10",
+            weightKg: 24,
+            rpe: "7",
+            completed: true,
+          },
+        ],
+      },
+    ],
+  });
+  if (!summary.includes("Goblet squat") || !summary.includes("24")) {
+    throw new Error("buildSessionSummaryText failed");
+  }
+
+  // coach isolation helper (dynamic import of coach internals via public path)
+  await loadClientContextIsolation(orgA.id, mine[0]?.id);
+
+  console.log("smoke-floor: OK");
+}
+
+main()
+  .then(() => process.exit(0))
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });

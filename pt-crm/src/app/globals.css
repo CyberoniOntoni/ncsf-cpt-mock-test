@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+:root {
+  --background: #09090b;
+  --foreground: #fafafa;
+  /* Design system surface roles — docs/design-system.md */
+  --ds-canvas: #09090b;
+  --ds-surface: #18181b;
+  --ds-border: #27272a;
+  --ds-action: #059669;
+  --ds-warn: #d97706;
+  --ds-danger: #b91c1c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Comfortable scrollbars (WebKit + Firefox) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Reduce layout jump on focus */
+:focus-visible {
+  outline: none;
+}
+
+/* Selection */
+::selection {
+  background: rgba(16, 185, 129, 0.35);
+  color: #ecfdf5;
+}
+
+/* Page content width helper used by polished pages */
+.page-pad {
+  padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .page-pad {
+    padding: 1.5rem;
+  }
+}
+
+/* Subtle enter for main content */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation: none;
+  }
+}
+
+/* Design system — section labels (In progress, Client, form groups) */
+.section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #71717a; /* zinc-500 */
+}
+
+/* List shell: full width content inside page-pad */
+.page-shell {
+  width: 100%;
+}
+
+/* Focus shell: floor flows (session, wizard) */
+.page-focus {
+  width: 100%;
+  max-width: 48rem; /* max-w-3xl */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* In-page anchors under mobile shell + client sticky bar (vars set by ClientDetailStickyBar) */
+.scroll-mt-client {
+  scroll-margin-top: calc(
+    var(--shell-mobile-h, 0px) + var(--client-sticky-h, 0px) + 12px
+  );
+}
