@@ -23,6 +23,15 @@
 | `/login` · `/register` | App entry |
 | `/` (logged in) | Floor command board |
 
+## Landing sections (polished)
+
+1. **Hero** — headline + product mock (Today board)  
+2. **Built for / not for** — scope honesty  
+3. **Mess vs board** — problem/solution  
+4. **Features** — six capability cards  
+5. **Training day** — four-step happy path  
+6. **Self-host CTA** — register / sign in / LXC
+
 ## CTAs
 
 - Primary: **Create studio account** → `/register`

@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FloorScribe — the floor OS for personal trainers",
+  title: "Floor OS for personal trainers",
   description:
-    "Run the training day on one board: sessions, packs, bookings, invoices, and coach — built for the gym floor, not a desk CRM.",
+    "FloorScribe — run the training day on one board: sessions, packs, bookings, invoices, and coach. Built for the gym floor, not desk CRM bloat. Self-host first.",
   openGraph: {
-    title: "FloorScribe",
+    title: "FloorScribe — floor OS for personal trainers",
     description:
-      "Floor OS for personal trainers — sessions, clients, programs, CRM, invoices.",
+      "Sessions, clients, programs, CRM, invoices — floor first. Self-host pilot ready.",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FloorScribe",
+    description: "Floor OS for personal trainers.",
   },
 };
 
@@ -18,7 +23,7 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-zinc-950 text-zinc-100 antialiased">
+    <div className="min-h-dvh bg-zinc-950 font-sans text-zinc-100 antialiased selection:bg-emerald-500/25 selection:text-emerald-50">
       {children}
     </div>
   );
