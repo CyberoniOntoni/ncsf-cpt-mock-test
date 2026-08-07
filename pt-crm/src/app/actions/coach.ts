@@ -243,6 +243,27 @@ export async function executeCoachActionAction(action: CrmAction) {
     };
   }
 
+  if (action.kind === "append_exercise") {
+    const programDayId = action.payload?.programDayId;
+    const bankExerciseId = action.payload?.bankExerciseId;
+    if (!programDayId || !bankExerciseId) {
+      throw new Error("Missing day or exercise for append");
+    }
+    const { addProgramExerciseAction } = await import("@/app/actions/programs");
+    const res = await addProgramExerciseAction({
+      programDayId,
+      bankExerciseId,
+      opts: { isWarmup: !!action.payload?.isWarmup },
+    });
+    return {
+      ok: true as const,
+      kind: "append_exercise" as const,
+      programId: res.programId,
+      href: `/programs/${res.programId}`,
+      message: `Added ${res.name} to ${res.dayName}.`,
+    };
+  }
+
   if (action.kind === "start_session") {
     const dayId = action.payload?.programDayId;
     if (!dayId) throw new Error("Missing program day for session");

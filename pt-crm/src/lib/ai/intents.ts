@@ -19,6 +19,12 @@ export type CoachIntent =
   | { kind: "insert_correctives" }
   | { kind: "apply_mesocycle"; week?: number }
   | { kind: "advance_mesocycle" }
+  | {
+      kind: "append_exercise";
+      exerciseQuery?: string;
+      dayHint?: number; // 1-based day index if parsed
+      isWarmup?: boolean;
+    }
   | { kind: "general" };
 
 /** Detect high-value CRM intents from natural language. */
@@ -32,6 +38,42 @@ export function detectIntent(message: string): CoachIntent {
     /warm-?up correctives/i.test(m)
   ) {
     return { kind: "insert_correctives" };
+  }
+
+  // Append single exercise to a program day (after correctives so they win)
+  if (
+    /(add|append|include|put)\b.{0,40}\b(to|on|into)\b.{0,20}\b(program|plan|day|workout)/i.test(
+      m
+    ) ||
+    /\b(add|append)\b.{0,48}\b(exercise|movement|drill)\b/i.test(m) ||
+    /\badd\s+[a-z0-9][a-z0-9\s\-]{1,40}\s+to\s+(day|the program|program)/i.test(
+      m
+    )
+  ) {
+    const dayM = m.match(/\bday\s*([1-6a-d])\b/i);
+    let dayHint: number | undefined;
+    if (dayM) {
+      const d = dayM[1].toLowerCase();
+      if (/^[1-6]$/.test(d)) dayHint = Number(d);
+      else dayHint = "abcd".indexOf(d) + 1 || undefined;
+    }
+    let exerciseQuery: string | undefined;
+    const quoted = m.match(/["“](.+?)["”]/);
+    if (quoted) exerciseQuery = quoted[1].trim();
+    else {
+      const stripped = m
+        .replace(/\b(add|append|include|put)\b/gi, " ")
+        .replace(
+          /\b(to|on|into)\b.{0,20}\b(the\s+)?(program|plan|day\s*[1-6a-d]?|workout)\b.*/i,
+          " "
+        )
+        .replace(/\b(exercise|movement|drill|as\s+warmup|warmup)\b/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (stripped.length >= 2) exerciseQuery = stripped;
+    }
+    const isWarmup = /warm-?up|as\s+warmup/i.test(m);
+    return { kind: "append_exercise", exerciseQuery, dayHint, isWarmup };
   }
 
   if (

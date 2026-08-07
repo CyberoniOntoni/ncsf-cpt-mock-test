@@ -29,6 +29,7 @@ import {
   suggestExercisesForCoach,
   type ExerciseWithAvailability,
 } from "@/lib/exercises";
+import { rankBankByNameQuery } from "@/lib/program-exercise-add";
 import { bullet, numbered, stripMarkdown } from "./coach-text";
 
 export type CoachTurnInput = {
@@ -568,6 +569,205 @@ Rules:
   } catch {
     return null;
   }
+}
+
+/** Append a bank exercise to an active program day (needs DB for days + bank). */
+async function handleAppendExerciseIntent(
+  input: CoachTurnInput,
+  clientCtx: Awaited<ReturnType<typeof loadClientContext>>,
+  intent: Extract<ReturnType<typeof detectIntent>, { kind: "append_exercise" }>
+): Promise<CoachResponse> {
+  if (!input.clientId || !clientCtx) {
+    return {
+      type: "follow_up",
+      intro: "Select a client first so I can add an exercise to their program.",
+      questions: ["Pick a client above, then ask again — e.g. “add face pulls to day 1”."],
+      playbookIds: [],
+      actions: clientNeedSelectActions(),
+    };
+  }
+
+  const prog = clientCtx.activeProgram;
+  if (!prog) {
+    return {
+      type: "solution",
+      ...solutionCardSchema.parse({
+        summary: `${clientCtx.name} has no active program to update`,
+        interventions: [
+          "Create a program first, then I can append an exercise to a day.",
+        ],
+        playbookTitles: ["Program design (CRM)"],
+        actions: [
+          {
+            id: "create_for_append",
+            kind: "create_program",
+            label: "Create program now",
+            payload: {
+              clientId: input.clientId,
+              daysPerWeek: 3,
+              activate: true,
+            },
+          },
+          {
+            id: "open_wizard_append",
+            kind: "open_program_wizard",
+            label: "Open program wizard",
+            href: `/programs/new?client=${input.clientId}`,
+          },
+        ],
+      }),
+    };
+  }
+
+  const db = await getDb();
+  const days = await db
+    .select({
+      id: programDays.id,
+      name: programDays.name,
+      dayIndex: programDays.dayIndex,
+    })
+    .from(programDays)
+    .where(eq(programDays.programId, prog.id))
+    .orderBy(asc(programDays.dayIndex));
+
+  if (!days.length) {
+    return {
+      type: "solution",
+      ...solutionCardSchema.parse({
+        summary: `“${prog.title}” has no days yet`,
+        interventions: ["Open the program and add a day, then try again."],
+        playbookTitles: ["Program design (CRM)"],
+        actions: [
+          {
+            id: "open_prog_append_empty",
+            kind: "open_program",
+            label: "Open program",
+            href: `/programs/${prog.id}`,
+            payload: { programId: prog.id },
+          },
+        ],
+      }),
+    };
+  }
+
+  const day =
+    intent.dayHint != null &&
+    intent.dayHint >= 1 &&
+    intent.dayHint <= days.length
+      ? days[intent.dayHint - 1]
+      : days[0];
+
+  const query = (intent.exerciseQuery || "").trim();
+  if (!query) {
+    return {
+      type: "solution",
+      ...solutionCardSchema.parse({
+        summary: `Which exercise should I add to “${prog.title}”?`,
+        interventions: [
+          `Target day: ${day.name}. Name an exercise from your bank — e.g. “add face pulls to day 1”.`,
+        ],
+        playbookTitles: ["Program design (CRM)"],
+        actions: [
+          {
+            id: "open_prog_append_query",
+            kind: "open_program",
+            label: "Open program (add on desk)",
+            href: `/programs/${prog.id}`,
+            payload: { programId: prog.id },
+          },
+        ],
+        suggestions: [
+          "Add face pulls to day 1",
+          "Add band pull-aparts as warmup",
+        ],
+      }),
+    };
+  }
+
+  const bank = await listExercisesForOrg(input.organizationId);
+  const ranked = rankBankByNameQuery(bank, query);
+  const availableRanked = ranked.filter((e) => e.available !== false);
+
+  if (!ranked.length || !availableRanked.length) {
+    const reason = !ranked.length
+      ? `No bank exercise matched “${query}”.`
+      : `Matches for “${query}” need unavailable equipment.`;
+    return {
+      type: "solution",
+      ...solutionCardSchema.parse({
+        summary: reason,
+        interventions: [
+          "Open the program and use Add exercise on the day, or try a different name.",
+          !ranked.length
+            ? "Check spelling against your exercise library."
+            : `Closest unavailable: ${ranked
+                .slice(0, 3)
+                .map((e) => e.name)
+                .join(", ")}.`,
+        ],
+        playbookTitles: ["Program design (CRM)"],
+        actions: [
+          {
+            id: "open_prog_append_nomatch",
+            kind: "open_program",
+            label: "Open program",
+            href: `/programs/${prog.id}`,
+            payload: { programId: prog.id },
+          },
+          {
+            id: "open_library_append",
+            kind: "open_library",
+            label: "Open exercise library",
+            href: "/library",
+          },
+        ],
+      }),
+    };
+  }
+
+  const pick = availableRanked[0];
+  const ambiguous = availableRanked.length > 1;
+  const warmupNote = intent.isWarmup ? " as warm-up" : "";
+
+  return {
+    type: "solution",
+    ...solutionCardSchema.parse({
+      summary: `Add ${pick.name}${warmupNote} to ${day.name} on “${prog.title}”`,
+      interventions: [
+        ambiguous
+          ? `Best match for “${query}”. Also matched: ${availableRanked
+              .slice(1, 4)
+              .map((e) => e.name)
+              .join(", ")}.`
+          : `Matched “${query}” in the exercise bank.`,
+        "Apply appends a straight set at the end of the day (defaults: 3×8-10 @ RPE 7).",
+      ],
+      playbookTitles: ["Program design (CRM)"],
+      actions: [
+        {
+          id: "do_append_exercise",
+          kind: "append_exercise",
+          label: `Add ${pick.name}`,
+          description: day.name,
+          payload: {
+            programId: prog.id,
+            programDayId: day.id,
+            bankExerciseId: pick.id,
+            exerciseName: pick.name,
+            clientId: input.clientId,
+            isWarmup: intent.isWarmup,
+          },
+        },
+        {
+          id: "open_prog_append",
+          kind: "open_program",
+          label: "Open program",
+          href: `/programs/${prog.id}`,
+          payload: { programId: prog.id },
+        },
+      ],
+    }),
+  };
 }
 
 /** Apply correctives / mesocycle to the client's active program. */
@@ -1478,6 +1678,10 @@ export async function runCoachTurn(input: CoachTurnInput): Promise<CoachResponse
     intent.kind === "advance_mesocycle"
   ) {
     return handleProgramMutateIntent(input, clientCtx, intent);
+  }
+
+  if (intent.kind === "append_exercise") {
+    return handleAppendExerciseIntent(input, clientCtx, intent);
   }
 
   if (

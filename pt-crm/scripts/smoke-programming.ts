@@ -24,6 +24,7 @@ import {
 import {
   nextProgramExerciseSortOrder,
   defaultAddExerciseRx,
+  rankBankByNameQuery,
 } from "../src/lib/program-exercise-add";
 
 function assert(cond: unknown, msg: string): asserts cond {
@@ -255,6 +256,19 @@ function main() {
   assert(nextProgramExerciseSortOrder([0, 1, 4]) === 5, "max+1");
   assert(defaultAddExerciseRx(false).sets === 3, "main sets");
   assert(defaultAddExerciseRx(true).restSec === 45, "warmup rest");
+  {
+    const ranked = rankBankByNameQuery(
+      [
+        { name: "Band Face Pull", available: true },
+        { name: "Face Pull", available: true },
+        { name: "Cable Row", available: true },
+        { name: "Face Pull (DB)", available: false },
+      ],
+      "face pull"
+    );
+    assert(ranked[0]?.name === "Face Pull", "startsWith preferred");
+    assert(ranked.every((e) => /face pull/i.test(e.name)), "includes only");
+  }
   console.log("ok program-exercise-add");
 
   console.log("\nLane B programming smoke: ALL PASS");

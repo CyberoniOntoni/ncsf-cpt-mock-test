@@ -30,6 +30,7 @@ export const crmActionSchema = z.object({
     "insert_correctives",
     "apply_mesocycle",
     "advance_mesocycle",
+    "append_exercise",
   ]),
   label: z.string(),
   description: z.string().optional(),
@@ -55,6 +56,9 @@ export const crmActionSchema = z.object({
       forceNewSession: z.boolean().optional(),
       /** 1–6 mesocycle week for apply_mesocycle */
       mesocycleWeek: z.number().optional(),
+      bankExerciseId: z.string().optional(),
+      exerciseName: z.string().optional(),
+      isWarmup: z.boolean().optional(),
     })
     .optional(),
 });

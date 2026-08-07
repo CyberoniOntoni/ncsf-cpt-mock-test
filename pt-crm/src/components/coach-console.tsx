@@ -416,7 +416,8 @@ export function CoachConsole({
       action.kind === "start_session" ||
       action.kind === "insert_correctives" ||
       action.kind === "apply_mesocycle" ||
-      action.kind === "advance_mesocycle";
+      action.kind === "advance_mesocycle" ||
+      action.kind === "append_exercise";
 
     if (isMutate) {
       if (action.kind === "create_program" && !clientId && !action.payload?.clientId) {
@@ -442,7 +443,8 @@ export function CoachConsole({
       if (
         (action.kind === "insert_correctives" ||
           action.kind === "apply_mesocycle" ||
-          action.kind === "advance_mesocycle") &&
+          action.kind === "advance_mesocycle" ||
+          action.kind === "append_exercise") &&
         !action.payload?.programId
       ) {
         setError("Missing program — open Coach with a client that has an active plan.");
@@ -740,6 +742,7 @@ export function CoachConsole({
                           a.kind === "insert_correctives" ||
                           a.kind === "apply_mesocycle" ||
                           a.kind === "advance_mesocycle" ||
+                          a.kind === "append_exercise" ||
                           a.kind === "select_client_hint"
                             ? "primary"
                             : "secondary"
@@ -753,7 +756,8 @@ export function CoachConsole({
                           a.kind === "start_session" ||
                           a.kind === "insert_correctives" ||
                           a.kind === "apply_mesocycle" ||
-                          a.kind === "advance_mesocycle" ? (
+                          a.kind === "advance_mesocycle" ||
+                          a.kind === "append_exercise" ? (
                           <Sparkles className="h-3.5 w-3.5" />
                         ) : (
                           <ExternalLink className="h-3.5 w-3.5" />
@@ -764,7 +768,8 @@ export function CoachConsole({
                               a.kind === "start_session" ||
                               a.kind === "insert_correctives" ||
                               a.kind === "apply_mesocycle" ||
-                              a.kind === "advance_mesocycle"
+                              a.kind === "advance_mesocycle" ||
+                              a.kind === "append_exercise"
                             ? a.label.length > 28
                               ? a.kind === "start_session"
                                 ? /resume/i.test(a.label)
