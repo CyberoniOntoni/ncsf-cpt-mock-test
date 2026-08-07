@@ -22,6 +22,7 @@ import {
   suggestProgression,
   type ProgressionSuggestion,
 } from "@/lib/progression";
+import { seedSessionNotes } from "@/lib/session-notes";
 import { assertClientInOrg, getClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
 
@@ -142,11 +143,11 @@ export async function startSessionFromProgramDayAction(
     );
     const agg = aggregateFromSetLogs(setLogs);
 
-    // Prefer program coach notes; else catalog cue (not generic pattern text)
-    const seededNotes =
-      ex.notes?.trim() ||
-      (ex.exerciseId ? bankCueById.get(ex.exerciseId) : undefined) ||
-      null;
+    // Prefer short program notes; else bank cue; never seed meta dumps
+    const seededNotes = seedSessionNotes({
+      programNotes: ex.notes,
+      bankCue: ex.exerciseId ? bankCueById.get(ex.exerciseId) : null,
+    });
 
     await db.insert(sessionExerciseLogs).values({
       id: id("sel"),

@@ -70,6 +70,31 @@ async function main() {
   ]);
   if (!line?.includes("50")) throw new Error("formatLastPerformance failed");
 
+  const { isProgramMetaDump, seedSessionNotes } = await import(
+    "../src/lib/session-notes"
+  );
+  if (!isProgramMetaDump("Elbows inside knees. · Reverse pyramid: foo · Deload week")) {
+    throw new Error("expected meta dump detection");
+  }
+  if (isProgramMetaDump("Heel stays down; drive knee toward wall.")) {
+    throw new Error("short cue should not be meta dump");
+  }
+  const seeded = seedSessionNotes({
+    programNotes: "Elbows inside knees. · Mesocycle: W4 · Deload week",
+    bankCue: "Elbows inside knees; chest tall.",
+  });
+  if (seeded !== "Elbows inside knees; chest tall.") {
+    throw new Error(`seed should prefer bank over dump, got ${seeded}`);
+  }
+  const short = seedSessionNotes({
+    programNotes: "Keep ribs down.",
+    bankCue: "Bank",
+  });
+  if (short !== "Keep ribs down.") {
+    throw new Error("short program notes should win");
+  }
+  console.log("session-notes: OK");
+
   const rel = formatRelativeSessionDay(new Date());
   if (rel !== "today") throw new Error(`expected today, got ${rel}`);
 
