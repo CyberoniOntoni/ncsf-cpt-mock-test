@@ -41,3 +41,7 @@ next-env.d.ts
 
 # local database
 /data
+
+# Local pilot backups
+backups/
+

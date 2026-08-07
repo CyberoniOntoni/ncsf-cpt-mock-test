@@ -12,8 +12,10 @@
     "smoke:floor-a": "tsx scripts/smoke-floor-a.ts",
     "smoke:programming": "tsx scripts/smoke-programming.ts",
     "smoke:library": "tsx scripts/smoke-library.ts",
+    "smoke:pilot": "tsx scripts/smoke-pilot.ts",
     "typecheck": "tsc --noEmit",
-    "backup:host": "bash scripts/backup-host.sh"
+    "backup:host": "bash scripts/backup-host.sh",
+    "backup:pglite": "powershell -ExecutionPolicy Bypass -File scripts/backup-pglite.ps1"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",

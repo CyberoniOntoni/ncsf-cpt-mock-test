@@ -4,6 +4,8 @@ Demo login: **`pt@demo.local`** / **`trainer123`**
 
 After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` and reseeds playbooks/templates.
 
+**Pilot go/no-go + backup:** **[pilot-readiness.md](./pilot-readiness.md)**
+
 ---
 
 ## 1. Start the day (Floor)

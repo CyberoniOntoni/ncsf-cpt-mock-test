@@ -41,6 +41,8 @@ Without `XAI_API_KEY`, the coach uses **rule-based** playbook matching.
 
 See **[docs/happy-path.md](./docs/happy-path.md)** — train a client end-to-end (floor + packages + coach).
 
+**Pilot (local go/no-go):** **[docs/pilot-readiness.md](./docs/pilot-readiness.md)** — trainer loop, smokes, Windows PGlite backup.
+
 ## Product map
 
 | Area | Route |
@@ -66,12 +68,19 @@ See **[docs/happy-path.md](./docs/happy-path.md)** — train a client end-to-end
 
 ```bash
 npm run smoke
+npm run smoke:pilot
 npx tsx scripts/verify-db.ts
 npx tsx scripts/smoke-library.ts
 npx tsx scripts/smoke-programming.ts
 npx tsx scripts/smoke-floor.ts
 npx tsx scripts/smoke-floor-a.ts
 npx tsc --noEmit
+```
+
+Local PGlite backup (Windows; stop dev first if possible):
+
+```bash
+npm run backup:pglite
 ```
 
 ## Docker / Proxmox LXC

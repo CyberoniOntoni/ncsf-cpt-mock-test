@@ -309,9 +309,9 @@ export default async function ClientDetailPage({
     unpaidInv.length === 0
       ? null
       : unpaidInv.length === 1
-        ? formatMoney(unpaidInv[0].amountCents, unpaidInv[0].currency, {
+        ? `${formatMoney(unpaidInv[0].amountCents, unpaidInv[0].currency, {
             compact: true,
-          })
+          })} unpaid`
         : `${unpaidInv.length} unpaid`;
   /** Hide empty CRM meta so header stays about the person */
   const showCrmMeta = !!(packageChip || nextApptChip || unpaidChip);
