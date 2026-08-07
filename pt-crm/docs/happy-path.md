@@ -35,13 +35,15 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 
 ## 3. On the floor (session)
 
-1. Header / sticky: **Start session** (or Resume).
-2. Log sets, RPE, pain as needed. Expanded exercises show a quiet **Cue** line (bank / pattern).
-3. **Complete session**:
+1. Header / sticky: **Start session** (or Resume). New sessions seed **program notes / bank cues** into each exercise.
+2. Log sets, RPE, pain as needed. Expanded exercises show a quiet **Cue** line and **Last** + progression tip.
+3. **Apply** on a tip (or keyboard **A**) fills open sets with suggested kg / target reps.
+4. Floor shortcuts (**?** for help): Space set · A apply · N/P exercise · +/− load · S save · U undo · R rest · Esc dismiss.
+5. **Complete session**:
    - Burns **one pack session** when a pack is active.
    - Full set log stays on the **session** (and under **Sessions**).
    - **Notes & recommendations** only gets a note if you entered **pain** or **session notes**.
-4. **Close the loop** (Session complete card):
+6. **Close the loop** (Session complete card):
    - **Copy summary** / Share (primary)
    - **Book next** appointment (collapsed form)
    - **Open client** · **Log check-in**

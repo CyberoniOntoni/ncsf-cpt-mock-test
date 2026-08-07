@@ -79,7 +79,7 @@ export async function startSessionFromProgramDayAction(
     .limit(1);
   if (!program) throw new Error("Program not found");
 
-  const exercises = await db
+  const dayExercises = await db
     .select()
     .from(programExercises)
     .where(eq(programExercises.programDayId, day.id))
@@ -108,7 +108,27 @@ export async function startSessionFromProgramDayAction(
 
   const { initSetLogsFromScheme } = await import("@/lib/set-schemes");
 
-  for (const ex of exercises) {
+  // Bank cues for floor coaching — seed into log notes when program has none
+  const exerciseIds = [
+    ...new Set(
+      dayExercises
+        .map((e) => e.exerciseId)
+        .filter((x): x is string => typeof x === "string" && x.length > 0)
+    ),
+  ];
+  const bankCueById = new Map<string, string>();
+  if (exerciseIds.length > 0) {
+    const bankRows = await db
+      .select({ id: exercises.id, cues: exercises.cues })
+      .from(exercises)
+      .where(inArray(exercises.id, exerciseIds));
+    for (const row of bankRows) {
+      const cue = row.cues?.trim();
+      if (cue) bankCueById.set(row.id, cue);
+    }
+  }
+
+  for (const ex of dayExercises) {
     const key = exerciseKey(ex.exerciseId, ex.exerciseName);
     const prevSets = lastByKey.get(key) || null;
     const scheme = ex.setScheme || "straight";
@@ -121,6 +141,12 @@ export async function startSessionFromProgramDayAction(
       prevSets
     );
     const agg = aggregateFromSetLogs(setLogs);
+
+    // Prefer program coach notes; else catalog cue (not generic pattern text)
+    const seededNotes =
+      ex.notes?.trim() ||
+      (ex.exerciseId ? bankCueById.get(ex.exerciseId) : undefined) ||
+      null;
 
     await db.insert(sessionExerciseLogs).values({
       id: id("sel"),
@@ -138,7 +164,7 @@ export async function startSessionFromProgramDayAction(
       weightKg: agg.weightKg,
       rpe: ex.rpe,
       completed: false,
-      notes: null,
+      notes: seededNotes,
       setLogs,
       setScheme: scheme,
       setSchemeMeta: schemeMeta,

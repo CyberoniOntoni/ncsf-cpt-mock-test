@@ -688,20 +688,119 @@ export function SessionLogger({
     );
   }
 
-  function applySuggestedLoad(logId: string, kg: number) {
+  /**
+   * One-tap progression: apply suggested kg and/or target reps to open sets.
+   * Undoable via the same stack as other set edits.
+   */
+  function applyProgression(
+    logId: string,
+    opts: { kg?: number | null; reps?: string | null; label?: string }
+  ) {
+    const log = logs.find((l) => l.id === logId);
+    if (!log || readonly) return;
+    const open = (log.setLogs || []).filter((s) => !s.completed);
+    if (!open.length) {
+      flash("No open sets to apply", "info");
+      return;
+    }
+    const kg = opts.kg;
+    const reps = opts.reps?.trim() || null;
+    if (kg == null && !reps) {
+      flash("Nothing to apply", "info");
+      return;
+    }
+
+    pushUndo({
+      type: "update_log",
+      logId,
+      before: {
+        setLogs: snapshotSetLogs(log.setLogs),
+        completed: log.completed,
+        notes: log.notes,
+      },
+      label: opts.label || `${log.exerciseName} · apply progression`,
+    });
     markDirty();
     setLogs((prev) =>
       prev.map((l) => {
         if (l.id !== logId) return l;
         return {
           ...l,
-          setLogs: (l.setLogs || []).map((s) =>
-            s.completed ? s : { ...s, weightKg: kg }
-          ),
+          setLogs: (l.setLogs || []).map((s) => {
+            if (s.completed) return s;
+            return {
+              ...s,
+              weightKg: kg != null ? kg : s.weightKg,
+              reps: reps || s.reps,
+            };
+          }),
         };
       })
     );
-    flash(`Applied ${kg} kg to open sets`, "success");
+    const bits: string[] = [];
+    if (kg != null) bits.push(`${kg} kg`);
+    if (reps) bits.push(`${reps} reps`);
+    flash(`Applied ${bits.join(" · ")} to open sets`, "success");
+  }
+
+  /** Apply current exercise's progression suggestion (also keyboard A). */
+  function applyCurrentProgression() {
+    const logId = currentExId || logs[0]?.id;
+    if (!logId) return;
+    const sug = prevLoads[logId]?.suggestion;
+    if (!sug) {
+      flash("No progression tip for this exercise", "info");
+      return;
+    }
+    const range =
+      sug.kind === "reps"
+        ? (() => {
+            const log = logs.find((l) => l.id === logId);
+            const pr = log?.plannedReps || "";
+            const m = pr.match(/(\d+)\s*[-–—to]+\s*(\d+)/i);
+            if (m) return m[2];
+            const single = pr.match(/(\d+)/);
+            return single?.[1] || null;
+          })()
+        : null;
+    applyProgression(logId, {
+      kg: sug.suggestedKg,
+      reps: range,
+      label: `Apply ${sug.kind}`,
+    });
+  }
+
+  function focusExercise(logId: string) {
+    setCollapsed((c) => ({ ...c, [logId]: false }));
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`ex-${logId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }
+
+  function goAdjacentExercise(dir: 1 | -1) {
+    if (!logs.length) return;
+    const ids = logs.map((l) => l.id);
+    const cur = currentExId && ids.includes(currentExId) ? currentExId : ids[0];
+    const idx = ids.indexOf(cur);
+    const next = ids[Math.max(0, Math.min(ids.length - 1, idx + dir))];
+    if (next) focusExercise(next);
+  }
+
+  function nudgeCurrentOpenWeight(delta: number) {
+    const log =
+      logs.find((l) => l.id === currentExId) ||
+      logs.find((l) => (l.setLogs || []).some((s) => !s.completed));
+    if (!log) return;
+    const open = (log.setLogs || []).find((s) => !s.completed);
+    if (!open) {
+      flash("No open set to nudge", "info");
+      return;
+    }
+    const cur = open.weightKg ?? 0;
+    const next = Math.round((cur + delta) * 2) / 2;
+    updateSet(log.id, open.setIndex, { weightKg: next < 0 ? 0 : next });
   }
 
   function localSummaryText() {
@@ -790,6 +889,14 @@ export function SessionLogger({
         t?.isContentEditable;
       if (typing) return;
 
+      // Escape: dismiss rest overlay or shortcuts help
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (restActive) setRestActive(null);
+        else if (showShortcuts) setShowShortcuts(false);
+        return;
+      }
+
       // Undo: Ctrl/Cmd+Z or U
       if (
         ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z")) ||
@@ -836,7 +943,35 @@ export function SessionLogger({
         }
         return;
       }
-      if (e.key === "?" ) {
+      // Apply progression suggestion for current exercise
+      if (e.key === "a" || e.key === "A") {
+        e.preventDefault();
+        applyCurrentProgression();
+        return;
+      }
+      // Next / previous exercise (expand + scroll)
+      if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        goAdjacentExercise(1);
+        return;
+      }
+      if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        goAdjacentExercise(-1);
+        return;
+      }
+      // Nudge open-set weight ±1 kg (or +2.5 with Shift)
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        nudgeCurrentOpenWeight(e.shiftKey ? 2.5 : 1);
+        return;
+      }
+      if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        nudgeCurrentOpenWeight(e.shiftKey ? -2.5 : -1);
+        return;
+      }
+      if (e.key === "?") {
         e.preventDefault();
         setShowShortcuts((v) => !v);
       }
@@ -844,7 +979,16 @@ export function SessionLogger({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readonly, logs, restActive, currentExId, autoRest, undoVersion]);
+  }, [
+    readonly,
+    logs,
+    restActive,
+    currentExId,
+    autoRest,
+    undoVersion,
+    showShortcuts,
+    prevLoads,
+  ]);
 
   function addSet(logId: string) {
     markDirty();
@@ -1202,7 +1346,7 @@ export function SessionLogger({
           {session.status === "in_progress" && (
             <p className="mt-2 text-[11px] text-zinc-500">
               <span className="text-zinc-400">
-                Space next set · S save · U undo · R rest
+                Space set · A apply · N/P move · +/− load
               </span>
               {lastSavedAt && !isDirty ? (
                 <span>
@@ -1721,30 +1865,53 @@ export function SessionLogger({
                       {prevLoads[log.id].suggestion && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-2">
                           <TrendingUp className="h-3.5 w-3.5 shrink-0 opacity-80" />
-                          <span className="flex-1">
+                          <span className="min-w-0 flex-1">
                             {prevLoads[log.id].suggestion!.message}
                           </span>
                           {!readonly &&
-                            prevLoads[log.id].suggestion!.suggestedKg !=
-                              null &&
-                            (prevLoads[log.id].suggestion!.kind === "load" ||
-                              prevLoads[log.id].suggestion!.kind ===
-                                "hold") && (
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                onClick={() =>
-                                  applySuggestedLoad(
-                                    log.id,
-                                    prevLoads[log.id].suggestion!.suggestedKg!
-                                  )
-                                }
-                              >
-                                Use{" "}
-                                {prevLoads[log.id].suggestion!.suggestedKg} kg
-                              </Button>
-                            )}
+                            (() => {
+                              const sug = prevLoads[log.id].suggestion!;
+                              const canKg =
+                                sug.suggestedKg != null &&
+                                (sug.kind === "load" ||
+                                  sug.kind === "hold" ||
+                                  sug.kind === "form");
+                              const canReps = sug.kind === "reps";
+                              if (!canKg && !canReps) return null;
+                              const targetReps = canReps
+                                ? (() => {
+                                    const pr = log.plannedReps || "";
+                                    const m = pr.match(
+                                      /(\d+)\s*[-–—to]+\s*(\d+)/i
+                                    );
+                                    if (m) return m[2];
+                                    return pr.match(/(\d+)/)?.[1] || null;
+                                  })()
+                                : null;
+                              const label = canKg
+                                ? `Apply ${sug.suggestedKg} kg`
+                                : targetReps
+                                  ? `Apply ${targetReps} reps`
+                                  : "Apply";
+                              return (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  className="min-h-11 shrink-0 px-3"
+                                  title="Apply to open sets (A)"
+                                  onClick={() =>
+                                    applyProgression(log.id, {
+                                      kg: canKg ? sug.suggestedKg : null,
+                                      reps: targetReps,
+                                      label: `Apply ${sug.kind}`,
+                                    })
+                                  }
+                                >
+                                  {label}
+                                </Button>
+                              );
+                            })()}
                         </div>
                       )}
                       {(() => {
@@ -2292,31 +2459,53 @@ export function SessionLogger({
             </li>
             <li>
               <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
-                S
+                A
               </kbd>{" "}
-              save progress
+              apply progression tip
             </li>
             <li>
               <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
-                U
+                N
               </kbd>{" "}
               /{" "}
               <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
-                Ctrl+Z
+                P
               </kbd>{" "}
-              undo
+              next / prev exercise
             </li>
             <li>
+              <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
+                +
+              </kbd>{" "}
+              /{" "}
+              <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
+                −
+              </kbd>{" "}
+              nudge open weight (±1 · Shift ±2.5)
+            </li>
+            <li>
+              <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
+                S
+              </kbd>{" "}
+              save ·{" "}
+              <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
+                U
+              </kbd>{" "}
+              undo ·{" "}
               <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
                 R
               </kbd>{" "}
-              start / skip rest
+              rest
             </li>
             <li>
               <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
+                Esc
+              </kbd>{" "}
+              dismiss ·{" "}
+              <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-zinc-200">
                 ?
               </kbd>{" "}
-              toggle this help
+              this help
             </li>
           </ul>
         </div>
