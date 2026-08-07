@@ -1469,6 +1469,98 @@ export async function tryAutoAdvanceMesocycleOnSessionComplete(
   };
 }
 
+/**
+ * Toggle auto-advance of mesocycle after enough completed sessions.
+ * Stored on generationMeta.autoAdvanceMesocycle (default true when unset).
+ */
+export async function setMesocycleAutoAdvanceAction(
+  programId: string,
+  enabled: boolean
+) {
+  const session = await requireSession();
+  const db = await getDb();
+  const [program] = await db
+    .select()
+    .from(programs)
+    .where(
+      and(
+        eq(programs.id, programId),
+        eq(programs.organizationId, session.organizationId)
+      )
+    )
+    .limit(1);
+  if (!program) throw new Error("Program not found");
+  const meta =
+    (program.generationMeta as Record<string, unknown> | null) || {};
+  await db
+    .update(programs)
+    .set({
+      generationMeta: {
+        ...meta,
+        autoAdvanceMesocycle: enabled,
+      },
+      updatedAt: new Date(),
+    })
+    .where(eq(programs.id, programId));
+  revalidatePath(`/programs/${programId}`);
+  return { ok: true as const, autoAdvance: enabled };
+}
+
+/** Progress toward next auto-advance for program detail UI. */
+export async function getMesocycleProgressAction(programId: string) {
+  const session = await requireSession();
+  const db = await getDb();
+  const [program] = await db
+    .select()
+    .from(programs)
+    .where(
+      and(
+        eq(programs.id, programId),
+        eq(programs.organizationId, session.organizationId)
+      )
+    )
+    .limit(1);
+  if (!program) throw new Error("Program not found");
+
+  const meta =
+    (program.generationMeta as Record<string, unknown> | null) || {};
+  const threshold = sessionsToAdvanceMesocycle(
+    program.daysPerWeek,
+    typeof meta.autoAdvanceAfterSessions === "number"
+      ? (meta.autoAdvanceAfterSessions as number)
+      : null
+  );
+  const windowStart = meta.mesocycleAppliedAt
+    ? new Date(String(meta.mesocycleAppliedAt))
+    : program.createdAt
+      ? new Date(program.createdAt)
+      : new Date(0);
+
+  const completed = await db
+    .select({ id: trainingSessions.id })
+    .from(trainingSessions)
+    .where(
+      and(
+        eq(trainingSessions.programId, programId),
+        eq(trainingSessions.organizationId, session.organizationId),
+        eq(trainingSessions.status, "completed"),
+        gte(trainingSessions.performedAt, windowStart)
+      )
+    );
+
+  const appliedWeek =
+    typeof meta.mesocycleWeek === "number" ? (meta.mesocycleWeek as number) : 1;
+  const autoAdvance = meta.autoAdvanceMesocycle !== false;
+
+  return {
+    completedInWindow: completed.length,
+    threshold,
+    appliedWeek,
+    autoAdvance,
+    appliedLabel: getMesocycleWeek(appliedWeek).label,
+  };
+}
+
 /** Suggest week from program createdAt (for UI hint). */
 export async function suggestProgramMesocycleWeekAction(programId: string) {
   const session = await requireSession();

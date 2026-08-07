@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -131,13 +131,52 @@ function matchesQuery(p: KnowledgePlaybook, q: string) {
 
 export function KnowledgeBrowser({
   playbooks,
+  initialQuery = "",
+  initialSlug = null,
 }: {
   playbooks: KnowledgePlaybook[];
+  /** From /knowledge?q= */
+  initialQuery?: string;
+  /** From /knowledge?slug= — opens matching card */
+  initialSlug?: string | null;
 }) {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQuery);
   const [category, setCategory] = useState<string>("all");
   const [ncsfOnly, setNcsfOnly] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+
+  // Deep-link: open by slug or first title match for q
+  useEffect(() => {
+    if (initialSlug) {
+      const hit = playbooks.find(
+        (p) => (p.slug || "").toLowerCase() === initialSlug.toLowerCase()
+      );
+      if (hit) {
+        setOpenId(hit.id);
+        setQ(initialQuery || hit.title);
+        requestAnimationFrame(() => {
+          document
+            .getElementById(`kb-${hit.id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        return;
+      }
+    }
+    if (initialQuery.trim()) {
+      const needle = initialQuery.trim().toLowerCase();
+      const hit =
+        playbooks.find((p) => p.title.toLowerCase() === needle) ||
+        playbooks.find((p) => p.title.toLowerCase().includes(needle));
+      if (hit) {
+        setOpenId(hit.id);
+        requestAnimationFrame(() => {
+          document
+            .getElementById(`kb-${hit.id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+    }
+  }, [initialSlug, initialQuery, playbooks]);
 
   const categories = useMemo(() => {
     const s = new Set(playbooks.map((p) => p.category || "other"));
@@ -312,8 +351,8 @@ export function KnowledgeBrowser({
                     .filter(Boolean);
                   const ncsf = isNcsf(p);
                   return (
+                    <div key={p.id} id={`kb-${p.id}`} className="scroll-mt-20">
                     <Card
-                      key={p.id}
                       className={`overflow-hidden p-0 transition ${
                         open
                           ? "border-emerald-900/40 bg-emerald-950/10"
@@ -475,6 +514,7 @@ export function KnowledgeBrowser({
                         </div>
                       )}
                     </Card>
+                    </div>
                   );
                 })}
               </div>

@@ -26,6 +26,10 @@ export const crmActionSchema = z.object({
     "open_history",
     "start_session",
     "select_client_hint",
+    /** Mutate existing program (Lane D) */
+    "insert_correctives",
+    "apply_mesocycle",
+    "advance_mesocycle",
   ]),
   label: z.string(),
   description: z.string().optional(),
@@ -49,6 +53,8 @@ export const crmActionSchema = z.object({
       programDayId: z.string().optional(),
       screenHint: z.string().optional(),
       forceNewSession: z.boolean().optional(),
+      /** 1–6 mesocycle week for apply_mesocycle */
+      mesocycleWeek: z.number().optional(),
     })
     .optional(),
 });

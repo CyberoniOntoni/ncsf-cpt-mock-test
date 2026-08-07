@@ -570,6 +570,153 @@ Rules:
   }
 }
 
+/** Apply correctives / mesocycle to the client's active program. */
+function handleProgramMutateIntent(
+  input: CoachTurnInput,
+  clientCtx: Awaited<ReturnType<typeof loadClientContext>>,
+  intent: Extract<
+    ReturnType<typeof detectIntent>,
+    | { kind: "insert_correctives" }
+    | { kind: "apply_mesocycle" }
+    | { kind: "advance_mesocycle" }
+  >
+): CoachResponse {
+  if (!input.clientId || !clientCtx) {
+    return {
+      type: "follow_up",
+      intro: "Select a client first so I can change their program.",
+      questions: ["Pick a client above, then ask again."],
+      playbookIds: [],
+      actions: clientNeedSelectActions(),
+    };
+  }
+
+  const prog = clientCtx.activeProgram;
+  if (!prog) {
+    return {
+      type: "solution",
+      ...solutionCardSchema.parse({
+        summary: `${clientCtx.name} has no active program to update`,
+        interventions: [
+          "Create a program first, then I can insert correctives or apply a mesocycle week.",
+        ],
+        playbookTitles: ["Program design (CRM)"],
+        actions: [
+          {
+            id: "create_for_mutate",
+            kind: "create_program",
+            label: "Create program now",
+            payload: { clientId: input.clientId, daysPerWeek: 3, activate: true },
+          },
+          {
+            id: "open_wizard_mutate",
+            kind: "open_program_wizard",
+            label: "Open program wizard",
+            href: `/programs/new?client=${input.clientId}`,
+          },
+        ],
+      }),
+    };
+  }
+
+  if (intent.kind === "insert_correctives") {
+    return {
+      type: "solution",
+      ...solutionCardSchema.parse({
+        summary: `Insert warm-up correctives into “${prog.title}”`,
+        interventions: [
+          "Uses client injuries and recent screen results.",
+          "Adds up to 2 correctives per day as warm-ups (skips duplicates).",
+        ],
+        playbookTitles: ["Correctives (CRM)"],
+        actions: [
+          {
+            id: "do_insert_correctives",
+            kind: "insert_correctives",
+            label: "Insert correctives",
+            description: prog.title,
+            payload: { programId: prog.id, clientId: input.clientId },
+          },
+          {
+            id: "open_prog_corr",
+            kind: "open_program",
+            label: "Open program",
+            href: `/programs/${prog.id}`,
+            payload: { programId: prog.id },
+          },
+        ],
+      }),
+    };
+  }
+
+  if (intent.kind === "advance_mesocycle") {
+    return {
+      type: "solution",
+      ...solutionCardSchema.parse({
+        summary: `Advance mesocycle on “${prog.title}”`,
+        interventions: [
+          "Moves to the next training week (1→6, wraps to intro) and scales prescriptions from baseline.",
+        ],
+        playbookTitles: ["Mesocycle (CRM)"],
+        actions: [
+          {
+            id: "do_advance_meso",
+            kind: "advance_mesocycle",
+            label: "Advance week",
+            description: prog.title,
+            payload: { programId: prog.id, clientId: input.clientId },
+          },
+          {
+            id: "open_prog_adv",
+            kind: "open_program",
+            label: "Open program",
+            href: `/programs/${prog.id}`,
+            payload: { programId: prog.id },
+          },
+        ],
+      }),
+    };
+  }
+
+  // apply_mesocycle
+  const week = intent.week ?? 4;
+  const weekLabel =
+    week === 4 ? "W4 · Deload" : `W${week}`;
+  return {
+    type: "solution",
+    ...solutionCardSchema.parse({
+      summary: `Apply ${weekLabel} to “${prog.title}”`,
+      interventions: [
+        "Scales sets/RPE from stored baselines so re-applying does not compound.",
+        week === 4
+          ? "Deload cuts volume and eases RPE."
+          : "Pick Apply to write the week onto the program.",
+      ],
+      playbookTitles: ["Mesocycle (CRM)"],
+      actions: [
+        {
+          id: "do_apply_meso",
+          kind: "apply_mesocycle",
+          label: `Apply ${weekLabel}`,
+          description: prog.title,
+          payload: {
+            programId: prog.id,
+            clientId: input.clientId,
+            mesocycleWeek: week,
+          },
+        },
+        {
+          id: "open_prog_meso",
+          kind: "open_program",
+          label: "Open program",
+          href: `/programs/${prog.id}`,
+          payload: { programId: prog.id },
+        },
+      ],
+    }),
+  };
+}
+
 function handleProgramIntent(
   input: CoachTurnInput,
   clientCtx: Awaited<ReturnType<typeof loadClientContext>>,
@@ -1322,6 +1469,15 @@ export async function runCoachTurn(input: CoachTurnInput): Promise<CoachResponse
     const all = await listExercisesForOrg(input.organizationId);
     const availableCount = all.filter((e) => e.available).length;
     return handleProgramIntent(input, clientCtx, intent, availableCount);
+  }
+
+  // Lane D: mutate active program (correctives / mesocycle)
+  if (
+    intent.kind === "insert_correctives" ||
+    intent.kind === "apply_mesocycle" ||
+    intent.kind === "advance_mesocycle"
+  ) {
+    return handleProgramMutateIntent(input, clientCtx, intent);
   }
 
   if (

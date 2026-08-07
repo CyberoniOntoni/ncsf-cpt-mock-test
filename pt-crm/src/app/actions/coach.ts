@@ -187,6 +187,62 @@ export async function executeCoachActionAction(action: CrmAction) {
     };
   }
 
+  // Lane D: mutate existing program
+  if (action.kind === "insert_correctives") {
+    const programId = action.payload?.programId;
+    if (!programId) throw new Error("Missing program for correctives");
+    const {
+      insertCorrectivesAction,
+    } = await import("@/app/actions/programs");
+    const res = await insertCorrectivesAction(programId);
+    const msg =
+      res.inserted > 0
+        ? `Inserted ${res.inserted} corrective(s).`
+        : res.reason === "no_correctives"
+          ? "No correctives matched this client’s history."
+          : "No new correctives inserted.";
+    return {
+      ok: true as const,
+      kind: "insert_correctives" as const,
+      programId,
+      href: `/programs/${programId}`,
+      message: msg,
+    };
+  }
+
+  if (action.kind === "apply_mesocycle") {
+    const programId = action.payload?.programId;
+    if (!programId) throw new Error("Missing program for mesocycle");
+    const week = action.payload?.mesocycleWeek ?? 4;
+    const { applyMesocycleToProgramAction } = await import(
+      "@/app/actions/programs"
+    );
+    const res = await applyMesocycleToProgramAction(programId, week);
+    return {
+      ok: true as const,
+      kind: "apply_mesocycle" as const,
+      programId,
+      href: `/programs/${programId}`,
+      message: `Applied ${res.label} from baseline prescriptions.`,
+    };
+  }
+
+  if (action.kind === "advance_mesocycle") {
+    const programId = action.payload?.programId;
+    if (!programId) throw new Error("Missing program to advance");
+    const { advanceMesocycleWeekAction } = await import(
+      "@/app/actions/programs"
+    );
+    const res = await advanceMesocycleWeekAction(programId);
+    return {
+      ok: true as const,
+      kind: "advance_mesocycle" as const,
+      programId,
+      href: `/programs/${programId}`,
+      message: `Advanced to ${res.label}.`,
+    };
+  }
+
   if (action.kind === "start_session") {
     const dayId = action.payload?.programDayId;
     if (!dayId) throw new Error("Missing program day for session");

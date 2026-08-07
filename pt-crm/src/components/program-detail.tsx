@@ -8,10 +8,12 @@ import {
   applyMesocycleToProgramAction,
   deleteProgramAction,
   deleteProgramExerciseAction,
+  getMesocycleProgressAction,
   getProgramVolumeReportAction,
   insertCorrectivesAction,
   regenerateProgramDayAction,
   regenerateProgramInPlaceAction,
+  setMesocycleAutoAdvanceAction,
   suggestProgramMesocycleWeekAction,
   suggestSubstitutionsAction,
   swapProgramExerciseAction,
@@ -34,7 +36,7 @@ import {
   formatRestLabel,
   formatSchemeName,
 } from "@/lib/workout-labels";
-import { fullName } from "@/lib/utils";
+import { cn, fullName } from "@/lib/utils";
 import { Badge, Button, Card, Input, Label, SectionLabel, Textarea } from "./ui";
 import { PageShell } from "./page-shell";
 import { StartSessionButton } from "./start-session-button";
@@ -138,6 +140,13 @@ export function ProgramDetail({
         ? ((program.generationMeta?.mesocycle as { week: number }).week)
         : 1;
   const [mesoWeek, setMesoWeek] = useState(metaWeek);
+  const [appliedWeek, setAppliedWeek] = useState(metaWeek);
+  const [mesoProgress, setMesoProgress] = useState<{
+    completedInWindow: number;
+    threshold: number;
+    autoAdvance: boolean;
+    appliedLabel: string;
+  } | null>(null);
   const [calendarHint, setCalendarHint] = useState<{
     week: number;
     label: string;
@@ -311,12 +320,44 @@ export function ProgramDetail({
     });
   }
 
+  // Keep local week in sync when server meta changes after refresh
+  useEffect(() => {
+    setMesoWeek(metaWeek);
+    setAppliedWeek(metaWeek);
+  }, [metaWeek]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getMesocycleProgressAction(program.id)
+      .then((p) => {
+        if (cancelled) return;
+        setMesoProgress({
+          completedInWindow: p.completedInWindow,
+          threshold: p.threshold,
+          autoAdvance: p.autoAdvance,
+          appliedLabel: p.appliedLabel,
+        });
+        setAppliedWeek(p.appliedWeek);
+      })
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [program.id, metaWeek, program.generationMeta]);
+
+  const mesoDirty = mesoWeek !== appliedWeek;
+
   function applyMesocycle() {
     setMsg(null);
     startTransition(async () => {
       try {
         const res = await applyMesocycleToProgramAction(program.id, mesoWeek);
-        setMsg(`Applied ${res.label} (from baseline — safe to re-apply)`);
+        setAppliedWeek(res.week);
+        setMsg(
+          `Applied ${res.label} (from baseline — safe to re-apply)`
+        );
         router.refresh();
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Mesocycle apply failed");
@@ -330,10 +371,30 @@ export function ProgramDetail({
       try {
         const res = await advanceMesocycleWeekAction(program.id);
         setMesoWeek(res.week);
+        setAppliedWeek(res.week);
         setMsg(`Advanced to ${res.label}`);
         router.refresh();
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Advance week failed");
+      }
+    });
+  }
+
+  function toggleAutoAdvance() {
+    if (!mesoProgress) return;
+    const next = !mesoProgress.autoAdvance;
+    setMsg(null);
+    startTransition(async () => {
+      try {
+        await setMesocycleAutoAdvanceAction(program.id, next);
+        setMesoProgress((p) => (p ? { ...p, autoAdvance: next } : p));
+        setMsg(
+          next
+            ? "Auto-advance on after enough completed sessions"
+            : "Auto-advance off — weeks only change when you Apply or Advance"
+        );
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Could not update auto-advance");
       }
     });
   }
@@ -577,6 +638,11 @@ export function ProgramDetail({
               {mesoInfo.label}
             </span>
             {mesoInfo.isDeload && <Badge tone="amber">Deload</Badge>}
+            {mesoDirty ? (
+              <Badge tone="amber">Not applied</Badge>
+            ) : (
+              <Badge tone="green">Applied</Badge>
+            )}
           </div>
           <div className="flex flex-wrap gap-1.5">
             {correctiveCount > 0 && (
@@ -591,6 +657,10 @@ export function ProgramDetail({
         </div>
         <p className="text-[11px] leading-relaxed text-zinc-500">
           {mesoInfo.notes}
+          <span className="text-zinc-600">
+            {" "}
+            · applied {getMesocycleWeek(appliedWeek).label}
+          </span>
           {suggestedFromCreated != null &&
             suggestedFromCreated !== mesoWeek && (
               <span className="text-zinc-600">
@@ -605,30 +675,53 @@ export function ProgramDetail({
             </span>
           )}
         </p>
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="min-w-[10rem] flex-1 sm:flex-none">
-            <Label htmlFor="pd-meso">Week</Label>
-            <select
-              id="pd-meso"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-              value={mesoWeek}
-              onChange={(e) => setMesoWeek(Number(e.target.value))}
-            >
-              {MESOCYCLE_WEEK_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
+
+        <div
+          className="grid grid-cols-3 gap-2 sm:grid-cols-6"
+          role="group"
+          aria-label="Mesocycle week"
+        >
+          {MESOCYCLE_WEEK_OPTIONS.map((opt) => {
+            const selected = mesoWeek === opt.value;
+            const plan = getMesocycleWeek(opt.value);
+            const isApplied = appliedWeek === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                aria-pressed={selected}
+                title={plan.notes}
+                disabled={pending}
+                onClick={() => setMesoWeek(opt.value)}
+                className={cn(
+                  "rounded-lg border px-2 py-2 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                  selected
+                    ? plan.isDeload
+                      ? "border-amber-600 bg-amber-950/40 text-amber-100 ring-1 ring-amber-500/40"
+                      : "border-emerald-600 bg-emerald-950/40 text-emerald-100 ring-1 ring-emerald-500/40"
+                    : isApplied
+                      ? "border-zinc-600 bg-zinc-900 text-zinc-200"
+                      : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                )}
+              >
+                <span className="block text-xs font-medium tabular-nums">
                   {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
-            variant="secondary"
+            variant={mesoDirty ? "primary" : "secondary"}
             size="sm"
             onClick={applyMesocycle}
-            disabled={pending}
+            disabled={pending || !mesoDirty}
+            className="min-h-11"
           >
-            Apply
+            {mesoDirty ? `Apply ${mesoInfo.label}` : "Applied"}
           </Button>
           <Button
             type="button"
@@ -636,7 +729,8 @@ export function ProgramDetail({
             size="sm"
             onClick={advanceWeek}
             disabled={pending}
-            title={`Go to ${getMesocycleWeek(nextMesocycleWeek(mesoWeek)).label}`}
+            className="min-h-11"
+            title={`Go to ${getMesocycleWeek(nextMesocycleWeek(appliedWeek)).label}`}
           >
             Advance
           </Button>
@@ -646,10 +740,35 @@ export function ProgramDetail({
             size="sm"
             onClick={useCalendarWeek}
             disabled={pending}
+            className="min-h-11"
           >
             Calendar
           </Button>
         </div>
+
+        {mesoProgress && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/40 px-2.5 py-2 text-[11px] text-zinc-400">
+            <span>
+              Progress:{" "}
+              <span className="font-medium tabular-nums text-zinc-200">
+                {mesoProgress.completedInWindow} / {mesoProgress.threshold}
+              </span>{" "}
+              sessions this week
+              {mesoProgress.autoAdvance
+                ? " · auto-advance on"
+                : " · auto-advance off"}
+            </span>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={toggleAutoAdvance}
+              className="min-h-9 font-medium text-zinc-300 underline-offset-2 hover:text-emerald-400 hover:underline"
+            >
+              {mesoProgress.autoAdvance ? "Turn off" : "Turn on"}
+            </button>
+          </div>
+        )}
+
         {constraintSummary && (
           <pre className="max-h-20 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-950/50 px-2.5 py-2 text-[11px] leading-relaxed text-zinc-500">
             {constraintSummary}

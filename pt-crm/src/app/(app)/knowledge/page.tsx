@@ -10,8 +10,13 @@ import { PageShell } from "@/components/page-shell";
 
 export const dynamic = "force-dynamic";
 
-export default async function KnowledgePage() {
+export default async function KnowledgePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; slug?: string }>;
+}) {
   const session = await requireSession();
+  const params = await searchParams;
   const db = await getDb();
   const rows = await db
     .select()
@@ -43,7 +48,11 @@ export default async function KnowledgePage() {
 
   return (
     <PageShell>
-      <KnowledgeBrowser playbooks={playbookList} />
+      <KnowledgeBrowser
+        playbooks={playbookList}
+        initialQuery={params.q || ""}
+        initialSlug={params.slug || null}
+      />
     </PageShell>
   );
 }

@@ -411,7 +411,14 @@ export function CoachConsole({
       return;
     }
 
-    if (action.kind === "create_program" || action.kind === "start_session") {
+    const isMutate =
+      action.kind === "create_program" ||
+      action.kind === "start_session" ||
+      action.kind === "insert_correctives" ||
+      action.kind === "apply_mesocycle" ||
+      action.kind === "advance_mesocycle";
+
+    if (isMutate) {
       if (action.kind === "create_program" && !clientId && !action.payload?.clientId) {
         const last = lastUserText(messages);
         if (last) rememberRetry(last);
@@ -430,6 +437,15 @@ export function CoachConsole({
       }
       if (action.kind === "start_session" && !action.payload?.programDayId) {
         setError("Missing program day — open a program and tap Start session.");
+        return;
+      }
+      if (
+        (action.kind === "insert_correctives" ||
+          action.kind === "apply_mesocycle" ||
+          action.kind === "advance_mesocycle") &&
+        !action.payload?.programId
+      ) {
+        setError("Missing program — open Coach with a client that has an active plan.");
         return;
       }
       setBusy(true);
@@ -721,6 +737,9 @@ export function CoachConsole({
                         variant={
                           a.kind === "create_program" ||
                           a.kind === "start_session" ||
+                          a.kind === "insert_correctives" ||
+                          a.kind === "apply_mesocycle" ||
+                          a.kind === "advance_mesocycle" ||
                           a.kind === "select_client_hint"
                             ? "primary"
                             : "secondary"
@@ -731,7 +750,10 @@ export function CoachConsole({
                         {a.kind === "select_client_hint" ? (
                           <UserPlus className="h-3.5 w-3.5" />
                         ) : a.kind === "create_program" ||
-                          a.kind === "start_session" ? (
+                          a.kind === "start_session" ||
+                          a.kind === "insert_correctives" ||
+                          a.kind === "apply_mesocycle" ||
+                          a.kind === "advance_mesocycle" ? (
                           <Sparkles className="h-3.5 w-3.5" />
                         ) : (
                           <ExternalLink className="h-3.5 w-3.5" />
@@ -739,14 +761,18 @@ export function CoachConsole({
                         {a.kind === "select_client_hint"
                           ? "Select"
                           : a.kind === "create_program" ||
-                              a.kind === "start_session"
-                            ? // Prefer full label (e.g. "Resume: Day A", "Create program now")
-                              a.label.length > 28
+                              a.kind === "start_session" ||
+                              a.kind === "insert_correctives" ||
+                              a.kind === "apply_mesocycle" ||
+                              a.kind === "advance_mesocycle"
+                            ? a.label.length > 28
                               ? a.kind === "start_session"
                                 ? /resume/i.test(a.label)
                                   ? "Resume"
                                   : "Start"
-                                : "Create"
+                                : a.kind === "create_program"
+                                  ? "Create"
+                                  : "Apply"
                               : a.label
                             : "Open"}
                       </Button>
@@ -1018,7 +1044,20 @@ function renderSolutionBody(
       {(playbookTitles.length > 0 || confidence) && (
         <div className="border-t border-zinc-700/50 pt-2 text-[11px] text-zinc-500">
           {playbookTitles.length > 0 && (
-            <span>Sources: {playbookTitles.join(", ")}</span>
+            <span>
+              Sources:{" "}
+              {playbookTitles.map((t, i) => (
+                <span key={`${t}-${i}`}>
+                  {i > 0 ? ", " : null}
+                  <Link
+                    href={`/knowledge?q=${encodeURIComponent(t)}`}
+                    className="text-emerald-400/90 hover:underline"
+                  >
+                    {t}
+                  </Link>
+                </span>
+              ))}
+            </span>
           )}
           {playbookTitles.length > 0 && confidence && <span> · </span>}
           {confidence && <span>Confidence: {confidence}</span>}

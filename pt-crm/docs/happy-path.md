@@ -69,8 +69,16 @@ Header whisper links (package left · next booking) jump to `#crm`.
 ## 5. Coach & knowledge
 
 1. Home **Coach** with client selected — e.g. “older adult training”, “needs analysis”.
-2. **Knowledge** — filter **NCSF**, safety / nutrition categories.
-3. Save recs from Coach → they show under **Notes & recommendations** (not session dumps).
+2. With an **active program**: ask “insert correctives”, “deload this program”, or “advance mesocycle” → one-tap Apply mutates the plan.
+3. **Knowledge** — filter **NCSF**, or open `/knowledge?slug=…` / `?q=…` from coach **Sources** links.
+4. Save recs from Coach → they show under **Notes & recommendations** (not session dumps).
+
+## 5b. Program mesocycle (desk)
+
+1. Open **Programs →** a plan.
+2. **Mesocycle** chips W1–W6 (deload = amber). Selecting does not write until **Apply**.
+3. Progress `n / threshold` sessions + auto-advance on/off.
+4. **Advance** steps week; session complete may auto-advance when on.
 
 ---
 

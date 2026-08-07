@@ -16,11 +16,43 @@ export type CoachIntent =
   | { kind: "client_brief" }
   | { kind: "next_session" }
   | { kind: "progression" }
+  | { kind: "insert_correctives" }
+  | { kind: "apply_mesocycle"; week?: number }
+  | { kind: "advance_mesocycle" }
   | { kind: "general" };
 
 /** Detect high-value CRM intents from natural language. */
 export function detectIntent(message: string): CoachIntent {
   const m = message.toLowerCase();
+
+  // Mutate existing program (before generic "create program")
+  if (
+    /(insert|add|apply).{0,20}corrective/i.test(m) ||
+    /corrective(s)?\s+(into|to|on)\s+(the\s+)?program/i.test(m) ||
+    /warm-?up correctives/i.test(m)
+  ) {
+    return { kind: "insert_correctives" };
+  }
+
+  if (
+    /(advance|next).{0,16}(meso|mesocycle|training week|block week)/i.test(m) ||
+    /mesocycle\s+(advance|next)/i.test(m) ||
+    /next\s+meso(cycle)?\s*week/i.test(m)
+  ) {
+    return { kind: "advance_mesocycle" };
+  }
+
+  if (
+    /deload\s+(this\s+)?(program|week|block|plan)/i.test(m) ||
+    /(apply|set).{0,12}(meso|mesocycle|deload)/i.test(m) ||
+    /mesocycle\s*(week\s*)?(w?\s*[1-6]|1|2|3|4|5|6)/i.test(m)
+  ) {
+    const weekMatch = m.match(/\b(?:w|week\s*)([1-6])\b/i) || m.match(/\b([1-6])\s*(?:week)?\b/);
+    let week: number | undefined;
+    if (/deload/i.test(m) && !weekMatch) week = 4;
+    else if (weekMatch) week = Number(weekMatch[1]);
+    return { kind: "apply_mesocycle", week };
+  }
 
   // Program design (keep early — overlaps with "plan")
   // Prefer create/design verbs so "what program" still hits open_program.
