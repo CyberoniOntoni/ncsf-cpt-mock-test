@@ -25,6 +25,8 @@ import {
   nextProgramExerciseSortOrder,
   defaultAddExerciseRx,
   rankBankByNameQuery,
+  rxFromSessionSetLogs,
+  canPromoteSessionLogToProgram,
 } from "../src/lib/program-exercise-add";
 import { detectIntent } from "../src/lib/ai/intents";
 
@@ -257,6 +259,43 @@ function main() {
   assert(nextProgramExerciseSortOrder([0, 1, 4]) === 5, "max+1");
   assert(defaultAddExerciseRx(false).sets === 3, "main sets");
   assert(defaultAddExerciseRx(true).restSec === 45, "warmup rest");
+  {
+    const rx = rxFromSessionSetLogs(
+      [
+        { completed: true, reps: "8", rpe: "7" },
+        { completed: true, reps: "10", rpe: "8" },
+        { completed: false, reps: "12", rpe: "9" },
+      ],
+      { sets: 3, reps: "8-10", rpe: "7" }
+    );
+    assert(rx.sets === 2, "rx sets from completed only");
+    assert(rx.reps === "10", "rx last completed reps");
+    assert(rx.rpe === "8", "rx last completed rpe");
+    assert(
+      canPromoteSessionLogToProgram({
+        programDayId: "day1",
+        exerciseId: "ex1",
+        alreadyOnDay: false,
+      }),
+      "promotable"
+    );
+    assert(
+      !canPromoteSessionLogToProgram({
+        programDayId: "day1",
+        exerciseId: "ex1",
+        alreadyOnDay: true,
+      }),
+      "not promotable if on day"
+    );
+    assert(
+      !canPromoteSessionLogToProgram({
+        programDayId: null,
+        exerciseId: "ex1",
+        alreadyOnDay: false,
+      }),
+      "not promotable without day"
+    );
+  }
   {
     const ranked = rankBankByNameQuery(
       [

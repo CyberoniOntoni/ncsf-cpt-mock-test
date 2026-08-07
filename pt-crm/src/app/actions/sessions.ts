@@ -836,6 +836,217 @@ export async function completeSessionAction(
   };
 }
 
+/**
+ * Append a bank exercise to an in-progress session (ad-hoc floor add).
+ * Not linked to program until promoteSessionExerciseToProgramAction.
+ */
+export async function addExerciseToSessionAction(
+  sessionId: string,
+  bankExerciseId: string
+) {
+  const session = await requireSession();
+  const db = await getDb();
+  const [row] = await db
+    .select()
+    .from(trainingSessions)
+    .where(
+      and(
+        eq(trainingSessions.id, sessionId),
+        eq(trainingSessions.organizationId, session.organizationId)
+      )
+    )
+    .limit(1);
+  if (!row) throw new Error("Session not found");
+  if (row.status !== "in_progress") {
+    throw new Error("Can only add exercises to an in-progress session");
+  }
+
+  const { listExercisesForOrg } = await import("@/lib/exercises");
+  const { initSetLogsFromScheme } = await import("@/lib/set-schemes");
+  const { defaultAddExerciseRx } = await import("@/lib/program-exercise-add");
+
+  const bank = await listExercisesForOrg(session.organizationId);
+  const pick = bank.find((e) => e.id === bankExerciseId);
+  if (!pick) throw new Error("Exercise not found in bank");
+  if (!pick.available) {
+    throw new Error(
+      `“${pick.name}” needs equipment not marked available: ${pick.missingEquipment.join(", ") || "unknown"}`
+    );
+  }
+
+  const existing = await db
+    .select({ sortOrder: sessionExerciseLogs.sortOrder })
+    .from(sessionExerciseLogs)
+    .where(eq(sessionExerciseLogs.sessionId, sessionId));
+  const sortOrder =
+    existing.length > 0
+      ? Math.max(...existing.map((e) => e.sortOrder)) + 1
+      : 0;
+
+  const rx = defaultAddExerciseRx(false);
+  const setLogs = initSetLogsFromScheme(
+    "straight",
+    null,
+    rx.sets,
+    rx.reps,
+    null
+  );
+  const agg = aggregateFromSetLogs(setLogs);
+  const logId = id("sel");
+
+  await db.insert(sessionExerciseLogs).values({
+    id: logId,
+    sessionId,
+    programExerciseId: null,
+    exerciseId: pick.id,
+    exerciseName: pick.name,
+    movementPattern: pick.movementPattern,
+    sortOrder,
+    isWarmup: false,
+    plannedSets: setLogs.length,
+    plannedReps: rx.reps,
+    actualSets: agg.actualSets,
+    actualReps: agg.actualReps,
+    weightKg: agg.weightKg,
+    rpe: rx.rpe,
+    completed: false,
+    notes: pick.cues || null,
+    setLogs,
+    setScheme: "straight",
+    setSchemeMeta: null,
+    groupId: null,
+    groupKind: null,
+    groupLabel: null,
+    groupOrder: null,
+    restAfterSec: null,
+    restBetweenRoundsSec: null,
+    groupRole: null,
+  });
+
+  await db
+    .update(trainingSessions)
+    .set({ updatedAt: new Date() })
+    .where(eq(trainingSessions.id, sessionId));
+
+  revalidatePath(`/sessions/${sessionId}`);
+  revalidatePath("/sessions");
+
+  return {
+    ok: true as const,
+    log: {
+      id: logId,
+      exerciseId: pick.id,
+      exerciseName: pick.name,
+      movementPattern: pick.movementPattern,
+      isWarmup: false,
+      plannedSets: setLogs.length,
+      plannedReps: rx.reps,
+      actualSets: agg.actualSets,
+      actualReps: agg.actualReps,
+      weightKg: agg.weightKg,
+      rpe: rx.rpe,
+      completed: false,
+      notes: pick.cues || null,
+      setLogs,
+      setScheme: "straight" as const,
+      setSchemeMeta: null,
+      sortOrder,
+      programExerciseId: null as string | null,
+      groupId: null,
+      groupKind: null,
+      groupLabel: null,
+      groupOrder: null,
+      restAfterSec: null,
+      restBetweenRoundsSec: null,
+      groupRole: null,
+    },
+  };
+}
+
+/**
+ * Promote a session log exercise onto the session's program day (keep on plan).
+ */
+export async function promoteSessionExerciseToProgramAction(
+  sessionId: string,
+  logId: string
+) {
+  const session = await requireSession();
+  const db = await getDb();
+  const [row] = await db
+    .select()
+    .from(trainingSessions)
+    .where(
+      and(
+        eq(trainingSessions.id, sessionId),
+        eq(trainingSessions.organizationId, session.organizationId)
+      )
+    )
+    .limit(1);
+  if (!row) throw new Error("Session not found");
+  if (!row.programDayId) {
+    throw new Error("Session has no program day — open a program session first");
+  }
+
+  const [log] = await db
+    .select()
+    .from(sessionExerciseLogs)
+    .where(
+      and(
+        eq(sessionExerciseLogs.id, logId),
+        eq(sessionExerciseLogs.sessionId, sessionId)
+      )
+    )
+    .limit(1);
+  if (!log) throw new Error("Exercise log not found");
+  if (!log.exerciseId) {
+    throw new Error("Exercise is not linked to the bank — cannot add to program");
+  }
+
+  // Already on this day (by bank id)?
+  const onDay = await db
+    .select({ id: programExercises.id, exerciseId: programExercises.exerciseId })
+    .from(programExercises)
+    .where(eq(programExercises.programDayId, row.programDayId));
+  if (onDay.some((pe) => pe.exerciseId === log.exerciseId)) {
+    throw new Error("Already on this program day");
+  }
+
+  const { rxFromSessionSetLogs } = await import("@/lib/program-exercise-add");
+  const setLogs = ensureSetLogs(log);
+  const rx = rxFromSessionSetLogs(setLogs, {
+    sets: log.plannedSets,
+    reps: log.plannedReps || log.actualReps,
+    rpe: log.rpe,
+  });
+
+  const { addProgramExerciseAction } = await import("@/app/actions/programs");
+  const res = await addProgramExerciseAction({
+    programDayId: row.programDayId,
+    bankExerciseId: log.exerciseId,
+    opts: {
+      isWarmup: log.isWarmup,
+      sets: rx.sets,
+      reps: rx.reps,
+      rpe: rx.rpe,
+      notes: log.notes,
+    },
+  });
+
+  await db
+    .update(sessionExerciseLogs)
+    .set({ programExerciseId: res.programExerciseId })
+    .where(eq(sessionExerciseLogs.id, logId));
+
+  revalidatePath(`/sessions/${sessionId}`);
+  if (row.programId) revalidatePath(`/programs/${row.programId}`);
+  return {
+    ok: true as const,
+    programExerciseId: res.programExerciseId,
+    name: res.name,
+    dayName: res.dayName,
+  };
+}
+
 export async function cancelSessionAction(sessionId: string) {
   const session = await requireSession();
   const db = await getDb();

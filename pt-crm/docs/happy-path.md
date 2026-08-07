@@ -17,20 +17,22 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 
 ---
 
-## 2. New or quiet client
+## 2. New or quiet client (cold paid loop)
 
-1. **Clients** → quick-add or **Full intake**. New clients start as **lead** (pipeline).
+Cold path — no sticky client, no open session:
+
+1. **Clients** → **Full intake** (or quick-add). New clients start as **lead**.
 2. Open the client profile.
-3. **Lead → active** is automatic on first real engagement:
-   - add a **package**, or
-   - design / attach a **program**, or
-   - **complete a floor session**.  
-   You can still change **stage** under **Packages & schedule**.  
-   **Deactivate** when they leave the roster (keeps history; **Reactivate** anytime). Inactive clients are hidden from the floor picker and Needs you.
-4. **Add package** (e.g. 10-pack) if selling sessions.
-5. **Book** the next appointment when you know the time.
-6. **Design program** only from empty **Active plan** (not the header).
-7. **Check-ins** (Home **Log check-in** or client `#crm-checkin`) clear quiet-lead Needs you for 7 days — they do **not** promote stage.
+3. **Add package** (e.g. 10-pack) and/or **Design program** from empty Active plan → stage becomes **active** on first real engagement (pack, program, or completed session).
+4. **Book** the next appointment when you know the time → shows on Home **Agenda** (~48h).
+5. **Start session** from Home or program day → log sets → **Complete**.
+6. Close-loop: **Share/Copy** → **Book next** → optionally **Keep on program** for ad-hoc floor adds.
+7. Confirm pack remaining dropped by 1; Home Agenda / Needs you refresh when you return to the tab.
+8. **Check-ins** clear quiet-lead Needs you for 7 days — they do **not** promote stage.
+
+**Deactivate** when they leave the roster (keeps history; **Reactivate** anytime). Inactive clients are hidden from the floor picker and Needs you.
+
+After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **11** = `client_tasks`).
 
 ---
 
@@ -40,6 +42,7 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 2. Log sets, RPE, pain as needed. Expanded exercises show a quiet **Cue** line and **Last** + progression tip.
    - Non-current exercises collapse to one line; **Focus current** resets attention.
    - **Prep open sets** on the current exercise fills empty weights and applies the progression tip.
+   - **Add exercise** (bank) mid-session for improvisation — not on the plan until you promote it.
 3. **Apply** on a tip (or keyboard **A**) fills open sets with suggested kg / target reps.
 4. Floor shortcuts (**?** for help): Space set · A apply · N/P exercise · +/− load · S save · U undo · R rest · Esc dismiss.
 5. **Complete session**:
@@ -49,6 +52,7 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 6. **Close the loop** (Session complete card):
    - **Copy summary** / Share (primary)
    - **Book next** appointment (collapsed form; defaults to session duration)
+   - **Keep on program** — **Add to plan** for ad-hoc floor exercises (program-day sessions only)
    - **Open client** · **Log check-in**
    - After complete: **Program** / **Progress** links when available; book next uses session duration.
    - Meta: Home · Program · Progress · All sessions
@@ -122,9 +126,11 @@ Browser checklist:
 - [ ] Sessions list shows the session; Notes does **not** show full set dump  
 - [ ] Program day **Add exercise** appends from bank  
 - [ ] Coach “add … to program” → Apply mutates plan
+- [ ] Mid-session **Add exercise** → after Complete **Add to plan** keeps it on the day  
 - [ ] Book appointment appears on Home Agenda (~48h); Needs you only if ≤4h
 - [ ] Floor: Focus current / Prep open sets; after Complete, close-loop Share + Book next
 - [ ] Follow-up task appears on Needs you; #crm-tasks deep link works
+- [ ] Home Agenda / Needs you refresh when returning to the tab  
 - [ ] Knowledge NCSF filter works  
 
 ---

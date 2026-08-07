@@ -159,6 +159,25 @@ export function HomeWorkspace({
     void loadDashboard();
   }, [hydrated, loadDashboard]);
 
+  // Keep Agenda / Needs you / open sessions fresh when returning to the tab or Home
+  useEffect(() => {
+    if (!hydrated) return;
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        void loadDashboard();
+      }
+    }
+    function onFocus() {
+      void loadDashboard();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [hydrated, loadDashboard]);
+
   const loadDetail = useCallback(async (clientId: string) => {
     setLoadingDetail(true);
     try {

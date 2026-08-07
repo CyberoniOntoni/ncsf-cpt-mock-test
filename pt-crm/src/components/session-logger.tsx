@@ -7,6 +7,7 @@ import {
   createClientAppointmentAction,
 } from "@/app/actions/crm";
 import {
+  addExerciseToSessionAction,
   cancelSessionAction,
   deleteSessionAction,
   completeSessionAction,
@@ -14,13 +15,16 @@ import {
   getLastWeightsForExerciseAction,
   getPreviousLoadsForSessionAction,
   getSessionSummaryTextAction,
+  promoteSessionExerciseToProgramAction,
   saveSessionProgressAction,
   type ExerciseCueEntry,
   type PreviousLoadEntry,
   type SessionExerciseUpdate,
 } from "@/app/actions/sessions";
 import { HomeQuickCheckIn } from "@/components/home-quick-checkin";
+import { ExerciseBankPicker } from "@/components/exercise-bank-picker";
 import type { SessionSetLog } from "@/db/schema";
+import { canPromoteSessionLogToProgram } from "@/lib/program-exercise-add";
 import {
   emomRestSeconds,
   formatEmomRestLabel,
@@ -118,6 +122,7 @@ const SUGGESTION_TONE: Record<string, string> = {
 type Log = {
   id: string;
   exerciseId?: string | null;
+  programExerciseId?: string | null;
   exerciseName: string;
   isWarmup: boolean;
   plannedSets: number | null;
@@ -161,6 +166,7 @@ type Session = {
   notes: string | null;
   performedAt: Date | string | null;
   programId: string | null;
+  programDayId?: string | null;
   clientId: string | null;
   updatedAt?: Date | string | null;
 };
@@ -241,6 +247,10 @@ export function SessionLogger({
     )
   );
   const [bookedLine, setBookedLine] = useState<string | null>(null);
+  const [showAddExercise, setShowAddExercise] = useState(false);
+  const [promotedLogIds, setPromotedLogIds] = useState<Record<string, true>>(
+    {}
+  );
   /** Prefer native Share when available (one emerald CTA on close-loop). */
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [restActive, setRestActive] = useState<{
@@ -1316,6 +1326,55 @@ export function SessionLogger({
     });
   }
 
+  function addBankExerciseToSession(bank: {
+    id: string;
+    name: string;
+  }) {
+    startTransition(async () => {
+      try {
+        const res = await addExerciseToSessionAction(session.id, bank.id);
+        setLogs((prev) => [
+          ...prev,
+          {
+            ...res.log,
+            setLogs: res.log.setLogs || [],
+          },
+        ]);
+        setShowAddExercise(false);
+        setCollapsed((c) => ({ ...c, [res.log.id]: false }));
+        markDirty();
+        flash(`Added ${res.log.exerciseName} to session`, "success");
+      } catch (e) {
+        flash(e instanceof Error ? e.message : "Could not add exercise", "error");
+      }
+    });
+  }
+
+  function promoteLogToProgram(logId: string) {
+    startTransition(async () => {
+      try {
+        const res = await promoteSessionExerciseToProgramAction(
+          session.id,
+          logId
+        );
+        setPromotedLogIds((m) => ({ ...m, [logId]: true }));
+        setLogs((prev) =>
+          prev.map((l) =>
+            l.id === logId
+              ? { ...l, programExerciseId: res.programExerciseId }
+              : l
+          )
+        );
+        flash(`Added ${res.name} to ${res.dayName}`, "success");
+      } catch (e) {
+        flash(
+          e instanceof Error ? e.message : "Could not add to program",
+          "error"
+        );
+      }
+    });
+  }
+
   function cancel() {
     if (!confirm("Cancel this session? Progress will be kept as cancelled."))
       return;
@@ -1752,6 +1811,57 @@ export function SessionLogger({
               </div>
             )}
 
+            {/* Keep floor improvisations on the plan */}
+            {session.programDayId &&
+              logs.some((l) =>
+                canPromoteSessionLogToProgram({
+                  programDayId: session.programDayId,
+                  exerciseId: l.exerciseId,
+                  alreadyOnDay: !!(
+                    l.programExerciseId || promotedLogIds[l.id]
+                  ),
+                })
+              ) && (
+                <div className="space-y-1.5 border-t border-emerald-900/40 pt-2.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400/80">
+                    Keep on program
+                  </p>
+                  <ul className="space-y-1">
+                    {logs
+                      .filter((l) =>
+                        canPromoteSessionLogToProgram({
+                          programDayId: session.programDayId,
+                          exerciseId: l.exerciseId,
+                          alreadyOnDay: !!(
+                            l.programExerciseId || promotedLogIds[l.id]
+                          ),
+                        })
+                      )
+                      .map((l) => (
+                        <li
+                          key={l.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/40 px-2.5 py-2"
+                        >
+                          <span className="text-xs font-medium text-zinc-200">
+                            {l.exerciseName}
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            disabled={pending}
+                            loading={pending}
+                            className="min-h-9"
+                            onClick={() => promoteLogToProgram(l.id)}
+                          >
+                            Add to plan
+                          </Button>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-emerald-900/40 pt-2 text-xs text-zinc-500">
               <Link
                 href="/"
@@ -1909,7 +2019,31 @@ export function SessionLogger({
 
       {/* Exercises — grouped for contrast / complex / superset */}
       <div className="space-y-3">
-        <SectionLabel as="h2">Exercises</SectionLabel>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionLabel as="h2" className="mb-0">
+            Exercises
+          </SectionLabel>
+          {!readonly && (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={pending}
+              className="min-h-11"
+              onClick={() => setShowAddExercise((v) => !v)}
+            >
+              {showAddExercise ? "Cancel add" : "Add exercise"}
+            </Button>
+          )}
+        </div>
+        {showAddExercise && !readonly && (
+          <ExerciseBankPicker
+            title="Add to this session"
+            disabled={pending}
+            onCancel={() => setShowAddExercise(false)}
+            onPick={(bank) => addBankExerciseToSession(bank)}
+          />
+        )}
         {groupExercisesIntoBlocks(logs).map((block, blockIdx) => {
           const renderExerciseCard = (log: Log, exIdx: number, inGroup: boolean) => {
           const sets = log.setLogs || [];

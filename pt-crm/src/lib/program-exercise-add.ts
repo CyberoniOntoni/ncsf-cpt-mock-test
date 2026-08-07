@@ -36,3 +36,43 @@ export function rankBankByNameQuery<
       return a.name.length - b.name.length;
     });
 }
+
+/** Prescription snapshot from completed session sets (for promote → program). */
+export function rxFromSessionSetLogs(
+  setLogs: Array<{
+    completed?: boolean | null;
+    reps?: string | null;
+    rpe?: string | null;
+  }> | null | undefined,
+  fallback?: { sets?: number | null; reps?: string | null; rpe?: string | null }
+): { sets: number; reps: string; rpe: string | null } {
+  const done = (setLogs || []).filter((s) => s.completed);
+  const source = done.length > 0 ? done : setLogs || [];
+  const sets =
+    done.length > 0
+      ? done.length
+      : Math.max(1, fallback?.sets || source.length || 3);
+  const last = source[source.length - 1];
+  const reps =
+    (last?.reps || "").trim() ||
+    (fallback?.reps || "").trim() ||
+    "8-10";
+  const rpe =
+    (last?.rpe || "").trim() ||
+    (fallback?.rpe || "").trim() ||
+    null;
+  return { sets, reps, rpe: rpe || null };
+}
+
+/** True when session log can be promoted onto a program day (needs bank id + day). */
+export function canPromoteSessionLogToProgram(opts: {
+  programDayId: string | null | undefined;
+  exerciseId: string | null | undefined;
+  alreadyOnDay: boolean;
+}): boolean {
+  return !!(
+    opts.programDayId &&
+    opts.exerciseId &&
+    !opts.alreadyOnDay
+  );
+}
