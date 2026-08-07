@@ -95,6 +95,59 @@ async function main() {
   }
   console.log("session-notes: OK");
 
+  const {
+    defaultExerciseCollapsed,
+    groupContainsCurrent,
+  } = await import("../src/lib/session-focus");
+  if (
+    !defaultExerciseCollapsed({
+      readonly: false,
+      logId: "a",
+      currentExId: "b",
+      completed: false,
+      userOverride: undefined,
+    })
+  ) {
+    throw new Error("non-current should collapse");
+  }
+  if (
+    defaultExerciseCollapsed({
+      readonly: false,
+      logId: "b",
+      currentExId: "b",
+      completed: false,
+      userOverride: undefined,
+    })
+  ) {
+    throw new Error("current should expand");
+  }
+  if (
+    !defaultExerciseCollapsed({
+      readonly: false,
+      logId: "a",
+      currentExId: "b",
+      completed: false,
+      userOverride: true,
+    })
+  ) {
+    // user forced collapse on current? userOverride true means collapsed
+  }
+  if (
+    defaultExerciseCollapsed({
+      readonly: false,
+      logId: "b",
+      currentExId: "b",
+      completed: false,
+      userOverride: false,
+    }) !== false
+  ) {
+    throw new Error("user expand override");
+  }
+  if (!groupContainsCurrent(["x", "y"], "y")) {
+    throw new Error("group current");
+  }
+  console.log("session-focus: OK");
+
   const rel = formatRelativeSessionDay(new Date());
   if (rel !== "today") throw new Error(`expected today, got ${rel}`);
 
