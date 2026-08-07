@@ -581,7 +581,7 @@ async function handleAppendExerciseIntent(
     return {
       type: "follow_up",
       intro: "Select a client first so I can add an exercise to their program.",
-      questions: ["Pick a client above, then ask again — e.g. “add face pulls to day 1”."],
+      questions: ["Pick a client in Coach, then ask again — e.g. “add face pulls to day 1”."],
       playbookIds: [],
       actions: clientNeedSelectActions(),
     };
@@ -796,7 +796,7 @@ function handleProgramMutateIntent(
     return {
       type: "follow_up",
       intro: "Select a client first so I can change their program.",
-      questions: ["Pick a client above, then ask again."],
+      questions: ["Pick a client in Coach, then ask again."],
       playbookIds: [],
       actions: clientNeedSelectActions(),
     };
@@ -940,7 +940,7 @@ function handleProgramIntent(
       intro:
         "I can design a program from your exercise bank and available equipment, but I need a client selected so goals, experience, and injuries feed the plan.",
       questions: [
-        "Select a client in the search bar above (or Quick add), then ask again — e.g. “create a 3-day program”.",
+        "Select a client in Coach (or Home search), then ask again — e.g. “create a 3-day program”.",
         "Or open the guided builder without a client if you want a template.",
       ],
       playbookIds: [],
@@ -956,7 +956,7 @@ function handleProgramIntent(
           id: "select_client_hint",
           kind: "select_client_hint",
           label: "Select a client first",
-          description: "Use the client search at the top of the workspace",
+          description: "Use Select client in Coach",
         },
       ],
     };
@@ -1088,7 +1088,7 @@ function handleLogSessionIntent(
       intro:
         "To log a session I need a client selected, then a program day to train from.",
       questions: [
-        "Select a client above, then ask “log session” again.",
+        "Select a client in Coach, then ask “log session” again.",
       ],
       playbookIds: [],
       actions: clientNeedSelectActions(),
@@ -1143,7 +1143,7 @@ function handleRetestIntent(
     return {
       type: "follow_up",
       intro: "Select a client to run or re-test movement screens.",
-      questions: ["Pick a client above, then ask to re-test (e.g. back scratch)."],
+      questions: ["Pick a client in Coach, then ask to re-test (e.g. back scratch)."],
       playbookIds: [],
       actions: clientNeedSelectActions(),
     };
@@ -1264,7 +1264,7 @@ function handleClientBriefIntent(
       intro:
         "Select a client to pull a floor-ready brief (goals, screens, recent sessions, active program).",
       questions: [
-        "Pick a client in the search bar above, then ask for a client brief again.",
+        "Pick a client in Coach, then ask for a client brief again.",
       ],
       playbookIds: [],
       actions: clientNeedSelectActions(),
@@ -1410,7 +1410,7 @@ function handleNextSessionIntent(
       intro:
         "Select a client to decide what to train next (resume in-progress or pick a program day).",
       questions: [
-        "Select a client above, then ask “what should we do today?” again.",
+        "Select a client in Coach, then ask “what should we do today?” again.",
       ],
       playbookIds: [],
       actions: clientNeedSelectActions(),

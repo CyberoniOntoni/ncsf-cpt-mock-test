@@ -18,7 +18,7 @@ import {
 } from "@/app/actions/coach";
 import { saveRecommendationToClientAction } from "@/app/actions/clients";
 import type { CrmAction } from "@/lib/ai/schemas";
-import { Alert, Button, Card, Textarea, Badge } from "./ui";
+import { Alert, Button, Textarea, Badge } from "./ui";
 import {
   CoachClientPicker,
   type CoachClientPick,
@@ -103,11 +103,46 @@ function PromptChip({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="rounded-full border border-zinc-700/90 bg-zinc-900/50 px-3 py-1.5 text-left text-xs text-zinc-300 transition hover:border-zinc-600 hover:bg-zinc-800/60 hover:text-zinc-100 disabled:pointer-events-none disabled:opacity-50"
+      className="inline-flex min-h-11 items-center rounded-full border border-zinc-700/90 bg-zinc-900/50 px-3 py-1.5 text-left text-xs text-zinc-300 transition hover:border-zinc-600 hover:bg-zinc-800/60 hover:text-zinc-100 disabled:pointer-events-none disabled:opacity-50"
     >
       {label}
     </button>
   );
+}
+
+const PLAN_MUTATE_KINDS = new Set([
+  "insert_correctives",
+  "apply_mesocycle",
+  "advance_mesocycle",
+  "append_exercise",
+]);
+
+function isMutateKind(kind: CrmAction["kind"]) {
+  return (
+    kind === "create_program" ||
+    kind === "start_session" ||
+    PLAN_MUTATE_KINDS.has(kind)
+  );
+}
+
+function actionButtonLabel(a: CrmAction): string {
+  if (a.kind === "select_client_hint") return "Select";
+  if (a.kind === "start_session") {
+    if (a.label.length > 28) {
+      return /resume/i.test(a.label) ? "Resume" : "Start";
+    }
+    return a.label;
+  }
+  if (a.kind === "create_program") {
+    return a.label.length > 28 ? "Create" : a.label;
+  }
+  if (PLAN_MUTATE_KINDS.has(a.kind)) {
+    if (a.kind === "append_exercise") {
+      return a.label.length > 32 ? "Add" : a.label;
+    }
+    return a.label.length > 28 ? "Apply" : a.label;
+  }
+  return "Open";
 }
 
 export function CoachConsole({
@@ -124,8 +159,13 @@ export function CoachConsole({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
+  const [appliedActionIds, setAppliedActionIds] = useState<Record<string, true>>(
+    {}
+  );
   const [error, setError] = useState<string | null>(null);
+  const [failedSend, setFailedSend] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [showClientPicker, setShowClientPicker] = useState(false);
@@ -135,6 +175,7 @@ export function CoachConsole({
   const retryingRef = useRef(false);
   /** Sync store so pick → parent clientId update still sees the pending prompt */
   const pendingRetryRef = useRef<string | null>(null);
+  const busy = sending || !!actionBusyId;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -212,19 +253,23 @@ export function CoachConsole({
     setConversationId(null);
     setMessages([]);
     setError(null);
+    setFailedSend(null);
     setSaved(null);
     setActionMsg(null);
     setShowClientPicker(false);
     setPendingRetry(null);
     pendingRetryRef.current = null;
+    setAppliedActionIds({});
+    setActionBusyId(null);
     setInput("");
   }
 
   async function sendWithClient(text: string, activeClientId?: string | null) {
     const cid = activeClientId !== undefined ? activeClientId : clientId;
     setError(null);
+    setFailedSend(null);
     setSaved(null);
-    setBusy(true);
+    setSending(true);
     try {
       const res = await sendCoachMessageAction({
         message: text,
@@ -262,21 +307,23 @@ export function CoachConsole({
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to get response");
+      setFailedSend(text);
     } finally {
-      setBusy(false);
+      setSending(false);
     }
   }
 
   async function onSend(textOverride?: string) {
     const text = (textOverride ?? input).trim();
-    if (!text || busy) return;
+    if (!text || sending) return;
     if (!textOverride) setInput("");
     setError(null);
+    setFailedSend(null);
     setSaved(null);
     setActionMsg(null);
     const tempId = `local_${Date.now()}`;
     setMessages((m) => [...m, { id: tempId, role: "user", content: text }]);
-    setBusy(true);
+    setSending(true);
     try {
       const res = await sendCoachMessageAction({
         message: text,
@@ -298,9 +345,12 @@ export function CoachConsole({
         rememberRetry(text);
       }
     } catch (e) {
+      setMessages((m) => m.filter((msg) => msg.id !== tempId));
+      setInput(text);
       setError(e instanceof Error ? e.message : "Failed to get response");
+      setFailedSend(text);
     } finally {
-      setBusy(false);
+      setSending(false);
     }
   }
 
@@ -324,10 +374,10 @@ export function CoachConsole({
   }
 
   async function saveLastSolution() {
-    if (!clientId) return;
+    if (!clientId || actionBusyId) return;
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last) return;
-    setBusy(true);
+    setActionBusyId("save-note");
     try {
       await saveRecommendationToClientAction(
         clientId,
@@ -340,7 +390,7 @@ export function CoachConsole({
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
-      setBusy(false);
+      setActionBusyId(null);
     }
   }
 
@@ -352,7 +402,9 @@ export function CoachConsole({
       const last = lastUserText(messages);
       if (last) rememberRetry(last);
       setShowClientPicker(true);
-      setActionMsg("Pick a client below, then I’ll continue with your request.");
+      setActionMsg(
+        "Pick a client in Coach below, then I’ll continue with your request."
+      );
       return;
     }
 
@@ -411,15 +463,7 @@ export function CoachConsole({
       return;
     }
 
-    const isMutate =
-      action.kind === "create_program" ||
-      action.kind === "start_session" ||
-      action.kind === "insert_correctives" ||
-      action.kind === "apply_mesocycle" ||
-      action.kind === "advance_mesocycle" ||
-      action.kind === "append_exercise";
-
-    if (isMutate) {
+    if (isMutateKind(action.kind)) {
       if (action.kind === "create_program" && !clientId && !action.payload?.clientId) {
         const last = lastUserText(messages);
         if (last) rememberRetry(last);
@@ -441,16 +485,13 @@ export function CoachConsole({
         return;
       }
       if (
-        (action.kind === "insert_correctives" ||
-          action.kind === "apply_mesocycle" ||
-          action.kind === "advance_mesocycle" ||
-          action.kind === "append_exercise") &&
+        PLAN_MUTATE_KINDS.has(action.kind) &&
         !action.payload?.programId
       ) {
         setError("Missing program — open Coach with a client that has an active plan.");
         return;
       }
-      setBusy(true);
+      setActionBusyId(action.id);
       try {
         const payload = {
           ...action,
@@ -460,7 +501,18 @@ export function CoachConsole({
           },
         };
         const res = await executeCoachActionAction(payload);
-        if (res.href) {
+        setAppliedActionIds((m) => ({ ...m, [action.id]: true }));
+        // Stay on Home for plan tweaks; navigate for create program / start session
+        if (PLAN_MUTATE_KINDS.has(action.kind)) {
+          setActionMsg(
+            res.message
+              ? res.href
+                ? `${res.message} Open program when ready.`
+                : res.message
+              : "Plan updated."
+          );
+          router.refresh();
+        } else if (res.href) {
           setActionMsg(res.message || "Done");
           router.push(res.href);
           router.refresh();
@@ -472,7 +524,7 @@ export function CoachConsole({
       } catch (e) {
         setError(e instanceof Error ? e.message : "Action failed");
       } finally {
-        setBusy(false);
+        setActionBusyId(null);
       }
       return;
     }
@@ -489,13 +541,18 @@ export function CoachConsole({
   const isSolution = lastStructured?.type === "solution";
   const isLastMessage = (id: string) => lastAssistant?.id === id;
 
-  const busyLabel =
-    messages.length === 0 || !lastAssistant
+  const busyLabel = sending
+    ? messages.length === 0 || !lastAssistant
       ? "Looking up playbooks…"
-      : "Thinking…";
+      : "Thinking…"
+    : actionBusyId === "save-note"
+      ? "Saving note…"
+      : actionBusyId
+        ? "Applying…"
+        : "";
 
   return (
-    <Card className="flex min-h-[min(26rem,65dvh)] flex-1 flex-col border-zinc-800/90 sm:min-h-[400px]">
+    <div className="flex min-h-[min(26rem,65dvh)] flex-1 flex-col sm:min-h-[400px]">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-3">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-zinc-100">Coach</h2>
@@ -513,6 +570,7 @@ export function CoachConsole({
               size="sm"
               onClick={newChat}
               disabled={busy}
+              className="min-h-11"
               aria-label="New chat"
             >
               <MessageSquarePlus className="h-3.5 w-3.5" />
@@ -524,6 +582,7 @@ export function CoachConsole({
               type="button"
               variant="secondary"
               size="sm"
+              className="min-h-11"
               onClick={() => setShowClientPicker((v) => !v)}
             >
               <UserPlus className="h-3.5 w-3.5" />
@@ -535,8 +594,10 @@ export function CoachConsole({
               type="button"
               variant="secondary"
               size="sm"
+              className="min-h-11"
               onClick={saveLastSolution}
               disabled={busy}
+              loading={actionBusyId === "save-note"}
             >
               <BookmarkPlus className="h-3.5 w-3.5" />
               Save note
@@ -688,6 +749,15 @@ export function CoachConsole({
         {messages.map((m) => {
           const actions = getActions(m.structured);
           const showSuggestions = m.role === "assistant" && isLastMessage(m.id);
+          // Only the latest assistant turn can fire mutates (avoid double-Apply)
+          const showActions =
+            m.role === "assistant" &&
+            actions.length > 0 &&
+            isLastMessage(m.id);
+          const firstPrimaryIdx = actions.findIndex(
+            (a) =>
+              isMutateKind(a.kind) || a.kind === "select_client_hint"
+          );
           return (
             <div
               key={m.id}
@@ -705,7 +775,6 @@ export function CoachConsole({
                 {m.structured?.type === "follow_up" && (
                   <Badge tone="amber">Follow-up</Badge>
                 )}
-                {actions.length > 0 && <Badge tone="green">Actions</Badge>}
               </div>
 
               {m.role === "assistant" ? (
@@ -716,73 +785,58 @@ export function CoachConsole({
                 </div>
               )}
 
-              {m.role === "assistant" && actions.length > 0 && (
+              {showActions && (
                 <div className="mt-3 flex flex-col gap-2 border-t border-zinc-700/80 pt-3">
-                  {actions.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-700/80 bg-zinc-950/40 px-2.5 py-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-zinc-100">
-                          {a.label}
-                        </div>
-                        {a.description && (
-                          <div className="text-xs text-zinc-500">
-                            {a.description}
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        className="shrink-0 text-xs"
-                        variant={
-                          a.kind === "create_program" ||
-                          a.kind === "start_session" ||
-                          a.kind === "insert_correctives" ||
-                          a.kind === "apply_mesocycle" ||
-                          a.kind === "advance_mesocycle" ||
-                          a.kind === "append_exercise" ||
-                          a.kind === "select_client_hint"
-                            ? "primary"
-                            : "secondary"
-                        }
-                        disabled={busy}
-                        onClick={() => void runAction(a)}
+                  {actions.map((a, idx) => {
+                    const applied = !!appliedActionIds[a.id];
+                    const isPrimary =
+                      !applied &&
+                      firstPrimaryIdx === idx &&
+                      (isMutateKind(a.kind) ||
+                        a.kind === "select_client_hint");
+                    const rowBusy = actionBusyId === a.id;
+                    return (
+                      <div
+                        key={a.id}
+                        className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-700/80 bg-zinc-950/40 px-2.5 py-2"
                       >
-                        {a.kind === "select_client_hint" ? (
-                          <UserPlus className="h-3.5 w-3.5" />
-                        ) : a.kind === "create_program" ||
-                          a.kind === "start_session" ||
-                          a.kind === "insert_correctives" ||
-                          a.kind === "apply_mesocycle" ||
-                          a.kind === "advance_mesocycle" ||
-                          a.kind === "append_exercise" ? (
-                          <Sparkles className="h-3.5 w-3.5" />
-                        ) : (
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        )}
-                        {a.kind === "select_client_hint"
-                          ? "Select"
-                          : a.kind === "create_program" ||
-                              a.kind === "start_session" ||
-                              a.kind === "insert_correctives" ||
-                              a.kind === "apply_mesocycle" ||
-                              a.kind === "advance_mesocycle" ||
-                              a.kind === "append_exercise"
-                            ? a.label.length > 28
-                              ? a.kind === "start_session"
-                                ? /resume/i.test(a.label)
-                                  ? "Resume"
-                                  : "Start"
-                                : a.kind === "create_program"
-                                  ? "Create"
-                                  : "Apply"
-                              : a.label
-                            : "Open"}
-                      </Button>
-                    </div>
-                  ))}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-zinc-100">
+                            {a.label}
+                          </div>
+                          {a.description && (
+                            <div className="text-xs text-zinc-500">
+                              {a.description}
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="min-h-11 shrink-0 text-xs"
+                          variant={isPrimary ? "primary" : "secondary"}
+                          disabled={busy || applied}
+                          loading={rowBusy}
+                          onClick={() => void runAction(a)}
+                        >
+                          {applied ? (
+                            "Done"
+                          ) : (
+                            <>
+                              {a.kind === "select_client_hint" ? (
+                                <UserPlus className="h-3.5 w-3.5" />
+                              ) : isMutateKind(a.kind) ? (
+                                <Sparkles className="h-3.5 w-3.5" />
+                              ) : (
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              )}
+                              {actionButtonLabel(a)}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -798,7 +852,7 @@ export function CoachConsole({
             </div>
           );
         })}
-        {busy && (
+        {busyLabel && (
           <div className="flex items-center gap-2 text-xs text-zinc-500">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
             {busyLabel}
@@ -809,7 +863,19 @@ export function CoachConsole({
 
       {error && (
         <Alert tone="error" className="mb-2 text-xs">
-          {error}
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="flex-1">{error}</span>
+            {failedSend && (
+              <button
+                type="button"
+                className="min-h-11 shrink-0 font-medium text-red-100 underline"
+                disabled={sending}
+                onClick={() => void onSend(failedSend)}
+              >
+                Retry
+              </button>
+            )}
+          </span>
         </Alert>
       )}
       {saved && (
@@ -825,7 +891,7 @@ export function CoachConsole({
 
       <div className="space-y-2">
         {clientName && (
-          <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-emerald-800/50 bg-emerald-950/40 px-2.5 py-0.5 text-[11px] text-emerald-300/90">
+          <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-emerald-800/50 bg-emerald-950/40 px-2.5 py-1 text-[11px] text-emerald-300/90">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
             <span className="truncate">{clientName}</span>
           </div>
@@ -846,45 +912,29 @@ export function CoachConsole({
               }
             }}
             className="min-h-[52px] max-h-36 resize-y"
-            disabled={busy}
+            disabled={sending}
+            aria-label="Message coach"
           />
           <Button
             type="button"
             size="lg"
             onClick={() => void onSend()}
-            disabled={busy || !input.trim()}
-            loading={busy}
-            className="shrink-0"
+            disabled={sending || !input.trim()}
+            loading={sending}
+            className="min-h-11 shrink-0"
             aria-label="Send"
           >
-            {!busy && <Send className="h-4 w-4" />}
+            {!sending && <Send className="h-4 w-4" />}
           </Button>
         </div>
       </div>
       <p className="mt-2 text-[11px] leading-relaxed text-zinc-600">
-        Coaching support only — not a medical diagnosis. Uses playbooks, client
-        profile, and equipment.{" "}
-        <Link href="/programs" className="text-emerald-500 hover:underline">
-          Programs
-        </Link>
-        {" · "}
-        <Link href="/sessions" className="text-emerald-500 hover:underline">
-          Sessions
-        </Link>
-        {" · "}
-        <Link href="/library" className="text-emerald-500 hover:underline">
-          Library
-        </Link>
-        {" · "}
+        Coaching support only — not medical diagnosis.{" "}
         <Link href="/knowledge" className="text-emerald-500 hover:underline">
           Knowledge
         </Link>
-        {" · "}
-        <Link href="/history" className="text-emerald-500 hover:underline">
-          History
-        </Link>
       </p>
-    </Card>
+    </div>
   );
 }
 

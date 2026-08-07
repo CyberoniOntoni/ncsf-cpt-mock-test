@@ -78,9 +78,9 @@ Header whisper links (package left · next booking) jump to `#crm`.
 
 ## 5. Coach & knowledge
 
-1. Home **Coach** with client selected — e.g. “older adult training”, “needs analysis”.
-2. With an **active program**: ask “insert correctives”, “deload this program”, or “advance mesocycle” → one-tap Apply mutates the plan.
-3. **Append exercise:** “add face pulls to day 1” / “add X to program” → **Apply** appends a bank match to that day (or first day). Unavailable equipment is rejected.
+1. Home **Coach** (collapsed by default — stays open in memory when you hide it). With client selected: e.g. “older adult training”, “needs analysis”.
+2. With an **active program**: ask “insert correctives”, “deload this program”, or “advance mesocycle” → one-tap **Apply** mutates the plan and **stays on Home** (open the program when ready).
+3. **Append exercise:** “add face pulls to day 1” / “add X to program” → **Apply** appends a bank match. Only the **latest** coach reply can re-Apply (no double-tap from old bubbles).
 4. **Knowledge** — filter **NCSF**, or open `/knowledge?slug=…` / `?q=…` from coach **Sources** links.
 5. Save recs from Coach → they show under **Notes & recommendations** (not session dumps).
 

@@ -816,15 +816,20 @@ export function HomeWorkspace({
             <ChevronRight className="h-4 w-4 shrink-0 text-zinc-500" />
           )}
         </button>
-        {coachOpen && (
-          <div className="min-h-[280px] rounded-xl border border-zinc-800/80 bg-zinc-950/30 p-1 sm:p-2">
-            <CoachConsole
-              clientId={selectedId}
-              clientName={clientName}
-              onSelectClient={onSelect}
-            />
-          </div>
-        )}
+        {/* Keep mounted so collapse does not wipe the thread (floor: hide chrome, keep context) */}
+        <div
+          className={cn(
+            "min-h-[280px] rounded-xl border border-zinc-800/80 bg-zinc-950/30 p-1 sm:p-2",
+            !coachOpen && "hidden"
+          )}
+          hidden={!coachOpen}
+        >
+          <CoachConsole
+            clientId={selectedId}
+            clientName={clientName}
+            onSelectClient={onSelect}
+          />
+        </div>
       </section>
     </div>
   );

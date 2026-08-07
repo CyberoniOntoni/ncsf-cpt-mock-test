@@ -345,7 +345,7 @@ export function clientNeedSelectActions(): CrmAction[] {
       kind: "select_client_hint",
       label: "Select a client first",
       description:
-        "Use the coach client picker (search) at the top of the workspace",
+        "Use Select client in Coach (search in the panel)",
     },
   ];
 }
