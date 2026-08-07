@@ -466,17 +466,17 @@ export function SessionLogger({
     return `${h}h ${m}m`;
   }, [nowTick]);
 
-  // Keep current exercise expanded and in view
+  // On current change: drop sticky expand overrides so only current stays open
+  // (empty map → defaultExerciseCollapsed opens current, collapses the rest)
   useEffect(() => {
     if (readonly || !currentExId) return;
-    setCollapsed((c) => {
-      if (c[currentExId] === false) return c;
-      return { ...c, [currentExId]: false };
+    setCollapsed({});
+    requestAnimationFrame(() => {
+      document.getElementById(`ex-${currentExId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
     });
-    const el = document.getElementById(`ex-${currentExId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
   }, [currentExId, readonly]);
 
   function updateLog(id: string, patch: Partial<Log>) {
