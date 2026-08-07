@@ -1,136 +1,88 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { registerAction } from "@/app/actions/auth";
+import { ArrowRight, Building2, User } from "lucide-react";
 import { AuthShell } from "@/components/auth-shell";
-import { AuthSubmitButton } from "@/components/auth-submit-button";
-import { RegisterOptionalFields } from "@/components/register-optional-fields";
-import { Alert, Card, Input, Label } from "@/components/ui";
+import { Card } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Create account",
-  description:
-    "Create your FloorScribe studio account — sessions, clients, programs & coach.",
+  description: "Join FloorScribe as an individual PT or create a studio team.",
 };
 
-export default async function RegisterPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const params = await searchParams;
-  const existingEmail = params.error?.toLowerCase().includes("already exists");
-
+export default function RegisterChooserPage() {
   return (
     <AuthShell
-      title="Create your studio"
-      subtitle="One trainer account + studio. Invite more later."
+      title="How will you use FloorScribe?"
+      subtitle="Pick the path that matches how you work."
     >
-      <Card className="border-zinc-800/80 p-5 shadow-xl shadow-black/40">
-        <form action={registerAction} className="space-y-3.5">
-          <div>
-            <Label htmlFor="name">Your name</Label>
-            <Input
-              id="name"
-              name="name"
-              type="text"
-              required
-              minLength={2}
-              autoComplete="name"
-              placeholder="Alex Chen"
-              className="mt-0.5 min-h-11"
-              autoFocus
-            />
-          </div>
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@studio.com"
-              className="mt-0.5 min-h-11"
-            />
-          </div>
-          <div>
-            <Label htmlFor="studioName">Studio name</Label>
-            <Input
-              id="studioName"
-              name="studioName"
-              type="text"
-              required
-              minLength={2}
-              autoComplete="organization"
-              placeholder="Your PT studio"
-              className="mt-0.5 min-h-11"
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={8}
-                autoComplete="new-password"
-                placeholder="Min 8 characters"
-                className="mt-0.5 min-h-11"
-              />
+      <div className="space-y-3">
+        <Link
+          href="/register/solo"
+          className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+        >
+          <Card className="border-zinc-800/80 p-4 transition group-hover:border-emerald-800/50 group-hover:bg-emerald-950/15">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-emerald-900/40 bg-emerald-950/40 text-emerald-400">
+                <User className="h-5 w-5" aria-hidden />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-sm font-semibold text-zinc-100">
+                    Individual PT
+                  </h2>
+                  <ArrowRight
+                    className="h-4 w-4 shrink-0 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-emerald-400"
+                    aria-hidden
+                  />
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                  Solo practice. You own your clients and run the floor yourself.
+                  Join a studio later with an invite if you need to.
+                </p>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="confirmPassword">Confirm</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                minLength={8}
-                autoComplete="new-password"
-                className="mt-0.5 min-h-11"
-              />
+          </Card>
+        </Link>
+        <Link
+          href="/register/studio"
+          className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+        >
+          <Card className="border-zinc-800/80 p-4 transition group-hover:border-emerald-800/50 group-hover:bg-emerald-950/15">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-emerald-900/40 bg-emerald-950/40 text-emerald-400">
+                <Building2 className="h-5 w-5" aria-hidden />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-sm font-semibold text-zinc-100">
+                    Studio / team
+                  </h2>
+                  <ArrowRight
+                    className="h-4 w-4 shrink-0 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-emerald-400"
+                    aria-hidden
+                  />
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                  Multi-trainer studio. You’re the owner — invite PTs from
+                  Settings after signup.
+                </p>
+              </div>
             </div>
-          </div>
-
-          <RegisterOptionalFields />
-
-          {params.error && (
-            <Alert tone="error">
-              {params.error}
-              {existingEmail && (
-                <>
-                  {" "}
-                  <Link
-                    href="/login"
-                    className="font-medium text-red-100 underline"
-                  >
-                    Sign in
-                  </Link>
-                </>
-              )}
-            </Alert>
-          )}
-          <AuthSubmitButton>Create account</AuthSubmitButton>
-          <p className="text-center text-[11px] text-zinc-600">
-            By creating an account you get an isolated studio on this server.
-          </p>
-        </form>
-        <p className="mt-5 border-t border-zinc-800 pt-4 text-center text-xs text-zinc-600">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-emerald-400 hover:underline"
-          >
-            Sign in
-          </Link>
-          {" · "}
-          <Link href="/marketing" className="text-zinc-500 hover:text-zinc-300">
-            About FloorScribe
-          </Link>
-        </p>
-      </Card>
+          </Card>
+        </Link>
+      </div>
+      <p className="mt-6 text-center text-xs leading-relaxed text-zinc-600">
+        Already invited? Open the link from your studio owner.
+        <br className="sm:hidden" />
+        {" "}
+        <Link href="/login" className="text-emerald-400 hover:underline">
+          Sign in
+        </Link>
+        {" · "}
+        <Link href="/marketing" className="text-zinc-500 hover:text-zinc-300">
+          About FloorScribe
+        </Link>
+      </p>
     </AuthShell>
   );
 }

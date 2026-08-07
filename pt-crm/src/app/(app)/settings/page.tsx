@@ -1,12 +1,17 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { organizations } from "@/db/schema";
-import { getUserProfile } from "@/lib/auth";
+import {
+  getUserProfile,
+  listPendingInvites,
+  listTeamMembers,
+} from "@/lib/auth";
 import { aiEnabled } from "@/lib/ai/client";
 import { AreaEyebrow } from "@/components/area-eyebrow";
 import { PageShell } from "@/components/page-shell";
 import { SettingsOrgForm } from "@/components/settings-org-form";
 import { SettingsProfileForm } from "@/components/settings-profile-form";
+import { SettingsTeamPanel } from "@/components/settings-team-panel";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -38,13 +43,21 @@ export default async function SettingsPage() {
   const nodeEnv = process.env.NODE_ENV || "development";
   const appUrl = process.env.APP_URL || "(not set)";
   const canEditOrg = session.role === "owner" || session.role === "admin";
+  const canManageTeam = canEditOrg;
+  const orgKind = org?.kind === "solo" ? "solo" : "studio";
+  const [members, pendingInvites] = await Promise.all([
+    listTeamMembers(),
+    listPendingInvites(),
+  ]);
+  const appOrigin =
+    (process.env.APP_URL || "").replace(/\/$/, "") || "http://127.0.0.1:3000";
 
   return (
     <PageShell className="space-y-4">
       <PageHeader
         title="Settings"
         eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
-        description="Your profile, studio, deploy, and AI"
+        description="Your profile, practice, team, deploy, and AI"
       />
 
       <Card>
@@ -90,7 +103,14 @@ export default async function SettingsPage() {
       </Card>
 
       <Card>
-        <h2 className="font-medium">Studio</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-medium">
+            {orgKind === "solo" ? "Practice" : "Studio"}
+          </h2>
+          <Badge tone={orgKind === "solo" ? "default" : "green"}>
+            {orgKind === "solo" ? "Individual PT" : "Studio team"}
+          </Badge>
+        </div>
         <p className="mt-1 text-xs text-zinc-600">
           Organization shown in the sidebar and on reports.
         </p>
@@ -102,6 +122,24 @@ export default async function SettingsPage() {
               unitSystem: org?.unitSystem || "metric",
               timezone: org?.timezone || "UTC",
             }}
+          />
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="font-medium">Team</h2>
+        <p className="mt-1 text-xs text-zinc-600">
+          {orgKind === "solo"
+            ? "Invite trainers to grow into a studio. They join via a link you copy and send."
+            : "Invite trainers and staff. They join via a link you copy and send (no email yet)."}
+        </p>
+        <div className="mt-4">
+          <SettingsTeamPanel
+            members={members}
+            invites={pendingInvites}
+            canManage={canManageTeam}
+            appOrigin={appOrigin}
+            currentUserId={session.userId}
           />
         </div>
       </Card>

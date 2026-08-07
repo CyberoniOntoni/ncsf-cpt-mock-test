@@ -186,7 +186,7 @@ export default function MarketingPage() {
             </Link>
             <Link href="/register" className="inline-flex">
               <Button size="sm" className="min-h-11 px-3">
-                Create studio
+                Get started
               </Button>
             </Link>
           </div>
@@ -221,7 +221,7 @@ export default function MarketingPage() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link href="/register" className="inline-flex">
                   <Button size="lg" className="min-h-11 gap-2 px-5">
-                    Create your studio
+                    Get started free
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </Button>
                 </Link>
@@ -327,7 +327,7 @@ export default function MarketingPage() {
               What’s in the box
             </h2>
             <p className="mt-2 max-w-xl text-sm text-zinc-500">
-              Enough for a solo studio pilot. Not a franchise ERP.
+              Enough for a solo PT or micro-studio pilot. Not a franchise ERP.
             </p>
             <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map(({ icon: Icon, title, body }) => (
@@ -397,16 +397,16 @@ export default function MarketingPage() {
                 <div className="max-w-xl">
                   <SectionLabel>Get started</SectionLabel>
                   <h2 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl">
-                    Open a studio. Run the day.
+                    Solo PT or studio team.
                   </h2>
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400 sm:text-base">
-                    Create your studio account, add clients, and start from
-                    Today. Sign in if you already have access.
+                    Register as an individual trainer or create a studio and
+                    invite your team. Add clients and start from Today.
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Link href="/register" className="inline-flex">
                       <Button size="lg" className="min-h-11 gap-2 px-5">
-                        Create studio account
+                        Create account
                         <ArrowRight className="h-4 w-4" aria-hidden />
                       </Button>
                     </Link>
@@ -423,9 +423,9 @@ export default function MarketingPage() {
                 </div>
                 <ul className="shrink-0 space-y-2 text-sm text-zinc-500 sm:pt-8">
                   {[
-                    "Register → own studio",
-                    "Today board → sticky client",
-                    "Settings → profile & studio",
+                    "Register → solo or studio",
+                    "Studio → invite trainers",
+                    "Settings → team & profile",
                   ].map((line) => (
                     <li key={line} className="flex items-center gap-2">
                       <Check
@@ -464,7 +464,7 @@ export default function MarketingPage() {
               href="/register"
               className="inline-flex min-h-11 items-center hover:text-zinc-300"
             >
-              Create studio
+              Get started
             </Link>
             <a
               href="https://github.com/CyberoniOntoni/floorscribe"

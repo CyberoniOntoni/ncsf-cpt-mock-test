@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 14; // 14 = user profile fields (phone, title, updated_at)
+const SCHEMA_VERSION = 15; // 15 = org kind + org_invites
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -51,6 +51,7 @@ async function ensureSchema() {
     CREATE TABLE IF NOT EXISTS organizations (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      kind TEXT NOT NULL DEFAULT 'studio',
       unit_system TEXT NOT NULL DEFAULT 'metric',
       timezone TEXT NOT NULL DEFAULT 'UTC',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -76,6 +77,21 @@ async function ensureSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE(user_id, organization_id)
     );
+
+    CREATE TABLE IF NOT EXISTS org_invites (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'trainer',
+      token TEXT NOT NULL UNIQUE,
+      invited_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      expires_at TIMESTAMPTZ NOT NULL,
+      accepted_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS org_invites_org_idx ON org_invites(organization_id);
+    CREATE INDEX IF NOT EXISTS org_invites_email_idx ON org_invites(email);
 
     CREATE TABLE IF NOT EXISTS clients (
       id TEXT PRIMARY KEY,
@@ -459,6 +475,22 @@ async function ensureSchema() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS title TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+    -- Org kind + invites (SCHEMA 15)
+    ALTER TABLE organizations ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'studio';
+    CREATE TABLE IF NOT EXISTS org_invites (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'trainer',
+      token TEXT NOT NULL UNIQUE,
+      invited_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      expires_at TIMESTAMPTZ NOT NULL,
+      accepted_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS org_invites_org_idx ON org_invites(organization_id);
+    CREATE INDEX IF NOT EXISTS org_invites_email_idx ON org_invites(email);
   `);
 }
 

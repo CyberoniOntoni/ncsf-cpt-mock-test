@@ -15,17 +15,34 @@ const showDemoHint = process.env.NODE_ENV !== "production";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const params = await searchParams;
+  const next =
+    params.next &&
+    params.next.startsWith("/") &&
+    !params.next.startsWith("//")
+      ? params.next
+      : "";
+  const isInviteReturn = next.startsWith("/invite/");
 
   return (
     <AuthShell
       title="Sign in"
-      subtitle="Sessions, clients, programs & coach — on the floor."
+      subtitle={
+        isInviteReturn
+          ? "Sign in to accept your studio invite."
+          : "Sessions, clients, programs & coach — on the floor."
+      }
     >
       <Card className="border-zinc-800/80 p-5 shadow-xl shadow-black/40">
         <form action={loginAction} className="space-y-4">
+          {next ? <input type="hidden" name="next" value={next} /> : null}
+          {isInviteReturn && (
+            <Alert tone="info">
+              After you sign in, you’ll return to the invite to join the team.
+            </Alert>
+          )}
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
@@ -51,7 +68,9 @@ export default async function LoginPage({
             />
           </div>
           {params.error && <Alert tone="error">{params.error}</Alert>}
-          <AuthSubmitButton>Sign in</AuthSubmitButton>
+          <AuthSubmitButton>
+            {isInviteReturn ? "Sign in to continue" : "Sign in"}
+          </AuthSubmitButton>
         </form>
         <p className="mt-5 border-t border-zinc-800 pt-4 text-center text-xs text-zinc-600">
           New trainer?{" "}
@@ -59,7 +78,7 @@ export default async function LoginPage({
             href="/register"
             className="font-medium text-emerald-400 hover:underline"
           >
-            Create a studio account
+            Individual PT or studio
           </Link>
           {" · "}
           <Link href="/marketing" className="text-zinc-500 hover:text-zinc-300">

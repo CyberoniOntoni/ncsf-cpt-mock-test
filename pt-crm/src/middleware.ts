@@ -27,6 +27,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/marketing") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
+    pathname.startsWith("/invite") ||
     pathname.startsWith("/api/health") ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/_next") ||
@@ -61,16 +62,27 @@ export async function middleware(req: NextRequest) {
   if (!valid && !isPublic) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
+    const dest = `${pathname}${req.nextUrl.search}`;
+    if (dest && dest !== "/") {
+      url.searchParams.set("next", dest);
+    }
     const res = NextResponse.redirect(url);
     // Drop broken JWT so we don't keep retrying with a bad cookie
     if (token) clearAuthCookies(res);
     return res;
   }
 
-  if (valid && (pathname === "/login" || pathname === "/register")) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+  // Already signed in: leave invite pages alone; bounce off auth entry points
+  if (
+    valid &&
+    (pathname === "/login" ||
+      pathname === "/register" ||
+      pathname.startsWith("/register/"))
+  ) {
+    const next = req.nextUrl.searchParams.get("next");
+    const safeNext =
+      next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    return NextResponse.redirect(new URL(safeNext, req.url));
   }
 
   return NextResponse.next();

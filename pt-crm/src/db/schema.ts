@@ -14,6 +14,8 @@ import {
 export const organizations = pgTable("organizations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  /** solo = individual PT practice · studio = multi-trainer team */
+  kind: text("kind").notNull().default("studio"), // solo | studio
   unitSystem: text("unit_system").notNull().default("metric"), // metric | imperial
   timezone: text("timezone").notNull().default("UTC"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -47,6 +49,35 @@ export const memberships = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("memberships_user_org_uidx").on(t.userId, t.organizationId)]
+);
+
+/**
+ * Studio invites — owner/admin invites a PT by email; accept via /invite/[token].
+ * status: pending | accepted | revoked | expired
+ */
+export const orgInvites = pgTable(
+  "org_invites",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    role: text("role").notNull().default("trainer"), // trainer | admin | front_desk
+    token: text("token").notNull().unique(),
+    invitedByUserId: text("invited_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("org_invites_org_idx").on(t.organizationId),
+    index("org_invites_email_idx").on(t.email),
+    uniqueIndex("org_invites_token_uidx").on(t.token),
+  ]
 );
 
 export const clients = pgTable(

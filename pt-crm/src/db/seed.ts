@@ -63,6 +63,7 @@ async function runSeed() {
   await db.insert(organizations).values({
     id: orgId,
     name: "Demo PT Studio",
+    kind: "studio",
     unitSystem: "metric",
     timezone: "Asia/Singapore",
   });
