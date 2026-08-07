@@ -230,7 +230,15 @@ export function SessionLogger({
   const [showBookNext, setShowBookNext] = useState(false);
   const [bookStart, setBookStart] = useState(() => defaultNextHourLocal());
   const [bookTitle, setBookTitle] = useState("");
-  const [bookDuration, setBookDuration] = useState("60");
+  const [bookDuration, setBookDuration] = useState(() =>
+    String(
+      session.status === "completed" &&
+        session.durationMin &&
+        session.durationMin > 0
+        ? session.durationMin
+        : 60
+    )
+  );
   const [bookedLine, setBookedLine] = useState<string | null>(null);
   /** Prefer native Share when available (one emerald CTA on close-loop). */
   const [canNativeShare, setCanNativeShare] = useState(false);
@@ -574,6 +582,27 @@ export function SessionLogger({
       Math.round((Date.now() - startedAtRef.current) / 60000)
     );
     return Math.min(elapsed, 240);
+  }
+
+  /** Default minutes for Book next: prefer completed session, then live field, else 60. */
+  function resolveBookDurationDefault(fromDuration?: string | number | null) {
+    const sessionMins =
+      session.durationMin && session.durationMin > 0
+        ? session.durationMin
+        : null;
+    const live =
+      fromDuration != null && fromDuration !== ""
+        ? Number(fromDuration)
+        : durationMin && Number(durationMin) > 0
+          ? Number(durationMin)
+          : null;
+    return String(
+      sessionMins && sessionMins > 0
+        ? sessionMins
+        : live && live > 0
+          ? live
+          : 60
+    );
   }
 
   /** Mark set done; copy weight/reps into next empty set when completing */
@@ -1169,12 +1198,15 @@ export function SessionLogger({
       return;
     }
     setMsg(null);
-    // Auto-fill duration if empty
+    // Auto-fill duration if empty; keep book-next default in sync
     let meta = sessionMeta();
     if (meta.durationMin == null || Number.isNaN(meta.durationMin as number)) {
       const mins = estimatedDurationMin();
       setDurationMin(String(mins));
       meta = { ...meta, durationMin: mins };
+    }
+    if (meta.durationMin != null && Number(meta.durationMin) > 0) {
+      setBookDuration(String(meta.durationMin));
     }
     setRestActive(null);
     startTransition(async () => {
@@ -1591,7 +1623,12 @@ export function SessionLogger({
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
                   <button
                     type="button"
-                    onClick={() => setShowBookNext((v) => !v)}
+                    onClick={() =>
+                      setShowBookNext((v) => {
+                        if (!v) setBookDuration(resolveBookDurationDefault());
+                        return !v;
+                      })
+                    }
                     aria-expanded={showBookNext}
                     className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
                   >
