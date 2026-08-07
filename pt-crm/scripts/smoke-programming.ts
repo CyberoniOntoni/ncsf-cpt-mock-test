@@ -21,6 +21,10 @@ import {
   sessionsToAdvanceMesocycle,
   shouldAutoAdvanceMesocycle,
 } from "../src/lib/program-volume";
+import {
+  nextProgramExerciseSortOrder,
+  defaultAddExerciseRx,
+} from "../src/lib/program-exercise-add";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT: ${msg}`);
@@ -245,6 +249,13 @@ function main() {
     "advance again at 6"
   );
   console.log("ok shouldAutoAdvanceMesocycle");
+
+  // program-exercise-add pure helpers
+  assert(nextProgramExerciseSortOrder([]) === 0, "empty day sort 0");
+  assert(nextProgramExerciseSortOrder([0, 1, 4]) === 5, "max+1");
+  assert(defaultAddExerciseRx(false).sets === 3, "main sets");
+  assert(defaultAddExerciseRx(true).restSec === 45, "warmup rest");
+  console.log("ok program-exercise-add");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

@@ -46,6 +46,10 @@ import {
   sessionsToAdvanceMesocycle,
   shouldAutoAdvanceMesocycle,
 } from "@/lib/program-volume";
+import {
+  defaultAddExerciseRx,
+  nextProgramExerciseSortOrder,
+} from "@/lib/program-exercise-add";
 import { ensureSetLogs } from "@/lib/session-sets";
 import { getClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
@@ -603,6 +607,131 @@ export async function swapProgramExerciseAction(
     ok: true as const,
     name: pick.name,
     movementPattern: pick.movementPattern,
+  };
+}
+
+/** Append a bank exercise to a program day (standalone straight sets). */
+export async function addProgramExerciseAction(input: {
+  programDayId: string;
+  bankExerciseId: string;
+  opts?: {
+    isWarmup?: boolean;
+    sets?: number;
+    reps?: string;
+    rpe?: string | null;
+    restSec?: number | null;
+    notes?: string | null;
+  };
+}) {
+  const session = await requireSession();
+  const db = await getDb();
+  const isWarmup = !!input.opts?.isWarmup;
+
+  const [dayRow] = await db
+    .select({
+      day: programDays,
+      program: programs,
+    })
+    .from(programDays)
+    .innerJoin(programs, eq(programDays.programId, programs.id))
+    .where(eq(programDays.id, input.programDayId))
+    .limit(1);
+
+  if (!dayRow || dayRow.program.organizationId !== session.organizationId) {
+    throw new Error("Not found");
+  }
+
+  const bank = await listExercisesForOrg(session.organizationId);
+  const pick = bank.find((e) => e.id === input.bankExerciseId);
+  if (!pick) throw new Error("Exercise not found in bank");
+  if (!pick.available) {
+    throw new Error(
+      `“${pick.name}” needs equipment not marked available: ${pick.missingEquipment.join(", ") || "unknown"}`
+    );
+  }
+
+  const existing = await db
+    .select({ sortOrder: programExercises.sortOrder })
+    .from(programExercises)
+    .where(eq(programExercises.programDayId, input.programDayId));
+
+  const sortOrder = nextProgramExerciseSortOrder(
+    existing.map((e) => e.sortOrder)
+  );
+  const defaults = defaultAddExerciseRx(isWarmup);
+  const sets = input.opts?.sets ?? defaults.sets;
+  const reps = input.opts?.reps ?? defaults.reps;
+  const rpe =
+    input.opts?.rpe !== undefined ? input.opts.rpe : defaults.rpe;
+  const restSec =
+    input.opts?.restSec !== undefined
+      ? input.opts.restSec
+      : defaults.restSec;
+  const notes =
+    input.opts?.notes !== undefined
+      ? input.opts.notes
+      : pick.cues || null;
+
+  const peId = id("pe");
+  await db.insert(programExercises).values({
+    id: peId,
+    programDayId: input.programDayId,
+    exerciseId: pick.id,
+    exerciseName: pick.name,
+    movementPattern: pick.movementPattern,
+    sets,
+    reps,
+    rpe,
+    restSec,
+    notes,
+    sortOrder,
+    isWarmup,
+    setScheme: "straight",
+    setSchemeMeta: null,
+    groupId: null,
+    groupKind: null,
+    groupLabel: null,
+    groupOrder: null,
+    restAfterSec: null,
+    restBetweenRoundsSec: null,
+    groupRole: null,
+  });
+
+  // Seed meso baseline when baselines already exist
+  const prevMeta =
+    (dayRow.program.generationMeta as Record<string, unknown> | null) || {};
+  const baselines =
+    (prevMeta.baselinePrescriptions as
+      | Record<string, { sets: number; reps: string; rpe: string | null; restSec: number | null }>
+      | undefined) || {};
+  const nextBaselines = {
+    ...baselines,
+    [peId]: { sets, reps, rpe, restSec },
+  };
+
+  await db
+    .update(programs)
+    .set({
+      generationMeta: {
+        ...prevMeta,
+        baselinePrescriptions: nextBaselines,
+      },
+      updatedAt: new Date(),
+    })
+    .where(eq(programs.id, dayRow.program.id));
+
+  revalidatePath(`/programs/${dayRow.program.id}`);
+  revalidatePath("/programs");
+  if (dayRow.program.clientId) {
+    revalidatePath(`/clients/${dayRow.program.clientId}`);
+  }
+
+  return {
+    ok: true as const,
+    programExerciseId: peId,
+    programId: dayRow.program.id,
+    name: pick.name,
+    dayName: dayRow.day.name,
   };
 }
 
