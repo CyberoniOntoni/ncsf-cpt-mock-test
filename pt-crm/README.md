@@ -62,6 +62,9 @@ See **[docs/happy-path.md](./docs/happy-path.md)** — train a client end-to-end
 npm run smoke
 npx tsx scripts/verify-db.ts
 npx tsx scripts/smoke-library.ts
+npx tsx scripts/smoke-programming.ts
+npx tsx scripts/smoke-floor.ts
+npx tsx scripts/smoke-floor-a.ts
 npx tsc --noEmit
 ```
 

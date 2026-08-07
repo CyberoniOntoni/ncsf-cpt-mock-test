@@ -8,6 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "smoke": "tsx scripts/smoke.ts",
+    "smoke:floor": "tsx scripts/smoke-floor.ts",
+    "smoke:floor-a": "tsx scripts/smoke-floor-a.ts",
+    "smoke:programming": "tsx scripts/smoke-programming.ts",
+    "smoke:library": "tsx scripts/smoke-library.ts",
+    "typecheck": "tsc --noEmit",
     "backup:host": "bash scripts/backup-host.sh"
   },
   "dependencies": {

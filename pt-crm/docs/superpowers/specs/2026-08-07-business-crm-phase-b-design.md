@@ -92,4 +92,4 @@ Indexes: org, client, due_at.
 - [x] Home Agenda + open_task Needs you
 - [x] Deep links including `#crm-tasks`
 - [x] happy-path docs updated
-- [ ] Local smoke after SCHEMA 11 restart
+- [x] Local smoke after SCHEMA 11 restart

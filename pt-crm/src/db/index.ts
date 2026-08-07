@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 11;
+const SCHEMA_VERSION = 11; // 11 = client_tasks (Phase B)
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;

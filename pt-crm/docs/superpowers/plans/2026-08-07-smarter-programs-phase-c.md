@@ -1,5 +1,7 @@
 # Phase C Smarter Programs — Implementation Plan
 
+**Status: Implemented (2026-08-07)**
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Let trainers append bank exercises to program days from desk and Coach Apply, without regenerating the whole plan.

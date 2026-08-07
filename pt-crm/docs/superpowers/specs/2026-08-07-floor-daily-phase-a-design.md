@@ -1,7 +1,7 @@
 # Design: Phase A — Floor daily friction
 
 **Date:** 2026-08-07  
-**Status:** Ready for user review → implementation plan  
+**Status:** Implemented  
 **Product:** pt-crm Floor OS  
 **Related:** [crm-product-vision.md](../../crm-product-vision.md), [happy-path.md](../../happy-path.md), [design-system.md](../../design-system.md)
 

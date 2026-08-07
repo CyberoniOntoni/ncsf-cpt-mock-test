@@ -109,6 +109,8 @@ npm run smoke          # seed + coach retrieval demo
 npx tsx scripts/verify-db.ts
 npx tsx scripts/smoke-library.ts
 npx tsx scripts/smoke-programming.ts   # constraints, meso, append helpers
+npx tsx scripts/smoke-floor.ts
+npx tsx scripts/smoke-floor-a.ts
 npx tsc --noEmit
 ```
 
@@ -120,7 +122,9 @@ Browser checklist:
 - [ ] Sessions list shows the session; Notes does **not** show full set dump  
 - [ ] Program day **Add exercise** appends from bank  
 - [ ] Coach “add … to program” → Apply mutates plan
-- [ ] Book appointment appears on Home needs-you within 48h  
+- [ ] Book appointment appears on Home Agenda (~48h); Needs you only if ≤4h
+- [ ] Floor: Focus current / Prep open sets; after Complete, close-loop Share + Book next
+- [ ] Follow-up task appears on Needs you; #crm-tasks deep link works
 - [ ] Knowledge NCSF filter works  
 
 ---
