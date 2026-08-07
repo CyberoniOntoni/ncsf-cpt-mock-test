@@ -17,6 +17,12 @@ export type ClientDetailStickyBarProps = {
   stageTone: "green" | "amber" | "default";
   hasRisk: boolean;
   /**
+   * Quiet commercial whisper (e.g. "3 left" / "Renew package") → #crm-pack.
+   */
+  packLabel?: string | null;
+  packTone?: "amber" | "muted" | "default";
+  packHref?: string;
+  /**
    * Link primary CTA. Ignored when `primarySlot` is provided.
    * Pass null when there is no primary action.
    */
@@ -51,6 +57,9 @@ export function ClientDetailStickyBar({
   stageLabel,
   stageTone,
   hasRisk,
+  packLabel = null,
+  packTone = "muted",
+  packHref = "#crm-pack",
   primary = null,
   primarySlot,
 }: ClientDetailStickyBarProps) {
@@ -154,6 +163,21 @@ export function ClientDetailStickyBar({
             <Badge tone={stageTone} className="shrink-0 capitalize">
               {stageLabel.replaceAll("_", " ")}
             </Badge>
+            {packLabel && (
+              <Link
+                href={packHref}
+                className={cn(
+                  "inline-flex min-h-9 shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-medium tabular-nums transition",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                  packTone === "amber"
+                    ? "bg-amber-900/40 text-amber-200 hover:bg-amber-900/55"
+                    : "bg-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                )}
+                title="Jump to packages"
+              >
+                {packLabel}
+              </Link>
+            )}
             {hasRisk && (
               <Link
                 href="#goals-constraints"

@@ -228,6 +228,8 @@ export function SessionLogger({
   const [bookTitle, setBookTitle] = useState("");
   const [bookDuration, setBookDuration] = useState("60");
   const [bookedLine, setBookedLine] = useState<string | null>(null);
+  /** Prefer native Share when available (one emerald CTA on close-loop). */
+  const [canNativeShare, setCanNativeShare] = useState(false);
   const [restActive, setRestActive] = useState<{
     seconds: number;
     label: string;
@@ -357,6 +359,12 @@ export function SessionLogger({
       cancelled = true;
     };
   }, [session.id]);
+
+  useEffect(() => {
+    setCanNativeShare(
+      typeof navigator !== "undefined" && typeof navigator.share === "function"
+    );
+  }, []);
 
   // Prefill summary when viewing completed/cancelled
   useEffect(() => {
@@ -1254,163 +1262,184 @@ export function SessionLogger({
         </div>
       )}
 
-      {/* Lane C: post-session close loop — one emerald CTA = share summary */}
+      {/* Lane C: post-session close loop — one emerald CTA */}
       {readonly && session.status === "completed" && (
         <div id="session-close-loop" className="scroll-mt-20">
-        <Card
-          className="space-y-3 border-emerald-800/40 bg-emerald-950/20"
-        >
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-emerald-100">
-                Session complete
-              </h3>
-              <p className="mt-0.5 text-xs text-emerald-200/70">
-                {stats.doneSets > 0 ? `${stats.doneSets} sets` : "Logged"}
-                {durationMin ? ` · ${durationMin} min` : ""}
-                {overallRpe ? ` · RPE ${overallRpe}` : ""}
-                {bookedLine ? ` · ${bookedLine}` : ""}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                loading={pending}
-                onClick={() => void shareSummary()}
-                className="min-h-11"
-              >
-                <Copy className="h-3.5 w-3.5" aria-hidden />
-                Copy summary
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                loading={pending}
-                onClick={() => void shareSummary({ native: true })}
-                className="min-h-11"
-              >
-                <Share2 className="h-3.5 w-3.5" aria-hidden />
-                Share
-              </Button>
-            </div>
-          </div>
-
-          {client?.id && (
-            <div className="space-y-2 border-t border-emerald-900/40 pt-2.5">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowBookNext((v) => !v);
-                  }}
-                  aria-expanded={showBookNext}
-                  className="min-h-11 font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+          <Card className="space-y-3 border-emerald-800/40 bg-emerald-950/20">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-emerald-100">
+                  Session complete
+                </h3>
+                <p
+                  className="mt-0.5 text-xs text-emerald-200/70"
+                  aria-live="polite"
                 >
-                  {showBookNext ? "Cancel book" : "Book next"}
-                </button>
-                <Link
-                  href={`/clients/${client.id}`}
-                  className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
-                >
-                  Open client
-                </Link>
-                <HomeQuickCheckIn
-                  clientId={client.id}
-                  clientName={fullName(client.firstName, client.lastName)}
-                  onSaved={() => flash("Check-in saved", "success")}
-                />
+                  {stats.doneSets > 0 ? `${stats.doneSets} sets` : "Logged"}
+                  {durationMin ? ` · ${durationMin} min` : ""}
+                  {overallRpe ? ` · RPE ${overallRpe}` : ""}
+                  {bookedLine ? ` · ${bookedLine}` : ""}
+                </p>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Share the summary, then rebook or log a touch.
+                </p>
               </div>
-
-              {showBookNext && (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    bookNext();
-                  }}
-                  className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/50 p-2.5"
-                >
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div>
-                      <Label htmlFor="book-next-start">When</Label>
-                      <Input
-                        id="book-next-start"
-                        type="datetime-local"
-                        value={bookStart}
-                        onChange={(e) => setBookStart(e.target.value)}
-                        disabled={pending}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="book-next-dur">Minutes</Label>
-                      <Input
-                        id="book-next-dur"
-                        type="number"
-                        min={15}
-                        max={240}
-                        step={15}
-                        value={bookDuration}
-                        onChange={(e) => setBookDuration(e.target.value)}
-                        disabled={pending}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="book-next-title">Title (optional)</Label>
-                    <Input
-                      id="book-next-title"
-                      value={bookTitle}
-                      onChange={(e) => setBookTitle(e.target.value)}
-                      placeholder="Session"
-                      disabled={pending}
-                      className="mt-1 text-sm"
-                    />
-                  </div>
+              <div className="flex flex-wrap gap-2">
+                {canNativeShare ? (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      loading={pending}
+                      onClick={() => void shareSummary({ native: true })}
+                      className="min-h-11 px-4"
+                    >
+                      <Share2 className="h-3.5 w-3.5" aria-hidden />
+                      Share summary
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      loading={pending}
+                      onClick={() => void shareSummary()}
+                      className="min-h-11 text-zinc-400"
+                    >
+                      <Copy className="h-3.5 w-3.5" aria-hidden />
+                      Copy
+                    </Button>
+                  </>
+                ) : (
                   <Button
-                    type="submit"
+                    type="button"
                     size="sm"
-                    variant="secondary"
                     loading={pending}
-                    className="min-h-11"
+                    onClick={() => void shareSummary()}
+                    className="min-h-11 px-4"
                   >
-                    Book
+                    <Copy className="h-3.5 w-3.5" aria-hidden />
+                    Copy summary
                   </Button>
-                </form>
-              )}
+                )}
+              </div>
             </div>
-          )}
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-emerald-900/40 pt-2 text-xs text-zinc-500">
-            <Link href="/" className="hover:text-emerald-400 hover:underline">
-              Home
-            </Link>
-            {program && (
-              <Link
-                href={`/programs/${program.id}`}
-                className="hover:text-emerald-400 hover:underline"
-              >
-                Program
-              </Link>
+            {client?.id && (
+              <div className="space-y-2 border-t border-emerald-900/40 pt-2.5">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setShowBookNext((v) => !v)}
+                    aria-expanded={showBookNext}
+                    className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+                  >
+                    {showBookNext ? "Cancel book" : "Book next"}
+                  </button>
+                  <Link
+                    href={`/clients/${client.id}`}
+                    className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+                  >
+                    Open client
+                  </Link>
+                  <HomeQuickCheckIn
+                    clientId={client.id}
+                    clientName={fullName(client.firstName, client.lastName)}
+                    onSaved={() => flash("Check-in saved", "success")}
+                  />
+                </div>
+
+                {showBookNext && (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      bookNext();
+                    }}
+                    className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/50 p-2.5"
+                  >
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div>
+                        <Label htmlFor="book-next-start">When</Label>
+                        <Input
+                          id="book-next-start"
+                          type="datetime-local"
+                          value={bookStart}
+                          onChange={(e) => setBookStart(e.target.value)}
+                          disabled={pending}
+                          className="mt-1 min-h-11 text-sm"
+                          autoFocus
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="book-next-dur">Minutes</Label>
+                        <Input
+                          id="book-next-dur"
+                          type="number"
+                          min={15}
+                          max={240}
+                          step={15}
+                          value={bookDuration}
+                          onChange={(e) => setBookDuration(e.target.value)}
+                          disabled={pending}
+                          className="mt-1 min-h-11 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="book-next-title">Title (optional)</Label>
+                      <Input
+                        id="book-next-title"
+                        value={bookTitle}
+                        onChange={(e) => setBookTitle(e.target.value)}
+                        placeholder="Session"
+                        disabled={pending}
+                        className="mt-1 min-h-11 text-sm"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      variant="secondary"
+                      loading={pending}
+                      className="min-h-11"
+                    >
+                      Book
+                    </Button>
+                  </form>
+                )}
+              </div>
             )}
-            <Link
-              href="/sessions"
-              className="hover:text-emerald-400 hover:underline"
-            >
-              All sessions
-            </Link>
-            <button
-              type="button"
-              onClick={removeSession}
-              disabled={pending}
-              className="text-zinc-600 hover:text-red-300 hover:underline"
-            >
-              Remove
-            </button>
-          </div>
-        </Card>
+
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-emerald-900/40 pt-2 text-xs text-zinc-500">
+              <Link
+                href="/"
+                className="inline-flex min-h-9 items-center hover:text-emerald-400 hover:underline"
+              >
+                Home
+              </Link>
+              {program && (
+                <Link
+                  href={`/programs/${program.id}`}
+                  className="inline-flex min-h-9 items-center hover:text-emerald-400 hover:underline"
+                >
+                  Program
+                </Link>
+              )}
+              <Link
+                href="/sessions"
+                className="inline-flex min-h-9 items-center hover:text-emerald-400 hover:underline"
+              >
+                All sessions
+              </Link>
+              <button
+                type="button"
+                onClick={removeSession}
+                disabled={pending}
+                className="inline-flex min-h-9 items-center text-zinc-600 hover:text-red-300 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          </Card>
         </div>
       )}
 
@@ -2156,43 +2185,63 @@ export function SessionLogger({
         })}
       </div>
 
-      {/* Session summary (share) */}
+      {/* Session summary text — CTAs live on close-loop when completed */}
       {(readonly || summaryText) && (
+        <div id="session-summary" className="scroll-mt-20">
         <Card className="space-y-2 print:border-0 print:bg-white print:text-black">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-100 print:text-black">
               Session summary
             </h3>
-            <div className="flex flex-wrap gap-2 print:hidden">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                loading={pending}
-                onClick={() => void shareSummary()}
-              >
-                <Copy className="h-3.5 w-3.5" />
-                Copy
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                loading={pending}
-                onClick={() => void shareSummary({ native: true })}
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                Share
-              </Button>
+            {/* Avoid double primary CTAs when close-loop already offers share */}
+            {session.status !== "completed" && (
+              <div className="flex flex-wrap gap-2 print:hidden">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  loading={pending}
+                  onClick={() => void shareSummary()}
+                  className="min-h-11"
+                >
+                  <Copy className="h-3.5 w-3.5" aria-hidden />
+                  Copy
+                </Button>
+                {canNativeShare && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    loading={pending}
+                    onClick={() => void shareSummary({ native: true })}
+                    className="min-h-11"
+                  >
+                    <Share2 className="h-3.5 w-3.5" aria-hidden />
+                    Share
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="min-h-11"
+                >
+                  Print
+                </Button>
+              </div>
+            )}
+            {session.status === "completed" && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => window.print()}
+                className="min-h-11 print:hidden"
               >
                 Print
               </Button>
-            </div>
+            )}
           </div>
           {summaryText ? (
             <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-xs leading-relaxed text-zinc-400 print:max-h-none print:border-0 print:bg-white print:text-black">
@@ -2204,6 +2253,7 @@ export function SessionLogger({
             </p>
           )}
         </Card>
+        </div>
       )}
 
       {restActive && (

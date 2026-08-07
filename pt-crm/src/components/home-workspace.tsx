@@ -24,7 +24,7 @@ import {
   syncActiveClientUrl,
 } from "@/lib/active-client";
 import { resolveClientNextAction } from "@/lib/client-next-action";
-import { fullName } from "@/lib/utils";
+import { cn, fullName } from "@/lib/utils";
 import { Badge, Button, Card, SectionLabel, Skeleton } from "./ui";
 import { ListRow } from "./list-row";
 import { StartSessionButton } from "./start-session-button";
@@ -141,7 +141,8 @@ export function HomeWorkspace({
       setInProgress(d.inProgress);
       setNeedsYou(d.needsYou);
       setClientCount(d.clientCount);
-      if (d.needsYou.length === 0) setNeedsOpen(false);
+      // Always show header; expand only when there is work (collapsed "All clear")
+      setNeedsOpen(d.needsYou.length > 0);
     } catch {
       // Keep prior data — don't wipe Needs you / open sessions on a transient failure
     } finally {
@@ -625,78 +626,86 @@ export function HomeWorkspace({
         </section>
       )}
 
-      {/* Needs you */}
-      {(dashLoading || needsYou.length > 0) && (
-        <section aria-label="Needs you">
-          <button
-            type="button"
-            onClick={() => setNeedsOpen((v) => !v)}
-            aria-expanded={needsOpen}
-            className="mb-1.5 flex w-full min-h-11 items-center gap-2 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
-          >
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-500/90" />
-            Needs you
-            {needsYou.length > 0 && (
-              <Badge tone="amber">{needsYou.length}</Badge>
+      {/* Needs you — always mounted (zero state when clear) */}
+      <section aria-label="Needs you">
+        <button
+          type="button"
+          onClick={() => setNeedsOpen((v) => !v)}
+          aria-expanded={needsOpen}
+          className="mb-1.5 flex w-full min-h-11 items-center gap-2 text-left text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
+        >
+          <AlertTriangle
+            className={cn(
+              "h-3.5 w-3.5",
+              needsYou.length > 0 ? "text-amber-500/90" : "text-zinc-600"
             )}
-            <span className="ml-auto font-normal normal-case tracking-normal text-zinc-600">
-              {needsOpen ? "Hide" : "Show"}
-            </span>
-          </button>
-          {needsOpen && (
-            <>
-              {dashLoading && needsYou.length === 0 ? (
-                <Skeleton className="h-20 w-full rounded-xl" />
-              ) : needsYou.length === 0 ? (
-                <Card className="border-dashed border-zinc-800 bg-zinc-950/40 py-3">
-                  <p className="text-sm text-zinc-500">
-                    Nothing needs you right now.
-                  </p>
-                </Card>
-              ) : (
-                <ul className="space-y-1.5">
-                  {needsYou.map((item) => {
-                    const badge = needsYouBadge(item.kind);
-                    const trailingLabel = item.actionLabel || badge.label;
-                    return (
-                      <li key={item.id}>
-                        <ListRow
-                          href={item.href}
-                          tone={item.urgency === "high" ? "warn" : "default"}
-                          title={item.title}
-                          subtitle={item.subtitle}
-                          trailing={
-                            <Badge
-                              tone={
-                                item.urgency === "high" ? "amber" : badge.tone
-                              }
-                            >
-                              {trailingLabel}
-                            </Badge>
-                          }
-                          onClick={() => {
-                            if (
-                              item.clientId &&
-                              item.kind !== "in_progress"
-                            ) {
-                              setSelectedId(item.clientId);
-                              setStoredActiveClient(
-                                item.clientId,
-                                item.title
-                              );
-                              syncActiveClientUrl(item.clientId);
-                            }
-                          }}
-                        />
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </>
+            aria-hidden
+          />
+          Needs you
+          {dashLoading ? (
+            <Badge tone="default">…</Badge>
+          ) : needsYou.length > 0 ? (
+            <Badge tone="amber">{needsYou.length}</Badge>
+          ) : (
+            <Badge tone="green">All clear</Badge>
           )}
-        </section>
-      )}
+          <span className="ml-auto font-normal normal-case tracking-normal text-zinc-600">
+            {needsOpen ? "Hide" : "Show"}
+          </span>
+        </button>
+        {needsOpen && (
+          <>
+            {dashLoading && needsYou.length === 0 ? (
+              <Skeleton className="h-20 w-full rounded-xl" />
+            ) : needsYou.length === 0 ? (
+              <Card className="border-dashed border-zinc-800 bg-zinc-950/40 py-3.5">
+                <p className="text-sm text-zinc-400">
+                  Nothing needs you right now.
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-600">
+                  Quiet leads, low packs, and open sessions show up here.
+                </p>
+              </Card>
+            ) : (
+              <ul className="space-y-1.5">
+                {needsYou.map((item) => {
+                  const badge = needsYouBadge(item.kind);
+                  const trailingLabel = item.actionLabel || badge.label;
+                  return (
+                    <li key={item.id}>
+                      <ListRow
+                        href={item.href}
+                        tone={item.urgency === "high" ? "warn" : "default"}
+                        title={item.title}
+                        subtitle={item.subtitle}
+                        trailing={
+                          <Badge
+                            tone={
+                              item.urgency === "high" ? "amber" : badge.tone
+                            }
+                          >
+                            {trailingLabel}
+                          </Badge>
+                        }
+                        onClick={() => {
+                          if (
+                            item.clientId &&
+                            item.kind !== "in_progress"
+                          ) {
+                            setSelectedId(item.clientId);
+                            setStoredActiveClient(item.clientId, item.title);
+                            syncActiveClientUrl(item.clientId);
+                          }
+                        }}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        )}
+      </section>
 
       {/* Coach — collapsed by default; open on demand */}
       <section aria-label="Coach">

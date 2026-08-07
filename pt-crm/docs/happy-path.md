@@ -10,7 +10,7 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 
 1. Open **/** (Home).
 2. Pick or search a client (sticky chip follows you).
-3. **Needs you** — action labels (Resume, Renew pack, Check in, Design…) deep-link to the right place (`#crm-pack`, `#crm-checkin`, etc.).
+3. **Needs you** — always on Home (**All clear** when empty). Action labels deep-link (`#crm-pack`, `#crm-checkin`, etc.).
 4. Primary CTA: **Resume session** or **Start session** (one emerald action).
 5. With a client selected: **Log check-in** on the launch card (clears quiet-lead when saved).
 

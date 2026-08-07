@@ -316,6 +316,9 @@ export default async function ClientDetailPage({
         stageLabel={stageLabel}
         stageTone={stageTone}
         hasRisk={hasRisk}
+        packLabel={packageChip}
+        packTone={packageChipTone === "amber" ? "amber" : "muted"}
+        packHref="#crm-pack"
         primary={stickyPrimaryLink}
         primarySlot={startSlot}
       />
