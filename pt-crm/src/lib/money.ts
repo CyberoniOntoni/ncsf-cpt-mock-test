@@ -43,3 +43,10 @@ export function sanitizeMoneyInput(raw: string): string {
     .slice(0, 2);
   return `${whole}.${frac}`;
 }
+
+/** Prefill amount fields from stored cents (drops trailing .00). */
+export function centsToMoneyInput(cents: number): string {
+  const n = Math.max(0, Math.floor(cents));
+  if (n % 100 === 0) return String(n / 100);
+  return (n / 100).toFixed(2);
+}

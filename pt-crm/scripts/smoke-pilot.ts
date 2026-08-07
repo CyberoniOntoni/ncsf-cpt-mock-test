@@ -9,6 +9,7 @@ import os from "os";
 import path from "path";
 import { eq } from "drizzle-orm";
 import {
+  centsToMoneyInput,
   formatMoney,
   parseMoneyToCents,
   sanitizeMoneyInput,
@@ -28,6 +29,8 @@ async function main() {
   assert(formatMoney(60050, "SGD") === "SGD 600.50", "full");
   assert(sanitizeMoneyInput("ab600.5x") === "600.5", "sanitize junk chars");
   assert(sanitizeMoneyInput("12.345") === "12.34", "sanitize 2dp");
+  assert(centsToMoneyInput(60000) === "600", "cents→input whole");
+  assert(centsToMoneyInput(60050) === "600.50", "cents→input frac");
   let zeroFailed = false;
   try {
     parseMoneyToCents("0");
