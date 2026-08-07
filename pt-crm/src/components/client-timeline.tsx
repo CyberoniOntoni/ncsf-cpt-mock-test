@@ -5,6 +5,7 @@ import {
   ClipboardList,
   MessageSquare,
   NotebookPen,
+  Receipt,
   Timer,
 } from "lucide-react";
 import {
@@ -27,6 +28,8 @@ function KindIcon({ kind }: { kind: TimelineKind }) {
       return <CheckCircle2 className={cls} aria-hidden />;
     case "checkin":
       return <MessageSquare className={cls} aria-hidden />;
+    case "invoice":
+      return <Receipt className={cls} aria-hidden />;
     case "note":
       return <NotebookPen className={cls} aria-hidden />;
   }
@@ -89,7 +92,7 @@ export function ClientTimeline({
           </SectionLabel>
         </div>
         <p className="text-[11px] text-zinc-600">
-          Sessions · bookings · tasks · check-ins
+          Sessions · bookings · invoices · tasks · check-ins
         </p>
       </div>
 

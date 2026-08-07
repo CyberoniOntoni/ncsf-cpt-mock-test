@@ -25,7 +25,11 @@ import {
   voidClientInvoiceAction,
 } from "@/app/actions/crm";
 import { clientStageLabel } from "@/lib/client-next-action";
-import { formatMoney } from "@/lib/money";
+import {
+  formatMoney,
+  parseMoneyToCents,
+  sanitizeMoneyInput,
+} from "@/lib/money";
 import {
   CHECK_IN_CHANNELS,
   type CheckInChannel,
@@ -390,12 +394,13 @@ export function ClientCrmPanel({
           (i) => i.status === "unpaid"
         ).length;
         if (unpaid === 0) {
-          // Prefill title from last pack when empty slate
+          // Prefill title from last pack when empty slate; focus amount
           const last = snapshot.lastPackage;
           if (last?.name) setInvTitle(last.name);
           setShowInvoiceForm(true);
-          scrollToId("crm-invoices", "input, textarea");
+          scrollToId("crm-invoices", "#inv-amount, input");
         } else {
+          // Land on unpaid list (Mark paid is one tap)
           setShowInvoiceForm(false);
           scrollToId("crm-invoices");
         }
@@ -433,7 +438,21 @@ export function ClientCrmPanel({
   const checkInList = snapshot.checkIns.slice(0, 8);
   const taskList = (snapshot.tasks || []).slice(0, 12);
   const openTasks = taskList.filter((t) => t.status === "open");
-  const invoiceList = (snapshot.invoices || []).slice(0, 12);
+  // Unpaid first, then paid, then void; newest issued within group
+  const invoiceList = useMemo(() => {
+    const rank = (s: string) =>
+      s === "unpaid" ? 0 : s === "paid" ? 1 : 2;
+    return [...(snapshot.invoices || [])]
+      .sort((a, b) => {
+        const ra = rank((a.status || "").toLowerCase());
+        const rb = rank((b.status || "").toLowerCase());
+        if (ra !== rb) return ra - rb;
+        const ta = a.issuedAt ? new Date(a.issuedAt).getTime() : 0;
+        const tb = b.issuedAt ? new Date(b.issuedAt).getTime() : 0;
+        return tb - ta;
+      })
+      .slice(0, 12);
+  }, [snapshot.invoices]);
   const unpaidInvoices = invoiceList.filter((i) => i.status === "unpaid");
 
   const packPct = activePackage
@@ -457,15 +476,24 @@ export function ClientCrmPanel({
   const summaryBooking = nextAppointment
     ? fmtDateShort(nextAppointment.startsAt) || fmtWhen(nextAppointment.startsAt)
     : "No booking";
-  const summaryUnpaid =
-    unpaidInvoices.length === 0
-      ? null
-      : unpaidInvoices.length === 1
-        ? formatMoney(
-            unpaidInvoices[0].amountCents,
-            unpaidInvoices[0].currency
-          )
-        : `${unpaidInvoices.length} unpaid`;
+  // Compact money on summary; sum when all unpaid share a currency
+  const summaryUnpaid = (() => {
+    if (unpaidInvoices.length === 0) return null;
+    if (unpaidInvoices.length === 1) {
+      return formatMoney(
+        unpaidInvoices[0].amountCents,
+        unpaidInvoices[0].currency,
+        { compact: true }
+      );
+    }
+    const cur = unpaidInvoices[0].currency;
+    const same = unpaidInvoices.every((i) => i.currency === cur);
+    if (same) {
+      const total = unpaidInvoices.reduce((s, i) => s + i.amountCents, 0);
+      return `${unpaidInvoices.length} unpaid · ${formatMoney(total, cur, { compact: true })}`;
+    }
+    return `${unpaidInvoices.length} unpaid`;
+  })();
 
   function run(fn: () => Promise<void>) {
     setError(null);
@@ -646,8 +674,10 @@ export function ClientCrmPanel({
 
   function onCreateInvoice(e: FormEvent) {
     e.preventDefault();
-    if (!invAmount.trim()) {
-      fail("Amount is required");
+    try {
+      parseMoneyToCents(invAmount);
+    } catch (err) {
+      fail(err instanceof Error ? err.message : "Invalid amount");
       return;
     }
     run(async () => {
@@ -663,6 +693,12 @@ export function ClientCrmPanel({
       setInvNotes("");
       setShowInvoiceForm(false);
     });
+  }
+
+  function openInvoiceForm() {
+    const last = snapshot.lastPackage;
+    if (last?.name) setInvTitle(last.name);
+    setShowInvoiceForm(true);
   }
 
   const now = Date.now();
@@ -1305,8 +1341,14 @@ export function ClientCrmPanel({
           <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
             Invoices
             {unpaidInvoices.length > 0 && (
-              <span className="ml-1.5 font-normal normal-case text-amber-400/90">
-                {unpaidInvoices.length} unpaid
+              <span className="ml-1.5 font-normal normal-case tabular-nums text-amber-400/90">
+                {unpaidInvoices.length === 1
+                  ? formatMoney(
+                      unpaidInvoices[0].amountCents,
+                      unpaidInvoices[0].currency,
+                      { compact: true }
+                    )
+                  : `${unpaidInvoices.length} unpaid`}
               </span>
             )}
           </p>
@@ -1315,11 +1357,8 @@ export function ClientCrmPanel({
             className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
             aria-expanded={showInvoiceForm}
             onClick={() => {
-              if (!showInvoiceForm) {
-                const last = snapshot.lastPackage;
-                if (last?.name) setInvTitle(last.name);
-              }
-              setShowInvoiceForm((v) => !v);
+              if (showInvoiceForm) setShowInvoiceForm(false);
+              else openInvoiceForm();
             }}
           >
             {showInvoiceForm ? "Done" : "New invoice"}
@@ -1329,7 +1368,7 @@ export function ClientCrmPanel({
         {invoiceList.length === 0 && !showInvoiceForm ? (
           <div className="space-y-2">
             <p className="text-xs text-zinc-600">
-              Track money owed — mark paid when settled. No cards or tax.
+              Record what they owe — mark paid when cash lands. No cards or tax.
             </p>
             <Button
               type="button"
@@ -1337,11 +1376,7 @@ export function ClientCrmPanel({
               variant="secondary"
               disabled={pending}
               className="min-h-11"
-              onClick={() => {
-                const last = snapshot.lastPackage;
-                if (last?.name) setInvTitle(last.name);
-                setShowInvoiceForm(true);
-              }}
+              onClick={openInvoiceForm}
             >
               New invoice
             </Button>
@@ -1362,7 +1397,7 @@ export function ClientCrmPanel({
                       unpaid
                         ? "border-amber-900/40 bg-amber-950/20"
                         : voided
-                          ? "border-zinc-800/60 bg-zinc-950/30 opacity-70"
+                          ? "border-zinc-800/50 bg-zinc-950/20 opacity-60"
                           : "border-zinc-800 bg-zinc-950/40"
                     )}
                   >
@@ -1390,10 +1425,16 @@ export function ClientCrmPanel({
                         <span
                           className={cn(
                             "font-semibold",
-                            unpaid ? "text-amber-300" : "text-zinc-200"
+                            unpaid
+                              ? "text-amber-300"
+                              : voided
+                                ? "text-zinc-500"
+                                : "text-zinc-200"
                           )}
                         >
-                          {formatMoney(inv.amountCents, inv.currency)}
+                          {formatMoney(inv.amountCents, inv.currency, {
+                            compact: true,
+                          })}
                         </span>
                         {inv.issuedAt && (
                           <span className="text-zinc-600">
@@ -1408,8 +1449,8 @@ export function ClientCrmPanel({
                           </span>
                         )}
                       </p>
-                      {inv.notes?.trim() && (
-                        <p className="mt-0.5 text-[11px] text-zinc-600">
+                      {inv.notes?.trim() && !voided && (
+                        <p className="mt-0.5 line-clamp-2 text-[11px] text-zinc-600">
                           {inv.notes.trim()}
                         </p>
                       )}
@@ -1420,9 +1461,9 @@ export function ClientCrmPanel({
                           <Button
                             type="button"
                             size="sm"
-                            variant="secondary"
                             disabled={pending}
                             className="min-h-11"
+                            aria-label={`Mark ${inv.title} paid`}
                             onClick={() =>
                               run(async () => {
                                 await setClientInvoicePaidAction(
@@ -1442,6 +1483,7 @@ export function ClientCrmPanel({
                             variant="ghost"
                             disabled={pending}
                             className="min-h-11"
+                            aria-label={`Mark ${inv.title} unpaid`}
                             onClick={() =>
                               run(async () => {
                                 await setClientInvoicePaidAction(
@@ -1452,7 +1494,7 @@ export function ClientCrmPanel({
                               })
                             }
                           >
-                            Mark unpaid
+                            Unpaid
                           </Button>
                         )}
                         <Button
@@ -1460,11 +1502,12 @@ export function ClientCrmPanel({
                           size="sm"
                           variant="ghost"
                           disabled={pending}
-                          className="min-h-11"
+                          className="min-h-11 text-zinc-500"
+                          aria-label={`Void ${inv.title}`}
                           onClick={() => {
                             if (
                               !window.confirm(
-                                `Void “${inv.title}” (${formatMoney(inv.amountCents, inv.currency)})?`
+                                `Void “${inv.title}” (${formatMoney(inv.amountCents, inv.currency, { compact: true })})?\n\nIt stays in history but no longer counts as owed.`
                               )
                             ) {
                               return;
@@ -1490,28 +1533,37 @@ export function ClientCrmPanel({
             onSubmit={onCreateInvoice}
             className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/40 p-2.5"
           >
-            <Input
-              value={invTitle}
-              onChange={(e) => setInvTitle(e.target.value)}
-              placeholder="Title (e.g. 10-pack)"
-              disabled={pending}
-              className="min-h-11 text-sm"
-              aria-label="Invoice title"
-            />
-            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-600">
+              New invoice · SGD · mark paid when settled
+            </p>
+            <div className="grid gap-2 sm:grid-cols-[7.5rem_1fr]">
+              <div>
+                <label className="sr-only" htmlFor="inv-amount">
+                  Amount
+                </label>
+                <Input
+                  id="inv-amount"
+                  value={invAmount}
+                  onChange={(e) =>
+                    setInvAmount(sanitizeMoneyInput(e.target.value))
+                  }
+                  placeholder="600"
+                  disabled={pending}
+                  required
+                  inputMode="decimal"
+                  autoComplete="off"
+                  className="min-h-11 text-sm tabular-nums"
+                  aria-label="Amount in SGD"
+                />
+              </div>
               <Input
-                value={invAmount}
-                onChange={(e) => setInvAmount(e.target.value)}
-                placeholder="Amount (e.g. 600 or 600.50)"
+                value={invTitle}
+                onChange={(e) => setInvTitle(e.target.value)}
+                placeholder="Title (e.g. 10-pack)"
                 disabled={pending}
-                required
-                inputMode="decimal"
-                className="min-h-11 text-sm tabular-nums"
-                aria-label="Amount"
+                className="min-h-11 text-sm"
+                aria-label="Invoice title"
               />
-              <p className="flex items-center text-[11px] text-zinc-600 sm:px-1">
-                SGD
-              </p>
             </div>
             <Input
               value={invNotes}

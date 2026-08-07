@@ -234,7 +234,9 @@ export function buildClientTimeline(input: {
       (st === "paid" ? ms(inv.paidAt) : null) ??
       ms(inv.issuedAt) ??
       Date.now();
-    const money = formatMoney(inv.amountCents, inv.currency || "SGD");
+    const money = formatMoney(inv.amountCents, inv.currency || "SGD", {
+      compact: true,
+    });
     let tone: TimelineTone = "default";
     let badge = st;
     if (st === "unpaid") {
@@ -247,6 +249,8 @@ export function buildClientTimeline(input: {
       tone = "danger";
       badge = "void";
     }
+    // Skip voided from the feed — still listed under Invoices
+    if (st === "void") continue;
     items.push({
       id: `inv-${inv.id}`,
       kind: "invoice",

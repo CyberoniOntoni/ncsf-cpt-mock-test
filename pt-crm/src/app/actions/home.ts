@@ -327,7 +327,7 @@ export async function getHomeDashboardAction() {
       id: `inv-${inv.invoiceId}`,
       kind: "unpaid_invoice",
       title: inv.name,
-      subtitle: `${inv.title} · ${formatMoney(inv.amountCents, inv.currency)} unpaid`,
+      subtitle: `${inv.title} · ${formatMoney(inv.amountCents, inv.currency, { compact: true })} unpaid`,
       href: `/clients/${inv.clientId}#crm-invoices`,
       actionLabel: "Mark paid",
       clientId: inv.clientId,

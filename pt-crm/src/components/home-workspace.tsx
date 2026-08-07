@@ -75,7 +75,7 @@ function needsYouBadge(kind: HomeNeedsYouItem["kind"]): {
   if (kind === "low_package") return { label: "Pack", tone: "amber" };
   if (kind === "upcoming_appt") return { label: "Appt", tone: "sky" };
   if (kind === "open_task") return { label: "Task", tone: "amber" };
-  if (kind === "unpaid_invoice") return { label: "Pay", tone: "amber" };
+  if (kind === "unpaid_invoice") return { label: "Unpaid", tone: "amber" };
   if (kind === "quiet_lead") return { label: "Lead", tone: "default" };
   // quiet_client fallback (actionLabel usually "Open on floor")
   return { label: "Quiet", tone: "default" };
@@ -769,8 +769,8 @@ export function HomeWorkspace({
                   Nothing needs you right now.
                 </p>
                 <p className="mt-0.5 text-xs text-zinc-600">
-                  Open tasks, soon bookings, quiet leads, low packs, and open
-                  sessions show up here.
+                  Open tasks, unpaid invoices, soon bookings, quiet leads, low
+                  packs, and open sessions show up here.
                 </p>
               </Card>
             ) : (

@@ -17,6 +17,7 @@ import { ClientProgressDashboard } from "@/components/client-progress-dashboard"
 import { ClientStickySync } from "@/components/client-sticky-sync";
 import { ClientTimeline } from "@/components/client-timeline";
 import { buildClientTimeline } from "@/lib/client-timeline";
+import { formatMoney } from "@/lib/money";
 import { QuickAddMeasurement } from "@/components/quick-add-measurement";
 import { ClientDeactivateControl } from "@/components/client-deactivate-control";
 import { StartSessionButton } from "@/components/start-session-button";
@@ -308,7 +309,9 @@ export default async function ClientDetailPage({
     unpaidInv.length === 0
       ? null
       : unpaidInv.length === 1
-        ? "Unpaid"
+        ? formatMoney(unpaidInv[0].amountCents, unpaidInv[0].currency, {
+            compact: true,
+          })
         : `${unpaidInv.length} unpaid`;
   /** Hide empty CRM meta so header stays about the person */
   const showCrmMeta = !!(packageChip || nextApptChip || unpaidChip);
