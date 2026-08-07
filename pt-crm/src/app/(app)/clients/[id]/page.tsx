@@ -246,6 +246,15 @@ export default async function ClientDetailPage({
       body: c.body,
       createdAt: c.createdAt,
     })),
+    invoices: (crm.invoices || []).map((inv) => ({
+      id: inv.id,
+      title: inv.title,
+      amountCents: inv.amountCents,
+      currency: inv.currency,
+      status: inv.status,
+      issuedAt: inv.issuedAt,
+      paidAt: inv.paidAt,
+    })),
     notes: notes.map((n) => ({
       id: n.id,
       title: n.title,
@@ -294,8 +303,15 @@ export default async function ClientDetailPage({
   const nextApptChip = crm.nextAppointment
     ? `Next ${fmtDayShort(crm.nextAppointment.startsAt)}`
     : null;
+  const unpaidInv = (crm.invoices || []).filter((i) => i.status === "unpaid");
+  const unpaidChip =
+    unpaidInv.length === 0
+      ? null
+      : unpaidInv.length === 1
+        ? "Unpaid"
+        : `${unpaidInv.length} unpaid`;
   /** Hide empty CRM meta so header stays about the person */
-  const showCrmMeta = !!(packageChip || nextApptChip);
+  const showCrmMeta = !!(packageChip || nextApptChip || unpaidChip);
 
   /** Floor ops only in header — Design lives on Active plan; Floor on nav chrome */
   const startSlot =
@@ -486,6 +502,19 @@ export default async function ClientDetailPage({
                         className="tabular-nums transition hover:text-zinc-400 hover:underline"
                       >
                         {nextApptChip}
+                      </a>
+                    )}
+                    {unpaidChip && (packageChip || nextApptChip) && (
+                      <span className="text-zinc-700" aria-hidden>
+                        ·
+                      </span>
+                    )}
+                    {unpaidChip && (
+                      <a
+                        href="#crm-invoices"
+                        className="font-medium tabular-nums text-amber-400/95 transition hover:underline"
+                      >
+                        {unpaidChip}
                       </a>
                     )}
                   </>

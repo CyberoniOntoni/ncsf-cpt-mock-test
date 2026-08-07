@@ -4,8 +4,9 @@ import { and, desc, eq, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { clients, programs, trainingSessions } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
-import { fullName } from "@/lib/utils";
 import { listOrgCrmSignalsAction } from "@/app/actions/crm";
+import { formatMoney } from "@/lib/money";
+import { fullName } from "@/lib/utils";
 
 export type HomeInProgressSession = {
   id: string;
@@ -26,7 +27,8 @@ export type HomeNeedsYouItem = {
     | "low_package"
     | "upcoming_appt"
     | "quiet_lead"
-    | "open_task";
+    | "open_task"
+    | "unpaid_invoice";
   title: string;
   subtitle: string;
   href: string;
@@ -320,15 +322,29 @@ export async function getHomeDashboardAction() {
     });
   }
 
+  for (const inv of signals.unpaidInvoices || []) {
+    needsYou.push({
+      id: `inv-${inv.invoiceId}`,
+      kind: "unpaid_invoice",
+      title: inv.name,
+      subtitle: `${inv.title} · ${formatMoney(inv.amountCents, inv.currency)} unpaid`,
+      href: `/clients/${inv.clientId}#crm-invoices`,
+      actionLabel: "Mark paid",
+      clientId: inv.clientId,
+      urgency: "high",
+    });
+  }
+
   // One primary row per client + always keep ≤4h bookings (time-critical)
   const KIND_RANK: Record<HomeNeedsYouItem["kind"], number> = {
     in_progress: 0,
-    open_task: 1,
-    low_package: 2,
-    upcoming_appt: 3,
-    no_program: 4,
-    quiet_client: 5,
-    quiet_lead: 6,
+    unpaid_invoice: 1,
+    open_task: 2,
+    low_package: 3,
+    upcoming_appt: 4,
+    no_program: 5,
+    quiet_client: 6,
+    quiet_lead: 7,
   };
   const urgencyRank = { high: 0, medium: 1, low: 2 } as const;
 

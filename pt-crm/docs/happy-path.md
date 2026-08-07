@@ -11,7 +11,7 @@ After `git pull` or schema changes: **restart** `npm run dev` so PGlite applies 
 1. Open **/** (**Today** — floor command board).
 2. Pick or search a client (sticky chip follows you).
 3. **Agenda** — booked sessions in the next ~48h (deep-link `#crm-appointments`). **Full calendar →** opens `/calendar` under **People**.
-4. **Needs you** — always on Home (**All clear** when empty). Includes open **tasks**, low/empty packs, quiet leads/clients, sessions in progress. Appointments only appear here when starting within **~4 hours**. Action labels deep-link (`#crm-pack`, `#crm-tasks`, `#crm-checkin`, etc.).
+4. **Needs you** — always on Home (**All clear** when empty). Includes open **tasks**, **unpaid invoices**, low/empty packs, quiet leads/clients, sessions in progress. Appointments only appear here when starting within **~4 hours**. Action labels deep-link (`#crm-pack`, `#crm-tasks`, `#crm-invoices`, `#crm-checkin`, etc.).
 5. Primary CTA: **Resume session** or **Start session** (one emerald action).
 6. With a client selected: **Log check-in** on the launch card (clears quiet-lead when saved).
 
@@ -32,7 +32,7 @@ Cold path — no sticky client, no open session:
 
 **Deactivate** when they leave the roster (keeps history; **Reactivate** anytime). Inactive clients are hidden from the floor picker and Needs you.
 
-After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **12** = appointment ↔ session link).
+After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **13** = simple invoices + appointment ↔ session link).
 
 ---
 
@@ -61,7 +61,7 @@ After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_V
 
 ## 4. Between sessions (CRM)
 
-On the client page, **Timeline** (below Sessions) merges sessions, bookings, tasks, check-ins, and coach notes newest-first. Deep links jump to `#crm-appointments`, `#crm-tasks`, `#crm-checkin`, or the session log.
+On the client page, **Timeline** (below Sessions) merges sessions, bookings, tasks, invoices, check-ins, and coach notes newest-first. Deep links jump to `#crm-appointments`, `#crm-tasks`, `#crm-invoices`, `#crm-checkin`, or the session log.
 
 On the client page, **Packages & schedule**:
 
@@ -70,6 +70,7 @@ On the client page, **Packages & schedule**:
 | Remaining sessions | Summary strip + package card |
 | **Renew pack** | When no active pack (and a prior pack exists) — one-tap prefills name/total; or Needs you **Renew pack** → `#crm-pack` |
 | Book / complete / **no-show** / cancel | Appointments (forms collapse until you open them) |
+| **Invoices** | Create amount + title; **Mark paid** / unpaid / void. Unpaid surface on Home Needs you (`#crm-invoices`). Manual only — no cards or tax. |
 | **Follow-ups** | Tasks with optional due date; mark done / remove. Open tasks surface on Home Needs you (`#crm-tasks`) |
 | Touch log | **Log check-in** (message / call / in person) + short **templates** (copy into WhatsApp yourself — no send) |
 | Stage | **Change stage** |

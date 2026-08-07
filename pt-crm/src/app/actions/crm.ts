@@ -6,6 +6,7 @@ import { getDb } from "@/db";
 import {
   clientAppointments,
   clientCheckIns,
+  clientInvoices,
   clientPackages,
   clientTasks,
   clients,
@@ -17,6 +18,7 @@ import {
   type CheckInChannel,
   type ClientStage,
 } from "@/lib/crm-constants";
+import { parseMoneyToCents } from "@/lib/money";
 import { assertClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
 
@@ -528,13 +530,100 @@ export async function deleteClientTaskAction(taskId: string, clientId: string) {
   return { ok: true as const };
 }
 
+// ── Invoices (manual mark paid) ────────────────────────────────────
+
+export async function createClientInvoiceAction(input: {
+  clientId: string;
+  title: string;
+  amount: string;
+  currency?: string;
+  notes?: string;
+  packageId?: string | null;
+}) {
+  const session = await requireSession();
+  await assertClientInOrg(input.clientId, session.organizationId);
+  const title = input.title.trim() || "Session pack";
+  const amountCents = parseMoneyToCents(input.amount);
+  const currency = (input.currency || "SGD").trim().toUpperCase().slice(0, 8) || "SGD";
+  const db = await getDb();
+  const invId = id("inv");
+  await db.insert(clientInvoices).values({
+    id: invId,
+    organizationId: session.organizationId,
+    clientId: input.clientId,
+    title,
+    amountCents,
+    currency,
+    status: "unpaid",
+    notes: input.notes?.trim() || null,
+    packageId: input.packageId?.trim() || null,
+    issuedAt: new Date(),
+  });
+  revalidateClient(input.clientId);
+  return { id: invId };
+}
+
+export async function setClientInvoicePaidAction(
+  invoiceId: string,
+  clientId: string,
+  paid: boolean
+) {
+  const session = await requireSession();
+  await assertClientInOrg(clientId, session.organizationId);
+  const db = await getDb();
+  const [row] = await db
+    .select()
+    .from(clientInvoices)
+    .where(
+      and(
+        eq(clientInvoices.id, invoiceId),
+        eq(clientInvoices.clientId, clientId),
+        eq(clientInvoices.organizationId, session.organizationId)
+      )
+    )
+    .limit(1);
+  if (!row) throw new Error("Invoice not found");
+  if (row.status === "void") throw new Error("Invoice is void");
+  await db
+    .update(clientInvoices)
+    .set({
+      status: paid ? "paid" : "unpaid",
+      paidAt: paid ? new Date() : null,
+    })
+    .where(eq(clientInvoices.id, invoiceId));
+  revalidateClient(clientId);
+  return { ok: true as const };
+}
+
+export async function voidClientInvoiceAction(
+  invoiceId: string,
+  clientId: string
+) {
+  const session = await requireSession();
+  await assertClientInOrg(clientId, session.organizationId);
+  const db = await getDb();
+  await db
+    .update(clientInvoices)
+    .set({ status: "void", paidAt: null })
+    .where(
+      and(
+        eq(clientInvoices.id, invoiceId),
+        eq(clientInvoices.clientId, clientId),
+        eq(clientInvoices.organizationId, session.organizationId)
+      )
+    );
+  revalidateClient(clientId);
+  return { ok: true as const };
+}
+
 /** CRM snapshot for client detail header + panel */
 export async function getClientCrmSnapshotAction(clientId: string) {
   const session = await requireSession();
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
 
-  const [packages, appointments, checkIns, nextAppt, tasks] = await Promise.all([
+  const [packages, appointments, checkIns, nextAppt, tasks, invoices] =
+    await Promise.all([
     db
       .select()
       .from(clientPackages)
@@ -570,6 +659,12 @@ export async function getClientCrmSnapshotAction(clientId: string) {
       .where(eq(clientTasks.clientId, clientId))
       .orderBy(asc(clientTasks.dueAt), desc(clientTasks.createdAt))
       .limit(20),
+    db
+      .select()
+      .from(clientInvoices)
+      .where(eq(clientInvoices.clientId, clientId))
+      .orderBy(desc(clientInvoices.issuedAt))
+      .limit(20),
   ]);
 
   const activePkgs = packages.filter((p) => p.status === "active");
@@ -601,6 +696,7 @@ export async function getClientCrmSnapshotAction(clientId: string) {
     appointments,
     checkIns,
     tasks,
+    invoices,
     nextAppointment: nextAppt[0] ?? null,
     activePackage,
     lastPackage,
@@ -646,6 +742,14 @@ export async function listOrgCrmSignalsAction() {
         title: string;
         dueAt: Date | null;
       }>,
+      unpaidInvoices: [] as Array<{
+        invoiceId: string;
+        clientId: string;
+        name: string;
+        title: string;
+        amountCents: number;
+        currency: string;
+      }>,
     };
   }
 
@@ -658,7 +762,7 @@ export async function listOrgCrmSignalsAction() {
   const nowDate = new Date();
   const horizon = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
-  const [pkgs, allAppts, checkIns] = await Promise.all([
+  const [pkgs, allAppts, checkIns, unpaidInvRows] = await Promise.all([
     db
       .select({
         clientId: clientPackages.clientId,
@@ -706,6 +810,23 @@ export async function listOrgCrmSignalsAction() {
       : Promise.resolve(
           [] as Array<{ clientId: string; createdAt: Date }>
         ),
+    db
+      .select({
+        id: clientInvoices.id,
+        clientId: clientInvoices.clientId,
+        title: clientInvoices.title,
+        amountCents: clientInvoices.amountCents,
+        currency: clientInvoices.currency,
+      })
+      .from(clientInvoices)
+      .where(
+        and(
+          inArray(clientInvoices.clientId, clientIdList),
+          eq(clientInvoices.status, "unpaid")
+        )
+      )
+      .orderBy(desc(clientInvoices.issuedAt))
+      .limit(30),
   ]);
 
   /**
@@ -876,5 +997,40 @@ export async function listOrgCrmSignalsAction() {
     });
   }
 
-  return { lowPackages, upcomingAppts, quietLeads, openTasks };
+  const unpaidInvoices: Array<{
+    invoiceId: string;
+    clientId: string;
+    name: string;
+    title: string;
+    amountCents: number;
+    currency: string;
+  }> = [];
+  for (const inv of unpaidInvRows) {
+    if (unpaidInvoices.length >= 15) break;
+    const c = clientById.get(inv.clientId);
+    if (
+      !c ||
+      c.status === "inactive" ||
+      c.status === "draft" ||
+      c.status === "paused"
+    ) {
+      continue;
+    }
+    unpaidInvoices.push({
+      invoiceId: inv.id,
+      clientId: inv.clientId,
+      name: `${c.firstName} ${c.lastName || ""}`.trim(),
+      title: inv.title,
+      amountCents: inv.amountCents,
+      currency: inv.currency,
+    });
+  }
+
+  return {
+    lowPackages,
+    upcomingAppts,
+    quietLeads,
+    openTasks,
+    unpaidInvoices,
+  };
 }

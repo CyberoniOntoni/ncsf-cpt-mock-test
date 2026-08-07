@@ -211,6 +211,41 @@ export const clientAppointments = pgTable(
   ]
 );
 
+/**
+ * Simple invoices — manual mark paid (no card/tax).
+ * status: unpaid | paid | void
+ */
+export const clientInvoices = pgTable(
+  "client_invoices",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    /** Amount in minor units (cents) */
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull().default("SGD"),
+    /** unpaid | paid | void */
+    status: text("status").notNull().default("unpaid"),
+    notes: text("notes"),
+    packageId: text("package_id").references(() => clientPackages.id, {
+      onDelete: "set null",
+    }),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("invoices_org_idx").on(t.organizationId),
+    index("invoices_client_idx").on(t.clientId),
+    index("invoices_status_idx").on(t.status),
+  ]
+);
+
 /** Between-session check-ins / touch log */
 export const clientCheckIns = pgTable(
   "client_check_ins",

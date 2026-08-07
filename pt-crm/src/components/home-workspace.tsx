@@ -75,6 +75,7 @@ function needsYouBadge(kind: HomeNeedsYouItem["kind"]): {
   if (kind === "low_package") return { label: "Pack", tone: "amber" };
   if (kind === "upcoming_appt") return { label: "Appt", tone: "sky" };
   if (kind === "open_task") return { label: "Task", tone: "amber" };
+  if (kind === "unpaid_invoice") return { label: "Pay", tone: "amber" };
   if (kind === "quiet_lead") return { label: "Lead", tone: "default" };
   // quiet_client fallback (actionLabel usually "Open on floor")
   return { label: "Quiet", tone: "default" };

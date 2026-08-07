@@ -2,12 +2,15 @@
  * Merge client relationship events into one reverse-chrono feed.
  */
 
+import { formatMoney } from "@/lib/money";
+
 export type TimelineKind =
   | "session"
   | "appointment"
   | "task"
   | "checkin"
-  | "note";
+  | "note"
+  | "invoice";
 
 export type TimelineTone = "default" | "accent" | "warn" | "danger";
 
@@ -41,6 +44,8 @@ function kindLabel(kind: TimelineKind): string {
       return "Check-in";
     case "note":
       return "Note";
+    case "invoice":
+      return "Invoice";
   }
 }
 
@@ -78,6 +83,16 @@ export type TimelineCheckInInput = {
   createdAt: Date | string;
 };
 
+export type TimelineInvoiceInput = {
+  id: string;
+  title: string;
+  amountCents: number;
+  currency?: string;
+  status: string;
+  issuedAt?: Date | string | null;
+  paidAt?: Date | string | null;
+};
+
 export type TimelineNoteInput = {
   id: string;
   title?: string | null;
@@ -91,6 +106,7 @@ export function buildClientTimeline(input: {
   appointments?: TimelineAppointmentInput[];
   tasks?: TimelineTaskInput[];
   checkIns?: TimelineCheckInInput[];
+  invoices?: TimelineInvoiceInput[];
   notes?: TimelineNoteInput[];
   /** Max items after sort (default 40) */
   limit?: number;
@@ -209,6 +225,37 @@ export function buildClientTimeline(input: {
       href: "#crm-checkin",
       badge: "touch",
       tone: "default",
+    });
+  }
+
+  for (const inv of input.invoices ?? []) {
+    const st = (inv.status || "unpaid").toLowerCase();
+    const at =
+      (st === "paid" ? ms(inv.paidAt) : null) ??
+      ms(inv.issuedAt) ??
+      Date.now();
+    const money = formatMoney(inv.amountCents, inv.currency || "SGD");
+    let tone: TimelineTone = "default";
+    let badge = st;
+    if (st === "unpaid") {
+      tone = "warn";
+      badge = "unpaid";
+    } else if (st === "paid") {
+      tone = "accent";
+      badge = "paid";
+    } else if (st === "void") {
+      tone = "danger";
+      badge = "void";
+    }
+    items.push({
+      id: `inv-${inv.id}`,
+      kind: "invoice",
+      at,
+      title: inv.title || "Invoice",
+      subtitle: money,
+      href: "#crm-invoices",
+      badge,
+      tone,
     });
   }
 

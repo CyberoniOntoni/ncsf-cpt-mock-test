@@ -14,14 +14,18 @@ import {
   cancelClientPackageAction,
   createClientAppointmentAction,
   createClientCheckInAction,
+  createClientInvoiceAction,
   createClientPackageAction,
   createClientTaskAction,
   deleteClientTaskAction,
+  setClientInvoicePaidAction,
   setClientTaskDoneAction,
   updateAppointmentStatusAction,
   updateClientStageAction,
+  voidClientInvoiceAction,
 } from "@/app/actions/crm";
 import { clientStageLabel } from "@/lib/client-next-action";
+import { formatMoney } from "@/lib/money";
 import {
   CHECK_IN_CHANNELS,
   type CheckInChannel,
@@ -71,6 +75,17 @@ export type CrmTaskRow = {
   completedAt?: Date | string | null;
 };
 
+export type CrmInvoiceRow = {
+  id: string;
+  title: string;
+  amountCents: number;
+  currency: string;
+  status: string;
+  notes?: string | null;
+  issuedAt?: Date | string | null;
+  paidAt?: Date | string | null;
+};
+
 export type CrmActivePackage = {
   id: string;
   name: string;
@@ -84,10 +99,17 @@ export type CrmSnapshot = {
   appointments: CrmAppointmentRow[];
   checkIns: CrmCheckInRow[];
   tasks?: CrmTaskRow[];
+  invoices?: CrmInvoiceRow[];
   nextAppointment: CrmAppointmentRow | null;
   activePackage: CrmActivePackage;
   /** Prefill for one-tap renew when no active pack */
   lastPackage?: { name: string; totalSessions: number } | null;
+};
+
+const INV_STATUS_LABEL: Record<string, string> = {
+  unpaid: "Unpaid",
+  paid: "Paid",
+  void: "Void",
 };
 
 /** Stage chips only — inactive uses header Deactivate (confirm + roster copy). */
@@ -232,6 +254,7 @@ export function ClientCrmPanel({
   const [showBookForm, setShowBookForm] = useState(false);
   const [showCheckInForm, setShowCheckInForm] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
 
   // Package form
   const [pkgName, setPkgName] = useState("");
@@ -251,6 +274,11 @@ export function ClientCrmPanel({
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
 
+  // Invoice form (manual mark paid — no cards/tax)
+  const [invTitle, setInvTitle] = useState("Session pack");
+  const [invAmount, setInvAmount] = useState("");
+  const [invNotes, setInvNotes] = useState("");
+
   useEffect(() => {
     const next = (initialStatus || "lead").trim().toLowerCase();
     setStage(next);
@@ -265,7 +293,7 @@ export function ClientCrmPanel({
   const lowRemaining =
     !!activePackage && activePackage.remaining <= 2;
 
-  // Deep links from home needs-you: #crm-pack | #crm-appointments | #crm-checkin | #crm-tasks
+  // Deep links: #crm-pack | #crm-appointments | #crm-checkin | #crm-tasks | #crm-invoices
   useEffect(() => {
     function scrollToId(id: string, focusSelector?: string) {
       const run = () => {
@@ -357,6 +385,20 @@ export function ClientCrmPanel({
           setShowTaskForm(false);
           scrollToId("crm-tasks");
         }
+      } else if (hash === "crm-invoices") {
+        const unpaid = (snapshot.invoices || []).filter(
+          (i) => i.status === "unpaid"
+        ).length;
+        if (unpaid === 0) {
+          // Prefill title from last pack when empty slate
+          const last = snapshot.lastPackage;
+          if (last?.name) setInvTitle(last.name);
+          setShowInvoiceForm(true);
+          scrollToId("crm-invoices", "input, textarea");
+        } else {
+          setShowInvoiceForm(false);
+          scrollToId("crm-invoices");
+        }
       }
     }
 
@@ -368,6 +410,7 @@ export function ClientCrmPanel({
     snapshot.nextAppointment,
     snapshot.lastPackage,
     snapshot.tasks,
+    snapshot.invoices,
     clientId,
   ]);
 
@@ -390,6 +433,8 @@ export function ClientCrmPanel({
   const checkInList = snapshot.checkIns.slice(0, 8);
   const taskList = (snapshot.tasks || []).slice(0, 12);
   const openTasks = taskList.filter((t) => t.status === "open");
+  const invoiceList = (snapshot.invoices || []).slice(0, 12);
+  const unpaidInvoices = invoiceList.filter((i) => i.status === "unpaid");
 
   const packPct = activePackage
     ? Math.min(
@@ -412,6 +457,15 @@ export function ClientCrmPanel({
   const summaryBooking = nextAppointment
     ? fmtDateShort(nextAppointment.startsAt) || fmtWhen(nextAppointment.startsAt)
     : "No booking";
+  const summaryUnpaid =
+    unpaidInvoices.length === 0
+      ? null
+      : unpaidInvoices.length === 1
+        ? formatMoney(
+            unpaidInvoices[0].amountCents,
+            unpaidInvoices[0].currency
+          )
+        : `${unpaidInvoices.length} unpaid`;
 
   function run(fn: () => Promise<void>) {
     setError(null);
@@ -590,6 +644,27 @@ export function ClientCrmPanel({
     });
   }
 
+  function onCreateInvoice(e: FormEvent) {
+    e.preventDefault();
+    if (!invAmount.trim()) {
+      fail("Amount is required");
+      return;
+    }
+    run(async () => {
+      await createClientInvoiceAction({
+        clientId,
+        title: invTitle.trim() || "Session pack",
+        amount: invAmount.trim(),
+        notes: invNotes.trim() || undefined,
+        packageId: activePackage?.id ?? null,
+      });
+      setInvTitle("Session pack");
+      setInvAmount("");
+      setInvNotes("");
+      setShowInvoiceForm(false);
+    });
+  }
+
   const now = Date.now();
   const who = clientName?.trim();
   const summaryAria = who ? `CRM summary for ${who}` : "Client CRM summary";
@@ -603,7 +678,7 @@ export function ClientCrmPanel({
             Packages & schedule
           </SectionLabel>
           <p className="mt-0.5 text-[11px] text-zinc-600">
-            Packs · bookings · check-ins
+            Packs · bookings · invoices · check-ins
           </p>
         </div>
         {pending && (
@@ -675,6 +750,19 @@ export function ClientCrmPanel({
         >
           {summaryBooking}
         </a>
+        {summaryUnpaid && (
+          <>
+            <span className="text-zinc-700" aria-hidden>
+              ·
+            </span>
+            <a
+              href="#crm-invoices"
+              className="font-medium tabular-nums text-amber-300/95 transition hover:underline"
+            >
+              {summaryUnpaid}
+            </a>
+          </>
+        )}
       </div>
 
       {/* Stage pipeline — collapsed when set (except draft). Deactivate/reactivate live in page header. */}
@@ -1205,6 +1293,256 @@ export function ClientCrmPanel({
               );
             })}
           </ul>
+        )}
+      </section>
+
+      {/* Invoices — manual mark paid (no cards / tax) */}
+      <section
+        id="crm-invoices"
+        className="scroll-mt-client space-y-2 border-t border-zinc-800/80 pt-4"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            Invoices
+            {unpaidInvoices.length > 0 && (
+              <span className="ml-1.5 font-normal normal-case text-amber-400/90">
+                {unpaidInvoices.length} unpaid
+              </span>
+            )}
+          </p>
+          <button
+            type="button"
+            className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
+            aria-expanded={showInvoiceForm}
+            onClick={() => {
+              if (!showInvoiceForm) {
+                const last = snapshot.lastPackage;
+                if (last?.name) setInvTitle(last.name);
+              }
+              setShowInvoiceForm((v) => !v);
+            }}
+          >
+            {showInvoiceForm ? "Done" : "New invoice"}
+          </button>
+        </div>
+
+        {invoiceList.length === 0 && !showInvoiceForm ? (
+          <div className="space-y-2">
+            <p className="text-xs text-zinc-600">
+              Track money owed — mark paid when settled. No cards or tax.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={pending}
+              className="min-h-11"
+              onClick={() => {
+                const last = snapshot.lastPackage;
+                if (last?.name) setInvTitle(last.name);
+                setShowInvoiceForm(true);
+              }}
+            >
+              New invoice
+            </Button>
+          </div>
+        ) : (
+          invoiceList.length > 0 && (
+            <ul className="space-y-1.5" aria-label="Invoices">
+              {invoiceList.map((inv) => {
+                const st = (inv.status || "unpaid").toLowerCase();
+                const unpaid = st === "unpaid";
+                const paid = st === "paid";
+                const voided = st === "void";
+                return (
+                  <li
+                    key={inv.id}
+                    className={cn(
+                      "flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2",
+                      unpaid
+                        ? "border-amber-900/40 bg-amber-950/20"
+                        : voided
+                          ? "border-zinc-800/60 bg-zinc-950/30 opacity-70"
+                          : "border-zinc-800 bg-zinc-950/40"
+                    )}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "text-xs font-medium",
+                            voided
+                              ? "text-zinc-500 line-through"
+                              : "text-zinc-200"
+                          )}
+                        >
+                          {inv.title}
+                        </span>
+                        <Badge
+                          tone={
+                            unpaid ? "amber" : paid ? "green" : "default"
+                          }
+                        >
+                          {INV_STATUS_LABEL[st] || st}
+                        </Badge>
+                      </div>
+                      <p className="mt-0.5 text-xs tabular-nums text-zinc-400">
+                        <span
+                          className={cn(
+                            "font-semibold",
+                            unpaid ? "text-amber-300" : "text-zinc-200"
+                          )}
+                        >
+                          {formatMoney(inv.amountCents, inv.currency)}
+                        </span>
+                        {inv.issuedAt && (
+                          <span className="text-zinc-600">
+                            {" "}
+                            · {fmtDateShort(inv.issuedAt)}
+                          </span>
+                        )}
+                        {paid && inv.paidAt && (
+                          <span className="text-zinc-600">
+                            {" "}
+                            · paid {fmtDateShort(inv.paidAt)}
+                          </span>
+                        )}
+                      </p>
+                      {inv.notes?.trim() && (
+                        <p className="mt-0.5 text-[11px] text-zinc-600">
+                          {inv.notes.trim()}
+                        </p>
+                      )}
+                    </div>
+                    {!voided && (
+                      <div className="flex flex-wrap gap-1">
+                        {unpaid ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            disabled={pending}
+                            className="min-h-11"
+                            onClick={() =>
+                              run(async () => {
+                                await setClientInvoicePaidAction(
+                                  inv.id,
+                                  clientId,
+                                  true
+                                );
+                              })
+                            }
+                          >
+                            Mark paid
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={pending}
+                            className="min-h-11"
+                            onClick={() =>
+                              run(async () => {
+                                await setClientInvoicePaidAction(
+                                  inv.id,
+                                  clientId,
+                                  false
+                                );
+                              })
+                            }
+                          >
+                            Mark unpaid
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={pending}
+                          className="min-h-11"
+                          onClick={() => {
+                            if (
+                              !window.confirm(
+                                `Void “${inv.title}” (${formatMoney(inv.amountCents, inv.currency)})?`
+                              )
+                            ) {
+                              return;
+                            }
+                            run(async () => {
+                              await voidClientInvoiceAction(inv.id, clientId);
+                            });
+                          }}
+                        >
+                          Void
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )
+        )}
+
+        {showInvoiceForm && (
+          <form
+            onSubmit={onCreateInvoice}
+            className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/40 p-2.5"
+          >
+            <Input
+              value={invTitle}
+              onChange={(e) => setInvTitle(e.target.value)}
+              placeholder="Title (e.g. 10-pack)"
+              disabled={pending}
+              className="min-h-11 text-sm"
+              aria-label="Invoice title"
+            />
+            <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+              <Input
+                value={invAmount}
+                onChange={(e) => setInvAmount(e.target.value)}
+                placeholder="Amount (e.g. 600 or 600.50)"
+                disabled={pending}
+                required
+                inputMode="decimal"
+                className="min-h-11 text-sm tabular-nums"
+                aria-label="Amount"
+              />
+              <p className="flex items-center text-[11px] text-zinc-600 sm:px-1">
+                SGD
+              </p>
+            </div>
+            <Input
+              value={invNotes}
+              onChange={(e) => setInvNotes(e.target.value)}
+              placeholder="Notes (optional)"
+              disabled={pending}
+              className="min-h-11 text-sm"
+              aria-label="Invoice notes"
+            />
+            <div className="flex flex-wrap gap-1.5">
+              <Button
+                type="submit"
+                size="sm"
+                loading={pending}
+                disabled={pending || !invAmount.trim()}
+                className="min-h-11"
+              >
+                Create invoice
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={pending}
+                className="min-h-11"
+                onClick={() => setShowInvoiceForm(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
         )}
       </section>
 

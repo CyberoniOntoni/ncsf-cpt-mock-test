@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 12; // 12 = appointment ↔ session link
+const SCHEMA_VERSION = 13; // 13 = client_invoices
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -209,6 +209,24 @@ async function ensureSchema() {
     CREATE INDEX IF NOT EXISTS tasks_org_idx ON client_tasks(organization_id);
     CREATE INDEX IF NOT EXISTS tasks_client_idx ON client_tasks(client_id);
     CREATE INDEX IF NOT EXISTS tasks_due_idx ON client_tasks(due_at);
+
+    CREATE TABLE IF NOT EXISTS client_invoices (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'SGD',
+      status TEXT NOT NULL DEFAULT 'unpaid',
+      notes TEXT,
+      package_id TEXT REFERENCES client_packages(id) ON DELETE SET NULL,
+      issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      paid_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS invoices_org_idx ON client_invoices(organization_id);
+    CREATE INDEX IF NOT EXISTS invoices_client_idx ON client_invoices(client_id);
+    CREATE INDEX IF NOT EXISTS invoices_status_idx ON client_invoices(status);
 
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
