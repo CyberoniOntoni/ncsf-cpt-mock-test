@@ -386,7 +386,13 @@ export async function createClientTaskAction(input: {
   if (!title) throw new Error("Task title is required");
   let due: Date | null = null;
   if (input.dueAt) {
-    due = new Date(input.dueAt);
+    // Date-only (YYYY-MM-DD) → local end of that calendar day (not UTC midnight)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input.dueAt)) {
+      const [y, m, d] = input.dueAt.split("-").map(Number);
+      due = new Date(y, m - 1, d, 23, 59, 59, 999);
+    } else {
+      due = new Date(input.dueAt);
+    }
     if (Number.isNaN(due.getTime())) throw new Error("Invalid due date");
   }
   const db = await getDb();
@@ -781,7 +787,8 @@ export async function listOrgCrmSignalsAction() {
     if (
       !c ||
       c.status === "inactive" ||
-      c.status === "draft"
+      c.status === "draft" ||
+      c.status === "paused"
     ) {
       continue;
     }

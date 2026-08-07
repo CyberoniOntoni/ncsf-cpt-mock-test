@@ -307,8 +307,17 @@ export function ClientCrmPanel({
         setShowCheckInForm(true);
         scrollToId("crm-checkin", "textarea");
       } else if (hash === "crm-tasks") {
-        setShowTaskForm(true);
-        scrollToId("crm-tasks", "input, textarea");
+        // Always scroll; open add form only when no open tasks remain
+        const openCount = (snapshot.tasks || []).filter(
+          (t) => t.status === "open"
+        ).length;
+        if (openCount === 0) {
+          setShowTaskForm(true);
+          scrollToId("crm-tasks", "input, textarea");
+        } else {
+          setShowTaskForm(false);
+          scrollToId("crm-tasks");
+        }
       }
     }
 
@@ -319,6 +328,7 @@ export function ClientCrmPanel({
     snapshot.activePackage,
     snapshot.nextAppointment,
     snapshot.lastPackage,
+    snapshot.tasks,
     clientId,
   ]);
 

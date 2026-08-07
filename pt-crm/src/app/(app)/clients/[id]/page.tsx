@@ -421,7 +421,7 @@ export default async function ClientDetailPage({
                     </span>
                     {packageChip && (
                       <a
-                        href="#crm"
+                        href="#crm-pack"
                         className={cn(
                           "transition hover:underline",
                           packageChipTone === "amber"
@@ -439,7 +439,7 @@ export default async function ClientDetailPage({
                     )}
                     {nextApptChip && (
                       <a
-                        href="#crm"
+                        href="#crm-appointments"
                         className="tabular-nums transition hover:text-zinc-400 hover:underline"
                       >
                         {nextApptChip}

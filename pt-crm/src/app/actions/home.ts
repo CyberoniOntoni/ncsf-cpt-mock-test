@@ -344,11 +344,13 @@ export async function getHomeDashboardAction() {
       byClient.set(item.clientId, item);
       continue;
     }
-    const betterKind = KIND_RANK[item.kind] < KIND_RANK[prev.kind];
-    const sameKindBetterUrgency =
-      item.kind === prev.kind &&
+    // Prefer higher urgency first (high > medium > low); then KIND_RANK
+    const betterUrgency =
       urgencyRank[item.urgency] < urgencyRank[prev.urgency];
-    if (betterKind || sameKindBetterUrgency) {
+    const sameUrgencyBetterKind =
+      item.urgency === prev.urgency &&
+      KIND_RANK[item.kind] < KIND_RANK[prev.kind];
+    if (betterUrgency || sameUrgencyBetterKind) {
       byClient.set(item.clientId, item);
     }
   }

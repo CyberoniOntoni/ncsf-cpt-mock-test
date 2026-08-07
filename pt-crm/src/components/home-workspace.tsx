@@ -320,50 +320,52 @@ export function HomeWorkspace({
         </div>
       </header>
 
-      {/* Today agenda — booked sessions next 48h */}
-      {(dashLoading || agenda.length > 0) && (
-        <section aria-label="Today agenda">
-          <SectionLabel className="mb-1.5">
-            Agenda
-            {agenda.length > 0 && (
-              <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-600">
-                ({agenda.length})
-              </span>
-            )}
-          </SectionLabel>
-          {dashLoading && agenda.length === 0 ? (
-            <Skeleton className="h-14 w-full rounded-xl" />
-          ) : (
-            <ul className="space-y-1.5">
-              {agenda.map((a) => {
-                const when = new Date(a.startsAt).toLocaleString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
-                return (
-                  <li key={a.appointmentId}>
-                    <ListRow
-                      href={a.href}
-                      tone="default"
-                      title={a.clientName}
-                      subtitle={`${a.title} · ${when}`}
-                      trailing={<Badge tone="sky">Booked</Badge>}
-                      onClick={() => {
-                        setSelectedId(a.clientId);
-                        setStoredActiveClient(a.clientId, a.clientName);
-                        syncActiveClientUrl(a.clientId);
-                      }}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
+      {/* Today agenda — booked sessions next 48h (always visible) */}
+      <section aria-label="Today agenda">
+        <SectionLabel className="mb-1.5">
+          Agenda
+          {agenda.length > 0 && (
+            <span className="ml-1.5 font-normal normal-case tracking-normal text-zinc-600">
+              ({agenda.length})
+            </span>
           )}
-        </section>
-      )}
+        </SectionLabel>
+        {dashLoading && agenda.length === 0 ? (
+          <Skeleton className="h-14 w-full rounded-xl" />
+        ) : agenda.length === 0 ? (
+          <p className="text-sm text-zinc-600">
+            Nothing booked in the next 48h.
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {agenda.map((a) => {
+              const when = new Date(a.startsAt).toLocaleString(undefined, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              return (
+                <li key={a.appointmentId}>
+                  <ListRow
+                    href={a.href}
+                    tone="default"
+                    title={a.clientName}
+                    subtitle={`${a.title} · ${when}`}
+                    trailing={<Badge tone="sky">Booked</Badge>}
+                    onClick={() => {
+                      setSelectedId(a.clientId);
+                      setStoredActiveClient(a.clientId, a.clientName);
+                      syncActiveClientUrl(a.clientId);
+                    }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
       {/* Open sessions (in progress) */}
       <section aria-label="Open sessions">
@@ -712,7 +714,8 @@ export function HomeWorkspace({
                   Nothing needs you right now.
                 </p>
                 <p className="mt-0.5 text-xs text-zinc-600">
-                  Quiet leads, low packs, and open sessions show up here.
+                  Open tasks, soon bookings, quiet leads, low packs, and open
+                  sessions show up here.
                 </p>
               </Card>
             ) : (
