@@ -125,6 +125,10 @@ export default async function RegisterPage({
           >
             Sign in
           </Link>
+          {" · "}
+          <Link href="/marketing" className="text-zinc-500 hover:text-zinc-300">
+            About FloorScribe
+          </Link>
         </p>
       </Card>
     </AuthShell>

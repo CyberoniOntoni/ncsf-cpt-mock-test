@@ -23,6 +23,8 @@ function clearAuthCookies(res: NextResponse) {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isPublic =
+    pathname === "/" ||
+    pathname.startsWith("/marketing") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
     pathname.startsWith("/api/health") ||
@@ -40,6 +42,20 @@ export async function middleware(req: NextRequest) {
     } catch {
       valid = false;
     }
+  }
+
+  // Logged out on / → product marketing site (URL stays /)
+  if (!valid && pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/marketing";
+    return NextResponse.rewrite(url);
+  }
+
+  // Logged in on marketing → floor command board
+  if (valid && (pathname === "/marketing" || pathname.startsWith("/marketing/"))) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
   }
 
   if (!valid && !isPublic) {

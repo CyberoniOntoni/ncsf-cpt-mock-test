@@ -61,6 +61,10 @@ export default async function LoginPage({
           >
             Create a studio account
           </Link>
+          {" · "}
+          <Link href="/marketing" className="text-zinc-500 hover:text-zinc-300">
+            About FloorScribe
+          </Link>
         </p>
         {showDemoHint && (
           <p className="mt-2 text-center text-[11px] text-zinc-700">

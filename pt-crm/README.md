@@ -20,10 +20,13 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000) — logged out shows the **product site**; signed in opens the floor board.
 
-**Demo login:** `pt@demo.local` / `trainer123`  
-**New studio:** [http://localhost:3000/register](http://localhost:3000/register)
+| | |
+|--|--|
+| **Marketing** | [/marketing](http://localhost:3000/marketing) (also `/` when logged out) |
+| **Demo login** | `pt@demo.local` / `trainer123` |
+| **New studio** | [/register](http://localhost:3000/register) |
 
 Restart the dev server after pulls so schema + seed upserts apply (`SCHEMA_VERSION` in `src/db/index.ts`).
 
