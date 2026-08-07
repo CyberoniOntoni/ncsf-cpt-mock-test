@@ -402,8 +402,15 @@ export async function getExerciseCuesForSessionAction(
 
     const out: Record<string, ExerciseCueEntry> = {};
     for (const log of logs) {
-      const note = log.notes?.trim();
-      if (note) {
+      const note = log.notes?.trim() || "";
+      // Prefer short coach notes; skip mesocycle/scheme dump for floor cue strip
+      const noteIsCue =
+        note.length > 0 &&
+        note.length <= 140 &&
+        !/mesocycle:|deload week|reverse pyramid:|tempo sets:|drop sets:/i.test(
+          note
+        );
+      if (noteIsCue) {
         out[log.id] = { cue: note, source: "notes" };
         continue;
       }
@@ -411,6 +418,14 @@ export async function getExerciseCuesForSessionAction(
         const bank = bankById.get(log.exerciseId)?.trim();
         if (bank) {
           out[log.id] = { cue: bank, source: "bank" };
+          continue;
+        }
+      }
+      // First clause of long notes (before " · ") often has the real cue
+      if (note) {
+        const first = note.split(/\s*·\s*/)[0]?.trim();
+        if (first && first.length <= 120 && !/mesocycle:|deload week/i.test(first)) {
+          out[log.id] = { cue: first, source: "notes" };
           continue;
         }
       }

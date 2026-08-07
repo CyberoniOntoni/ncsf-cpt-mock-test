@@ -88,11 +88,12 @@ export function suggestProgression(input: {
     };
   }
 
-  // Clean top-end sets → bump load
+  // Clean top-end sets → bump load (skip bodyweight / zero-load patterns)
   if (
     allDone &&
     hitTopOfRange &&
     topKg != null &&
+    topKg > 0 &&
     (rpe == null || rpe <= 7.5)
   ) {
     const bump = topKg >= 60 ? 2.5 : topKg >= 20 ? 2 : 1;
@@ -101,6 +102,15 @@ export function suggestProgression(input: {
       kind: "load",
       message: `Hit top of range clean${rpe != null ? ` @ RPE ${rpe.toFixed(1)}` : ""} — try ${next} kg next.`,
       suggestedKg: next,
+    };
+  }
+
+  // Bodyweight / zero load: progress via reps, not fake +1 kg
+  if (allDone && hitTopOfRange && (topKg == null || topKg === 0)) {
+    return {
+      kind: "reps",
+      message: `Clean bodyweight sets${rpe != null ? ` @ RPE ${rpe.toFixed(1)}` : ""} — add reps or a harder variation.`,
+      suggestedKg: null,
     };
   }
 
