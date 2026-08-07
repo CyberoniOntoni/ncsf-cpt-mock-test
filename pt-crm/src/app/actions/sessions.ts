@@ -22,7 +22,10 @@ import {
   suggestProgression,
   type ProgressionSuggestion,
 } from "@/lib/progression";
-import { seedSessionNotes } from "@/lib/session-notes";
+import {
+  isProgramMetaDump,
+  seedSessionNotes,
+} from "@/lib/session-notes";
 import { assertClientInOrg, getClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
 
@@ -405,12 +408,7 @@ export async function getExerciseCuesForSessionAction(
     for (const log of logs) {
       const note = log.notes?.trim() || "";
       // Prefer short coach notes; skip mesocycle/scheme dump for floor cue strip
-      const noteIsCue =
-        note.length > 0 &&
-        note.length <= 140 &&
-        !/mesocycle:|deload week|reverse pyramid:|tempo sets:|drop sets:/i.test(
-          note
-        );
+      const noteIsCue = note.length > 0 && !isProgramMetaDump(note);
       if (noteIsCue) {
         out[log.id] = { cue: note, source: "notes" };
         continue;
@@ -425,7 +423,7 @@ export async function getExerciseCuesForSessionAction(
       // First clause of long notes (before " · ") often has the real cue
       if (note) {
         const first = note.split(/\s*·\s*/)[0]?.trim();
-        if (first && first.length <= 120 && !/mesocycle:|deload week/i.test(first)) {
+        if (first && !isProgramMetaDump(first) && first.length <= 120) {
           out[log.id] = { cue: first, source: "notes" };
           continue;
         }

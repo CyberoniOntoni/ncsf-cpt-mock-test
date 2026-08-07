@@ -257,12 +257,27 @@ export function SessionLogger({
   const [summaryText, setSummaryText] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [autoRest, setAutoRest] = useState(true);
+  /** Optimistic status after complete (before server refresh lands). */
+  const [statusOverride, setStatusOverride] = useState<string | null>(null);
   const startedAtRef = useRef<number>(
     session.performedAt ? new Date(session.performedAt).getTime() : Date.now()
   );
 
-  const readonly =
-    session.status === "completed" || session.status === "cancelled";
+  const status = statusOverride ?? session.status;
+  const readonly = status === "completed" || status === "cancelled";
+
+  // Sync override when server status catches up (or changes from outside).
+  useEffect(() => {
+    if (statusOverride != null && session.status === statusOverride) {
+      setStatusOverride(null);
+    } else if (
+      statusOverride != null &&
+      (session.status === "completed" || session.status === "cancelled") &&
+      session.status !== statusOverride
+    ) {
+      setStatusOverride(null);
+    }
+  }, [session.status, statusOverride]);
 
   // void undoVersion so re-renders after push/pop re-read canUndo
   const canUndo = undoVersion >= 0 && undoStackRef.current.canUndo;
@@ -804,6 +819,7 @@ export function SessionLogger({
     const needsFill = (log.setLogs || []).some(
       (s) => !s.completed && s.weightKg == null
     );
+    let historyApplied = false;
     if (needsFill && client?.id) {
       try {
         const res = await getLastWeightsForExerciseAction({
@@ -813,26 +829,34 @@ export function SessionLogger({
           excludeSessionId: session.id,
         });
         if (res.setLogs.length) {
-          pushUndo({
-            type: "update_log",
-            logId,
-            before: {
-              setLogs: snapshotSetLogs(log.setLogs),
-              completed: log.completed,
-              notes: log.notes,
-            },
-            label: `${log.exerciseName} · prep fill`,
+          const next = applyPreviousWeights(log.setLogs || [], res.setLogs);
+          const wroteWeight = (log.setLogs || []).some((s, i) => {
+            if (s.completed || s.weightKg != null) return false;
+            return next[i]?.weightKg != null;
           });
-          markDirty();
-          setLogs((prev) =>
-            prev.map((l) => {
-              if (l.id !== logId) return l;
-              return {
-                ...l,
-                setLogs: applyPreviousWeights(l.setLogs || [], res.setLogs),
-              };
-            })
-          );
+          if (wroteWeight) {
+            historyApplied = true;
+            pushUndo({
+              type: "update_log",
+              logId,
+              before: {
+                setLogs: snapshotSetLogs(log.setLogs),
+                completed: log.completed,
+                notes: log.notes,
+              },
+              label: `${log.exerciseName} · prep fill`,
+            });
+            markDirty();
+            setLogs((prev) =>
+              prev.map((l) => {
+                if (l.id !== logId) return l;
+                return {
+                  ...l,
+                  setLogs: applyPreviousWeights(l.setLogs || [], res.setLogs),
+                };
+              })
+            );
+          }
         }
       } catch {
         /* continue to progression */
@@ -864,7 +888,11 @@ export function SessionLogger({
     }
 
     flash(
-      needsFill ? "Filled last loads where available" : "Sets already prepped",
+      needsFill
+        ? historyApplied
+          ? "Filled last loads where available"
+          : "No last loads to fill"
+        : "Sets already prepped",
       "info"
     );
   }
@@ -939,7 +967,7 @@ export function SessionLogger({
         painNotes: painNotes || null,
         notes: notes || null,
         performedAt: session.performedAt,
-        status: session.status,
+        status,
       },
       clientName: client
         ? fullName(client.firstName, client.lastName)
@@ -1240,13 +1268,14 @@ export function SessionLogger({
           `Session completed · summary ready to share${meso}`,
           "success"
         );
+        setStatusOverride("completed");
         router.refresh();
-        // Scroll close-loop into view after complete
-        requestAnimationFrame(() => {
+        // Scroll close-loop into view after optimistic UI mounts
+        setTimeout(() => {
           document
             .getElementById("session-close-loop")
             ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
+        }, 200);
       } catch (e) {
         flash(e instanceof Error ? e.message : "Complete failed", "error");
       }
@@ -1442,16 +1471,16 @@ export function SessionLogger({
           </div>
           <Badge
             tone={
-              session.status === "completed"
+              status === "completed"
                 ? "green"
-                : session.status === "cancelled"
+                : status === "cancelled"
                   ? "red"
                   : "amber"
             }
           >
-            {session.status === "in_progress"
+            {status === "in_progress"
               ? "Live"
-              : session.status.replace("_", " ")}
+              : status.replace("_", " ")}
           </Badge>
         </div>
 
@@ -1487,7 +1516,7 @@ export function SessionLogger({
               style={{ width: `${stats.pct}%` }}
             />
           </div>
-          {session.status === "in_progress" && (
+          {status === "in_progress" && (
             <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-zinc-500">
               <span className="text-zinc-400">
                 Space set · A apply · N/P move · +/− load
@@ -1531,13 +1560,19 @@ export function SessionLogger({
               · wrap up duration & RPE, then complete
             </span>
           </div>
-          <Button type="button" size="sm" loading={pending} onClick={complete}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            loading={pending}
+            onClick={complete}
+          >
             Complete session
           </Button>
         </div>
       )}
 
-      {readonly && session.status === "cancelled" && (
+      {readonly && status === "cancelled" && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
           <div className="text-sm text-zinc-300">
             Session cancelled
@@ -1566,7 +1601,7 @@ export function SessionLogger({
       )}
 
       {/* Lane C: post-session close loop — one emerald CTA */}
-      {readonly && session.status === "completed" && (
+      {readonly && status === "completed" && (
         <div id="session-close-loop" className="scroll-mt-20">
           <Card className="space-y-3 border-emerald-800/40 bg-emerald-950/20">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -2515,33 +2550,99 @@ export function SessionLogger({
 
           if (block.type === "group") {
             const memberIds = block.members.map((m) => m.id);
+            const groupHasCurrent = groupContainsCurrent(
+              memberIds,
+              currentExId
+            );
             const groupOpen =
               readonly ||
-              groupContainsCurrent(memberIds, currentExId) ||
+              groupHasCurrent ||
               block.members.some((m) => collapsed[m.id] === false);
             const groupDone = block.members.every((m) => m.completed);
+            function expandGroup() {
+              setCollapsed((c) => {
+                const next = { ...c };
+                for (const id of memberIds) next[id] = false;
+                return next;
+              });
+            }
+            function collapseGroup() {
+              if (readonly || groupHasCurrent) return;
+              setCollapsed((c) => {
+                const next = { ...c };
+                for (const id of memberIds) next[id] = true;
+                return next;
+              });
+            }
             return (
               <div
                 key={block.groupId}
                 className="space-y-2 rounded-xl border border-amber-900/40 bg-amber-950/10 p-2.5 sm:p-3"
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone="amber">
-                    {formatSchemeName(block.kind)}
-                  </Badge>
-                  <span className="text-sm font-semibold text-zinc-100">
-                    {formatGroupTitle(block.kind, block.label)}
-                  </span>
-                  <span className="text-[11px] tabular-nums text-zinc-500">
-                    {block.rounds} rounds
-                  </span>
-                  {!groupOpen && (
+                {!groupOpen ? (
+                  <button
+                    type="button"
+                    onClick={expandGroup}
+                    className="flex w-full flex-wrap items-center gap-2 rounded-lg text-left outline-none ring-emerald-500/40 focus-visible:ring-2"
+                    aria-expanded={false}
+                    aria-label={`Expand group ${formatGroupTitle(block.kind, block.label)}`}
+                  >
+                    <Badge tone="amber">
+                      {formatSchemeName(block.kind)}
+                    </Badge>
+                    <span className="text-sm font-semibold text-zinc-100">
+                      {formatGroupTitle(block.kind, block.label)}
+                    </span>
+                    <span className="text-[11px] tabular-nums text-zinc-500">
+                      {block.rounds} rounds
+                    </span>
                     <span className="text-[11px] text-zinc-500">
                       · {block.members.length} exercises
-                      {groupDone ? " · done" : " · collapsed"}
+                      {groupDone ? " · done" : " · collapsed"} · tap to expand
                     </span>
-                  )}
-                </div>
+                  </button>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex flex-wrap items-center gap-2",
+                      !readonly &&
+                        !groupHasCurrent &&
+                        "cursor-pointer rounded-lg outline-none ring-emerald-500/40 focus-visible:ring-2"
+                    )}
+                    role={
+                      !readonly && !groupHasCurrent ? "button" : undefined
+                    }
+                    tabIndex={
+                      !readonly && !groupHasCurrent ? 0 : undefined
+                    }
+                    onClick={
+                      !readonly && !groupHasCurrent
+                        ? collapseGroup
+                        : undefined
+                    }
+                    onKeyDown={
+                      !readonly && !groupHasCurrent
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              collapseGroup();
+                            }
+                          }
+                        : undefined
+                    }
+                    aria-expanded={true}
+                  >
+                    <Badge tone="amber">
+                      {formatSchemeName(block.kind)}
+                    </Badge>
+                    <span className="text-sm font-semibold text-zinc-100">
+                      {formatGroupTitle(block.kind, block.label)}
+                    </span>
+                    <span className="text-[11px] tabular-nums text-zinc-500">
+                      {block.rounds} rounds
+                    </span>
+                  </div>
+                )}
                 {groupOpen && (
                   <>
                     <div className="rounded-lg border border-amber-900/30 bg-zinc-950/50 px-2.5 py-2 text-[11px] leading-relaxed text-zinc-400">
@@ -2594,7 +2695,7 @@ export function SessionLogger({
               Session summary
             </h3>
             {/* Avoid double primary CTAs when close-loop already offers share */}
-            {session.status !== "completed" && (
+            {status !== "completed" && (
               <div className="flex flex-wrap gap-2 print:hidden">
                 <Button
                   type="button"
@@ -2631,7 +2732,7 @@ export function SessionLogger({
                 </Button>
               </div>
             )}
-            {session.status === "completed" && (
+            {status === "completed" && (
               <Button
                 type="button"
                 variant="ghost"
@@ -2800,6 +2901,7 @@ export function SessionLogger({
                 onClick={() => setShowShortcuts((v) => !v)}
                 className="text-zinc-500"
                 title="Keyboard shortcuts"
+                aria-label="Keyboard shortcuts"
               >
                 <Keyboard className="h-4 w-4" />
               </Button>
