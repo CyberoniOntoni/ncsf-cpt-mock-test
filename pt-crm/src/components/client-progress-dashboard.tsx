@@ -175,7 +175,7 @@ export function ClientProgressDashboard({
 
   if (!showFull) {
     return (
-      <div id="progress" className="scroll-mt-20">
+      <div id="progress" className="scroll-mt-client">
         <Card padding="sm">
           <SectionLabel as="h2" className="mb-2">
             Progress
@@ -518,7 +518,7 @@ export function ClientProgressDashboard({
   }
 
   return (
-    <div id="progress" className="scroll-mt-20">
+    <div id="progress" className="scroll-mt-client">
       <Card padding="sm" className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">

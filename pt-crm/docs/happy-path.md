@@ -67,7 +67,7 @@ On the client page, **Packages & schedule**:
 |--------|--------|
 | Remaining sessions | Summary strip + package card |
 | **Renew pack** | When no active pack (and a prior pack exists) — one-tap prefills name/total; or Needs you **Renew pack** → `#crm-pack` |
-| Book / complete / cancel booking | Appointments (forms collapse until you open them) |
+| Book / complete / **no-show** / cancel | Appointments (forms collapse until you open them) |
 | **Follow-ups** | Tasks with optional due date; mark done / remove. Open tasks surface on Home Needs you (`#crm-tasks`) |
 | Touch log | **Log check-in** (message / call / in person) + short **templates** (copy into WhatsApp yourself — no send) |
 | Stage | **Change stage** |

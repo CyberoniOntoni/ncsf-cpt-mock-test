@@ -137,8 +137,9 @@ export function HomeWorkspace({
     });
   }, []);
 
-  const loadDashboard = useCallback(async () => {
-    setDashLoading(true);
+  const loadDashboard = useCallback(async (opts?: { soft?: boolean }) => {
+    // Soft refresh (focus/visibility) keeps prior UI — avoid Needs you “…” flicker
+    if (!opts?.soft) setDashLoading(true);
     try {
       const d = await getHomeDashboardAction();
       setInProgress(d.inProgress);
@@ -146,11 +147,13 @@ export function HomeWorkspace({
       setNeedsYou(d.needsYou);
       setClientCount(d.clientCount);
       // Always show header; expand only when there is work (collapsed "All clear")
-      setNeedsOpen(d.needsYou.length > 0);
+      if (!opts?.soft) {
+        setNeedsOpen(d.needsYou.length > 0);
+      }
     } catch {
       // Keep prior data — don't wipe Needs you / open sessions on a transient failure
     } finally {
-      setDashLoading(false);
+      if (!opts?.soft) setDashLoading(false);
     }
   }, []);
 
@@ -164,11 +167,11 @@ export function HomeWorkspace({
     if (!hydrated) return;
     function onVisible() {
       if (document.visibilityState === "visible") {
-        void loadDashboard();
+        void loadDashboard({ soft: true });
       }
     }
     function onFocus() {
-      void loadDashboard();
+      void loadDashboard({ soft: true });
     }
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onFocus);
@@ -352,9 +355,19 @@ export function HomeWorkspace({
         {dashLoading && agenda.length === 0 ? (
           <Skeleton className="h-14 w-full rounded-xl" />
         ) : agenda.length === 0 ? (
-          <p className="text-sm text-zinc-600">
-            Nothing booked in the next 48h.
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-zinc-600">
+              Nothing booked in the next 48h.
+            </p>
+            {hasClient && selectedId && (
+              <Link
+                href={`/clients/${selectedId}#crm-appointments`}
+                className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400/90 hover:underline"
+              >
+                Book for {clientName || "client"} →
+              </Link>
+            )}
+          </div>
         ) : (
           <ul className="space-y-1.5">
             {agenda.map((a) => {

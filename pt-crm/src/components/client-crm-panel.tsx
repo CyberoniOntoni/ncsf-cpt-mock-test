@@ -87,12 +87,8 @@ export type CrmSnapshot = {
   lastPackage?: { name: string; totalSessions: number } | null;
 };
 
-const PIPELINE_STAGES: ClientStage[] = [
-  "lead",
-  "active",
-  "paused",
-  "inactive",
-];
+/** Stage chips only — inactive uses header Deactivate (confirm + roster copy). */
+const PIPELINE_STAGES: ClientStage[] = ["lead", "active", "paused"];
 
 const CHANNEL_LABEL: Record<string, string> = {
   message: "Message",
@@ -337,6 +333,10 @@ export function ClientCrmPanel({
     if (stage === "draft" && !list.includes("draft")) {
       list.unshift("draft");
     }
+    // Show inactive chip only when already inactive (reactivate via pipeline or header)
+    if (stage === "inactive" && !list.includes("inactive")) {
+      list.push("inactive");
+    }
     return list;
   }, [stage]);
 
@@ -378,12 +378,38 @@ export function ClientCrmPanel({
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Something went wrong");
+        requestAnimationFrame(() => {
+          document
+            .getElementById("crm-error")
+            ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
       }
+    });
+  }
+
+  // Client-side validation: surface banner and scroll so forms far down still show it
+  function fail(message: string) {
+    setError(message);
+    requestAnimationFrame(() => {
+      document
+        .getElementById("crm-error")
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   }
 
   function onStageChange(next: string) {
     if (next === stage) return;
+    // Inactive is not on chips; if it appears (e.g. draft list edge), require confirm
+    if (next === "inactive") {
+      const who = clientName?.trim() || "this client";
+      if (
+        !window.confirm(
+          `Deactivate ${who}?\n\nThey leave the active roster and floor picker. History, packages, and sessions stay.`
+        )
+      ) {
+        return;
+      }
+    }
     const prev = stage;
     setStage(next);
     // Collapse pipeline after choosing a real pipeline stage
@@ -412,12 +438,12 @@ export function ClientCrmPanel({
     e.preventDefault();
     const total = Number(pkgTotal);
     if (!Number.isFinite(total) || total < 1) {
-      setError("Total sessions must be at least 1");
+      fail("Total sessions must be at least 1");
       return;
     }
     const used = Math.max(0, Math.floor(Number(pkgUsed) || 0));
     if (used > total) {
-      setError("Used cannot exceed total sessions");
+      fail("Used cannot exceed total sessions");
       return;
     }
     run(async () => {
@@ -459,15 +485,20 @@ export function ClientCrmPanel({
   function onCreateAppointment(e: FormEvent) {
     e.preventDefault();
     if (!apptStart) {
-      setError("Start time is required");
+      fail("Start time is required");
       return;
     }
     const startDate = new Date(apptStart);
     if (Number.isNaN(startDate.getTime())) {
-      setError("Invalid start time");
+      fail("Invalid start time");
       return;
     }
-    const duration = Math.max(15, Math.floor(Number(apptDuration) || 60));
+    const rawDur = Math.floor(Number(apptDuration) || 60);
+    if (rawDur < 15) {
+      fail("Duration must be at least 15 minutes");
+      return;
+    }
+    const duration = Math.min(240, rawDur);
     run(async () => {
       await createClientAppointmentAction({
         clientId,
@@ -484,11 +515,14 @@ export function ClientCrmPanel({
 
   function onApptStatus(
     appointmentId: string,
-    status: "completed" | "cancelled",
+    status: "completed" | "cancelled" | "no_show",
     title: string
   ) {
     if (status === "cancelled") {
       if (!window.confirm(`Cancel “${title}”?`)) return;
+    }
+    if (status === "no_show") {
+      if (!window.confirm(`Mark “${title}” as no-show?`)) return;
     }
     run(async () => {
       await updateAppointmentStatusAction(appointmentId, clientId, status);
@@ -498,7 +532,7 @@ export function ClientCrmPanel({
   function onCreateCheckIn(e: FormEvent) {
     e.preventDefault();
     if (!checkInBody.trim()) {
-      setError("Check-in note is required");
+      fail("Check-in note is required");
       return;
     }
     run(async () => {
@@ -538,13 +572,15 @@ export function ClientCrmPanel({
 
       {error && (
         <p
+          id="crm-error"
           role="alert"
+          aria-live="assertive"
           className="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-200"
         >
           {error}
           <button
             type="button"
-            className="ml-2 font-medium text-red-100 underline"
+            className="ml-2 min-h-11 font-medium text-red-100 underline"
             onClick={() => setError(null)}
           >
             Dismiss
@@ -567,31 +603,35 @@ export function ClientCrmPanel({
             </span>
           </>
         )}
-        <span
+        <a
+          href="#crm-pack"
           className={cn(
-            "tabular-nums",
+            "tabular-nums transition hover:underline",
             activePackage
               ? lowRemaining
                 ? "font-medium text-amber-300/95"
-                : "text-zinc-400"
+                : "text-zinc-400 hover:text-zinc-200"
               : hadExhaustedPack
                 ? "font-medium text-amber-300/95"
-                : "text-zinc-600"
+                : "text-zinc-600 hover:text-zinc-400"
           )}
         >
           {summaryPack}
-        </span>
+        </a>
         <span className="text-zinc-700" aria-hidden>
           ·
         </span>
-        <span
+        <a
+          href="#crm-appointments"
           className={cn(
-            "tabular-nums",
-            nextAppointment ? "text-zinc-400" : "text-zinc-600"
+            "tabular-nums transition hover:underline",
+            nextAppointment
+              ? "text-zinc-400 hover:text-zinc-200"
+              : "text-zinc-600 hover:text-zinc-400"
           )}
         >
           {summaryBooking}
-        </span>
+        </a>
       </div>
 
       {/* Stage pipeline — collapsed when set (except draft). Deactivate/reactivate live in page header. */}
@@ -626,11 +666,9 @@ export function ClientCrmPanel({
                   onClick={() => onStageChange(s)}
                   aria-pressed={active}
                   className={cn(
-                    "min-h-9 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                    "min-h-11 rounded-full border px-3 py-1.5 text-xs font-medium transition",
                     active
-                      ? s === "inactive"
-                        ? "border-zinc-600 bg-zinc-800 text-zinc-200"
-                        : "border-emerald-700/60 bg-emerald-950/50 text-emerald-300"
+                      ? "border-emerald-700/60 bg-emerald-950/50 text-emerald-300"
                       : "border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200",
                     pending && "opacity-60"
                   )}
@@ -770,7 +808,7 @@ export function ClientCrmPanel({
                     size="sm"
                     disabled={pending}
                     onClick={startRenewPack}
-                    className="min-h-9"
+                    className="min-h-11"
                   >
                     Renew pack
                   </Button>
@@ -782,7 +820,7 @@ export function ClientCrmPanel({
                   disabled={pending}
                   aria-expanded={showAddPack}
                   onClick={() => setShowAddPack(true)}
-                  className="min-h-9"
+                  className="min-h-11"
                 >
                   Add package
                 </Button>
@@ -801,7 +839,7 @@ export function ClientCrmPanel({
               onChange={(e) => setPkgName(e.target.value)}
               placeholder="Pack name (e.g. 10-pack)"
               disabled={pending}
-              className="min-h-9 py-1.5 text-xs"
+              className="min-h-11 py-1.5 text-xs"
               aria-label="Package name"
             />
             <Input
@@ -814,7 +852,7 @@ export function ClientCrmPanel({
               placeholder="Total"
               disabled={pending}
               required
-              className="min-h-9 py-1.5 text-xs tabular-nums"
+              className="min-h-11 py-1.5 text-xs tabular-nums"
               aria-label="Total sessions"
             />
             <Input
@@ -826,7 +864,7 @@ export function ClientCrmPanel({
               onChange={(e) => setPkgUsed(e.target.value)}
               placeholder="Used"
               disabled={pending}
-              className="min-h-9 py-1.5 text-xs tabular-nums"
+              className="min-h-11 py-1.5 text-xs tabular-nums"
               aria-label="Already used sessions"
             />
             <div className="flex flex-wrap gap-1.5">
@@ -835,7 +873,7 @@ export function ClientCrmPanel({
                 size="sm"
                 variant="secondary"
                 disabled={pending}
-                className="min-h-9"
+                className="min-h-11"
               >
                 Add pack
               </Button>
@@ -845,7 +883,7 @@ export function ClientCrmPanel({
                   size="sm"
                   variant="ghost"
                   disabled={pending}
-                  className="min-h-9"
+                  className="min-h-11"
                   onClick={() => setShowAddPack(false)}
                 >
                   Cancel
@@ -898,6 +936,7 @@ export function ClientCrmPanel({
                 size="sm"
                 variant="secondary"
                 disabled={pending}
+                className="min-h-11"
                 onClick={() =>
                   onApptStatus(
                     nextAppointment.id,
@@ -913,6 +952,23 @@ export function ClientCrmPanel({
                 size="sm"
                 variant="ghost"
                 disabled={pending}
+                className="min-h-11"
+                onClick={() =>
+                  onApptStatus(
+                    nextAppointment.id,
+                    "no_show",
+                    nextAppointment.title
+                  )
+                }
+              >
+                No-show
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={pending}
+                className="min-h-11"
                 onClick={() =>
                   onApptStatus(
                     nextAppointment.id,
@@ -944,7 +1000,7 @@ export function ClientCrmPanel({
               onChange={(e) => setApptStart(e.target.value)}
               disabled={pending}
               required
-              className="min-h-9 py-1.5 text-xs tabular-nums"
+              className="min-h-11 py-1.5 text-xs tabular-nums"
               aria-label="Appointment start"
             />
             <Input
@@ -952,7 +1008,7 @@ export function ClientCrmPanel({
               onChange={(e) => setApptTitle(e.target.value)}
               placeholder="Title (optional)"
               disabled={pending}
-              className="min-h-9 py-1.5 text-xs"
+              className="min-h-11 py-1.5 text-xs"
               aria-label="Appointment title"
             />
             <Input
@@ -964,7 +1020,7 @@ export function ClientCrmPanel({
               onChange={(e) => setApptDuration(e.target.value)}
               placeholder="Min"
               disabled={pending}
-              className="min-h-9 py-1.5 text-xs tabular-nums"
+              className="min-h-11 py-1.5 text-xs tabular-nums"
               aria-label="Duration minutes"
             />
             <Button
@@ -972,7 +1028,7 @@ export function ClientCrmPanel({
               size="sm"
               variant="secondary"
               disabled={pending}
-              className="min-h-9"
+              className="min-h-11"
             >
               Book
             </Button>
@@ -987,6 +1043,9 @@ export function ClientCrmPanel({
                 a.status === "scheduled" &&
                 Number.isFinite(startMs) &&
                 startMs < now - 60_000;
+              // Next-up card already owns actions — avoid duplicate CTAs
+              const isNext =
+                nextAppointment != null && a.id === nextAppointment.id;
               return (
                 <li
                   key={a.id}
@@ -1007,18 +1066,22 @@ export function ClientCrmPanel({
                           : APPT_STATUS_LABEL[a.status] ||
                             a.status.replaceAll("_", " ")}
                       </Badge>
+                      {isNext && (
+                        <Badge tone="sky">Next</Badge>
+                      )}
                     </div>
                     <p className="mt-0.5 text-[11px] tabular-nums text-zinc-500">
                       {fmtWhen(a.startsAt)}
                     </p>
                   </div>
-                  {a.status === "scheduled" && (
+                  {a.status === "scheduled" && !isNext && (
                     <div className="flex flex-wrap gap-1">
                       <Button
                         type="button"
                         size="sm"
                         variant="secondary"
                         disabled={pending}
+                        className="min-h-11"
                         onClick={() =>
                           onApptStatus(a.id, "completed", a.title)
                         }
@@ -1030,6 +1093,19 @@ export function ClientCrmPanel({
                         size="sm"
                         variant="ghost"
                         disabled={pending}
+                        className="min-h-11"
+                        onClick={() =>
+                          onApptStatus(a.id, "no_show", a.title)
+                        }
+                      >
+                        No-show
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={pending}
+                        className="min-h-11"
                         onClick={() =>
                           onApptStatus(a.id, "cancelled", a.title)
                         }
@@ -1101,7 +1177,7 @@ export function ClientCrmPanel({
                       })
                     }
                     className={cn(
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-xs font-bold",
+                      "flex h-11 w-11 shrink-0 items-center justify-center rounded-md border text-xs font-bold",
                       done
                         ? "border-emerald-800/50 bg-emerald-950/40 text-emerald-300"
                         : "border-zinc-700 text-zinc-500 hover:border-zinc-500"
@@ -1140,12 +1216,15 @@ export function ClientCrmPanel({
                   <button
                     type="button"
                     disabled={pending}
-                    className="text-[10px] text-zinc-600 hover:text-red-300"
-                    onClick={() =>
+                    className="min-h-11 px-1 text-[11px] text-zinc-600 hover:text-red-300"
+                    onClick={() => {
+                      if (!window.confirm(`Remove follow-up “${t.title}”?`)) {
+                        return;
+                      }
                       run(async () => {
                         await deleteClientTaskAction(t.id, clientId);
-                      })
-                    }
+                      });
+                    }}
                   >
                     Remove
                   </button>
@@ -1160,7 +1239,7 @@ export function ClientCrmPanel({
             onSubmit={(e) => {
               e.preventDefault();
               if (!taskTitle.trim()) {
-                setError("Task title is required");
+                fail("Task title is required");
                 return;
               }
               run(async () => {
@@ -1278,9 +1357,9 @@ export function ClientCrmPanel({
                     onClick={() => setChannel(c)}
                     aria-pressed={active}
                     className={cn(
-                      "min-h-8 rounded-full border px-2.5 py-1 text-[11px] font-medium transition",
+                      "min-h-11 rounded-full border px-2.5 py-1 text-[11px] font-medium transition",
                       active
-                        ? "border-sky-700/50 bg-sky-950/40 text-sky-200"
+                        ? "border-emerald-700/60 bg-emerald-950/50 text-emerald-300"
                         : "border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
                     )}
                   >
@@ -1316,7 +1395,7 @@ export function ClientCrmPanel({
               variant="secondary"
               loading={pending}
               disabled={pending || !checkInBody.trim()}
-              className="min-h-9"
+              className="min-h-11"
             >
               Log check-in
             </Button>

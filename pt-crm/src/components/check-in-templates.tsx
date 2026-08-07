@@ -30,7 +30,7 @@ export function CheckInTemplates({
           title={t.body}
           onClick={() => onPick(t.body)}
           className={cn(
-            "min-h-8 rounded-full border border-zinc-800 bg-zinc-950/50 px-2.5 py-1 text-[11px] font-medium text-zinc-400 transition",
+            "min-h-11 rounded-full border border-zinc-800 bg-zinc-950/50 px-2.5 py-1 text-[11px] font-medium text-zinc-400 transition",
             "hover:border-zinc-600 hover:text-zinc-200",
             "disabled:opacity-50"
           )}
