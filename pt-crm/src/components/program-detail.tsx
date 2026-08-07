@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  addProgramExerciseAction,
   advanceMesocycleWeekAction,
   applyMesocycleToProgramAction,
   deleteProgramAction,
@@ -126,6 +127,7 @@ export function ProgramDetail({
   const [editId, setEditId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Partial<Ex>>({});
   const [swapId, setSwapId] = useState<string | null>(null);
+  const [addDayId, setAddDayId] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<SubSuggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [metaOpen, setMetaOpen] = useState(
@@ -307,6 +309,26 @@ export function ProgramDetail({
         router.refresh();
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Swap failed");
+      }
+    });
+  }
+
+  function addExercise(
+    dayId: string,
+    bank: { id: string; name: string }
+  ) {
+    setMsg(null);
+    startTransition(async () => {
+      try {
+        const res = await addProgramExerciseAction({
+          programDayId: dayId,
+          bankExerciseId: bank.id,
+        });
+        setAddDayId(null);
+        setMsg(`Added ${res.name} to ${res.dayName}`);
+        router.refresh();
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Add failed");
       }
     });
   }
@@ -841,6 +863,20 @@ export function ProgramDetail({
               <StartSessionButton programDayId={day.id} />
               <Button
                 type="button"
+                variant="secondary"
+                size="sm"
+                disabled={pending}
+                onClick={() => {
+                  setSwapId(null);
+                  setEditId(null);
+                  setAddDayId((cur) => (cur === day.id ? null : day.id));
+                }}
+                className="min-h-11"
+              >
+                {addDayId === day.id ? "Cancel add" : "Add exercise"}
+              </Button>
+              <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 disabled={pending}
@@ -852,6 +888,15 @@ export function ProgramDetail({
               </Button>
             </div>
           </div>
+          {addDayId === day.id && (
+            <div className="mt-3">
+              <ExerciseBankPicker
+                title={`Add to ${day.name}`}
+                onCancel={() => setAddDayId(null)}
+                onPick={(bank) => addExercise(day.id, bank)}
+              />
+            </div>
+          )}
           <div className="mt-3 space-y-2">
             {groupExercisesIntoBlocks(day.exercises).map((block) => {
               const renderEx = (ex: Ex, nested: boolean) => (
@@ -950,6 +995,7 @@ export function ProgramDetail({
                           className="min-h-11"
                           onClick={() => {
                             setEditId(null);
+                            setAddDayId(null);
                             setSwapId(ex.id);
                           }}
                         >
@@ -1181,6 +1227,7 @@ export function ProgramDetail({
                           className="min-h-11 min-w-11 px-2.5 text-xs"
                           onClick={() => {
                             setEditId(null);
+                            setAddDayId(null);
                             setSwapId(ex.id);
                           }}
                         >
@@ -1193,6 +1240,7 @@ export function ProgramDetail({
                           className="min-h-11 min-w-11 px-2.5 text-xs"
                           onClick={() => {
                             setSwapId(null);
+                            setAddDayId(null);
                             setEditId(ex.id);
                             setEditDraft(ex);
                           }}
