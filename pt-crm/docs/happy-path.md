@@ -59,7 +59,7 @@ On the client page, **Packages & schedule**:
 |--------|--------|
 | Remaining sessions | Summary strip + package card |
 | Book / complete / cancel booking | Appointments (forms collapse until you open them) |
-| Touch log | **Log check-in** (message / call / in person) |
+| Touch log | **Log check-in** (message / call / in person) + short **templates** (copy into WhatsApp yourself — no send) |
 | Stage | **Change stage** |
 
 Header whisper links (package left · next booking) jump to `#crm`.

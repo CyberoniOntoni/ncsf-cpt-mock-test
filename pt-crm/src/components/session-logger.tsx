@@ -1560,12 +1560,20 @@ export function SessionLogger({
               >
                 Home
               </Link>
-              {program && (
+              {(program?.id || session.programId) && (
                 <Link
-                  href={`/programs/${program.id}`}
+                  href={`/programs/${program?.id || session.programId}`}
                   className="inline-flex min-h-9 items-center hover:text-emerald-400 hover:underline"
                 >
                   Program
+                </Link>
+              )}
+              {client?.id && (
+                <Link
+                  href={`/clients/${client.id}#progress`}
+                  className="inline-flex min-h-9 items-center hover:text-emerald-400 hover:underline"
+                >
+                  Progress
                 </Link>
               )}
               <Link
@@ -2273,17 +2281,50 @@ export function SessionLogger({
                     </div>
                   )}
 
-                  <div>
-                    <Label>Notes</Label>
-                    <Input
-                      disabled={readonly}
-                      value={log.notes ?? ""}
-                      onChange={(e) =>
-                        updateLog(log.id, { notes: e.target.value })
-                      }
-                      placeholder="Cues, substitutions…"
-                    />
-                  </div>
+                  {/* Quiet notes: collapsed when long program meta is prefilled */}
+                  {(() => {
+                    const note = (log.notes || "").trim();
+                    const longMeta =
+                      note.length > 80 ||
+                      /mesocycle:|deload week|reverse pyramid:|tempo sets:|drop sets:/i.test(
+                        note
+                      );
+                    if (longMeta && !readonly) {
+                      return (
+                        <details className="rounded-lg border border-zinc-800/80 bg-zinc-950/30">
+                          <summary className="cursor-pointer px-2.5 py-2 text-[11px] font-medium text-zinc-500 marker:content-none [&::-webkit-details-marker]:hidden">
+                            Coach notes (program)
+                          </summary>
+                          <div className="border-t border-zinc-800 px-2.5 py-2">
+                            <Textarea
+                              disabled={readonly}
+                              value={log.notes ?? ""}
+                              onChange={(e) =>
+                                updateLog(log.id, { notes: e.target.value })
+                              }
+                              placeholder="Cues, substitutions…"
+                              rows={2}
+                              className="min-h-[56px] text-xs"
+                              aria-label={`Notes for ${log.exerciseName}`}
+                            />
+                          </div>
+                        </details>
+                      );
+                    }
+                    return (
+                      <div>
+                        <Label>Notes</Label>
+                        <Input
+                          disabled={readonly}
+                          value={log.notes ?? ""}
+                          onChange={(e) =>
+                            updateLog(log.id, { notes: e.target.value })
+                          }
+                          placeholder="Cues, substitutions…"
+                        />
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </Card>

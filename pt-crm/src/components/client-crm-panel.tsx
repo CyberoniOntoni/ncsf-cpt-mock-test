@@ -24,6 +24,7 @@ import {
   type ClientStage,
 } from "@/lib/crm-constants";
 import { cn } from "@/lib/utils";
+import { CheckInTemplates } from "./check-in-templates";
 import { Badge, Button, Card, Input, SectionLabel, Textarea } from "./ui";
 
 export type CrmPackageRow = {
@@ -1052,6 +1053,18 @@ export function ClientCrmPanel({
                   </button>
                 );
               })}
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-600">
+                Templates · paste into WhatsApp yourself
+              </p>
+              <CheckInTemplates
+                disabled={pending}
+                onPick={(body) => {
+                  setCheckInBody(body);
+                  setChannel("message");
+                }}
+              />
             </div>
             <Textarea
               value={checkInBody}

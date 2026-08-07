@@ -7,6 +7,7 @@ import {
   type CheckInChannel,
 } from "@/lib/crm-constants";
 import { cn } from "@/lib/utils";
+import { CheckInTemplates } from "./check-in-templates";
 import { Button, Textarea } from "./ui";
 
 const CHANNEL_LABEL: Record<CheckInChannel, string> = {
@@ -141,6 +142,15 @@ export function HomeQuickCheckIn({
           );
         })}
       </div>
+
+      <CheckInTemplates
+        disabled={pending}
+        onPick={(text) => {
+          setBody(text);
+          setChannel("message");
+          setError(null);
+        }}
+      />
 
       <Textarea
         value={body}
