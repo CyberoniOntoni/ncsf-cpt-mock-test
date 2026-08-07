@@ -909,6 +909,15 @@ export async function completeSessionAction(
     .set({ status: "completed", updatedAt: new Date() })
     .where(eq(trainingSessions.id, sessionId));
 
+  /** Pack burn result for floor flash + close-loop (null = no client / not first complete). */
+  let packBurn: {
+    consumed: boolean;
+    reason: "ok" | "no_pack" | "empty" | "error";
+    remaining?: number;
+    packageName?: string;
+    status?: string;
+  } | null = null;
+
   // Floor complete: burn pack + promote lead → active (defensive first engagement)
   if (wasInProgress && row.clientId) {
     try {
@@ -916,10 +925,28 @@ export async function completeSessionAction(
         tryConsumePackageSessionAction,
         promoteLeadToActiveIfNeeded,
       } = await import("@/app/actions/crm");
-      await tryConsumePackageSessionAction(row.clientId);
+      const burn = await tryConsumePackageSessionAction(row.clientId);
+      if (burn.consumed) {
+        packBurn = {
+          consumed: true,
+          reason: "ok",
+          remaining: burn.remaining,
+          packageName: burn.packageName,
+          status: burn.status,
+        };
+      } else {
+        packBurn = {
+          consumed: false,
+          reason: burn.reason === "empty" ? "empty" : "no_pack",
+          remaining: "remaining" in burn ? burn.remaining : undefined,
+          packageName: "packageName" in burn ? burn.packageName : undefined,
+          status: "status" in burn ? burn.status : undefined,
+        };
+      }
       await promoteLeadToActiveIfNeeded(row.clientId);
     } catch {
       // pack/promote optional — never block session complete
+      packBurn = { consumed: false, reason: "error" };
     }
   }
 
@@ -982,10 +1009,13 @@ export async function completeSessionAction(
 
   revalidatePath(`/sessions/${sessionId}`);
   revalidatePath("/sessions");
+  // Always refresh floor Home so open sessions + Needs you drop this session
+  revalidatePath("/");
   if (row.clientId) revalidatePath(`/clients/${row.clientId}`);
   if (row.programId) revalidatePath(`/programs/${row.programId}`);
   return {
     ok: true as const,
+    packBurn,
     mesoAdvance: mesoAdvance?.advanced
       ? {
           week: mesoAdvance.week,

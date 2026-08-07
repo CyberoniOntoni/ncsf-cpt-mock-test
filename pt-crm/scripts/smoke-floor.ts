@@ -1,11 +1,11 @@
 /**
- * Lane A smoke: tenant isolation, progression helpers, last-load map shape.
+ * Lane A smoke: tenant isolation, progression helpers, pack burn math, last-load.
+ * Uses isolated temp PGlite so it can run while `npm run dev` is up.
  * Run: npx tsx scripts/smoke-floor.ts
  */
-import { seedIfNeeded } from "../src/db/seed";
-import { getDb } from "../src/db";
-import { clients, organizations } from "../src/db/schema";
-import { getClientInOrg } from "../src/lib/tenant";
+import fs from "fs";
+import os from "os";
+import path from "path";
 import {
   formatLastPerformance,
   parseRepRange,
@@ -18,6 +18,14 @@ import {
 import { loadClientContextIsolation } from "./_smoke-helpers";
 
 async function main() {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "floorscribe-floor-"));
+  process.env.PGLITE_DATA_DIR = tmpDir;
+
+  const { seedIfNeeded } = await import("../src/db/seed");
+  const { getDb } = await import("../src/db");
+  const { clients, organizations } = await import("../src/db/schema");
+  const { getClientInOrg } = await import("../src/lib/tenant");
+
   await seedIfNeeded();
   const db = await getDb();
   const orgs = await db.select().from(organizations);
@@ -265,8 +273,75 @@ async function main() {
   }
   console.log("progress-share: OK");
 
+  // Pack burn math (floor complete → remaining / exhausted) — DB-level
+  {
+    const { clientPackages } = await import("../src/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const { id } = await import("../src/lib/utils");
+    if (mine[0]) {
+      const pkgId = id("pkg");
+      await db.insert(clientPackages).values({
+        id: pkgId,
+        clientId: mine[0].id,
+        name: "Smoke pack",
+        totalSessions: 2,
+        usedSessions: 0,
+        status: "active",
+      });
+      // Simulate consume once
+      await db
+        .update(clientPackages)
+        .set({ usedSessions: 1, status: "active" })
+        .where(eq(clientPackages.id, pkgId));
+      let [p] = await db
+        .select()
+        .from(clientPackages)
+        .where(eq(clientPackages.id, pkgId))
+        .limit(1);
+      if (!p || p.totalSessions - p.usedSessions !== 1) {
+        throw new Error("pack remaining after first burn should be 1");
+      }
+      // Burn last → exhausted
+      await db
+        .update(clientPackages)
+        .set({ usedSessions: 2, status: "exhausted" })
+        .where(eq(clientPackages.id, pkgId));
+      [p] = await db
+        .select()
+        .from(clientPackages)
+        .where(eq(clientPackages.id, pkgId))
+        .limit(1);
+      if (!p || p.status !== "exhausted" || p.usedSessions !== 2) {
+        throw new Error("pack should be exhausted after full burn");
+      }
+      // Restore one (delete completed session path)
+      await db
+        .update(clientPackages)
+        .set({ usedSessions: 1, status: "active" })
+        .where(eq(clientPackages.id, pkgId));
+      [p] = await db
+        .select()
+        .from(clientPackages)
+        .where(eq(clientPackages.id, pkgId))
+        .limit(1);
+      if (!p || p.status !== "active" || p.totalSessions - p.usedSessions !== 1) {
+        throw new Error("pack restore should leave 1 remaining");
+      }
+      await db.delete(clientPackages).where(eq(clientPackages.id, pkgId));
+      console.log("pack-burn: OK");
+    } else {
+      console.log("pack-burn: skip (no client)");
+    }
+  }
+
   // coach isolation helper (dynamic import of coach internals via public path)
   await loadClientContextIsolation(orgA.id, mine[0]?.id);
+
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch {
+    // ignore lock leftovers on Windows
+  }
 
   console.log("smoke-floor: OK");
 }

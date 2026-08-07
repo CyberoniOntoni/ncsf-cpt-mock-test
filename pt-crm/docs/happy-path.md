@@ -48,14 +48,16 @@ After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_V
 3. **Apply** on a tip (or keyboard **A**) fills open sets with suggested kg / target reps.
 4. Floor shortcuts (**?** for help): Space set · A apply · N/P exercise · +/− load · S save · U undo · R rest · Esc dismiss.
 5. **Complete session**:
-   - Burns **one pack session** when a pack is active.
+   - Burns **one pack session** when a pack is **active** (oldest pack first). Closing a calendar booking does **not** burn a pack.
+   - Flash + close-loop show pack left / empty / no pack. Empty → **Renew pack** deep-link.
+   - Home (**/**) revalidates so open sessions drop off and **Needs you** can show low/empty pack.
    - Full set log stays on the **session** (and under **Sessions**).
    - **Notes & recommendations** only gets a note if you entered **pain** or **session notes**.
 6. **Close the loop** (Session complete card):
    - **Copy summary** / Share (primary)
    - **Book next** appointment (collapsed form; defaults to session duration)
    - **Keep on program** — **Add to plan** for ad-hoc floor exercises (program-day sessions only)
-   - **Open client** · **Log check-in**
+   - **Open client** · **Today** · **Log check-in** · **Renew/Add pack** when relevant
    - After complete: **Program** / **Progress** links when available; book next uses session duration.
    - Meta: Home · Program · Progress · All sessions
 

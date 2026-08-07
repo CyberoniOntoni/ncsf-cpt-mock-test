@@ -248,7 +248,7 @@ export async function adjustPackageUsedAction(
 
 /**
  * Consume one session from the oldest active pack (if any).
- * Used when a floor session or booked appointment is completed.
+ * Used when a floor session is completed (not calendar “close booking”).
  * Safe no-op when no pack / already empty.
  */
 export async function tryConsumePackageSessionAction(clientId: string) {
@@ -266,8 +266,26 @@ export async function tryConsumePackageSessionAction(clientId: string) {
     )
     .orderBy(asc(clientPackages.purchasedAt))
     .limit(1);
-  if (!pkg || pkg.usedSessions >= pkg.totalSessions) {
-    return { consumed: false as const };
+  if (!pkg) {
+    return { consumed: false as const, reason: "no_pack" as const };
+  }
+  // Heal inconsistent row: active but already fully used
+  if (pkg.usedSessions >= pkg.totalSessions) {
+    if (pkg.status === "active") {
+      await db
+        .update(clientPackages)
+        .set({ status: "exhausted" })
+        .where(eq(clientPackages.id, pkg.id));
+      revalidateClient(clientId);
+    }
+    return {
+      consumed: false as const,
+      reason: "empty" as const,
+      packageId: pkg.id,
+      packageName: pkg.name,
+      remaining: 0,
+      status: "exhausted" as const,
+    };
   }
   const used = pkg.usedSessions + 1;
   const remaining = pkg.totalSessions - used;
@@ -283,7 +301,9 @@ export async function tryConsumePackageSessionAction(clientId: string) {
   revalidateClient(clientId);
   return {
     consumed: true as const,
+    reason: "ok" as const,
     packageId: pkg.id,
+    packageName: pkg.name,
     remaining,
     status,
   };

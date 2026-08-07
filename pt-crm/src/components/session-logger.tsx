@@ -267,6 +267,10 @@ export function SessionLogger({
   const [summaryText, setSummaryText] = useState<string | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [autoRest, setAutoRest] = useState(true);
+  /** Pack line after complete (burn / empty / no pack). */
+  const [packBurnLine, setPackBurnLine] = useState<string | null>(null);
+  const [packBurnEmpty, setPackBurnEmpty] = useState(false);
+
   /** Optimistic status after complete (before server refresh lands). */
   const [statusOverride, setStatusOverride] = useState<string | null>(null);
   const startedAtRef = useRef<number>(
@@ -1269,12 +1273,43 @@ export function SessionLogger({
         } catch {
           /* ignore */
         }
+        // Pack burn feedback (floor complete only burns when was in_progress)
+        let packBit = "";
+        setPackBurnEmpty(false);
+        const pb = done?.packBurn;
+        if (pb?.consumed && pb.remaining != null) {
+          if (pb.remaining === 0 || pb.status === "exhausted") {
+            packBit = " · Pack empty — renew";
+            setPackBurnLine(
+              pb.packageName
+                ? `${pb.packageName} · empty — renew on client`
+                : "Pack empty — renew on client"
+            );
+            setPackBurnEmpty(true);
+          } else {
+            packBit = ` · ${pb.remaining} pack left`;
+            setPackBurnLine(
+              pb.packageName
+                ? `${pb.packageName} · ${pb.remaining} left`
+                : `${pb.remaining} session${pb.remaining === 1 ? "" : "s"} left on pack`
+            );
+          }
+        } else if (pb?.reason === "empty") {
+          packBit = " · Pack already empty";
+          setPackBurnLine("Pack was already empty — renew on client");
+          setPackBurnEmpty(true);
+        } else if (pb?.reason === "no_pack" && client?.id) {
+          packBit = " · No pack";
+          setPackBurnLine("No active pack — add one on the client to track remaining");
+        } else {
+          setPackBurnLine(null);
+        }
         const meso =
           done?.mesoAdvance?.label || done?.mesoAdvance?.week != null
             ? ` · Mesocycle → ${done.mesoAdvance.label || `W${done.mesoAdvance.week}`}`
             : "";
         flash(
-          `Session completed · summary ready to share${meso}`,
+          `Session completed · summary ready${packBit}${meso}`,
           "success"
         );
         setStatusOverride("completed");
@@ -1695,8 +1730,45 @@ export function SessionLogger({
                   {overallRpe ? ` · RPE ${overallRpe}` : ""}
                   {bookedLine ? ` · ${bookedLine}` : ""}
                 </p>
+                {packBurnLine && (
+                  <p
+                    className={cn(
+                      "mt-1 text-xs",
+                      packBurnEmpty
+                        ? "font-medium text-amber-300/95"
+                        : "text-emerald-200/80"
+                    )}
+                  >
+                    {packBurnLine}
+                    {client?.id && packBurnEmpty && (
+                      <>
+                        {" · "}
+                        <Link
+                          href={`/clients/${client.id}#crm-pack`}
+                          className="underline hover:text-amber-200"
+                        >
+                          Renew pack
+                        </Link>
+                      </>
+                    )}
+                    {client?.id &&
+                      !packBurnEmpty &&
+                      packBurnLine.startsWith("No active") && (
+                        <>
+                          {" · "}
+                          <Link
+                            href={`/clients/${client.id}#crm-pack`}
+                            className="underline hover:text-emerald-200"
+                          >
+                            Add pack
+                          </Link>
+                        </>
+                      )}
+                  </p>
+                )}
                 <p className="mt-1 text-[11px] text-zinc-500">
-                  Share the summary, then rebook or log a touch.
+                  Share the summary, then rebook or log a touch. Home Needs you
+                  refreshes when you go back.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1760,6 +1832,28 @@ export function SessionLogger({
                     className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
                   >
                     Open client
+                  </Link>
+                  {(packBurnEmpty ||
+                    packBurnLine?.startsWith("No active")) && (
+                    <Link
+                      href={`/clients/${client.id}#crm-pack`}
+                      className={cn(
+                        "inline-flex min-h-11 items-center font-medium hover:underline",
+                        packBurnEmpty
+                          ? "text-amber-400/95 hover:text-amber-300"
+                          : "text-zinc-400 hover:text-emerald-400"
+                      )}
+                    >
+                      {packBurnEmpty ? "Renew pack" : "Add pack"}
+                    </Link>
+                  )}
+                  <Link
+                    href={
+                      client.id ? `/?client=${client.id}` : "/"
+                    }
+                    className="inline-flex min-h-11 items-center font-medium text-zinc-400 hover:text-emerald-400 hover:underline"
+                  >
+                    Today
                   </Link>
                   <HomeQuickCheckIn
                     clientId={client.id}
