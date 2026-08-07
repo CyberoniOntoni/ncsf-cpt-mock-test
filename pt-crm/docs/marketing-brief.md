@@ -12,7 +12,7 @@
 
 1. **Floor first** — Today board, sticky client, one primary CTA.
 2. **Spine not bloat** — packs, bookings, check-ins, invoices next to the log.
-3. **Self-host honesty** — your LXC, one volume, pilot before multi-tenant cloud.
+3. **Scope honesty** — solo / micro-studio; not franchise ERP or client apps (yet).
 
 ## Site map (v1)
 
@@ -30,12 +30,12 @@
 3. **Mess vs board** — problem/solution  
 4. **Features** — six capability cards  
 5. **Training day** — four-step happy path  
-6. **Self-host CTA** — register / sign in / LXC
+6. **Get started CTA** — register / sign in (no self-hosting copy on the public site for now)
 
 ## CTAs
 
 - Primary: **Create studio account** → `/register`
-- Secondary: **Sign in** → `/login` (demo seed for local)
+- Secondary: **Sign in** → `/login`
 
 ## Voice
 

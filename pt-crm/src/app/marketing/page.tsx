@@ -5,7 +5,6 @@ import {
   Check,
   Dumbbell,
   Receipt,
-  Server,
   Sparkles,
   Timer,
   Users,
@@ -17,7 +16,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "#features", label: "Features" },
   { href: "#day", label: "The day" },
-  { href: "#host", label: "Self-host" },
+  { href: "#start", label: "Get started" },
 ] as const;
 
 const FEATURES = [
@@ -75,7 +74,7 @@ const DAY = [
 const FOR = [
   "Solo PTs and micro-studios",
   "Trainers who live on the floor",
-  "Self-host pilots (laptop → LXC)",
+  "Studios that want packs, bookings, and money in one place",
 ] as const;
 
 const NOT_FOR = [
@@ -237,8 +236,8 @@ export default function MarketingPage() {
                 </Link>
               </div>
               <p className="mt-5 text-xs text-zinc-600">
-                Self-host first · one volume to back up · no card processor
-                required
+                Floor first · commercial spine without the bloat · manual
+                invoices when you need them
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm lg:mx-0 lg:max-w-none">
@@ -311,8 +310,7 @@ export default function MarketingPage() {
               </p>
               <p className="mt-4 text-sm leading-relaxed text-emerald-100/65">
                 Between sessions: stage, pack, book, invoice, check-in. On the
-                floor: log, complete, share, rebook. Docker + PGlite — one volume
-                to back up when you go to LXC.
+                floor: log, complete, share, rebook — one product for the day.
               </p>
             </div>
           </div>
@@ -387,8 +385,8 @@ export default function MarketingPage() {
           </div>
         </section>
 
-        {/* Self-host */}
-        <section id="host" className="scroll-mt-20">
+        {/* Get started */}
+        <section id="start" className="scroll-mt-20">
           <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-20">
             <div className="relative overflow-hidden rounded-2xl border border-emerald-900/40 bg-gradient-to-br from-emerald-950/50 via-zinc-950 to-zinc-950 p-6 sm:p-10">
               <div
@@ -397,18 +395,13 @@ export default function MarketingPage() {
               />
               <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                 <div className="max-w-xl">
-                  <div className="flex items-center gap-2 text-emerald-400/90">
-                    <Server className="h-4 w-4" aria-hidden />
-                    <SectionLabel>Pilot & deploy</SectionLabel>
-                  </div>
+                  <SectionLabel>Get started</SectionLabel>
                   <h2 className="mt-3 text-2xl font-semibold tracking-tight text-zinc-50 sm:text-3xl">
-                    Your machine. Your LXC. Your volume.
+                    Open a studio. Run the day.
                   </h2>
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400 sm:text-base">
-                    FloorScribe is self-host first. Create a studio on this
-                    instance, or use the local demo seed. Data lives in one
-                    PGlite volume — back it up before busy weeks. Ship with
-                    Docker on Proxmox when the laptop isn’t enough.
+                    Create your studio account, add clients, and start from
+                    Today. Sign in if you already have access.
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Link href="/register" className="inline-flex">
@@ -427,22 +420,12 @@ export default function MarketingPage() {
                       </Button>
                     </Link>
                   </div>
-                  <p className="mt-6 text-xs leading-relaxed text-zinc-600">
-                    Local demo seed:{" "}
-                    <code className="rounded bg-zinc-900 px-1.5 py-0.5 text-zinc-500">
-                      pt@demo.local
-                    </code>{" "}
-                    /{" "}
-                    <code className="rounded bg-zinc-900 px-1.5 py-0.5 text-zinc-500">
-                      trainer123
-                    </code>
-                  </p>
                 </div>
                 <ul className="shrink-0 space-y-2 text-sm text-zinc-500 sm:pt-8">
                   {[
                     "Register → own studio",
-                    "Settings → profile & password",
-                    "Docker · DEPLOY.md for LXC",
+                    "Today board → sticky client",
+                    "Settings → profile & studio",
                   ].map((line) => (
                     <li key={line} className="flex items-center gap-2">
                       <Check

@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Floor OS for personal trainers",
   description:
-    "FloorScribe — run the training day on one board: sessions, packs, bookings, invoices, and coach. Built for the gym floor, not desk CRM bloat. Self-host first.",
+    "FloorScribe — run the training day on one board: sessions, packs, bookings, invoices, and coach. Built for the gym floor, not desk CRM bloat.",
   openGraph: {
     title: "FloorScribe — floor OS for personal trainers",
     description:
-      "Sessions, clients, programs, CRM, invoices — floor first. Self-host pilot ready.",
+      "Sessions, clients, programs, CRM, invoices — floor first.",
     type: "website",
   },
   twitter: {
