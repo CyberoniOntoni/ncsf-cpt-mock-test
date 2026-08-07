@@ -101,7 +101,7 @@ type Program = {
 };
 
 function isSuccessFlash(msg: string) {
-  return !/fail|could not|assign a client|no correctives|no new correctives/i.test(
+  return !/fail|error|could not|not found|needs equipment|unavailable|assign a client|no correctives|no new correctives|invalid/i.test(
     msg
   );
 }
@@ -288,8 +288,12 @@ export function ProgramDetail({
   function removeExercise(id: string) {
     if (!confirm("Remove this exercise?")) return;
     startTransition(async () => {
-      await deleteProgramExerciseAction(id);
-      router.refresh();
+      try {
+        await deleteProgramExerciseAction(id);
+        router.refresh();
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Remove failed");
+      }
     });
   }
 
@@ -336,9 +340,13 @@ export function ProgramDetail({
   function removeProgram() {
     if (!confirm("Delete this entire program?")) return;
     startTransition(async () => {
-      await deleteProgramAction(program.id);
-      router.push("/programs");
-      router.refresh();
+      try {
+        await deleteProgramAction(program.id);
+        router.push("/programs");
+        router.refresh();
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Delete failed");
+      }
     });
   }
 
@@ -892,6 +900,7 @@ export function ProgramDetail({
             <div className="mt-3">
               <ExerciseBankPicker
                 title={`Add to ${day.name}`}
+                disabled={pending}
                 onCancel={() => setAddDayId(null)}
                 onPick={(bank) => addExercise(day.id, bank)}
               />
@@ -969,6 +978,7 @@ export function ProgramDetail({
                       <ExerciseBankPicker
                         preferPattern={ex.movementPattern}
                         title={`Swap “${ex.exerciseName}”`}
+                        disabled={pending}
                         onCancel={() => setSwapId(null)}
                         onPick={(bank) => swapExercise(ex.id, bank)}
                       />

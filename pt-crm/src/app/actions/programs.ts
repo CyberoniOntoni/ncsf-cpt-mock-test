@@ -697,25 +697,28 @@ export async function addProgramExerciseAction(input: {
     groupRole: null,
   });
 
-  // Seed meso baseline when baselines already exist
+  // Seed meso baseline only when baselines already exist (non-empty map)
   const prevMeta =
     (dayRow.program.generationMeta as Record<string, unknown> | null) || {};
   const baselines =
     (prevMeta.baselinePrescriptions as
       | Record<string, { sets: number; reps: string; rpe: string | null; restSec: number | null }>
       | undefined) || {};
-  const nextBaselines = {
-    ...baselines,
-    [peId]: { sets, reps, rpe, restSec },
-  };
+  const hasBaselines = Object.keys(baselines).length > 0;
+  const nextMeta = hasBaselines
+    ? {
+        ...prevMeta,
+        baselinePrescriptions: {
+          ...baselines,
+          [peId]: { sets, reps, rpe, restSec },
+        },
+      }
+    : prevMeta;
 
   await db
     .update(programs)
     .set({
-      generationMeta: {
-        ...prevMeta,
-        baselinePrescriptions: nextBaselines,
-      },
+      generationMeta: nextMeta,
       updatedAt: new Date(),
     })
     .where(eq(programs.id, dayRow.program.id));

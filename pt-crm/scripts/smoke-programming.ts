@@ -26,6 +26,7 @@ import {
   defaultAddExerciseRx,
   rankBankByNameQuery,
 } from "../src/lib/program-exercise-add";
+import { detectIntent } from "../src/lib/ai/intents";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT: ${msg}`);
@@ -270,6 +271,27 @@ function main() {
     assert(ranked.every((e) => /face pull/i.test(e.name)), "includes only");
   }
   console.log("ok program-exercise-add");
+
+  // detectIntent: append vs correctives anchors
+  {
+    const append = detectIntent("add face pulls to day 1");
+    assert(append.kind === "append_exercise", "add face pulls → append_exercise");
+    if (append.kind === "append_exercise") {
+      assert(append.dayHint === 1, "dayHint 1");
+      assert(
+        /face\s*pull/i.test(append.exerciseQuery || ""),
+        "exerciseQuery face pulls"
+      );
+    }
+    const broad = detectIntent("add exercise variety");
+    assert(
+      broad.kind !== "append_exercise",
+      "bare 'add exercise variety' must not append"
+    );
+    const corr = detectIntent("insert correctives");
+    assert(corr.kind === "insert_correctives", "insert correctives");
+  }
+  console.log("ok detectIntent append/correctives");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

@@ -40,15 +40,19 @@ export function detectIntent(message: string): CoachIntent {
     return { kind: "insert_correctives" };
   }
 
-  // Append single exercise to a program day (after correctives so they win)
+  // Append single exercise to a program day (after correctives so they win).
+  // Require program/day/plan anchor (or quoted exercise + day) so bare
+  // "add exercise variety" does not fire.
   if (
     /(add|append|include|put)\b.{0,40}\b(to|on|into)\b.{0,20}\b(program|plan|day|workout)/i.test(
       m
     ) ||
-    /\b(add|append)\b.{0,48}\b(exercise|movement|drill)\b/i.test(m) ||
     /\badd\s+[a-z0-9][a-z0-9\s\-]{1,40}\s+to\s+(day|the program|program)/i.test(
       m
-    )
+    ) ||
+    (/\b(add|append)\b/i.test(m) &&
+      /["“].+?["”]/.test(m) &&
+      /\b(day\s*[1-6a-d]?|program|plan)\b/i.test(m))
   ) {
     const dayM = m.match(/\bday\s*([1-6a-d])\b/i);
     let dayHint: number | undefined;

@@ -21,11 +21,14 @@ export function ExerciseBankPicker({
   onCancel,
   preferPattern,
   title = "Swap from exercise bank",
+  disabled = false,
 }: {
   onPick: (ex: BankExercisePick) => void;
   onCancel: () => void;
   preferPattern?: string | null;
   title?: string;
+  /** Disable pick/close while a parent mutation is pending */
+  disabled?: boolean;
 }) {
   const [all, setAll] = useState<BankExercisePick[]>([]);
   const [q, setQ] = useState("");
@@ -76,12 +79,22 @@ export function ExerciseBankPicker({
   }, [all, q, pattern, availableOnly, preferPattern]);
 
   return (
-    <div className="space-y-2 rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3">
+    <div
+      className={`space-y-2 rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3 ${
+        disabled ? "pointer-events-none opacity-60" : ""
+      }`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-xs font-semibold uppercase tracking-wide text-emerald-400">
           {title}
         </div>
-        <Button type="button" variant="ghost" className="text-xs" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="text-xs"
+          disabled={disabled}
+          onClick={onCancel}
+        >
           Close
         </Button>
       </div>
@@ -92,12 +105,14 @@ export function ExerciseBankPicker({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             autoFocus
+            disabled={disabled}
           />
         </div>
         <select
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm"
+          className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm disabled:opacity-50"
           value={pattern}
           onChange={(e) => setPattern(e.target.value)}
+          disabled={disabled}
         >
           {patterns.map((p) => (
             <option key={p} value={p}>
@@ -110,6 +125,7 @@ export function ExerciseBankPicker({
             type="checkbox"
             checked={availableOnly}
             onChange={(e) => setAvailableOnly(e.target.checked)}
+            disabled={disabled}
           />
           Available only
         </label>
@@ -120,7 +136,8 @@ export function ExerciseBankPicker({
           <li key={ex.id}>
             <button
               type="button"
-              className="flex w-full items-start justify-between gap-2 border-b border-zinc-800 px-3 py-2 text-left last:border-0 hover:bg-zinc-800/80"
+              disabled={disabled}
+              className="flex w-full items-start justify-between gap-2 border-b border-zinc-800 px-3 py-2 text-left last:border-0 hover:bg-zinc-800/80 disabled:opacity-50"
               onClick={() => onPick(ex)}
             >
               <div>

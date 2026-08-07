@@ -650,12 +650,18 @@ async function handleAppendExerciseIntent(
     };
   }
 
+  const dayHintOutOfRange =
+    intent.dayHint != null &&
+    (intent.dayHint < 1 || intent.dayHint > days.length);
   const day =
     intent.dayHint != null &&
     intent.dayHint >= 1 &&
     intent.dayHint <= days.length
       ? days[intent.dayHint - 1]
       : days[0];
+  const dayHintNote = dayHintOutOfRange
+    ? `Day ${intent.dayHint} not on this plan — using ${day.name}.`
+    : null;
 
   const query = (intent.exerciseQuery || "").trim();
   if (!query) {
@@ -664,6 +670,7 @@ async function handleAppendExerciseIntent(
       ...solutionCardSchema.parse({
         summary: `Which exercise should I add to “${prog.title}”?`,
         interventions: [
+          ...(dayHintNote ? [dayHintNote] : []),
           `Target day: ${day.name}. Name an exercise from your bank — e.g. “add face pulls to day 1”.`,
         ],
         playbookTitles: ["Program design (CRM)"],
@@ -728,19 +735,23 @@ async function handleAppendExerciseIntent(
   const pick = availableRanked[0];
   const ambiguous = availableRanked.length > 1;
   const warmupNote = intent.isWarmup ? " as warm-up" : "";
+  const defaultsCopy = intent.isWarmup
+    ? "defaults: 2×8-10 @ RPE 5–6 · 45s rest"
+    : "defaults: 3×8-10 @ RPE 7";
 
   return {
     type: "solution",
     ...solutionCardSchema.parse({
       summary: `Add ${pick.name}${warmupNote} to ${day.name} on “${prog.title}”`,
       interventions: [
+        ...(dayHintNote ? [dayHintNote] : []),
         ambiguous
-          ? `Best match for “${query}”. Also matched: ${availableRanked
+          ? `Best match: ${pick.name}. Also: ${availableRanked
               .slice(1, 4)
               .map((e) => e.name)
-              .join(", ")}.`
+              .join(", ")} — Apply uses best match.`
           : `Matched “${query}” in the exercise bank.`,
-        "Apply appends a straight set at the end of the day (defaults: 3×8-10 @ RPE 7).",
+        `Apply appends a straight set at the end of the day (${defaultsCopy}).`,
       ],
       playbookTitles: ["Program design (CRM)"],
       actions: [
