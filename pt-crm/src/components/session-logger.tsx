@@ -500,11 +500,10 @@ export function SessionLogger({
     return `${h}h ${m}m`;
   }, [nowTick]);
 
-  // On current change: drop sticky expand overrides so only current stays open
-  // (empty map → defaultExerciseCollapsed opens current, collapses the rest)
+  // Scroll current into view when it advances — keep manual expand overrides
+  // so peeking a prior exercise is not wiped mid-session (Focus current clears).
   useEffect(() => {
     if (readonly || !currentExId) return;
-    setCollapsed({});
     requestAnimationFrame(() => {
       document.getElementById(`ex-${currentExId}`)?.scrollIntoView({
         behavior: "smooth",
@@ -1427,13 +1426,31 @@ export function SessionLogger({
           flash(`No previous weights for ${log.exerciseName}`, "info");
           return;
         }
+        const before = snapshotSetLogs(log.setLogs);
+        const nextSets = applyPreviousWeights(log.setLogs || [], res.setLogs);
+        const changed =
+          JSON.stringify(before) !== JSON.stringify(snapshotSetLogs(nextSets));
+        if (!changed) {
+          flash("Sets already match last loads", "info");
+          return;
+        }
+        pushUndo({
+          type: "update_log",
+          logId: log.id,
+          before: {
+            setLogs: before,
+            completed: log.completed,
+            notes: log.notes,
+          },
+          label: `Fill last · ${log.exerciseName}`,
+        });
         markDirty();
         setLogs((prev) =>
           prev.map((l) => {
             if (l.id !== log.id) return l;
             return {
               ...l,
-              setLogs: applyPreviousWeights(l.setLogs || [], res.setLogs),
+              setLogs: nextSets,
             };
           })
         );
@@ -1592,10 +1609,10 @@ export function SessionLogger({
               {!readonly && currentExId && (
                 <button
                   type="button"
-                  className="text-[11px] font-medium text-zinc-500 hover:text-emerald-400 hover:underline"
+                  className="inline-flex min-h-11 items-center text-[11px] font-medium text-zinc-500 hover:text-emerald-400 hover:underline"
                   onClick={() => {
+                    // Clear sticky expands so only current is open (default rules)
                     setCollapsed({});
-                    // effect will open currentExId on next current change; defaults re-apply now
                     document.getElementById(`ex-${currentExId}`)?.scrollIntoView({
                       behavior: "smooth",
                       block: "nearest",
@@ -1623,6 +1640,7 @@ export function SessionLogger({
             type="button"
             size="sm"
             variant="secondary"
+            className="min-h-11"
             loading={pending}
             onClick={complete}
           >
@@ -2308,6 +2326,7 @@ export function SessionLogger({
                           type="button"
                           variant="secondary"
                           size="sm"
+                          className="min-h-11"
                           disabled={pending}
                           onClick={() => copyLastWeights(log)}
                         >
@@ -2336,6 +2355,7 @@ export function SessionLogger({
                         type="button"
                         variant="ghost"
                         size="sm"
+                        className="min-h-11"
                         onClick={() => {
                           const sec =
                             log.restAfterSec ||
@@ -2356,6 +2376,7 @@ export function SessionLogger({
                         type="button"
                         variant="ghost"
                         size="sm"
+                        className="min-h-11"
                         onClick={() => {
                           const completed = !log.completed;
                           updateLog(log.id, {

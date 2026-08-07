@@ -130,7 +130,18 @@ async function main() {
       userOverride: true,
     })
   ) {
-    // user forced collapse on current? userOverride true means collapsed
+    throw new Error("user forced collapse override should stay collapsed");
+  }
+  if (
+    defaultExerciseCollapsed({
+      readonly: false,
+      logId: "a",
+      currentExId: "b",
+      completed: false,
+      userOverride: false,
+    }) !== false
+  ) {
+    throw new Error("user expand on non-current should stay open (peek)");
   }
   if (
     defaultExerciseCollapsed({
@@ -142,6 +153,28 @@ async function main() {
     }) !== false
   ) {
     throw new Error("user expand override");
+  }
+  if (
+    !defaultExerciseCollapsed({
+      readonly: false,
+      logId: "done",
+      currentExId: "done",
+      completed: true,
+      userOverride: undefined,
+    })
+  ) {
+    throw new Error("completed should collapse even if last/current");
+  }
+  if (
+    defaultExerciseCollapsed({
+      readonly: false,
+      logId: "done",
+      currentExId: "done",
+      completed: true,
+      userOverride: false,
+    }) !== false
+  ) {
+    throw new Error("user can expand completed");
   }
   if (!groupContainsCurrent(["x", "y"], "y")) {
     throw new Error("group current");

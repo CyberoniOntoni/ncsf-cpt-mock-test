@@ -1,6 +1,7 @@
 /**
  * Default collapsed state for an exercise card while logging.
  * userOverride: value from collapsed[logId] when user toggled; undefined = no override.
+ * Manual expands (userOverride === false) survive current-exercise advances.
  */
 export function defaultExerciseCollapsed(opts: {
   readonly: boolean;
@@ -11,7 +12,9 @@ export function defaultExerciseCollapsed(opts: {
 }): boolean {
   if (opts.userOverride !== undefined) return opts.userOverride;
   if (opts.readonly) return false;
-  // Live logging: only current exercise open by default
+  // Completed exercises stay collapsed unless the user expanded them
+  if (opts.completed) return true;
+  // Live logging: only current incomplete exercise open by default
   if (opts.currentExId && opts.logId === opts.currentExId) return false;
   return true;
 }

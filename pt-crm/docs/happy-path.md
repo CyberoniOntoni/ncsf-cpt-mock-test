@@ -40,8 +40,8 @@ After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_V
 
 1. Header / sticky: **Start session** (or Resume). New sessions seed **program notes / bank cues** into each exercise (not mesocycle meta dumps as primary cue).
 2. Log sets, RPE, pain as needed. Expanded exercises show a quiet **Cue** line and **Last** + progression tip.
-   - Non-current exercises collapse to one line; **Focus current** resets attention.
-   - **Prep open sets** on the current exercise fills empty weights and applies the progression tip.
+   - Non-current exercises collapse to one line; expand a prior one to peek loads — **Focus current** clears peeks.
+   - **Fill last** / **Prep open sets** are undoable (keyboard **U**).
    - **Add exercise** (bank) mid-session for improvisation — not on the plan until you promote it.
 3. **Apply** on a tip (or keyboard **A**) fills open sets with suggested kg / target reps.
 4. Floor shortcuts (**?** for help): Space set · A apply · N/P exercise · +/− load · S save · U undo · R rest · Esc dismiss.
