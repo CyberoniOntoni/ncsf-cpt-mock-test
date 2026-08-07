@@ -725,6 +725,7 @@ export function SessionLogger({
       label: opts.label || `${log.exerciseName} · apply progression`,
     });
     markDirty();
+    // Functional update so callers that fill weights first (prepOpenSets) compose correctly
     setLogs((prev) =>
       prev.map((l) => {
         if (l.id !== logId) return l;
@@ -745,6 +746,89 @@ export function SessionLogger({
     if (kg != null) bits.push(`${kg} kg`);
     if (reps) bits.push(`${reps} reps`);
     flash(`Applied ${bits.join(" · ")} to open sets`, "success");
+  }
+
+  /**
+   * Fill empty open-set weights from last session, then apply progression tip.
+   * Does not auto-run on mount — user tap only. Current exercise preferred.
+   */
+  async function prepOpenSets() {
+    if (readonly) return;
+    const logId = currentExId || logs.find((l) => !l.completed)?.id;
+    if (!logId) {
+      flash("No open exercise", "info");
+      return;
+    }
+    const log = logs.find((l) => l.id === logId);
+    if (!log) return;
+
+    // 1) Fill null weights from previous session if any open set lacks weight
+    const needsFill = (log.setLogs || []).some(
+      (s) => !s.completed && s.weightKg == null
+    );
+    if (needsFill && client?.id) {
+      try {
+        const res = await getLastWeightsForExerciseAction({
+          clientId: client.id,
+          exerciseId: log.exerciseId,
+          exerciseName: log.exerciseName,
+          excludeSessionId: session.id,
+        });
+        if (res.setLogs.length) {
+          pushUndo({
+            type: "update_log",
+            logId,
+            before: {
+              setLogs: snapshotSetLogs(log.setLogs),
+              completed: log.completed,
+              notes: log.notes,
+            },
+            label: `${log.exerciseName} · prep fill`,
+          });
+          markDirty();
+          setLogs((prev) =>
+            prev.map((l) => {
+              if (l.id !== logId) return l;
+              return {
+                ...l,
+                setLogs: applyPreviousWeights(l.setLogs || [], res.setLogs),
+              };
+            })
+          );
+        }
+      } catch {
+        /* continue to progression */
+      }
+    }
+
+    // 2) Apply progression for current exercise only (same as A).
+    // applyProgression flashes on success — skip final flash when it runs.
+    const sug = prevLoads[logId]?.suggestion;
+    if (sug) {
+      const range =
+        sug.kind === "reps"
+          ? (() => {
+              const pr = log.plannedReps || "";
+              const m = pr.match(/(\d+)\s*[-–—to]+\s*(\d+)/i);
+              if (m) return m[2];
+              return pr.match(/(\d+)/)?.[1] || null;
+            })()
+          : null;
+      applyProgression(logId, {
+        kg:
+          sug.suggestedKg != null && sug.suggestedKg > 0
+            ? sug.suggestedKg
+            : null,
+        reps: range,
+        label: "Prep open sets",
+      });
+      return;
+    }
+
+    flash(
+      needsFill ? "Filled last loads where available" : "Sets already prepped",
+      "info"
+    );
   }
 
   /** Apply current exercise's progression suggestion (also keyboard A). */
@@ -2016,6 +2100,23 @@ export function SessionLogger({
                           Fill last
                         </Button>
                       )}
+                      {log.id === currentExId &&
+                        ((sets.some(
+                          (s) => !s.completed && s.weightKg == null
+                        ) ||
+                          !!prevLoads[log.id]?.suggestion) && (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="min-h-11"
+                            disabled={pending}
+                            onClick={() => void prepOpenSets()}
+                            title="Fill empty weights from last time, then apply progression tip"
+                          >
+                            Prep open sets
+                          </Button>
+                        ))}
                       <Button
                         type="button"
                         variant="ghost"
