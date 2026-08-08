@@ -445,20 +445,25 @@ export function buildSchemePlan(
   const rpe = base.rpe || "7";
 
   if (opts?.isWarmup || schemeId === "straight") {
-    const planned: PlannedSetRow[] = Array.from({ length: base.sets }, () => ({
+    // Guard invalid lengths (NaN / negative throw in Array.from)
+    const n = Math.max(
+      1,
+      Math.min(20, Math.round(Number(base.sets)) || (opts?.isWarmup ? 2 : 3))
+    );
+    const planned: PlannedSetRow[] = Array.from({ length: n }, () => ({
       reps: base.reps,
       rpe,
       role: "work",
       restSec: rest,
     }));
     return {
-      sets: base.sets,
+      sets: n,
       reps: base.reps,
       rpe,
       restSec: rest,
       setScheme: opts?.isWarmup ? "straight" : schemeId,
       setSchemeMeta: {
-        summary: `${base.sets}×${base.reps}`,
+        summary: `${n}×${base.reps}`,
         howTo: def.howTo,
         plannedSets: planned,
       },

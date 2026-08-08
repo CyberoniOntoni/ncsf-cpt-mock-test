@@ -270,6 +270,9 @@ export async function executeCoachActionAction(action: CrmAction) {
     const res = await startSessionFromProgramDayAction(dayId, {
       forceNew: !!action.payload?.forceNewSession,
     });
+    if (!res.ok) {
+      throw new Error(res.error);
+    }
     return {
       ok: true as const,
       kind: "start_session" as const,

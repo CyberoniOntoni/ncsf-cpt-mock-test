@@ -101,272 +101,351 @@ async function linkSessionAndAppointment(
   if (resolvedClientId) revalidatePath(`/clients/${resolvedClientId}`);
 }
 
+/** Result type — avoid throwing expected failures (production digests them as React #441). */
+export type StartSessionResult =
+  | {
+      ok: true;
+      sessionId: string;
+      resumed: boolean;
+      clientId?: string | null;
+      alreadyCompleted?: boolean;
+    }
+  | { ok: false; error: string; code?: string };
+
 /**
  * Start (or resume) a floor session from a booked appointment.
- * Uses the client's active program first day when no session is linked yet.
+ * Prefers the client's active program; falls back to latest draft with days.
  */
-export async function startSessionFromAppointmentAction(appointmentId: string) {
-  const session = await requireSession();
-  const db = await getDb();
-  const orgId = session.organizationId;
+export async function startSessionFromAppointmentAction(
+  appointmentId: string
+): Promise<StartSessionResult> {
+  try {
+    const session = await requireSession();
+    const db = await getDb();
+    const orgId = session.organizationId;
 
-  const [appt] = await db
-    .select({
-      appt: clientAppointments,
-      clientOrg: clients.organizationId,
-    })
-    .from(clientAppointments)
-    .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
-    .where(eq(clientAppointments.id, appointmentId))
-    .limit(1);
+    const [appt] = await db
+      .select({
+        appt: clientAppointments,
+        clientOrg: clients.organizationId,
+      })
+      .from(clientAppointments)
+      .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
+      .where(eq(clientAppointments.id, appointmentId))
+      .limit(1);
 
-  if (!appt || appt.clientOrg !== orgId) {
-    throw new Error("Appointment not found");
-  }
-  const row = appt.appt;
-  if (row.status === "cancelled") {
-    throw new Error("This booking was cancelled");
-  }
+    if (!appt || appt.clientOrg !== orgId) {
+      return { ok: false, error: "Appointment not found", code: "not_found" };
+    }
+    const row = appt.appt;
+    if (row.status === "cancelled") {
+      return {
+        ok: false,
+        error: "This booking was cancelled",
+        code: "cancelled",
+      };
+    }
 
-  // Resume linked in-progress session
-  if (row.sessionId) {
-    const [linked] = await db
+    // Resume linked in-progress session
+    if (row.sessionId) {
+      const [linked] = await db
+        .select()
+        .from(trainingSessions)
+        .where(
+          and(
+            eq(trainingSessions.id, row.sessionId),
+            eq(trainingSessions.organizationId, orgId)
+          )
+        )
+        .limit(1);
+      if (linked?.status === "in_progress") {
+        return {
+          ok: true,
+          sessionId: linked.id,
+          resumed: true,
+          clientId: row.clientId,
+        };
+      }
+      if (linked?.status === "completed") {
+        return {
+          ok: true,
+          sessionId: linked.id,
+          resumed: false,
+          clientId: row.clientId,
+          alreadyCompleted: true,
+        };
+      }
+      if (!linked || linked.status === "cancelled") {
+        await db
+          .update(clientAppointments)
+          .set({ sessionId: null })
+          .where(eq(clientAppointments.id, row.id));
+      }
+    }
+
+    // Prefer active program, then any non-archived plan for this client
+    const clientPrograms = await db
       .select()
-      .from(trainingSessions)
+      .from(programs)
       .where(
         and(
-          eq(trainingSessions.id, row.sessionId),
-          eq(trainingSessions.organizationId, orgId)
+          eq(programs.organizationId, orgId),
+          eq(programs.clientId, row.clientId)
         )
       )
+      .orderBy(desc(programs.updatedAt))
+      .limit(20);
+
+    const program =
+      clientPrograms.find((p) => p.status === "active") ||
+      clientPrograms.find((p) => p.status === "draft") ||
+      clientPrograms.find((p) => p.status !== "archived") ||
+      null;
+
+    if (!program) {
+      return {
+        ok: false,
+        error:
+          "This client has no program yet. Design or assign a plan, then start from the booking.",
+        code: "no_program",
+      };
+    }
+
+    const [day] = await db
+      .select()
+      .from(programDays)
+      .where(eq(programDays.programId, program.id))
+      .orderBy(asc(programDays.dayIndex))
       .limit(1);
-    if (linked?.status === "in_progress") {
+    if (!day) {
       return {
-        sessionId: linked.id,
-        resumed: true as const,
-        clientId: row.clientId,
+        ok: false,
+        error: "That program has no training days yet.",
+        code: "no_day",
       };
     }
-    if (linked?.status === "completed") {
-      // Point trainer at the log instead of starting a second floor day
-      return {
-        sessionId: linked.id,
-        resumed: false as const,
-        clientId: row.clientId,
-        alreadyCompleted: true as const,
-      };
-    }
-    // Cancelled / missing log — clear stale link and continue to start
-    if (!linked || linked.status === "cancelled") {
-      await db
-        .update(clientAppointments)
-        .set({ sessionId: null })
-        .where(eq(clientAppointments.id, row.id));
-    }
+
+    const res = await startSessionFromProgramDayAction(day.id, {
+      appointmentId: row.id,
+    });
+    if (!res.ok) return res;
+
+    revalidatePath("/calendar");
+    revalidatePath(`/clients/${row.clientId}`);
+    revalidatePath("/");
+    return {
+      ok: true,
+      sessionId: res.sessionId,
+      resumed: res.resumed,
+      clientId: row.clientId,
+    };
+  } catch (e) {
+    console.error("[startSessionFromAppointment]", e);
+    return {
+      ok: false,
+      error:
+        e instanceof Error && e.message && !/digest|Server Components/i.test(e.message)
+          ? e.message
+          : "Could not start session from booking",
+      code: "error",
+    };
   }
-
-  // Active program → first day
-  const [program] = await db
-    .select()
-    .from(programs)
-    .where(
-      and(
-        eq(programs.organizationId, orgId),
-        eq(programs.clientId, row.clientId),
-        eq(programs.status, "active")
-      )
-    )
-    .orderBy(desc(programs.updatedAt))
-    .limit(1);
-
-  if (!program) {
-    throw new Error(
-      "Add a program for this client first, then start from the booking."
-    );
-  }
-
-  const [day] = await db
-    .select()
-    .from(programDays)
-    .where(eq(programDays.programId, program.id))
-    .orderBy(asc(programDays.dayIndex))
-    .limit(1);
-  if (!day) {
-    throw new Error("Program has no days");
-  }
-
-  const res = await startSessionFromProgramDayAction(day.id, {
-    appointmentId: row.id,
-  });
-  revalidatePath("/calendar");
-  revalidatePath(`/clients/${row.clientId}`);
-  revalidatePath("/");
-  return {
-    sessionId: res.sessionId,
-    resumed: res.resumed,
-    clientId: row.clientId,
-  };
 }
 
 /**
  * Start a new session for a program day, or resume an existing in-progress one.
+ * Returns { ok:false } for expected failures (avoids React #441 digests in production).
  */
 export async function startSessionFromProgramDayAction(
   programDayId: string,
   opts?: { forceNew?: boolean; appointmentId?: string | null }
-) {
-  const session = await requireSession();
-  const db = await getDb();
-  const appointmentId = opts?.appointmentId?.trim() || null;
+): Promise<StartSessionResult> {
+  try {
+    const session = await requireSession();
+    const db = await getDb();
+    const appointmentId = opts?.appointmentId?.trim() || null;
 
-  if (!opts?.forceNew) {
-    const existing = await findInProgressSessionForDayAction(programDayId);
-    if (existing) {
-      // Attach booking to an already-open day log when starting from calendar
-      if (appointmentId && !existing.appointmentId) {
-        await linkSessionAndAppointment(
-          existing.id,
-          appointmentId,
-          existing.clientId,
-          session.organizationId
-        );
+    if (!opts?.forceNew) {
+      const existing = await findInProgressSessionForDayAction(programDayId);
+      if (existing) {
+        if (appointmentId && !existing.appointmentId) {
+          await linkSessionAndAppointment(
+            existing.id,
+            appointmentId,
+            existing.clientId,
+            session.organizationId
+          );
+        }
+        return {
+          ok: true,
+          sessionId: existing.id,
+          resumed: true,
+          clientId: existing.clientId,
+        };
       }
-      return { sessionId: existing.id, resumed: true as const };
     }
-  }
 
-  const [day] = await db
-    .select()
-    .from(programDays)
-    .where(eq(programDays.id, programDayId))
-    .limit(1);
-  if (!day) throw new Error("Program day not found");
-
-  const [program] = await db
-    .select()
-    .from(programs)
-    .where(
-      and(
-        eq(programs.id, day.programId),
-        eq(programs.organizationId, session.organizationId)
-      )
-    )
-    .limit(1);
-  if (!program) throw new Error("Program not found");
-
-  const dayExercises = await db
-    .select()
-    .from(programExercises)
-    .where(eq(programExercises.programDayId, day.id))
-    .orderBy(asc(programExercises.sortOrder));
-
-  // Prefill weights from last completed session for this client when possible
-  const lastByKey = await loadLastSetLogsMap(
-    session.organizationId,
-    program.clientId
-  );
-
-  const sessionId = id("ses");
-  const title = `${day.name} · ${program.title}`;
-
-  await db.insert(trainingSessions).values({
-    id: sessionId,
-    organizationId: session.organizationId,
-    clientId: program.clientId,
-    programId: program.id,
-    programDayId: day.id,
-    createdByUserId: session.userId,
-    title,
-    status: "in_progress",
-    performedAt: new Date(),
-    appointmentId: appointmentId,
-  });
-
-  if (appointmentId) {
-    await linkSessionAndAppointment(
-      sessionId,
-      appointmentId,
-      program.clientId,
-      session.organizationId
-    );
-  }
-
-  const { initSetLogsFromScheme } = await import("@/lib/set-schemes");
-
-  // Bank cues for floor coaching — seed into log notes when program has none
-  const exerciseIds = [
-    ...new Set(
-      dayExercises
-        .map((e) => e.exerciseId)
-        .filter((x): x is string => typeof x === "string" && x.length > 0)
-    ),
-  ];
-  const bankCueById = new Map<string, string>();
-  if (exerciseIds.length > 0) {
-    const bankRows = await db
-      .select({ id: exercises.id, cues: exercises.cues })
-      .from(exercises)
-      .where(inArray(exercises.id, exerciseIds));
-    for (const row of bankRows) {
-      const cue = row.cues?.trim();
-      if (cue) bankCueById.set(row.id, cue);
+    const [day] = await db
+      .select()
+      .from(programDays)
+      .where(eq(programDays.id, programDayId))
+      .limit(1);
+    if (!day) {
+      return {
+        ok: false,
+        error: "Training day not found — open the program and try again.",
+        code: "no_day",
+      };
     }
-  }
 
-  for (const ex of dayExercises) {
-    const key = exerciseKey(ex.exerciseId, ex.exerciseName);
-    const prevSets = lastByKey.get(key) || null;
-    const scheme = ex.setScheme || "straight";
-    const schemeMeta = ex.setSchemeMeta || null;
-    const setLogs = initSetLogsFromScheme(
-      scheme,
-      schemeMeta,
-      ex.sets,
-      ex.reps,
-      prevSets
+    const [program] = await db
+      .select()
+      .from(programs)
+      .where(eq(programs.id, day.programId))
+      .limit(1);
+    if (!program) {
+      return {
+        ok: false,
+        error: "That program was removed. Open Plans and pick another day.",
+        code: "not_found",
+      };
+    }
+    if (program.organizationId !== session.organizationId) {
+      return {
+        ok: false,
+        error: "Program not found for this studio.",
+        code: "not_found",
+      };
+    }
+
+    const dayExercises = await db
+      .select()
+      .from(programExercises)
+      .where(eq(programExercises.programDayId, day.id))
+      .orderBy(asc(programExercises.sortOrder));
+
+    const lastByKey = await loadLastSetLogsMap(
+      session.organizationId,
+      program.clientId
     );
-    const agg = aggregateFromSetLogs(setLogs);
 
-    // Prefer short program notes; else bank cue; never seed meta dumps
-    const seededNotes = seedSessionNotes({
-      programNotes: ex.notes,
-      bankCue: ex.exerciseId ? bankCueById.get(ex.exerciseId) : null,
+    const sessionId = id("ses");
+    const title = `${day.name} · ${program.title}`;
+
+    await db.insert(trainingSessions).values({
+      id: sessionId,
+      organizationId: session.organizationId,
+      clientId: program.clientId,
+      programId: program.id,
+      programDayId: day.id,
+      createdByUserId: session.userId,
+      title,
+      status: "in_progress",
+      performedAt: new Date(),
+      appointmentId: appointmentId,
     });
 
-    await db.insert(sessionExerciseLogs).values({
-      id: id("sel"),
-      sessionId,
-      programExerciseId: ex.id,
-      exerciseId: ex.exerciseId,
-      exerciseName: ex.exerciseName,
-      movementPattern: ex.movementPattern,
-      sortOrder: ex.sortOrder,
-      isWarmup: ex.isWarmup,
-      plannedSets: setLogs.length || ex.sets,
-      plannedReps: ex.reps,
-      actualSets: agg.actualSets,
-      actualReps: agg.actualReps,
-      weightKg: agg.weightKg,
-      rpe: ex.rpe,
-      completed: false,
-      notes: seededNotes,
-      setLogs,
-      setScheme: scheme,
-      setSchemeMeta: schemeMeta,
-      groupId: ex.groupId || null,
-      groupKind: ex.groupKind || null,
-      groupLabel: ex.groupLabel || null,
-      groupOrder: ex.groupOrder ?? null,
-      restAfterSec: ex.restAfterSec ?? null,
-      restBetweenRoundsSec: ex.restBetweenRoundsSec ?? null,
-      groupRole: ex.groupRole || null,
-    });
-  }
+    if (appointmentId) {
+      await linkSessionAndAppointment(
+        sessionId,
+        appointmentId,
+        program.clientId,
+        session.organizationId
+      );
+    }
 
-  revalidatePath(`/programs/${program.id}`);
-  if (program.clientId) revalidatePath(`/clients/${program.clientId}`);
-  revalidatePath("/sessions");
-  return { sessionId, resumed: false as const };
+    const { initSetLogsFromScheme } = await import("@/lib/set-schemes");
+
+    const exerciseIds = [
+      ...new Set(
+        dayExercises
+          .map((e) => e.exerciseId)
+          .filter((x): x is string => typeof x === "string" && x.length > 0)
+      ),
+    ];
+    const bankCueById = new Map<string, string>();
+    if (exerciseIds.length > 0) {
+      const bankRows = await db
+        .select({ id: exercises.id, cues: exercises.cues })
+        .from(exercises)
+        .where(inArray(exercises.id, exerciseIds));
+      for (const row of bankRows) {
+        const cue = row.cues?.trim();
+        if (cue) bankCueById.set(row.id, cue);
+      }
+    }
+
+    for (const ex of dayExercises) {
+      const key = exerciseKey(ex.exerciseId, ex.exerciseName);
+      const prevSets = lastByKey.get(key) || null;
+      const scheme = ex.setScheme || "straight";
+      const schemeMeta = ex.setSchemeMeta || null;
+      const setLogs = initSetLogsFromScheme(
+        scheme,
+        schemeMeta,
+        ex.sets,
+        ex.reps,
+        prevSets
+      );
+      const agg = aggregateFromSetLogs(setLogs);
+
+      const seededNotes = seedSessionNotes({
+        programNotes: ex.notes,
+        bankCue: ex.exerciseId ? bankCueById.get(ex.exerciseId) : null,
+      });
+
+      await db.insert(sessionExerciseLogs).values({
+        id: id("sel"),
+        sessionId,
+        programExerciseId: ex.id,
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        movementPattern: ex.movementPattern,
+        sortOrder: ex.sortOrder,
+        isWarmup: ex.isWarmup,
+        plannedSets: setLogs.length || Math.max(1, ex.sets || 1),
+        plannedReps: ex.reps,
+        actualSets: agg.actualSets,
+        actualReps: agg.actualReps,
+        weightKg: agg.weightKg,
+        rpe: ex.rpe,
+        completed: false,
+        notes: seededNotes,
+        setLogs,
+        setScheme: scheme,
+        setSchemeMeta: schemeMeta,
+        groupId: ex.groupId || null,
+        groupKind: ex.groupKind || null,
+        groupLabel: ex.groupLabel || null,
+        groupOrder: ex.groupOrder ?? null,
+        restAfterSec: ex.restAfterSec ?? null,
+        restBetweenRoundsSec: ex.restBetweenRoundsSec ?? null,
+        groupRole: ex.groupRole || null,
+      });
+    }
+
+    revalidatePath(`/programs/${program.id}`);
+    if (program.clientId) revalidatePath(`/clients/${program.clientId}`);
+    revalidatePath("/sessions");
+    return {
+      ok: true,
+      sessionId,
+      resumed: false,
+      clientId: program.clientId,
+    };
+  } catch (e) {
+    console.error("[startSessionFromProgramDay]", e);
+    return {
+      ok: false,
+      error:
+        e instanceof Error &&
+        e.message &&
+        !/digest|Server Components|Minified React/i.test(e.message)
+          ? e.message
+          : "Could not start session — try again or open the program first.",
+      code: "error",
+    };
+  }
 }
 
 function exerciseKey(exerciseId: string | null | undefined, name: string) {

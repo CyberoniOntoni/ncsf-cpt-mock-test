@@ -40,14 +40,25 @@ export function StartFromAppointmentButton({
       try {
         setStoredActiveClient(clientId, clientName ?? null);
         const res = await startSessionFromAppointmentAction(appointmentId);
-        if ("alreadyCompleted" in res && res.alreadyCompleted) {
+        if (!res.ok) {
+          setError(res.error);
+          setProgramHint(
+            res.code === "no_program" || /program/i.test(res.error)
+          );
+          return;
+        }
+        if (res.alreadyCompleted) {
           setOpenLogOnly(true);
         }
         router.push(`/sessions/${res.sessionId}`);
         router.refresh();
       } catch (e) {
         const msg =
-          e instanceof Error ? e.message : "Could not start session";
+          e instanceof Error &&
+          e.message &&
+          !/digest|Server Components|Minified React|#441/i.test(e.message)
+            ? e.message
+            : "Could not start session from booking.";
         setError(msg);
         setProgramHint(/program/i.test(msg));
       }

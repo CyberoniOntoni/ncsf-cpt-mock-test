@@ -43,10 +43,21 @@ export function StartSessionButton({
         const res = await startSessionFromProgramDayAction(programDayId, {
           forceNew,
         });
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
         router.push(`/sessions/${res.sessionId}`);
         router.refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not start session");
+        // Production often digests throws as React #441 — prefer result.ok path above
+        const msg =
+          e instanceof Error &&
+          e.message &&
+          !/digest|Server Components|Minified React|#441/i.test(e.message)
+            ? e.message
+            : "Could not start session — check the program still exists.";
+        setError(msg);
       }
     });
   }
