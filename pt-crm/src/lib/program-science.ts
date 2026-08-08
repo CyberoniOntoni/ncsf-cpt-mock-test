@@ -7,6 +7,7 @@
  */
 
 import { patternLabel } from "@/lib/exercise-meta";
+import { sessionPhase, shouldPrecede } from "@/lib/exercise-order";
 import { parseRepRange } from "@/lib/progression";
 
 export type ProgramScienceGoal =
@@ -175,8 +176,21 @@ export function recommendedRestSec(opts: {
 }): { restSec: number; rationale: string } {
   if (opts.isWarmup) {
     return {
-      restSec: 45,
-      rationale: "Warm-up — short rest, stay warm without fatigue.",
+      restSec: 30,
+      rationale:
+        "Warm-up — short rest; stay warm. Quality activation, not fatigue.",
+    };
+  }
+
+  // Cool-down lengthen / restore often has near-zero rest
+  if (
+    opts.pattern === "mobility" &&
+    opts.reps &&
+    /(hold|breath|min easy)/i.test(opts.reps)
+  ) {
+    return {
+      restSec: 20,
+      rationale: "Cool-down / mobility — minimal rest; keep breathing easy.",
     };
   }
 
@@ -256,7 +270,11 @@ export function defaultRxForGoal(
   }).restSec;
 
   if (isWarmup) {
-    return { sets: 2, reps: "8-10", rpe: "5-6", restSec: 45 };
+    // RAMP-style activation defaults when appending a warm-up row by hand
+    if (pattern === "mobility") {
+      return { sets: 2, reps: "6-10/side", rpe: "4-5", restSec: 30 };
+    }
+    return { sets: 2, reps: "8-12", rpe: "4-5", restSec: 30 };
   }
 
   if (pattern === "mobility") {
@@ -343,8 +361,8 @@ export function estimateDayMinutes(exercises: PlannedExercise[]): number {
 }
 
 /**
- * Session order heuristics: warm-ups → power → compounds → accessories → core.
- * Returns coach-facing hints when order is inverted.
+ * Session order heuristics using exercise-order scores.
+ * Flags inverted pairs (e.g. OHP before bench, isolation before compounds).
  */
 export function sessionOrderHints(
   dayName: string,
@@ -353,47 +371,50 @@ export function sessionOrderHints(
   const flags: PlanFlag[] = [];
   if (exercises.length < 2) return flags;
 
-  type Rank = number;
-  function rank(ex: PlannedExercise): Rank {
-    if (ex.isWarmup) return 0;
-    const p = normPattern(ex.movementPattern);
-    if (POWER.has(p)) return 1;
-    if (COMPOUND.has(p)) return 2;
-    if (p === "carry") return 3;
-    if (ACCESSORY.has(p) && p !== "core") return 4;
-    if (p === "core") return 5;
-    return 3;
-  }
-
-  let maxRankSeen = -1;
   let sawCompound = false;
   let sawAccessoryBeforeCompound = false;
   let sawCoreBeforeCompound = false;
   let sawPowerAfterCompound = false;
+  let sawVerticalBeforeHorizontalPush = false;
 
-  for (const ex of exercises) {
-    const r = rank(ex);
+  for (let i = 0; i < exercises.length; i++) {
+    const ex = exercises[i]!;
     const p = normPattern(ex.movementPattern);
-    if (COMPOUND.has(p) && !ex.isWarmup) sawCompound = true;
-    if (!ex.isWarmup && ACCESSORY.has(p) && p !== "core" && !sawCompound) {
+    const phase = sessionPhase(ex);
+    if (phase !== "work") continue;
+
+    if (COMPOUND.has(p)) sawCompound = true;
+    if (ACCESSORY.has(p) && p !== "core" && !sawCompound) {
       sawAccessoryBeforeCompound = true;
     }
-    if (!ex.isWarmup && p === "core" && !sawCompound) {
-      sawCoreBeforeCompound = true;
+    if (p === "core" && !sawCompound) sawCoreBeforeCompound = true;
+    if (POWER.has(p) && sawCompound) sawPowerAfterCompound = true;
+
+    // Specific: any later horizontal primary vs earlier vertical push
+    if (p === "vertical_push") {
+      for (let j = i + 1; j < exercises.length; j++) {
+        const later = exercises[j]!;
+        if (sessionPhase(later) !== "work") continue;
+        if (
+          normPattern(later.movementPattern) === "horizontal_push" &&
+          shouldPrecede(later, ex)
+        ) {
+          sawVerticalBeforeHorizontalPush = true;
+        }
+      }
     }
-    if (!ex.isWarmup && POWER.has(p) && sawCompound) {
-      sawPowerAfterCompound = true;
-    }
-    if (r + 1 < maxRankSeen) {
-      // significant inversion already captured by specific flags
-    }
-    maxRankSeen = Math.max(maxRankSeen, r);
   }
 
   if (sawPowerAfterCompound) {
     flags.push({
       severity: "warn",
       message: `${dayName}: power/plyo after heavy compounds — move explosive work earlier for quality.`,
+    });
+  }
+  if (sawVerticalBeforeHorizontalPush) {
+    flags.push({
+      severity: "warn",
+      message: `${dayName}: vertical press before horizontal (e.g. OHP before bench) — put the bigger horizontal press first when both are hard sets.`,
     });
   }
   if (sawAccessoryBeforeCompound) {
@@ -409,10 +430,9 @@ export function sessionOrderHints(
     });
   }
 
-  // Warm-ups not first
-  const firstWorking = exercises.findIndex((e) => !e.isWarmup);
+  const firstWorking = exercises.findIndex((e) => sessionPhase(e) === "work");
   const warmupAfterWork = exercises.some(
-    (e, i) => e.isWarmup && firstWorking >= 0 && i > firstWorking
+    (e, i) => sessionPhase(e) === "warmup" && firstWorking >= 0 && i > firstWorking
   );
   if (warmupAfterWork) {
     flags.push({

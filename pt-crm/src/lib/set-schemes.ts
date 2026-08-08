@@ -48,6 +48,8 @@ export type SetSchemeMeta = {
   /** Short coach summary shown in UI */
   summary?: string;
   howTo?: string;
+  /** Session phase for prep blocks (warm-up / cool-down) without schema columns */
+  phase?: "warmup" | "cooldown" | "work";
   plannedSets?: PlannedSetRow[];
   /** Default tempo e.g. 3-1-X-1 */
   tempo?: string;

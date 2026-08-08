@@ -25,6 +25,8 @@ import { HomeQuickCheckIn } from "@/components/home-quick-checkin";
 import { ExerciseBankPicker } from "@/components/exercise-bank-picker";
 import type { SessionSetLog } from "@/db/schema";
 import { canPromoteSessionLogToProgram } from "@/lib/program-exercise-add";
+import { sessionPhase } from "@/lib/exercise-order";
+import { isCooldownMeta } from "@/lib/session-prep";
 import {
   emomRestSeconds,
   formatEmomRestLabel,
@@ -140,6 +142,7 @@ type Log = {
     summary?: string;
     howTo?: string;
     tempo?: string;
+    phase?: string;
     group?: {
       rounds?: number;
       restBetweenExercisesSec?: number;
@@ -193,6 +196,18 @@ function normalizeLogs(logs: Log[]): Log[] {
     ...l,
     setLogs: ensureSetLogs(l),
   }));
+}
+
+/** Floor phase for badges / separators (cool-down via isCooldownMeta). */
+function floorPhase(log: Log): "warmup" | "work" | "cooldown" {
+  // sessionPhase: isWarmup → warmup; else isCooldownMeta → cooldown; else meta phase
+  return sessionPhase(log);
+}
+
+function phaseLabel(phase: "warmup" | "work" | "cooldown"): string {
+  if (phase === "warmup") return "Warm-up";
+  if (phase === "cooldown") return "Cool-down";
+  return "Main work";
 }
 
 const cellInput =
@@ -2163,12 +2178,22 @@ export function SessionLogger({
             onPick={(bank) => addBankExerciseToSession(bank)}
           />
         )}
-        {groupExercisesIntoBlocks(logs).map((block, blockIdx) => {
+        {(() => {
+          const blocks = groupExercisesIntoBlocks(logs);
+          let prevPhase: "warmup" | "work" | "cooldown" | null = null;
+
+          return blocks.map((block, blockIdx) => {
           const renderExerciseCard = (log: Log, exIdx: number, inGroup: boolean) => {
           const sets = log.setLogs || [];
           const setsDone = sets.filter((s) => s.completed).length;
           const collapsedEx = isCollapsed(log);
           const isCurrent = log.id === currentExId && !readonly;
+          const phase = floorPhase(log);
+          const isPrep = phase === "warmup" || phase === "cooldown";
+          // Cool-down only via isCooldownMeta (not isWarmup flag)
+          const showCooldown =
+            !log.isWarmup && isCooldownMeta(log.setSchemeMeta);
+          const showWarmup = phase === "warmup" && !showCooldown;
 
           return (
             <div key={log.id} id={`ex-${log.id}`} className="scroll-mt-24">
@@ -2177,13 +2202,27 @@ export function SessionLogger({
                 "overflow-hidden p-0",
                 log.completed && "border-emerald-900/40 bg-emerald-950/10",
                 isCurrent && !log.completed && "border-emerald-700/50 ring-1 ring-emerald-900/40",
-                inGroup && "border-zinc-800/80"
+                inGroup && "border-zinc-800/80",
+                // Quieter prep / finish blocks (don't compete with main work)
+                !log.completed &&
+                  !isCurrent &&
+                  !inGroup &&
+                  phase === "warmup" &&
+                  "border-emerald-900/20 bg-zinc-950/30",
+                !log.completed &&
+                  !isCurrent &&
+                  !inGroup &&
+                  phase === "cooldown" &&
+                  "border-sky-900/25 bg-zinc-950/30"
               )}
             >
               {/* Exercise header */}
               <button
                 type="button"
-                className="flex w-full items-start justify-between gap-2 px-3 py-3 text-left sm:px-4"
+                className={cn(
+                  "flex w-full items-start justify-between gap-2 text-left sm:px-4",
+                  isPrep ? "px-3 py-2.5" : "px-3 py-3"
+                )}
                 onClick={() => toggleCollapse(log.id)}
                 aria-expanded={!collapsedEx}
                 aria-controls={`ex-body-${log.id}`}
@@ -2195,7 +2234,9 @@ export function SessionLogger({
                         "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                         inGroup
                           ? "bg-amber-950/60 text-amber-200 ring-1 ring-amber-800/50"
-                          : "bg-zinc-800 text-zinc-400"
+                          : isPrep
+                            ? "bg-zinc-900 text-zinc-500"
+                            : "bg-zinc-800 text-zinc-400"
                       )}
                     >
                       {inGroup
@@ -2203,12 +2244,34 @@ export function SessionLogger({
                         : exIdx + 1}
                     </span>
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-zinc-50">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "font-medium",
+                            isPrep ? "text-zinc-200" : "text-zinc-50"
+                          )}
+                        >
                           {log.exerciseName}
                         </span>
-                        {log.isWarmup && (
-                          <Badge tone="green">Warm-up</Badge>
+                        {showWarmup && (
+                          <span title="Warm-up exercise">
+                            <Badge
+                              tone="green"
+                              className="text-[10px] uppercase tracking-wide"
+                            >
+                              Warm-up
+                            </Badge>
+                          </span>
+                        )}
+                        {showCooldown && (
+                          <span title="Cool-down exercise">
+                            <Badge
+                              tone="sky"
+                              className="text-[10px] uppercase tracking-wide"
+                            >
+                              Cool-down
+                            </Badge>
+                          </span>
                         )}
                         {log.completed && <Badge tone="green">Done</Badge>}
                         {isCurrent && !log.completed && (
@@ -2222,13 +2285,18 @@ export function SessionLogger({
                       )}
                     </div>
                   </div>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5 pl-9 text-xs text-zinc-500">
+                  <div
+                    className={cn(
+                      "flex flex-wrap items-center gap-1.5 pl-9 text-xs text-zinc-500",
+                      isPrep ? "mt-1" : "mt-1.5"
+                    )}
+                  >
                     {!inGroup && log.setScheme && log.setScheme !== "straight" && (
                       <Badge tone="amber">
                         {formatSchemeName(log.setScheme)}
                       </Badge>
                     )}
-                    {!inGroup && log.setScheme === "straight" && (
+                    {!inGroup && log.setScheme === "straight" && !isPrep && (
                       <Badge>Straight</Badge>
                     )}
                     <span className="tabular-nums text-zinc-400">
@@ -2804,6 +2872,42 @@ export function SessionLogger({
           );
           };
 
+          const blockLead =
+            block.type === "group" ? block.members[0] : block.exercise;
+          const blockPhase = blockLead ? floorPhase(blockLead) : "work";
+          const showPhaseSep =
+            prevPhase !== null
+              ? prevPhase !== blockPhase
+              : blockPhase === "warmup" || blockPhase === "cooldown";
+          const sepText =
+            blockPhase === "work" && prevPhase === "warmup"
+              ? "Main work"
+              : phaseLabel(blockPhase);
+          prevPhase = blockPhase;
+
+          const phaseSep = showPhaseSep ? (
+            <div
+              role="separator"
+              aria-label={sepText}
+              className={cn(
+                "flex items-center gap-2 pt-1",
+                blockIdx > 0 && "mt-1 border-t border-zinc-800/60"
+              )}
+            >
+              <span
+                className={cn(
+                  "text-[10px] font-semibold uppercase tracking-wider",
+                  blockPhase === "warmup" && "text-emerald-500/80",
+                  blockPhase === "cooldown" && "text-sky-400/80",
+                  blockPhase === "work" && "text-zinc-500"
+                )}
+              >
+                {sepText}
+              </span>
+              <span className="h-px flex-1 bg-zinc-800/80" aria-hidden />
+            </div>
+          ) : null;
+
           if (block.type === "group") {
             const memberIds = block.members.map((m) => m.id);
             const groupHasCurrent = groupContainsCurrent(
@@ -2831,8 +2935,9 @@ export function SessionLogger({
               });
             }
             return (
+              <div key={block.groupId} className="space-y-2">
+              {phaseSep}
               <div
-                key={block.groupId}
                 className="space-y-2 rounded-xl border border-amber-900/40 bg-amber-950/10 p-2.5 sm:p-3"
               >
                 {!groupOpen ? (
@@ -2935,11 +3040,18 @@ export function SessionLogger({
                   </>
                 )}
               </div>
+              </div>
             );
           }
 
-          return renderExerciseCard(block.exercise, blockIdx, false);
-        })}
+          return (
+            <div key={block.exercise.id} className="space-y-2">
+              {phaseSep}
+              {renderExerciseCard(block.exercise, blockIdx, false)}
+            </div>
+          );
+        });
+        })()}
       </div>
 
       {/* Session summary text — CTAs live on close-loop when completed */}

@@ -45,9 +45,20 @@ export default async function ProgramsPage({
   const newHref = clientId
     ? `/programs/new?client=${encodeURIComponent(clientId)}`
     : "/programs/new";
+  const scratchHref = clientId
+    ? `/programs/new?mode=scratch&client=${encodeURIComponent(clientId)}`
+    : "/programs/new?mode=scratch";
 
   const active = rows.filter((p) => p.status === "active");
-  const rest = rows.filter((p) => p.status !== "active");
+  /** Drafts with no client — reusable templates / save for later */
+  const savedForLater = rows.filter(
+    (p) => p.status === "draft" && !p.clientId
+  );
+  const rest = rows.filter(
+    (p) =>
+      p.status !== "active" &&
+      !(p.status === "draft" && !p.clientId)
+  );
 
   function ProgramRow({
     p,
@@ -82,8 +93,8 @@ export default async function ProgramsPage({
                 {p.clientName}
               </span>
             ) : (
-              <span className="text-xs font-normal text-zinc-600">
-                Unassigned
+              <span className="text-xs font-normal text-amber-500/80">
+                {p.status === "draft" ? "Template" : "Unassigned"}
               </span>
             )}
           </span>
@@ -121,14 +132,29 @@ export default async function ProgramsPage({
       <PageHeader
         title="Programs"
         eyebrow={<AreaEyebrow areaId="plans" current="Programs" />}
-        description="Build plans from your bank and floor equipment — then start a session from any day"
+        description="New program opens a chooser (auto-design or scratch). From scratch jumps to empty days — unassigned drafts land under Saved for later."
         actions={
-          <Link href={newHref}>
-            <Button className="min-h-11">
-              <Plus className="h-4 w-4" />
-              New program
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={scratchHref}
+              title="Empty days — skip the chooser"
+              className="inline-flex"
+            >
+              <Button variant="secondary" className="min-h-11">
+                From scratch
+              </Button>
+            </Link>
+            <Link
+              href={newHref}
+              title="Choose auto-design or build from scratch"
+              className="inline-flex"
+            >
+              <Button className="min-h-11">
+                <Plus className="h-4 w-4" />
+                New program
+              </Button>
+            </Link>
+          </div>
         }
       />
 
@@ -161,13 +187,38 @@ export default async function ProgramsPage({
           }
           description={
             filterName
-              ? "Design a plan for this client from their goals, constraints, and the gear you have on the floor."
-              : "Pick a client (optional), set days and goal, preview the split, then save. You can swap exercises anytime."
+              ? "New program opens a chooser — auto-design from goals and floor gear, or build from scratch for this client."
+              : "New program opens a chooser: Auto-design fills a week, or Build from scratch with optional Save for later (unassigned template)."
           }
           action={
-            <Link href={newHref}>
-              <Button className="min-h-11">Design a program</Button>
-            </Link>
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-wrap justify-center gap-2">
+                <Link
+                  href={scratchHref}
+                  title="Empty days — skip the chooser"
+                  className="inline-flex"
+                >
+                  <Button variant="secondary" className="min-h-11">
+                    From scratch
+                  </Button>
+                </Link>
+                <Link
+                  href={newHref}
+                  title="Choose auto-design or build from scratch"
+                  className="inline-flex"
+                >
+                  <Button className="min-h-11">
+                    <Plus className="h-4 w-4" />
+                    New program
+                  </Button>
+                </Link>
+              </div>
+              <p className="max-w-sm text-center text-[11px] leading-relaxed text-zinc-600">
+                <span className="text-zinc-500">New program</span> → chooser ·{" "}
+                <span className="text-zinc-500">From scratch</span> → blank days
+                right away
+              </p>
+            </div>
           }
         />
       ) : (
@@ -184,10 +235,34 @@ export default async function ProgramsPage({
               </div>
             </section>
           )}
+          {savedForLater.length > 0 && (
+            <section className="rounded-xl border border-amber-900/35 bg-amber-950/10 px-3 py-3 sm:px-4 sm:py-3.5">
+              <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <SectionLabel as="h2" className="text-amber-400/90">
+                  Saved for later
+                </SectionLabel>
+                <span className="text-[11px] tabular-nums text-zinc-600">
+                  {savedForLater.length} template
+                  {savedForLater.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <p className="mb-3 text-[11px] leading-relaxed text-zinc-500">
+                Unassigned drafts you can reuse. Open one, finish exercises, then
+                assign a client when you train.
+              </p>
+              <div className="grid gap-2">
+                {savedForLater.map((p) => (
+                  <ProgramRow key={p.id} p={p} />
+                ))}
+              </div>
+            </section>
+          )}
           {rest.length > 0 && (
             <section>
               <SectionLabel as="h2" className="mb-2.5">
-                {active.length > 0 ? "Drafts & archived" : "All programs"}
+                {active.length > 0 || savedForLater.length > 0
+                  ? "Other drafts & archived"
+                  : "All programs"}
               </SectionLabel>
               <div className="grid gap-2">
                 {rest.map((p) => (

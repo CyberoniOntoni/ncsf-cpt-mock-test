@@ -74,6 +74,8 @@ See **[docs/happy-path.md](./docs/happy-path.md)** — train a client end-to-end
 
 **Pilot (local go/no-go):** **[docs/pilot-readiness.md](./docs/pilot-readiness.md)** — trainer loop, smokes, Windows PGlite backup.
 
+**Status / roadmap (what’s done & next):** **[docs/STATUS.md](./docs/STATUS.md)** — living audit for humans and agents.
+
 ## Product map
 
 | Area | Route |

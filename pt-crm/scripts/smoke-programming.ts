@@ -46,6 +46,18 @@ import {
   sortPatternsForUi,
 } from "../src/lib/exercise-meta";
 import { suggestProgression } from "../src/lib/progression";
+import {
+  cooldownSlotsForSession,
+  densityFromMinutes,
+  isCooldownMeta,
+  prepPrescription,
+  warmupSlotsForSession,
+} from "../src/lib/session-prep";
+import {
+  shouldPrecede,
+  sortExercisesForSession,
+  scoreExerciseOrder,
+} from "../src/lib/exercise-order";
 import { detectIntent } from "../src/lib/ai/intents";
 
 function assert(cond: unknown, msg: string): asserts cond {
@@ -276,7 +288,7 @@ function main() {
   assert(nextProgramExerciseSortOrder([]) === 0, "empty day sort 0");
   assert(nextProgramExerciseSortOrder([0, 1, 4]) === 5, "max+1");
   assert(defaultAddExerciseRx(false).sets === 3, "main sets");
-  assert(defaultAddExerciseRx(true).restSec === 45, "warmup rest");
+  assert(defaultAddExerciseRx(true).restSec === 30, "warmup rest short");
   {
     const rx = rxFromSessionSetLogs(
       [
@@ -382,7 +394,7 @@ function main() {
       pattern: "squat",
     });
     assert(strAppend.restSec >= 150, "append strength rest");
-    assert(defaultAddExerciseRx(true).restSec === 45, "warmup rest");
+    assert(defaultAddExerciseRx(true).restSec === 30, "warmup rest");
 
     const hypBand = weeklySetBand("horizontal_pull", "hypertrophy");
     assert(
@@ -524,6 +536,132 @@ function main() {
     assert(holdHard?.kind === "hold", "high RPE hold");
   }
   console.log("ok program-science");
+
+  // session-prep: RAMP warm-up + cool-down structure
+  {
+    const shortW = warmupSlotsForSession("lower", "short");
+    assert(shortW.length >= 1, "short warm-up ≥1");
+    assert(
+      shortW.every((s) => s.phase === "warmup"),
+      "warm-up phase only"
+    );
+    const longW = warmupSlotsForSession("legs", "long");
+    assert(longW.length >= 3, "long warm-up fuller RAMP");
+    assert(
+      longW.some((s) => s.role === "raise") &&
+        longW.some((s) => s.role === "activate"),
+      "raise + activate present"
+    );
+    const pushW = warmupSlotsForSession("push", "standard");
+    assert(
+      pushW.some((s) => /scap|cuff|shoulder/i.test(s.preferTags.join(" "))),
+      "push activates scap/cuff tags"
+    );
+    const cdShort = cooldownSlotsForSession("upper", "short");
+    assert(cdShort.length >= 1, "short cool-down still present");
+    assert(cdShort.every((s) => s.phase === "cooldown"), "cool-down phase");
+    const cdLong = cooldownSlotsForSession("legs", "long");
+    assert(cdLong.length >= 2, "long cool-down multi-step");
+    const actRx = prepPrescription("activate");
+    assert(actRx.rpe.startsWith("4") || actRx.rpe.startsWith("5"), "activate easy RPE");
+    const raiseRx = prepPrescription("raise");
+    assert(/min/i.test(raiseRx.reps), "raise is time-based");
+    assert(densityFromMinutes(30) === "short", "30m short");
+    assert(densityFromMinutes(60) === "long", "60m long");
+    assert(
+      isCooldownMeta({ phase: "cooldown" }) &&
+        isCooldownMeta({ summary: "Cool-down · easy" }),
+      "cooldown meta detect"
+    );
+    assert(!isCooldownMeta({ phase: "warmup" }), "warmup not cooldown");
+  }
+  console.log("ok session-prep warm-up/cool-down");
+
+  // exercise-order: prioritization & periodization sequencing
+  {
+    const bench = {
+      exerciseName: "Barbell Bench Press",
+      movementPattern: "horizontal_push",
+      isWarmup: false,
+    };
+    const military = {
+      exerciseName: "Military Press",
+      movementPattern: "vertical_push",
+      isWarmup: false,
+    };
+    const incline = {
+      exerciseName: "Incline Dumbbell Press",
+      movementPattern: "horizontal_push",
+      isWarmup: false,
+    };
+    const laterals = {
+      exerciseName: "Lateral Raise",
+      movementPattern: "vertical_push",
+      isWarmup: false,
+    };
+    const backSquat = {
+      exerciseName: "Back Squat",
+      movementPattern: "squat",
+      isWarmup: false,
+    };
+    const lunge = {
+      exerciseName: "Walking Lunge",
+      movementPattern: "squat",
+      isWarmup: false,
+    };
+    const facePull = {
+      exerciseName: "Band Face Pull",
+      movementPattern: "horizontal_pull",
+      isWarmup: false,
+    };
+    const row = {
+      exerciseName: "Barbell Bent-Over Row",
+      movementPattern: "horizontal_pull",
+      isWarmup: false,
+    };
+    const wu = {
+      exerciseName: "World's Greatest Stretch",
+      movementPattern: "mobility",
+      isWarmup: true,
+      setSchemeMeta: { phase: "warmup", summary: "Warm-up · Mobilize" },
+    };
+    const cd = {
+      exerciseName: "Easy walk",
+      movementPattern: "cardio",
+      isWarmup: false,
+      setSchemeMeta: { phase: "cooldown", summary: "Cool-down · Downshift" },
+    };
+
+    assert(shouldPrecede(bench, military), "bench before military press");
+    assert(shouldPrecede(bench, incline), "flat bench before incline");
+    assert(shouldPrecede(military, laterals), "OHP before lateral raises");
+    assert(shouldPrecede(backSquat, lunge), "back squat before lunges");
+    assert(shouldPrecede(row, facePull), "row before face pull");
+    assert(shouldPrecede(wu, bench), "warm-up before bench");
+    assert(shouldPrecede(bench, cd), "work before cool-down");
+
+    const pushDay = sortExercisesForSession(
+      [laterals, military, facePull, bench, wu, cd],
+      { sessionKind: "push", goal: "strength" }
+    );
+    const names = pushDay.map((e) => e.exerciseName);
+    assert(names[0] === wu.exerciseName, "warm-up first in sort");
+    assert(
+      names.indexOf(bench.exerciseName!) < names.indexOf(military.exerciseName!),
+      "bench before military after full sort"
+    );
+    assert(
+      names.indexOf(military.exerciseName!) < names.indexOf(laterals.exerciseName!),
+      "military before laterals"
+    );
+    assert(names[names.length - 1] === cd.exerciseName, "cool-down last");
+
+    // Pull day biases rows early vs pushes
+    const pullBias = scoreExerciseOrder(row, { sessionKind: "pull" });
+    const pushOnPull = scoreExerciseOrder(bench, { sessionKind: "pull" });
+    assert(pullBias.rank < pushOnPull.rank, "on pull day, rows before bench");
+  }
+  console.log("ok exercise-order prioritization");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

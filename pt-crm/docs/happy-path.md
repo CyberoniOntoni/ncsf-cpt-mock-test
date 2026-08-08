@@ -94,11 +94,11 @@ Header whisper links (package left · next booking) jump to `#crm`.
 
 ## 5b. Program edit & mesocycle (desk)
 
-1. Open **Programs →** a plan.
+1. Open **Programs → New program** — chooser: **Auto-design** (wizard) or **Build from scratch**. From the list, **From scratch** skips the chooser. Check **Save for later** on scratch to keep an **unassigned draft** (shows under **Saved for later** on `/programs`). Then open a plan.
 2. Per day: **Add exercise** opens the bank picker (append only — no full regen). New rows get **goal + pattern** defaults; picker shows pattern science + typical Rx.
 3. **Plan balance** card: weekly working sets by pattern, pull:push, session estimates, science flags, and **Fill next** chips (MEV / antagonist gaps).
-4. Edit rest → **Science rest** + **Apply**. Design wizard preview shows the same balance strip.
-5. Floor tips use **double progression** (reps → then load) and hold cues at high RPE.
+4. Edit rest → **Science rest** + **Apply**. Floor tips use **double progression** (reps → then load) and hold cues at high RPE.
+5. **Exercise order & session prep:** Auto-design and desk **Add exercise** re-sort each day: warm-up → power → primary compounds (e.g. **bench before overhead press**, squat before lunges) → secondary → isolation → cool-down. RAMP warm-up (raise / activate / mobilize / potentiate) and cool-down (downshift / lengthen) show as badges on desk and floor — not free-form notes.
 6. **Mesocycle** chips W1–W6 (deload = amber). Selecting does not write until **Apply**.
 7. Progress `n / threshold` sessions + auto-advance on/off; **Advance** steps week.
 

@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  addProgramDayAction,
   addProgramExerciseAction,
   advanceMesocycleWeekAction,
   applyMesocycleToProgramAction,
   deleteProgramAction,
+  deleteProgramDayAction,
   deleteProgramExerciseAction,
   getMesocycleProgressAction,
   getProgramVolumeReportAction,
@@ -18,9 +20,17 @@ import {
   suggestProgramMesocycleWeekAction,
   suggestSubstitutionsAction,
   swapProgramExerciseAction,
+  updateProgramDayAction,
   updateProgramExerciseAction,
   updateProgramMetaAction,
 } from "@/app/actions/programs";
+import { scratchBuildProgress } from "@/lib/program-scratch";
+import {
+  matchesScienceOrder,
+  sessionPhase,
+  sessionPhaseLabel,
+} from "@/lib/exercise-order";
+import { isCooldownMeta } from "@/lib/session-prep";
 import { groupExercisesIntoBlocks } from "@/lib/exercise-groups";
 import {
   getMesocycleWeek,
@@ -83,6 +93,7 @@ type Ex = {
   setSchemeMeta?: {
     summary?: string;
     howTo?: string;
+    phase?: string;
   } | null;
   sortOrder?: number;
   groupId?: string | null;
@@ -126,11 +137,14 @@ export function ProgramDetail({
   client,
   days,
   clients,
+  startInBuildMode = false,
 }: {
   program: Program;
   client: { id: string; firstName: string; lastName: string } | null;
   days: Day[];
   clients: { id: string; firstName: string; lastName: string }[];
+  /** Open first empty day picker after create-from-scratch */
+  startInBuildMode?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -145,6 +159,8 @@ export function ProgramDetail({
   const [addDayId, setAddDayId] = useState<string | null>(null);
   /** When opening Add exercise from a fill chip, prefer this pattern. */
   const [addPreferPattern, setAddPreferPattern] = useState<string | null>(null);
+  const [renameDayId, setRenameDayId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState({ name: "", focus: "" });
   const [suggestions, setSuggestions] = useState<SubSuggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [metaOpen, setMetaOpen] = useState(
@@ -195,6 +211,31 @@ export function ProgramDetail({
   const correctiveCount = Array.isArray(program.generationMeta?.correctiveIds)
     ? (program.generationMeta!.correctiveIds as unknown[]).length
     : 0;
+  const isScratch =
+    program.generationMeta?.source === "scratch" ||
+    program.generationMeta?.manual === true;
+  const buildProgress = useMemo(
+    () => scratchBuildProgress(days),
+    [days]
+  );
+  const needsBuildHelp =
+    isScratch ||
+    buildProgress.totalExercises === 0 ||
+    buildProgress.emptyDayIndexes.length > 0;
+
+  // After create-from-scratch: open first empty day picker once
+  useEffect(() => {
+    if (!startInBuildMode) return;
+    const firstEmpty = days.find((d) => d.exercises.length === 0);
+    if (firstEmpty) {
+      setAddDayId(firstEmpty.id);
+      setMsg(
+        "Shell ready — fill each day from the bank. Plan balance updates as you go."
+      );
+    }
+    router.replace(`/programs/${program.id}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once after create
+  }, [startInBuildMode]);
   const suggestedFromCreated = program.createdAt
     ? suggestMesocycleWeekFromStartDate(program.createdAt)
     : null;
@@ -345,10 +386,10 @@ export function ProgramDetail({
           programDayId: dayId,
           bankExerciseId: bank.id,
         });
-        setAddDayId(null);
+        // Keep bank open so you can stack several exercises on a day
         setAddPreferPattern(null);
         setMsg(
-          `Added ${res.name} to ${res.dayName} (${program.goal.replaceAll("_", " ")} defaults)`
+          `Added ${res.name} to ${res.dayName} (science order) — pick another or Cancel`
         );
         router.refresh();
       } catch (e) {
@@ -575,10 +616,64 @@ export function ProgramDetail({
     [planScience, program.goal]
   );
 
+  function addDay() {
+    setMsg(null);
+    startTransition(async () => {
+      try {
+        const res = await addProgramDayAction(program.id);
+        setMsg(`Added ${res.name}`);
+        setAddDayId(res.dayId);
+        router.refresh();
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Could not add day");
+      }
+    });
+  }
+
+  function saveDayMeta(dayId: string) {
+    setMsg(null);
+    startTransition(async () => {
+      try {
+        await updateProgramDayAction(dayId, {
+          name: renameDraft.name,
+          focus: renameDraft.focus || null,
+        });
+        setRenameDayId(null);
+        setMsg("Day updated");
+        router.refresh();
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Could not update day");
+      }
+    });
+  }
+
+  function removeDay(dayId: string, hasExercises: boolean) {
+    if (hasExercises) {
+      if (
+        !confirm(
+          "Delete this day and all its exercises? This cannot be undone."
+        )
+      ) {
+        return;
+      }
+    }
+    setMsg(null);
+    startTransition(async () => {
+      try {
+        await deleteProgramDayAction(dayId, { force: hasExercises });
+        if (addDayId === dayId) setAddDayId(null);
+        setMsg("Day removed");
+        router.refresh();
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Could not remove day");
+      }
+    });
+  }
+
   function openAddOnFirstDay(pattern?: string | null) {
     const day = days[0];
     if (!day) {
-      setMsg("No training days — regenerate or design a program first");
+      setMsg("No training days — add a day first");
       return;
     }
     setSwapId(null);
@@ -627,6 +722,12 @@ export function ProgramDetail({
               <Badge className="capitalize">
                 {program.goal.replaceAll("_", " ")}
               </Badge>
+              {isScratch && (
+                <Badge tone="amber">From scratch</Badge>
+              )}
+              {status === "draft" && !client && (
+                <Badge tone="amber">Saved for later</Badge>
+              )}
             </div>
             <p className="mt-1 text-sm text-zinc-500">
               <span className="capitalize">
@@ -646,7 +747,10 @@ export function ProgramDetail({
                 </>
               )}
               {!client && (
-                <span className="text-zinc-600"> · Unassigned</span>
+                <span className="text-zinc-600">
+                  {" "}
+                  · Unassigned — assign a client when ready
+                </span>
               )}
             </p>
           </div>
@@ -673,6 +777,130 @@ export function ProgramDetail({
         )}
       </div>
 
+      {/* Scratch / incomplete build checklist */}
+      {needsBuildHelp && (
+        <Card
+          padding="sm"
+          className={cn(
+            "space-y-2.5",
+            isScratch
+              ? "border-amber-900/40 bg-amber-950/15"
+              : "border-zinc-800 bg-zinc-950/40"
+          )}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-200/90">
+                Build checklist
+              </p>
+              <p className="mt-0.5 text-sm text-zinc-300">
+                <span className="tabular-nums font-medium text-zinc-100">
+                  {buildProgress.daysWithWork}/{buildProgress.totalDays || 0}
+                </span>{" "}
+                days filled
+                {buildProgress.totalExercises > 0 && (
+                  <>
+                    {" · "}
+                    <span className="tabular-nums">
+                      {buildProgress.totalExercises}
+                    </span>{" "}
+                    exercises
+                  </>
+                )}
+                {buildProgress.complete && (
+                  <span className="text-zinc-500">
+                    {" "}
+                    · shell full — assign & activate when ready
+                  </span>
+                )}
+              </p>
+            </div>
+            {!buildProgress.complete && days.length > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                disabled={pending}
+                className="min-h-11"
+                onClick={() => {
+                  const empty = days.find((d) => d.exercises.length === 0);
+                  if (empty) {
+                    setAddDayId(empty.id);
+                    setSwapId(null);
+                    setEditId(null);
+                  }
+                }}
+              >
+                Next empty day
+              </Button>
+            )}
+          </div>
+          {days.length > 0 && (
+            <div className="flex h-1.5 overflow-hidden rounded-full bg-zinc-900">
+              <div
+                className="rounded-full bg-emerald-500 transition-all"
+                style={{
+                  width: `${
+                    buildProgress.totalDays
+                      ? (100 * buildProgress.daysWithWork) /
+                        buildProgress.totalDays
+                      : 0
+                  }%`,
+                }}
+              />
+            </div>
+          )}
+          <ol className="grid gap-1.5 text-[11px] text-zinc-500 sm:grid-cols-3">
+            <li
+              className={
+                buildProgress.totalDays > 0 ? "text-emerald-400/90" : ""
+              }
+            >
+              <span className="tabular-nums font-semibold text-zinc-600">
+                1.
+              </span>{" "}
+              Days laid out
+            </li>
+            <li
+              className={
+                buildProgress.complete
+                  ? "text-emerald-400/90"
+                  : buildProgress.daysWithWork > 0
+                    ? "text-amber-200/80"
+                    : ""
+              }
+            >
+              <span className="tabular-nums font-semibold text-zinc-600">
+                2.
+              </span>{" "}
+              Fill each day from bank
+            </li>
+            <li
+              className={
+                status === "active" && !!clientId ? "text-emerald-400/90" : ""
+              }
+            >
+              <span className="tabular-nums font-semibold text-zinc-600">
+                3.
+              </span>{" "}
+              Assign client · set Active
+            </li>
+          </ol>
+          {status === "draft" && !client && (
+            <p className="text-[11px] leading-snug text-zinc-500">
+              Unassigned template — open{" "}
+              <button
+                type="button"
+                className="font-medium text-emerald-400 hover:underline"
+                onClick={() => setMetaOpen(true)}
+              >
+                Program details
+              </button>{" "}
+              to assign when ready.
+            </p>
+          )}
+        </Card>
+      )}
+
       {/* Meta — collapsible */}
       <Card padding="sm" className="space-y-0">
         <button
@@ -683,7 +911,14 @@ export function ProgramDetail({
           aria-controls="program-details-panel"
           aria-label="Program details"
         >
-          <SectionLabel as="span">Program details</SectionLabel>
+          <SectionLabel as="span">
+            Program details
+            {status === "draft" && !client ? (
+              <span className="ml-2 text-[11px] font-normal normal-case tracking-normal text-amber-400/80">
+                · assign client here
+              </span>
+            ) : null}
+          </SectionLabel>
           {metaOpen ? (
             <ChevronDown className="h-4 w-4 shrink-0 text-zinc-500" />
           ) : (
@@ -1057,67 +1292,158 @@ export function ProgramDetail({
           <SectionLabel as="h2" className="mb-0">
             Training days
           </SectionLabel>
-          {days.length > 0 && (
-            <p className="text-[11px] text-zinc-600">
-              Start a session, add from the bank, or edit sets / reps / rest
-            </p>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {days.length > 0 && (
+              <p className="text-[11px] text-zinc-600">
+                Start a session, add from the bank, or edit sets / reps / rest
+              </p>
+            )}
+            {days.length < 6 && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={pending}
+                onClick={addDay}
+                className="min-h-11"
+              >
+                Add day
+              </Button>
+            )}
+          </div>
         </div>
         {days.length === 0 && (
           <p className="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/30 px-4 py-6 text-center text-sm text-zinc-500">
-            No days yet — use{" "}
-            <span className="font-medium text-zinc-400">Regenerate</span> below
-            or design a new program.
+            No days yet —{" "}
+            <button
+              type="button"
+              disabled={pending}
+              onClick={addDay}
+              className="font-medium text-emerald-400 hover:underline disabled:opacity-50"
+            >
+              Add a day
+            </button>
+            , then use{" "}
+            <span className="font-medium text-zinc-400">Add exercise</span> on
+            each day.
           </p>
         )}
         {days.map((day) => (
-          <Card key={day.id} padding="sm" className="space-y-0">
+          <Card
+            key={day.id}
+            padding="sm"
+            className={cn(
+              "space-y-0",
+              day.exercises.length === 0 &&
+                "border-dashed border-zinc-700/80 bg-zinc-950/20"
+            )}
+          >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-zinc-100">
-                {day.name}
-              </h3>
-              <p className="mt-0.5 text-[11px] text-zinc-500">
-                {day.focus ? (
-                  <>
-                    <span className="text-zinc-400">{day.focus}</span>
-                    <span className="mx-1.5 text-zinc-700">·</span>
-                  </>
-                ) : null}
-                <span className="tabular-nums">{day.exercises.length}</span>{" "}
-                exercise
-                {day.exercises.length === 1 ? "" : "s"}
-                {dayMinuteByName.get(day.name) != null &&
-                  day.exercises.length > 0 && (
-                    <>
-                      <span className="mx-1.5 text-zinc-700">·</span>
-                      <span
-                        className={cn(
-                          "tabular-nums",
-                          planScience.dayEstimates.find(
-                            (d) => d.name === day.name
-                          )?.overSessionCap
-                            ? "text-amber-300/90"
-                            : "text-zinc-400"
-                        )}
-                        title="Estimated session length from sets + rest"
-                      >
-                        ~{dayMinuteByName.get(day.name)} min
+              {renameDayId === day.id ? (
+                <div className="space-y-2">
+                  <Input
+                    value={renameDraft.name}
+                    onChange={(e) =>
+                      setRenameDraft((d) => ({ ...d, name: e.target.value }))
+                    }
+                    placeholder="Day name"
+                    className="max-w-xs"
+                    disabled={pending}
+                  />
+                  <Input
+                    value={renameDraft.focus}
+                    onChange={(e) =>
+                      setRenameDraft((d) => ({ ...d, focus: e.target.value }))
+                    }
+                    placeholder="Focus (optional)"
+                    className="max-w-xs"
+                    disabled={pending}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={pending || !renameDraft.name.trim()}
+                      onClick={() => saveDayMeta(day.id)}
+                      className="min-h-11"
+                    >
+                      Save name
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={pending}
+                      onClick={() => setRenameDayId(null)}
+                      className="min-h-11"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-sm font-semibold text-zinc-100">
+                    {day.name}
+                    {day.exercises.length === 0 && (
+                      <span className="ml-2 text-[10px] font-medium uppercase tracking-wide text-amber-400/80">
+                        Empty
                       </span>
-                    </>
-                  )}
-              </p>
+                    )}
+                  </h3>
+                  <p className="mt-0.5 text-[11px] text-zinc-500">
+                    {day.focus ? (
+                      <>
+                        <span className="text-zinc-400">{day.focus}</span>
+                        <span className="mx-1.5 text-zinc-700">·</span>
+                      </>
+                    ) : null}
+                    <span className="tabular-nums">{day.exercises.length}</span>{" "}
+                    exercise
+                    {day.exercises.length === 1 ? "" : "s"}
+                    {dayMinuteByName.get(day.name) != null &&
+                      day.exercises.length > 0 && (
+                        <>
+                          <span className="mx-1.5 text-zinc-700">·</span>
+                          <span
+                            className={cn(
+                              "tabular-nums",
+                              planScience.dayEstimates.find(
+                                (d) => d.name === day.name
+                              )?.overSessionCap
+                                ? "text-amber-300/90"
+                                : "text-zinc-400"
+                            )}
+                            title="Estimated session length from sets + rest"
+                          >
+                            ~{dayMinuteByName.get(day.name)} min
+                          </span>
+                        </>
+                      )}
+                  </p>
+                </>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <StartSessionButton programDayId={day.id} />
+              {day.exercises.length > 0 && (
+                <StartSessionButton programDayId={day.id} />
+              )}
               <Button
                 type="button"
-                variant={addDayId === day.id ? "primary" : "secondary"}
+                variant={
+                  addDayId === day.id
+                    ? "primary"
+                    : day.exercises.length === 0
+                      ? "primary"
+                      : "secondary"
+                }
                 size="sm"
                 disabled={pending}
                 onClick={() => {
                   setSwapId(null);
                   setEditId(null);
+                  setRenameDayId(null);
                   if (addDayId === day.id) {
                     setAddDayId(null);
                     setAddPreferPattern(null);
@@ -1128,18 +1454,52 @@ export function ProgramDetail({
                 }}
                 className="min-h-11"
               >
-                {addDayId === day.id ? "Cancel" : "Add exercise"}
+                {addDayId === day.id
+                  ? "Cancel"
+                  : day.exercises.length === 0
+                    ? "Add first exercise"
+                    : "Add exercise"}
+              </Button>
+              {day.exercises.length > 0 && !isScratch && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => regenerateDay(day.id, day.name)}
+                  title="Rebuild this day only"
+                  className="min-h-11"
+                >
+                  Rebuild day
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={pending}
+                onClick={() => {
+                  setRenameDayId(day.id);
+                  setRenameDraft({
+                    name: day.name,
+                    focus: day.focus || "",
+                  });
+                  setAddDayId(null);
+                }}
+                className="min-h-11"
+              >
+                Rename
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 disabled={pending}
-                onClick={() => regenerateDay(day.id, day.name)}
-                title="Rebuild this day only"
-                className="min-h-11"
+                onClick={() => removeDay(day.id, day.exercises.length > 0)}
+                className="min-h-11 text-zinc-500 hover:text-red-300"
+                title="Remove day"
               >
-                Rebuild day
+                Remove
               </Button>
             </div>
           </div>
@@ -1168,31 +1528,78 @@ export function ProgramDetail({
           )}
           <div className="mt-3 space-y-2">
             {day.exercises.length === 0 && addDayId !== day.id && (
-              <p className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/30 px-3 py-3 text-center text-xs text-zinc-500">
-                Empty day — tap{" "}
-                <button
+              <div className="rounded-lg border border-dashed border-emerald-900/40 bg-emerald-950/10 px-3 py-4 text-center">
+                <p className="text-xs text-zinc-400">
+                  Empty day — warm-up → compounds → accessories → cool-down.
+                  Plan balance tracks weekly volume.
+                </p>
+                <Button
                   type="button"
-                  className="font-medium text-emerald-400 hover:underline"
+                  size="sm"
+                  disabled={pending}
+                  className="mt-2 min-h-11"
                   onClick={() => {
                     setSwapId(null);
                     setEditId(null);
                     setAddDayId(day.id);
                   }}
                 >
-                  Add exercise
-                </button>{" "}
-                or rebuild the day.
-              </p>
+                  Add first exercise
+                </Button>
+              </div>
             )}
-            {groupExercisesIntoBlocks(day.exercises).map((block) => {
-              const renderEx = (ex: Ex, nested: boolean) => (
+            {day.exercises.length >= 2 &&
+              !matchesScienceOrder(
+                day.exercises.map((ex) => ({
+                  id: ex.id,
+                  exerciseName: ex.exerciseName,
+                  movementPattern: ex.movementPattern,
+                  isWarmup: ex.isWarmup,
+                  setScheme: ex.setScheme,
+                  setSchemeMeta: ex.setSchemeMeta,
+                  groupId: ex.groupId,
+                  groupOrder: ex.groupOrder,
+                  sortOrder: ex.sortOrder,
+                })),
+                {
+                  focus: day.focus,
+                  sessionKind: day.name,
+                  goal: program.goal,
+                }
+              ) && (
+                <p className="rounded-md border border-zinc-800/80 bg-zinc-950/30 px-2.5 py-1.5 text-[11px] leading-snug text-zinc-500">
+                  Order differs from usual science sequence. New adds still
+                  insert by science; nothing reorders until you change the
+                  day.
+                </p>
+              )}
+            {(() => {
+              const blocks = groupExercisesIntoBlocks(day.exercises);
+              const phaseOfBlock = (
+                block: (typeof blocks)[number]
+              ): "warmup" | "work" | "cooldown" => {
+                const ex =
+                  block.type === "group" ? block.members[0]! : block.exercise;
+                return sessionPhase(ex);
+              };
+              const phasesInDay = new Set(blocks.map(phaseOfBlock));
+              const showPhaseHeaders =
+                phasesInDay.has("warmup") || phasesInDay.has("cooldown");
+
+              const renderEx = (ex: Ex, nested: boolean) => {
+                const phase = sessionPhase(ex);
+                const phaseBorder =
+                  !nested && phase === "warmup"
+                    ? "border-l-2 border-l-emerald-700/60 border-zinc-800 bg-emerald-950/10"
+                    : !nested && phase === "cooldown"
+                      ? "border-l-2 border-l-zinc-500 border-zinc-800 bg-zinc-950/50"
+                      : nested
+                        ? "border-zinc-800/80 bg-zinc-950/60"
+                        : "border-zinc-800 bg-zinc-950/40";
+                return (
                 <li
                   key={ex.id}
-                  className={`list-none rounded-lg border px-3 py-2.5 ${
-                    nested
-                      ? "border-zinc-800/80 bg-zinc-950/60"
-                      : "border-zinc-800 bg-zinc-950/40"
-                  }`}
+                  className={`list-none rounded-lg border px-3 py-2.5 ${phaseBorder}`}
                 >
                   {swapId === ex.id ? (
                     <div className="space-y-3">
@@ -1496,11 +1903,19 @@ export function ProgramDetail({
                           )}
                           <div className="min-w-0">
                             <div className="text-sm font-medium text-zinc-100">
-                              {ex.isWarmup && (
-                                <span className="mr-1.5 text-[10px] font-semibold uppercase text-emerald-400">
+                              {/* Phase chip when day has no section headers (single-phase day) */}
+                              {!showPhaseHeaders && ex.isWarmup && (
+                                <span className="mr-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">
                                   Warm-up
                                 </span>
                               )}
+                              {!showPhaseHeaders &&
+                                !ex.isWarmup &&
+                                isCooldownMeta(ex.setSchemeMeta) && (
+                                  <span className="mr-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                                    Cool-down
+                                  </span>
+                                )}
                               {ex.exerciseName}
                             </div>
                             {nested && formatGroupRoleTitle(ex.groupRole) && (
@@ -1633,45 +2048,80 @@ export function ProgramDetail({
                     </div>
                   )}
                 </li>
-              );
+                );
+              };
 
-              if (block.type === "group") {
-                return (
-                  <div
-                    key={block.groupId}
-                    className="rounded-xl border border-amber-900/40 bg-amber-950/10 p-2.5"
-                  >
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <Badge tone="amber">
-                        {formatSchemeName(block.kind)}
-                      </Badge>
-                      <span className="text-xs font-semibold text-zinc-100">
-                        {formatGroupTitle(block.kind, block.label)}
-                      </span>
-                      <span className="text-[11px] text-zinc-500">
-                        {block.rounds} rounds ·{" "}
-                        {formatRestLabel(block.restBetweenRoundsSec)} between
-                        rounds
-                      </span>
+              return blocks.map((block, blockIndex) => {
+                const phase = phaseOfBlock(block);
+                const prevPhase =
+                  blockIndex > 0
+                    ? phaseOfBlock(blocks[blockIndex - 1]!)
+                    : null;
+                const showHeader =
+                  showPhaseHeaders && phase !== prevPhase;
+                const blockKey =
+                  block.type === "group"
+                    ? block.groupId
+                    : block.exercise.id;
+
+                const blockBody =
+                  block.type === "group" ? (
+                    <div className="rounded-xl border border-amber-900/40 bg-amber-950/10 p-2.5">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <Badge tone="amber">
+                          {formatSchemeName(block.kind)}
+                        </Badge>
+                        <span className="text-xs font-semibold text-zinc-100">
+                          {formatGroupTitle(block.kind, block.label)}
+                        </span>
+                        <span className="text-[11px] text-zinc-500">
+                          {block.rounds} rounds ·{" "}
+                          {formatRestLabel(block.restBetweenRoundsSec)} between
+                          rounds
+                        </span>
+                      </div>
+                      {block.howTo && (
+                        <p className="mb-2 text-[11px] text-zinc-500">
+                          {block.howTo}
+                        </p>
+                      )}
+                      <ul className="space-y-1.5">
+                        {block.members.map((ex) => renderEx(ex, true))}
+                      </ul>
                     </div>
-                    {block.howTo && (
-                      <p className="mb-2 text-[11px] text-zinc-500">
-                        {block.howTo}
-                      </p>
-                    )}
+                  ) : (
                     <ul className="space-y-1.5">
-                      {block.members.map((ex) => renderEx(ex, true))}
+                      {renderEx(block.exercise, false)}
                     </ul>
+                  );
+
+                return (
+                  <div key={blockKey} className="space-y-2">
+                    {showHeader && (
+                      <div
+                        className={cn(
+                          "flex items-center gap-2",
+                          blockIndex > 0 && "pt-1"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "text-[10px] font-semibold uppercase tracking-wide",
+                            phase === "warmup"
+                              ? "text-emerald-400/90"
+                              : "text-zinc-400"
+                          )}
+                        >
+                          {sessionPhaseLabel(phase)}
+                        </span>
+                        <div className="h-px flex-1 bg-zinc-800/90" />
+                      </div>
+                    )}
+                    {blockBody}
                   </div>
                 );
-              }
-
-              return (
-                <ul key={block.exercise.id} className="space-y-1.5">
-                  {renderEx(block.exercise, false)}
-                </ul>
-              );
-            })}
+              });
+            })()}
           </div>
           </Card>
         ))}

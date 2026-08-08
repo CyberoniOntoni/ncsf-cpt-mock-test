@@ -7,10 +7,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ProgramPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ build?: string }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
   const data = await getProgramAction(id);
   if (!data) notFound();
   const clients = await listClientsAction();
@@ -25,6 +28,7 @@ export default async function ProgramPage({
         firstName: c.firstName,
         lastName: c.lastName,
       }))}
+      startInBuildMode={sp.build === "1"}
     />
   );
 }

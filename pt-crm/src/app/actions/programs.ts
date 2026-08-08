@@ -339,6 +339,289 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
   return { programId };
 }
 
+export type CreateBlankProgramInput = {
+  title?: string;
+  goal?: ProgramGoal;
+  daysPerWeek?: number;
+  sessionMinutes?: number;
+  experienceLevel?: string;
+  notes?: string;
+  /** full_body | upper_lower | ppl | custom — seeds day names/focus */
+  splitLayout?: string;
+  /** Optional explicit day shells (overrides layout generation) */
+  days?: Array<{ name: string; focus?: string | null }>;
+  /** Optional — omit to save as unassigned template for later */
+  clientId?: string | null;
+  /** When true, status = active; default draft for “save for later” */
+  activate?: boolean;
+};
+
+const DAY_LETTER = ["A", "B", "C", "D", "E", "F"] as const;
+
+function scratchDayName(index: number, daysPerWeek: number): string {
+  if (daysPerWeek <= 3) return `Day ${DAY_LETTER[index] ?? index + 1}`;
+  return `Day ${index + 1}`;
+}
+
+/**
+ * Empty program shell — trainer builds days/exercises by hand.
+ * Default: draft + no client (saved for later / reusable template).
+ */
+export async function createBlankProgramAction(input: CreateBlankProgramInput) {
+  const session = await requireSession();
+  const db = await getDb();
+
+  const { getScratchSplit, defaultTitleForScratch } = await import(
+    "@/lib/program-scratch"
+  );
+
+  const daysPerWeek = Math.min(6, Math.max(1, Math.round(input.daysPerWeek || 3)));
+  const sessionMinutes = Math.min(
+    120,
+    Math.max(20, Math.round(input.sessionMinutes || 45))
+  );
+  const goal = (input.goal || "general") as ProgramGoal;
+  const splitLayout = input.splitLayout || "custom";
+  const layout = getScratchSplit(splitLayout);
+  const splitType =
+    splitLayout === "full_body" ||
+    splitLayout === "upper_lower" ||
+    splitLayout === "ppl"
+      ? splitLayout
+      : "custom";
+
+  const dayShells =
+    input.days && input.days.length > 0
+      ? input.days.slice(0, 6).map((d) => ({
+          name: (d.name || "").trim() || "Day",
+          focus: d.focus?.trim() || null,
+        }))
+      : layout.daysFor(daysPerWeek);
+
+  const resolvedDays = dayShells.length
+    ? dayShells
+    : Array.from({ length: daysPerWeek }, (_, i) => ({
+        name: scratchDayName(i, daysPerWeek),
+        focus: null as string | null,
+      }));
+
+  const title =
+    (input.title || "").trim() ||
+    defaultTitleForScratch({
+      goal,
+      splitId: layout.id,
+      daysPerWeek: resolvedDays.length,
+      forLater: !input.clientId && !input.activate,
+    });
+
+  if (input.clientId) {
+    const c = await getClientInOrg(input.clientId, session.organizationId);
+    if (!c) throw new Error("Client not found");
+  }
+
+  const programId = id("prg");
+  await db.insert(programs).values({
+    id: programId,
+    organizationId: session.organizationId,
+    clientId: input.clientId || null,
+    createdByUserId: session.userId,
+    title,
+    goal,
+    daysPerWeek: resolvedDays.length,
+    sessionMinutes,
+    splitType,
+    experienceLevel: input.experienceLevel || "intermediate",
+    status: input.activate ? "active" : "draft",
+    notes: input.notes?.trim() || null,
+    generationMeta: {
+      source: "scratch",
+      manual: true,
+      splitLayout: layout.id,
+      createdAt: new Date().toISOString(),
+      mesocycleWeek: 1,
+    },
+  });
+
+  for (let i = 0; i < resolvedDays.length; i++) {
+    const shell = resolvedDays[i]!;
+    await db.insert(programDays).values({
+      id: id("pd"),
+      programId,
+      dayIndex: i,
+      name: shell.name,
+      focus: shell.focus,
+    });
+  }
+
+  revalidatePath("/programs");
+  if (input.clientId) {
+    revalidatePath(`/clients/${input.clientId}`);
+    await promoteLeadToActiveIfNeeded(input.clientId);
+  }
+  return { programId };
+}
+
+/** Append an empty training day (for from-scratch builds). */
+export async function addProgramDayAction(
+  programId: string,
+  opts?: { name?: string; focus?: string | null }
+) {
+  const session = await requireSession();
+  const db = await getDb();
+  const [p] = await db
+    .select()
+    .from(programs)
+    .where(
+      and(
+        eq(programs.id, programId),
+        eq(programs.organizationId, session.organizationId)
+      )
+    )
+    .limit(1);
+  if (!p) throw new Error("Program not found");
+
+  const existing = await db
+    .select({ dayIndex: programDays.dayIndex })
+    .from(programDays)
+    .where(eq(programDays.programId, programId));
+  if (existing.length >= 6) {
+    throw new Error("Maximum 6 training days per program");
+  }
+  const nextIndex =
+    existing.length === 0
+      ? 0
+      : Math.max(...existing.map((d) => d.dayIndex)) + 1;
+  const dayId = id("pd");
+  const name =
+    (opts?.name || "").trim() ||
+    scratchDayName(nextIndex, Math.max(p.daysPerWeek, nextIndex + 1));
+
+  await db.insert(programDays).values({
+    id: dayId,
+    programId,
+    dayIndex: nextIndex,
+    name,
+    focus: opts?.focus?.trim() || null,
+  });
+
+  const newDaysPerWeek = Math.max(p.daysPerWeek, existing.length + 1);
+  await db
+    .update(programs)
+    .set({
+      daysPerWeek: newDaysPerWeek,
+      updatedAt: new Date(),
+    })
+    .where(eq(programs.id, programId));
+
+  revalidatePath(`/programs/${programId}`);
+  revalidatePath("/programs");
+  return { dayId, name };
+}
+
+/** Rename / refocus a program day. */
+export async function updateProgramDayAction(
+  dayId: string,
+  data: { name?: string; focus?: string | null }
+) {
+  const session = await requireSession();
+  const db = await getDb();
+  const [row] = await db
+    .select({
+      day: programDays,
+      program: programs,
+    })
+    .from(programDays)
+    .innerJoin(programs, eq(programDays.programId, programs.id))
+    .where(eq(programDays.id, dayId))
+    .limit(1);
+  if (!row || row.program.organizationId !== session.organizationId) {
+    throw new Error("Not found");
+  }
+
+  const patch: { name?: string; focus?: string | null } = {};
+  if (data.name !== undefined) {
+    const n = data.name.trim();
+    if (!n) throw new Error("Day name required");
+    patch.name = n;
+  }
+  if (data.focus !== undefined) {
+    patch.focus = data.focus?.trim() || null;
+  }
+  if (Object.keys(patch).length === 0) return { ok: true as const };
+
+  await db.update(programDays).set(patch).where(eq(programDays.id, dayId));
+  await db
+    .update(programs)
+    .set({ updatedAt: new Date() })
+    .where(eq(programs.id, row.program.id));
+
+  revalidatePath(`/programs/${row.program.id}`);
+  return { ok: true as const };
+}
+
+/**
+ * Remove a program day. Allowed when empty, or force=true (deletes exercises).
+ * Reindexes remaining days and updates daysPerWeek.
+ */
+export async function deleteProgramDayAction(
+  dayId: string,
+  opts?: { force?: boolean }
+) {
+  const session = await requireSession();
+  const db = await getDb();
+  const [row] = await db
+    .select({
+      day: programDays,
+      program: programs,
+    })
+    .from(programDays)
+    .innerJoin(programs, eq(programDays.programId, programs.id))
+    .where(eq(programDays.id, dayId))
+    .limit(1);
+  if (!row || row.program.organizationId !== session.organizationId) {
+    throw new Error("Not found");
+  }
+
+  const exCount = await db
+    .select({ id: programExercises.id })
+    .from(programExercises)
+    .where(eq(programExercises.programDayId, dayId));
+  if (exCount.length > 0 && !opts?.force) {
+    throw new Error(
+      "Day has exercises — remove them first, or force-delete the day"
+    );
+  }
+
+  await db.delete(programDays).where(eq(programDays.id, dayId));
+
+  const remaining = await db
+    .select()
+    .from(programDays)
+    .where(eq(programDays.programId, row.program.id))
+    .orderBy(asc(programDays.dayIndex));
+
+  for (let i = 0; i < remaining.length; i++) {
+    if (remaining[i]!.dayIndex !== i) {
+      await db
+        .update(programDays)
+        .set({ dayIndex: i })
+        .where(eq(programDays.id, remaining[i]!.id));
+    }
+  }
+
+  await db
+    .update(programs)
+    .set({
+      daysPerWeek: Math.max(1, remaining.length),
+      updatedAt: new Date(),
+    })
+    .where(eq(programs.id, row.program.id));
+
+  revalidatePath(`/programs/${row.program.id}`);
+  revalidatePath("/programs");
+  return { ok: true as const, remaining: remaining.length };
+}
+
 export async function updateProgramMetaAction(
   programId: string,
   data: { title?: string; status?: string; notes?: string; clientId?: string | null }
@@ -610,6 +893,51 @@ export async function swapProgramExerciseAction(
   };
 }
 
+/** Re-sequence a day's exercises with science order (bench before OHP, etc.). */
+async function reorderProgramDayExercises(
+  programDayId: string,
+  ctx: { focus?: string | null; goal?: string | null; splitType?: string | null }
+) {
+  const db = await getDb();
+  const { sortExercisesForSession } = await import("@/lib/exercise-order");
+  const rows = await db
+    .select()
+    .from(programExercises)
+    .where(eq(programExercises.programDayId, programDayId));
+  if (rows.length <= 1) return;
+
+  const ordered = sortExercisesForSession(
+    rows.map((r) => ({
+      id: r.id,
+      exerciseName: r.exerciseName,
+      movementPattern: r.movementPattern,
+      isWarmup: r.isWarmup,
+      setScheme: r.setScheme,
+      setSchemeMeta: r.setSchemeMeta as {
+        phase?: string;
+        summary?: string;
+      } | null,
+      groupId: r.groupId,
+      groupOrder: r.groupOrder,
+      sortOrder: r.sortOrder,
+    })),
+    {
+      focus: ctx.focus,
+      sessionKind: ctx.splitType,
+      goal: ctx.goal || undefined,
+    }
+  );
+
+  for (const row of ordered) {
+    const id = (row as { id?: string }).id;
+    if (!id || row.sortOrder == null) continue;
+    await db
+      .update(programExercises)
+      .set({ sortOrder: row.sortOrder })
+      .where(eq(programExercises.id, id));
+  }
+}
+
 /** Append a bank exercise to a program day (standalone straight sets). */
 export async function addProgramExerciseAction(input: {
   programDayId: string;
@@ -650,14 +978,6 @@ export async function addProgramExerciseAction(input: {
     );
   }
 
-  const existing = await db
-    .select({ sortOrder: programExercises.sortOrder })
-    .from(programExercises)
-    .where(eq(programExercises.programDayId, input.programDayId));
-
-  const sortOrder = nextProgramExerciseSortOrder(
-    existing.map((e) => e.sortOrder)
-  );
   // Goal + pattern aware defaults (strength rest/reps, hypertrophy density, etc.)
   const defaults = defaultAddExerciseRx(isWarmup, {
     goal: dayRow.program.goal,
@@ -675,6 +995,15 @@ export async function addProgramExerciseAction(input: {
     input.opts?.notes !== undefined
       ? input.opts.notes
       : pick.cues || null;
+
+  // Temporary sort at end; reordered with science rules after insert
+  const existing = await db
+    .select({ sortOrder: programExercises.sortOrder })
+    .from(programExercises)
+    .where(eq(programExercises.programDayId, input.programDayId));
+  const sortOrder = nextProgramExerciseSortOrder(
+    existing.map((e) => e.sortOrder)
+  );
 
   const peId = id("pe");
   await db.insert(programExercises).values({
@@ -726,6 +1055,12 @@ export async function addProgramExerciseAction(input: {
       updatedAt: new Date(),
     })
     .where(eq(programs.id, dayRow.program.id));
+
+  await reorderProgramDayExercises(input.programDayId, {
+    focus: dayRow.day.focus,
+    goal: dayRow.program.goal,
+    splitType: dayRow.program.splitType,
+  });
 
   revalidatePath(`/programs/${dayRow.program.id}`);
   revalidatePath("/programs");

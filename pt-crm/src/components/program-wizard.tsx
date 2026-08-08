@@ -20,6 +20,7 @@ import {
   planBalanceSummaryLine,
   suggestFillPatterns,
 } from "@/lib/program-science";
+import { isCooldownMeta } from "@/lib/session-prep";
 import {
   formatGroupBadge,
   formatGroupRoleTitle,
@@ -1150,6 +1151,12 @@ export function ProgramWizard({
                                   Warm-up
                                 </span>
                               )}
+                              {!ex.isWarmup &&
+                                isCooldownMeta(ex.setSchemeMeta) && (
+                                  <span className="mr-1.5 text-[10px] font-semibold uppercase text-sky-400">
+                                    Cool-down
+                                  </span>
+                                )}
                               {ex.exerciseName}
                             </div>
                           </div>

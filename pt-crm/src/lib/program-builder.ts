@@ -28,6 +28,17 @@ import {
   type SetSchemeId,
   type SetSchemeMeta,
 } from "@/lib/set-schemes";
+import {
+  cooldownSlotsForSession,
+  densityFromMinutes,
+  prepHowTo,
+  prepPrescription,
+  prepSummary,
+  warmupSlotsForSession,
+  type PrepSessionKind,
+  type PrepSlot,
+} from "@/lib/session-prep";
+import { sortExercisesForSession } from "@/lib/exercise-order";
 import { id } from "@/lib/utils";
 
 export type ProgramGoal =
@@ -121,7 +132,10 @@ type SessionKind =
 type Slot = {
   patterns: string[];
   warmup?: boolean;
+  cooldown?: boolean;
   label?: string;
+  preferTags?: string[];
+  prepRole?: string;
 };
 
 type Density = "short" | "standard" | "long";
@@ -385,38 +399,41 @@ function splitForDays(days: number, goal: ProgramGoal): { kind: SessionKind; nam
   ];
 }
 
+function prepSlotToBuilderSlot(p: PrepSlot): Slot {
+  return {
+    patterns: p.patterns,
+    warmup: p.phase === "warmup",
+    cooldown: p.phase === "cooldown",
+    label: p.label,
+    preferTags: p.preferTags,
+    prepRole: p.role,
+  };
+}
+
 /**
- * Slot templates by session kind and length.
+ * Work slots only (no warm-up/cool-down). Prep is layered in buildProgramDraft.
  * short (<40): lean main lifts
  * standard (40–54): main lifts + core when sensible
  * long (≥55): +1 accessory/unilateral or second push/pull, capped
  */
-function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: number): Slot[] {
+function workSlotsForKind(kind: SessionKind, minutes: number): Slot[] {
   const density = densityForMinutes(minutes);
   const short = density === "short";
   const long = density === "long";
+  const maxWork = short ? 4 : long ? 6 : 5;
 
-  const withMobility = (slots: Slot[]): Slot[] => {
-    const base =
-      preferMobility || kind === "mobility"
-        ? [{ patterns: ["mobility"], warmup: true }, ...slots]
-        : slots;
-    // Cap total slots including mobility warmup (main work ~6–7 max)
-    const maxSlots = 7;
-    return base.slice(0, maxSlots);
-  };
+  const cap = (slots: Slot[]) => slots.slice(0, maxWork);
 
   switch (kind) {
     case "mobility":
-      return [
-        { patterns: ["mobility"], warmup: true },
+      return cap([
         { patterns: ["mobility"] },
         { patterns: ["mobility", "core"] },
         { patterns: ["core"] },
         ...(long ? [{ patterns: ["mobility", "carry"] }] : []),
-      ].slice(0, 7);
+      ]);
     case "full_a":
-      return withMobility([
+      return cap([
         { patterns: ["squat"] },
         { patterns: ["horizontal_push"] },
         { patterns: ["horizontal_pull"] },
@@ -424,7 +441,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long ? [{ patterns: ["hinge", "squat"] }] : []), // unilateral / secondary lower
       ]);
     case "full_b":
-      return withMobility([
+      return cap([
         { patterns: ["hinge"] },
         { patterns: ["vertical_push", "horizontal_push"] },
         { patterns: ["vertical_pull", "horizontal_pull"] },
@@ -432,7 +449,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long ? [{ patterns: ["horizontal_pull", "horizontal_push"] }] : []),
       ]);
     case "full_c":
-      return withMobility([
+      return cap([
         { patterns: ["squat"] },
         { patterns: ["hinge"] },
         { patterns: ["horizontal_pull", "horizontal_push"] },
@@ -440,7 +457,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long && !short ? [{ patterns: ["vertical_pull", "vertical_push"] }] : []),
       ]);
     case "upper":
-      return withMobility([
+      return cap([
         { patterns: ["horizontal_push"] },
         { patterns: ["horizontal_pull"] },
         { patterns: ["vertical_push", "horizontal_push"] },
@@ -449,7 +466,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long ? [{ patterns: ["horizontal_pull", "horizontal_push"] }] : []),
       ]);
     case "lower":
-      return withMobility([
+      return cap([
         { patterns: ["squat"] },
         { patterns: ["hinge"] },
         { patterns: ["squat", "hinge"] },
@@ -457,7 +474,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long ? [{ patterns: ["hinge", "squat"] }] : []),
       ]);
     case "push":
-      return withMobility([
+      return cap([
         { patterns: ["horizontal_push"] },
         { patterns: ["vertical_push", "horizontal_push"] },
         { patterns: ["horizontal_push"] },
@@ -465,7 +482,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long ? [{ patterns: ["vertical_push", "horizontal_push"] }] : []),
       ]);
     case "pull":
-      return withMobility([
+      return cap([
         { patterns: ["horizontal_pull"] },
         { patterns: ["vertical_pull", "horizontal_pull"] },
         { patterns: ["horizontal_pull"] },
@@ -473,7 +490,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long ? [{ patterns: ["vertical_pull", "horizontal_pull"] }] : []),
       ]);
     case "legs":
-      return withMobility([
+      return cap([
         { patterns: ["squat"] },
         { patterns: ["hinge"] },
         { patterns: ["squat"] },
@@ -481,7 +498,7 @@ function slotsForKind(kind: SessionKind, preferMobility: boolean, minutes: numbe
         ...(long ? [{ patterns: ["hinge", "squat"] }] : []),
       ]);
     default:
-      return withMobility([
+      return cap([
         { patterns: ["squat"] },
         { patterns: ["horizontal_push"] },
         { patterns: ["horizontal_pull"] },
@@ -672,22 +689,30 @@ function buildCorrectiveWarmups(opts: {
 
     const bank = opts.pool.find((e) => e.id === pick.id);
     const reason = plainText(corrective.reason) || corrective.reason;
+    const rx = prepPrescription("mobilize");
     out.push({
       id: id("pe"),
       exerciseId: pick.id,
       exerciseName: pick.name,
       movementPattern: pick.movementPattern || "mobility",
-      sets: 2,
-      reps: "8-10/side",
-      rpe: "5-6",
-      restSec: 45,
-      notes: reason,
+      sets: rx.sets,
+      reps: rx.reps,
+      rpe: rx.rpe,
+      restSec: rx.restSec,
+      notes: composeExerciseNotes([
+        reason,
+        "Corrective first — quality before load.",
+        bank?.cues,
+      ]),
       sortOrder: 0,
       isWarmup: true,
       setScheme: "straight",
       setSchemeMeta: {
-        summary: `Warm-up · ${reason}`,
-        howTo: plainText(bank?.cues || corrective.reason) || reason,
+        phase: "warmup",
+        summary: `Warm-up · Corrective · ${reason}`,
+        howTo:
+          plainText(bank?.cues || corrective.reason) ||
+          "Pain-free range; stop short of aggravating symptoms.",
       },
       groupId: null,
       groupKind: null,
@@ -765,7 +790,17 @@ export async function buildProgramDraft(
 
   for (let i = 0; i < split.length; i++) {
     const session = split[i];
-    const slots = slotsForKind(session.kind, preferMobility, sessionMinutes);
+    const prepDensity = densityFromMinutes(sessionMinutes);
+    const kind = session.kind as PrepSessionKind;
+    const workSlots = workSlotsForKind(session.kind, sessionMinutes);
+    const warmupSlots = warmupSlotsForSession(kind, prepDensity, {
+      preferMobility,
+    }).map(prepSlotToBuilderSlot);
+    const cooldownSlots = cooldownSlotsForSession(kind, prepDensity).map(
+      prepSlotToBuilderSlot
+    );
+    // Order: correctives → RAMP warm-up → main work → cool-down
+    const slots: Slot[] = [...warmupSlots, ...workSlots, ...cooldownSlots];
     const dayUsed = new Set<string>();
     const dayPatternCounts = new Map<string, number>();
     const exercises: BuiltExercise[] = [];
@@ -776,7 +811,7 @@ export async function buildProgramDraft(
       correctives,
       pool: available,
       usedIds: new Set([...dayUsed, ...usedGlobal]),
-      limit: 2,
+      limit: densityForMinutes(sessionMinutes) === "short" ? 1 : 2,
     });
     for (const wu of correctiveWarmups) {
       if (wu.exerciseId) {
@@ -796,16 +831,17 @@ export async function buildProgramDraft(
     for (const slot of slots) {
       slotSalt += 1 + i;
       const primaryPattern = slot.patterns[0] || "squat";
+      const isPrep = !!(slot.warmup || slot.cooldown);
       const schemeId = assignSetScheme({
         goal,
         pattern: primaryPattern,
-        isWarmup: !!slot.warmup,
+        isWarmup: isPrep,
         sortOrder: sort,
         experience,
       });
 
       // ── Multi-exercise group (contrast / complex / superset) ──
-      if (!slot.warmup && isMultiExerciseScheme(schemeId)) {
+      if (!isPrep && isMultiExerciseScheme(schemeId)) {
         const groupSpec = getGroupMemberSpecs(schemeId, {
           pattern: primaryPattern,
           goal,
@@ -985,26 +1021,32 @@ export async function buildProgramDraft(
       }
 
       // ── Single-exercise scheme ──
+      const slotTags = [
+        ...preferTags,
+        ...(slot.preferTags || []),
+        ...(slot.warmup ? ["warmup"] : []),
+        ...(slot.cooldown ? ["cooldown", "mobility"] : []),
+      ];
       let ex = pickExercise(
         available,
         slot.patterns,
         new Set([...dayUsed, ...usedGlobal]),
-        preferTags,
+        slotTags,
         variationSeed,
         slotSalt,
         constraintProfile,
-        dayPatternCounts
+        isPrep ? undefined : dayPatternCounts
       );
       if (!ex) {
         ex = pickExercise(
           available,
           slot.patterns,
           dayUsed,
-          preferTags,
+          slotTags,
           variationSeed,
           slotSalt + 99,
           constraintProfile,
-          dayPatternCounts
+          isPrep ? undefined : dayPatternCounts
         );
       }
       if (!ex) continue;
@@ -1018,7 +1060,15 @@ export async function buildProgramDraft(
         );
       }
 
-      const rx = prescription(goal, ex.movementPattern, experience);
+      const role = (slot.prepRole ||
+        (slot.warmup ? "activate" : slot.cooldown ? "lengthen" : "")) as
+        | import("@/lib/session-prep").PrepRole
+        | "";
+      const prepRx =
+        isPrep && role
+          ? prepPrescription(role as import("@/lib/session-prep").PrepRole)
+          : null;
+      const rx = prepRx || prescription(goal, ex.movementPattern, experience);
       const planned = buildSchemePlan(
         schemeId,
         {
@@ -1027,26 +1077,41 @@ export async function buildProgramDraft(
           rpe: rx.rpe,
           restSec: rx.restSec,
         },
-        { pattern: ex.movementPattern, isWarmup: !!slot.warmup }
+        { pattern: ex.movementPattern, isWarmup: isPrep }
       );
 
-      const mesoRx = applyMeso(
-        {
-          sets: planned.sets,
-          reps: planned.reps,
-          rpe: planned.rpe,
-          restSec: planned.restSec,
-        },
-        mesoPlan
-      );
+      // Don't mesocycle-scale warm-up/cool-down volume
+      const mesoRx = isPrep
+        ? {
+            sets: planned.sets,
+            reps: planned.reps,
+            rpe: planned.rpe,
+            restSec: planned.restSec,
+            note: null as string | null,
+          }
+        : applyMeso(
+            {
+              sets: planned.sets,
+              reps: planned.reps,
+              rpe: planned.rpe,
+              restSec: planned.restSec,
+            },
+            mesoPlan
+          );
+
+      const prepHow =
+        isPrep && role
+          ? prepHowTo(role as import("@/lib/session-prep").PrepRole)
+          : null;
 
       let notes = composeExerciseNotes([
+        isPrep ? slot.label || null : null,
         ex.cues,
-        planned.notesExtra,
-        mesoRx.note,
+        prepHow,
+        isPrep ? null : planned.notesExtra,
+        isPrep ? null : mesoRx.note,
       ]);
 
-      // If still empty, drop a short scheme howTo snippet
       if (!notes) {
         const howTo = plainText(planned.setSchemeMeta?.howTo);
         if (howTo) notes = truncateNote(howTo);
@@ -1062,7 +1127,26 @@ export async function buildProgramDraft(
         ]);
       }
 
-      const metaHowTo = plainText(planned.setSchemeMeta?.howTo) || planned.setSchemeMeta?.howTo;
+      const metaHowTo =
+        plainText(prepHow || planned.setSchemeMeta?.howTo) ||
+        planned.setSchemeMeta?.howTo;
+
+      const phase = slot.cooldown
+        ? "cooldown"
+        : slot.warmup
+          ? "warmup"
+          : undefined;
+      const summaryFromSlot =
+        slot.cooldown || slot.warmup
+          ? prepSummary({
+              patterns: slot.patterns,
+              phase: slot.cooldown ? "cooldown" : "warmup",
+              role: (role ||
+                "activate") as import("@/lib/session-prep").PrepRole,
+              preferTags: slot.preferTags || [],
+              label: slot.label || (slot.cooldown ? "Cool-down" : "Warm-up"),
+            })
+          : planned.setSchemeMeta?.summary;
 
       exercises.push({
         id: id("pe"),
@@ -1079,6 +1163,8 @@ export async function buildProgramDraft(
         setScheme: planned.setScheme,
         setSchemeMeta: {
           ...planned.setSchemeMeta,
+          phase,
+          summary: summaryFromSlot || planned.setSchemeMeta?.summary,
           howTo: metaHowTo,
         },
         groupId: null,
@@ -1091,12 +1177,20 @@ export async function buildProgramDraft(
       });
     }
 
+    // Science order: warm-up → power → primary compounds (bench before OHP) →
+    // secondary → isolation → core/carry → cool-down
+    const ordered = sortExercisesForSession(exercises, {
+      sessionKind: session.kind,
+      focus: session.focus,
+      goal,
+    });
+
     days.push({
       id: id("pd"),
       dayIndex: i,
       name: session.name,
       focus: session.focus,
-      exercises,
+      exercises: ordered,
     });
   }
 
@@ -1126,24 +1220,32 @@ export async function buildProgramDraft(
     `Mesocycle week ${mesoWeek}${mesoPlan.isDeload ? " (deload)" : ""}: ${mesoPlan.notes || "standard loading"}.`
   );
   // preferMobility already includes goal === "mobility"
+  generationNotes.push(
+    "Prep: corrective (if any) → raise/activate/mobilize warm-up (RAMP) → main work → cool-down downshift + lengthen."
+  );
+  generationNotes.push(
+    "Exercise order: power → primary compounds (e.g. bench before overhead press) → secondary → isolation → core/carry."
+  );
   if (preferMobility) {
-    generationNotes.push("Mobility emphasis: soft-tissue / opener warm-ups prioritized.");
+    generationNotes.push(
+      "Mobility emphasis: extra mobilize/activate work in the warm-up."
+    );
   } else if (density === "long") {
     generationNotes.push(
-      `Long sessions (~${sessionMinutes} min): extra accessory or second push/pull slot where the split allows.`
+      `Long sessions (~${sessionMinutes} min): fuller warm-up + cool-down; extra accessory where the split allows.`
     );
   } else if (density === "short") {
     generationNotes.push(
-      `Short sessions (~${sessionMinutes} min): lean main lifts; core often deferred.`
+      `Short sessions (~${sessionMinutes} min): lean main lifts; warm-up trimmed to activation (+ mobilize if mobility emphasis); brief cool-down still included.`
     );
   } else {
     generationNotes.push(
-      `Standard session length (~${sessionMinutes} min): main lifts plus core when the template allows.`
+      `Standard session length (~${sessionMinutes} min): structured warm-up and cool-down around main lifts.`
     );
   }
   if (correctiveIds.length) {
     generationNotes.push(
-      `Corrective warm-ups: ${correctiveIds.length} prescription(s) from history/assessments (up to 2 per day).`
+      `Corrective warm-ups: ${correctiveIds.length} prescription(s) from history/assessments (up to 2/day; 1 if short session).`
     );
   } else if (constraintProfile.injuryFlags.length) {
     generationNotes.push(
