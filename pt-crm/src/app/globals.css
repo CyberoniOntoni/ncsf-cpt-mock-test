@@ -110,8 +110,8 @@ body {
   transform: translate3d(1.5rem, 0.75rem, 0);
 }
 .mkt-reveal--scale {
-  transform: scale(0.97) translate3d(0, 1rem, 0);
-  filter: blur(4px);
+  transform: scale(0.985) translate3d(0, 0.75rem, 0);
+  filter: blur(2px);
 }
 .mkt-reveal--fade {
   transform: none;
@@ -198,36 +198,36 @@ body {
 }
 
 .mkt-hero-in {
-  animation: mkt-hero-in 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: mkt-hero-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .mkt-hero-in-delay-1 {
-  animation-delay: 0.04s;
+  animation-delay: 0.05s;
 }
 .mkt-hero-in-delay-2 {
-  animation-delay: 0.12s;
+  animation-delay: 0.14s;
 }
 .mkt-hero-in-delay-3 {
-  animation-delay: 0.22s;
+  animation-delay: 0.24s;
 }
 .mkt-hero-in-delay-4 {
-  animation-delay: 0.32s;
+  animation-delay: 0.36s;
 }
 
-/* Card hover utility used by marketing feature/day grids */
+/* Marketing cards — calm studio (warm charcoal + soft sage) */
 .mkt-card {
   border-radius: 0.75rem;
-  border: 1px solid rgb(39 39 42); /* zinc-800 */
-  background-color: rgb(9 9 11 / 0.4);
+  border: 1px solid rgb(68 64 60 / 0.55); /* stone-700-ish */
+  background-color: rgb(26 24 22 / 0.55);
   transition:
-    border-color 0.25s ease,
-    background-color 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.25s ease;
+    border-color 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 }
 .mkt-card:hover {
-  border-color: rgb(6 78 59 / 0.45); /* emerald-900 */
-  background-color: rgb(24 24 27 / 0.45);
-  box-shadow: 0 12px 32px -12px rgb(2 44 34 / 0.35);
+  border-color: rgb(6 78 59 / 0.4); /* soft emerald */
+  background-color: rgb(28 25 23 / 0.7);
+  box-shadow: 0 14px 36px -14px rgb(0 0 0 / 0.45);
 }
 @media (hover: hover) and (pointer: fine) {
   .mkt-card:hover {

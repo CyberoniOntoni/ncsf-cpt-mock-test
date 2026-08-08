@@ -4,34 +4,34 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.APP_URL || "https://floorscribe.com"
   ),
-  title: "FloorScribe — Floor OS for personal trainers",
+  title: "FloorScribe - for trainers who run the day",
   description:
-    "FloorScribe is the day board for personal trainers — sessions, programs, packs, bookings, invoices, and coach. Solo or studio.",
+    "FloorScribe is a calm day board for personal trainers: sessions, packs, bookings, and invoices. Solo practice or studio team.",
   alternates: {
     canonical: "https://floorscribe.com",
   },
   openGraph: {
-    title: "FloorScribe — run the floor, not the paperwork",
+    title: "FloorScribe - run the day, not the paperwork",
     description:
-      "Sessions, packs, CRM, and coach on one floor board. Built for solo PTs and micro-studios.",
+      "Sessions, packs, CRM, and coach on one quiet board. Built for solo PTs and studios.",
     type: "website",
     url: "https://floorscribe.com",
     siteName: "FloorScribe",
-    images: [{ url: "/marketing/hero-bg.jpg", width: 1920, height: 1080 }],
+    images: [{ url: "/marketing/hero-calm.jpg", width: 1920, height: 1080 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "FloorScribe — Floor OS for personal trainers",
+    title: "FloorScribe - for trainers who run the day",
     description:
-      "Sessions, packs, CRM, and coach on one floor board. Solo or studio.",
-    images: ["/marketing/hero-bg.jpg"],
+      "Sessions, packs, CRM, and coach on one quiet board. Solo or studio.",
+    images: ["/marketing/hero-calm.jpg"],
   },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#09090b",
+  themeColor: "#141210",
   colorScheme: "dark",
 };
 
@@ -41,7 +41,7 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-zinc-950 font-sans text-zinc-100 antialiased selection:bg-emerald-500/25 selection:text-emerald-50">
+    <div className="mkt-root min-h-dvh bg-[#141210] font-sans text-stone-100 antialiased selection:bg-emerald-800/35 selection:text-stone-50">
       {children}
     </div>
   );
