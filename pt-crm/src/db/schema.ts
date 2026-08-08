@@ -588,6 +588,8 @@ export const trainingSessions = pgTable(
     notes: text("notes"),
     /** Booking this floor log was started from (optional) */
     appointmentId: text("appointment_id"),
+    /** Pack credit burned on complete (optional; for exact restore) */
+    packageId: text("package_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

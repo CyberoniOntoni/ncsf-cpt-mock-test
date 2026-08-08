@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb, getPGlite } from "@/db";
 import { organizations } from "@/db/schema";
+import { isWeakAuthSecret } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,12 +19,7 @@ export async function GET() {
     await db.select({ id: organizations.id }).from(organizations).limit(1);
 
     const authSecret = process.env.AUTH_SECRET || "";
-    const weakAuth =
-      !authSecret ||
-      authSecret === "change-me-in-production" ||
-      authSecret === "dev-only-change-me-floorscribe-secret-key" ||
-      authSecret === "dev-only-change-me-pt-crm-secret-key" ||
-      authSecret.length < 24;
+    const weakAuth = isWeakAuthSecret(authSecret);
 
     return NextResponse.json(
       {
@@ -33,7 +29,7 @@ export async function GET() {
         latencyMs: Date.now() - started,
         nodeEnv: process.env.NODE_ENV || "development",
         aiConfigured: !!(process.env.XAI_API_KEY || process.env.AI_API_KEY),
-        authSecretConfigured: !!authSecret && !weakAuth,
+        authSecretConfigured: !weakAuth,
         warnings: [
           ...(weakAuth && process.env.NODE_ENV === "production"
             ? ["AUTH_SECRET is missing or weak — set a long random secret before production use"]

@@ -239,15 +239,19 @@ export function buildClientTimeline(input: {
     });
     let tone: TimelineTone = "default";
     let badge = st;
+    let statusWord = st;
     if (st === "unpaid") {
       tone = "warn";
       badge = "unpaid";
+      statusWord = "unpaid";
     } else if (st === "paid") {
       tone = "accent";
       badge = "paid";
+      statusWord = "paid";
     } else if (st === "void") {
       tone = "danger";
       badge = "void";
+      statusWord = "voided";
     }
     // Skip voided from the feed — still listed under Invoices
     if (st === "void") continue;
@@ -256,7 +260,7 @@ export function buildClientTimeline(input: {
       kind: "invoice",
       at,
       title: inv.title || "Invoice",
-      subtitle: money,
+      subtitle: `${money} · ${statusWord}`,
       href: "#crm-invoices",
       badge,
       tone,

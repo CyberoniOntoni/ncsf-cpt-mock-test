@@ -37,10 +37,34 @@ export function parseLocalDateKey(key: string): Date | null {
   return dt;
 }
 
-/** datetime-local value for 9:00 on a local date key. */
-export function bookAtLocalFromDateKey(dateKey: string, hour = 9, minute = 0): string {
+/**
+ * datetime-local value for booking on a local date key.
+ * - Future days → 09:00 (or custom hour)
+ * - Today → next whole hour if 09:00 is already past
+ */
+export function bookAtLocalFromDateKey(
+  dateKey: string,
+  hour = 9,
+  minute = 0
+): string {
   const d = parseLocalDateKey(dateKey);
   if (!d) return "";
+  const todayKey = toLocalDateKey(new Date());
+  if (dateKey === todayKey) {
+    const now = new Date();
+    const candidate = new Date(d);
+    candidate.setHours(hour, minute, 0, 0);
+    if (candidate.getTime() <= now.getTime()) {
+      // Next whole hour (min 15m ahead feels bookable)
+      const next = new Date(now);
+      next.setMinutes(0, 0, 0);
+      next.setHours(next.getHours() + 1);
+      // Stay on the same calendar day if possible
+      if (toLocalDateKey(next) === todayKey) {
+        return `${next.getFullYear()}-${pad2(next.getMonth() + 1)}-${pad2(next.getDate())}T${pad2(next.getHours())}:${pad2(next.getMinutes())}`;
+      }
+    }
+  }
   d.setHours(hour, minute, 0, 0);
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }

@@ -21,6 +21,13 @@
 
 html {
   color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
@@ -29,6 +36,7 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
 }
 
 * {
@@ -74,6 +82,175 @@ body {
 @media (min-width: 640px) {
   .page-pad {
     padding: 1.5rem;
+  }
+}
+
+/* ——— Marketing scroll reveals (subtle, fail-safe) ——— */
+.mkt-reveal {
+  --mkt-delay: 0ms;
+  --mkt-duration: 700ms;
+  opacity: 0;
+  will-change: transform, opacity;
+  transition-property: opacity, transform, filter;
+  transition-duration: var(--mkt-duration);
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--mkt-delay);
+}
+
+.mkt-reveal--up {
+  transform: translate3d(0, 1.75rem, 0);
+}
+.mkt-reveal--down {
+  transform: translate3d(0, -1.25rem, 0);
+}
+.mkt-reveal--left {
+  transform: translate3d(-1.5rem, 0.75rem, 0);
+}
+.mkt-reveal--right {
+  transform: translate3d(1.5rem, 0.75rem, 0);
+}
+.mkt-reveal--scale {
+  transform: scale(0.97) translate3d(0, 1rem, 0);
+  filter: blur(4px);
+}
+.mkt-reveal--fade {
+  transform: none;
+}
+
+.mkt-reveal--in {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  will-change: auto;
+}
+
+.mkt-stagger {
+  --mkt-step: 80ms;
+  --mkt-base: 0ms;
+}
+
+.mkt-stagger > * {
+  opacity: 0;
+  transform: translate3d(0, 1.25rem, 0);
+  will-change: transform, opacity;
+  transition-property: opacity, transform;
+  transition-duration: 650ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0ms;
+}
+
+.mkt-stagger--left > * {
+  transform: translate3d(-1.25rem, 0.5rem, 0);
+}
+.mkt-stagger--right > * {
+  transform: translate3d(1.25rem, 0.5rem, 0);
+}
+.mkt-stagger--scale > * {
+  transform: scale(0.96) translate3d(0, 0.75rem, 0);
+}
+
+.mkt-stagger--in > *:nth-child(1) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 0);
+}
+.mkt-stagger--in > *:nth-child(2) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 1);
+}
+.mkt-stagger--in > *:nth-child(3) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 2);
+}
+.mkt-stagger--in > *:nth-child(4) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 3);
+}
+.mkt-stagger--in > *:nth-child(5) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 4);
+}
+.mkt-stagger--in > *:nth-child(6) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 5);
+}
+.mkt-stagger--in > *:nth-child(7) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 6);
+}
+.mkt-stagger--in > *:nth-child(8) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 7);
+}
+.mkt-stagger--in > *:nth-child(9) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 8);
+}
+.mkt-stagger--in > *:nth-child(n + 10) {
+  transition-delay: calc(var(--mkt-base) + var(--mkt-step) * 9);
+}
+
+.mkt-stagger--in > * {
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto;
+}
+
+@keyframes mkt-hero-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.25rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.mkt-hero-in {
+  animation: mkt-hero-in 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.mkt-hero-in-delay-1 {
+  animation-delay: 0.04s;
+}
+.mkt-hero-in-delay-2 {
+  animation-delay: 0.12s;
+}
+.mkt-hero-in-delay-3 {
+  animation-delay: 0.22s;
+}
+.mkt-hero-in-delay-4 {
+  animation-delay: 0.32s;
+}
+
+/* Card hover utility used by marketing feature/day grids */
+.mkt-card {
+  border-radius: 0.75rem;
+  border: 1px solid rgb(39 39 42); /* zinc-800 */
+  background-color: rgb(9 9 11 / 0.4);
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+.mkt-card:hover {
+  border-color: rgb(6 78 59 / 0.45); /* emerald-900 */
+  background-color: rgb(24 24 27 / 0.45);
+  box-shadow: 0 12px 32px -12px rgb(2 44 34 / 0.35);
+}
+@media (hover: hover) and (pointer: fine) {
+  .mkt-card:hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* Only soften marketing motion — don't nuke all site transitions */
+@media (prefers-reduced-motion: reduce) {
+  .mkt-reveal,
+  .mkt-stagger > *,
+  .mkt-hero-in {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+  .mkt-card,
+  .mkt-card:hover {
+    transition: none !important;
+    transform: none !important;
   }
 }
 

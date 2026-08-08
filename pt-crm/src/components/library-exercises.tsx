@@ -199,33 +199,35 @@ export function LibraryExercises({ initial }: { initial: LibraryExercise[] }) {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <Input
             className="pl-9"
-            placeholder="Search name, muscles, tags, cues, gear…"
+            placeholder="Search name, muscle, tags, cues, gear…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            aria-label="Search exercises"
           />
         </div>
-        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-300">
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 text-sm text-zinc-300">
           <input
             type="checkbox"
             checked={availableOnly}
             onChange={(e) => setAvailableOnly(e.target.checked)}
-            className="rounded border-zinc-600"
+            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-emerald-600 focus:ring-emerald-500/50"
           />
-          Available only
+          Floor gear only
         </label>
-        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-300">
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 text-sm text-zinc-300">
           <input
             type="checkbox"
             checked={groupByPattern}
             onChange={(e) => setGroupByPattern(e.target.checked)}
-            className="rounded border-zinc-600"
+            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-emerald-600 focus:ring-emerald-500/50"
           />
           Group by pattern
         </label>
         <select
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-emerald-500"
+          className="min-h-11 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
           value={sortMode}
           onChange={(e) => setSortMode(e.target.value as SortMode)}
+          aria-label="Sort exercises"
         >
           <option value="pattern">Sort: pattern</option>
           <option value="name">Sort: name</option>
@@ -300,7 +302,7 @@ export function LibraryExercises({ initial }: { initial: LibraryExercise[] }) {
           title="No exercises match"
           description={
             availableOnly
-              ? "Clear “Available only” or enable more gear in Equipment inventory."
+              ? "Turn off “Floor gear only” or enable more gear in Equipment."
               : "Try a different search, pattern, or level filter."
           }
           className="py-10"

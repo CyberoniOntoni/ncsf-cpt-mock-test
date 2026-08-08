@@ -5,9 +5,37 @@ import { jwtVerify } from "jose";
 const COOKIE = "floorscribe_session";
 const LEGACY_COOKIE = "ptcrm_session";
 
+/** Dev-only fallback — never treat as production-ok. */
+const DEV_AUTH_SECRET = "dev-only-change-me-floorscribe-secret-key";
+
+const WEAK_AUTH_SECRETS = new Set([
+  "change-me-in-production",
+  "dev-only-change-me-floorscribe-secret-key",
+  "dev-only-change-me-pt-crm-secret-key",
+]);
+
+function isWeakAuthSecret(s: string | undefined | null): boolean {
+  if (!s) return true;
+  if (WEAK_AUTH_SECRETS.has(s)) return true;
+  if (s.length < 24) return true;
+  return false;
+}
+
+/**
+ * Production: fail closed if AUTH_SECRET is missing/weak (no hardcoded signing default).
+ * Development: allow distinct dev default.
+ */
 function secret() {
-  const s = process.env.AUTH_SECRET || "dev-only-change-me-floorscribe-secret-key";
-  return new TextEncoder().encode(s);
+  const s = process.env.AUTH_SECRET || "";
+  if (process.env.NODE_ENV === "production") {
+    if (isWeakAuthSecret(s)) {
+      throw new Error(
+        "AUTH_SECRET is missing or weak in production. Set a long random secret (≥24 characters)."
+      );
+    }
+    return new TextEncoder().encode(s);
+  }
+  return new TextEncoder().encode(s || DEV_AUTH_SECRET);
 }
 
 function clearAuthCookies(res: NextResponse) {
@@ -52,12 +80,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // Logged in on marketing → floor command board
-  if (valid && (pathname === "/marketing" || pathname.startsWith("/marketing/"))) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
+  // /marketing is always public (even when signed in) so the site can be previewed
+  // Signed-in users still land on the floor board at /
 
   if (!valid && !isPublic) {
     const url = req.nextUrl.clone();

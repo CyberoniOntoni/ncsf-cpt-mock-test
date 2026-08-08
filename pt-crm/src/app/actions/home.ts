@@ -329,7 +329,7 @@ export async function getHomeDashboardAction() {
       title: inv.name,
       subtitle: `${inv.title} · ${formatMoney(inv.amountCents, inv.currency, { compact: true })} unpaid`,
       href: `/clients/${inv.clientId}#crm-invoices`,
-      actionLabel: "Open invoice",
+      actionLabel: "Collect",
       clientId: inv.clientId,
       urgency: "high",
     });

@@ -13,6 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.APP_URL || "https://floorscribe.com"
+  ),
   title: {
     default: "FloorScribe",
     template: "%s · FloorScribe",

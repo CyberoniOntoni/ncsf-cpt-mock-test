@@ -33,10 +33,15 @@ export function SettingsProfileForm({
   const [email, setEmail] = useState(initial.email);
   const [phone, setPhone] = useState(initial.phone);
   const [title, setTitle] = useState(initial.title);
+  /** Re-auth when changing email (separate from password-change form) */
+  const [emailCurrentPassword, setEmailCurrentPassword] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const emailChanged =
+    email.trim().toLowerCase() !== initial.email.trim().toLowerCase();
 
   // Keep form in sync after server refresh
   useEffect(() => {
@@ -44,6 +49,7 @@ export function SettingsProfileForm({
     setEmail(initial.email);
     setPhone(initial.phone);
     setTitle(initial.title);
+    setEmailCurrentPassword("");
   }, [initial.name, initial.email, initial.phone, initial.title]);
 
   useEffect(() => {
@@ -61,12 +67,28 @@ export function SettingsProfileForm({
   function onSaveProfile(e: FormEvent) {
     e.preventDefault();
     setProfileMsg(null);
+    if (emailChanged && !emailCurrentPassword) {
+      setProfileMsg({
+        tone: "err",
+        text: "Enter your current password to change email",
+      });
+      return;
+    }
     startProfile(async () => {
-      const res = await updateProfileAction({ name, email, phone, title });
+      const res = await updateProfileAction({
+        name,
+        email,
+        phone,
+        title,
+        ...(emailChanged
+          ? { currentPassword: emailCurrentPassword }
+          : {}),
+      });
       if ("error" in res && res.error) {
         setProfileMsg({ tone: "err", text: res.error });
         return;
       }
+      setEmailCurrentPassword("");
       setProfileMsg({ tone: "ok", text: "Profile saved" });
       router.refresh();
     });
@@ -166,6 +188,26 @@ export function SettingsProfileForm({
             />
           </div>
         </div>
+        {emailChanged ? (
+          <div>
+            <Label htmlFor="profile-email-password">
+              Current password (required to change email)
+            </Label>
+            <Input
+              id="profile-email-password"
+              type="password"
+              value={emailCurrentPassword}
+              onChange={(e) => setEmailCurrentPassword(e.target.value)}
+              required
+              disabled={busy}
+              className="mt-0.5"
+              autoComplete="current-password"
+            />
+            <p className="mt-1 text-[11px] text-zinc-600">
+              Changing your sign-in email needs a password check.
+            </p>
+          </div>
+        ) : null}
         <Button
           type="submit"
           size="sm"

@@ -10,6 +10,7 @@ import {
   clientPackages,
   clientTasks,
   clients,
+  trainingSessions,
 } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
 import {
@@ -19,6 +20,7 @@ import {
   type ClientStage,
 } from "@/lib/crm-constants";
 import { parseMoneyToCents } from "@/lib/money";
+import { assertCanManageMoney } from "@/lib/rbac";
 import { assertClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
 
@@ -212,6 +214,7 @@ export async function adjustPackageUsedAction(
   delta: number
 ) {
   const session = await requireSession();
+  assertCanManageMoney(session.role);
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
   const [pkg] = await db
@@ -246,16 +249,39 @@ export async function adjustPackageUsedAction(
   return { usedSessions: used, remaining, status };
 }
 
+function packIsBurnable(
+  pkg: {
+    status: string;
+    usedSessions: number;
+    totalSessions: number;
+    expiresAt: Date | string | null;
+  },
+  now: Date
+): boolean {
+  if (pkg.status !== "active") return false;
+  if (pkg.usedSessions >= pkg.totalSessions) return false;
+  if (pkg.expiresAt != null && new Date(pkg.expiresAt).getTime() <= now.getTime()) {
+    return false;
+  }
+  return true;
+}
+
 /**
- * Consume one session from the oldest active pack (if any).
+ * Consume one session from the oldest burnable pack (active, not expired, used < total).
  * Used when a floor session is completed (not calendar “close booking”).
- * Safe no-op when no pack / already empty.
+ * Safe no-op when no pack / already empty. Race-safe: re-read + conditional update.
+ * When sessionId is provided and burn succeeds, stores packageId on the training session.
  */
-export async function tryConsumePackageSessionAction(clientId: string) {
+export async function tryConsumePackageSessionAction(
+  clientId: string,
+  sessionId?: string
+) {
   const session = await requireSession();
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
-  const [pkg] = await db
+  const now = new Date();
+
+  const activeRows = await db
     .select()
     .from(clientPackages)
     .where(
@@ -264,36 +290,95 @@ export async function tryConsumePackageSessionAction(clientId: string) {
         eq(clientPackages.status, "active")
       )
     )
-    .orderBy(asc(clientPackages.purchasedAt))
-    .limit(1);
-  if (!pkg) {
-    return { consumed: false as const, reason: "no_pack" as const };
-  }
-  // Heal inconsistent row: active but already fully used
-  if (pkg.usedSessions >= pkg.totalSessions) {
-    if (pkg.status === "active") {
+    .orderBy(asc(clientPackages.purchasedAt));
+
+  // Heal active-but-full or expired rows so they don't block older-first selection forever
+  for (const row of activeRows) {
+    if (row.usedSessions >= row.totalSessions) {
       await db
         .update(clientPackages)
         .set({ status: "exhausted" })
-        .where(eq(clientPackages.id, pkg.id));
-      revalidateClient(clientId);
+        .where(eq(clientPackages.id, row.id));
     }
+  }
+
+  const pkg = activeRows.find((p) => packIsBurnable(p, now));
+  if (!pkg) {
+    // Distinguish empty-but-present vs no usable pack
+    const hadActive = activeRows.some((p) => p.usedSessions >= p.totalSessions);
+    if (hadActive) {
+      const empty = activeRows.find((p) => p.usedSessions >= p.totalSessions);
+      return {
+        consumed: false as const,
+        reason: "empty" as const,
+        packageId: empty?.id,
+        packageName: empty?.name,
+        remaining: 0,
+        status: "exhausted" as const,
+      };
+    }
+    return { consumed: false as const, reason: "no_pack" as const };
+  }
+
+  // Re-read for atomic-style burn
+  const [fresh] = await db
+    .select()
+    .from(clientPackages)
+    .where(eq(clientPackages.id, pkg.id))
+    .limit(1);
+  if (!fresh || !packIsBurnable(fresh, now)) {
     return {
       consumed: false as const,
-      reason: "empty" as const,
+      reason: "race" as const,
       packageId: pkg.id,
       packageName: pkg.name,
-      remaining: 0,
-      status: "exhausted" as const,
     };
   }
-  const used = pkg.usedSessions + 1;
-  const remaining = pkg.totalSessions - used;
+
+  const expectedUsed = fresh.usedSessions;
+  const used = expectedUsed + 1;
+  const remaining = fresh.totalSessions - used;
   const status = remaining <= 0 ? "exhausted" : "active";
+
+  // Conditional update: only if still at expected used + active
   await db
     .update(clientPackages)
     .set({ usedSessions: used, status })
-    .where(eq(clientPackages.id, pkg.id));
+    .where(
+      and(
+        eq(clientPackages.id, fresh.id),
+        eq(clientPackages.usedSessions, expectedUsed),
+        eq(clientPackages.status, "active")
+      )
+    );
+
+  const [after] = await db
+    .select()
+    .from(clientPackages)
+    .where(eq(clientPackages.id, fresh.id))
+    .limit(1);
+  if (!after || after.usedSessions !== used) {
+    return {
+      consumed: false as const,
+      reason: "race" as const,
+      packageId: fresh.id,
+      packageName: fresh.name,
+    };
+  }
+
+  if (sessionId) {
+    await db
+      .update(trainingSessions)
+      .set({ packageId: fresh.id, updatedAt: new Date() })
+      .where(
+        and(
+          eq(trainingSessions.id, sessionId),
+          eq(trainingSessions.organizationId, session.organizationId),
+          eq(trainingSessions.clientId, clientId)
+        )
+      );
+  }
+
   await db
     .update(clients)
     .set({ updatedAt: new Date() })
@@ -302,46 +387,104 @@ export async function tryConsumePackageSessionAction(clientId: string) {
   return {
     consumed: true as const,
     reason: "ok" as const,
-    packageId: pkg.id,
-    packageName: pkg.name,
+    packageId: fresh.id,
+    packageName: fresh.name,
     remaining,
     status,
   };
 }
 
 /**
- * Restore one used session on the most recently used pack (active or exhausted).
+ * Restore one used session on a pack.
+ * Prefer the pack linked on the training session (packageId); else most recently
+ * purchased active/exhausted pack with used > 0.
  * Used when deleting a completed floor session that may have burned a pack credit.
  */
-export async function tryRestorePackageSessionAction(clientId: string) {
+export async function tryRestorePackageSessionAction(
+  clientId: string,
+  sessionId?: string
+) {
   const session = await requireSession();
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
-  const candidates = await db
-    .select()
-    .from(clientPackages)
-    .where(
-      and(
-        eq(clientPackages.clientId, clientId),
-        or(
-          eq(clientPackages.status, "active"),
-          eq(clientPackages.status, "exhausted")
+
+  let pkg: typeof clientPackages.$inferSelect | undefined;
+
+  if (sessionId) {
+    const [ts] = await db
+      .select({
+        packageId: trainingSessions.packageId,
+        organizationId: trainingSessions.organizationId,
+        clientId: trainingSessions.clientId,
+      })
+      .from(trainingSessions)
+      .where(
+        and(
+          eq(trainingSessions.id, sessionId),
+          eq(trainingSessions.organizationId, session.organizationId)
         )
       )
-    )
-    .orderBy(desc(clientPackages.purchasedAt));
+      .limit(1);
+    if (ts?.packageId && (!ts.clientId || ts.clientId === clientId)) {
+      const [linked] = await db
+        .select()
+        .from(clientPackages)
+        .where(
+          and(
+            eq(clientPackages.id, ts.packageId),
+            eq(clientPackages.clientId, clientId)
+          )
+        )
+        .limit(1);
+      if (linked && linked.usedSessions > 0 && linked.status !== "cancelled") {
+        pkg = linked;
+      }
+    }
+  }
 
-  const pkg = candidates.find((p) => p.usedSessions > 0);
+  if (!pkg) {
+    const candidates = await db
+      .select()
+      .from(clientPackages)
+      .where(
+        and(
+          eq(clientPackages.clientId, clientId),
+          or(
+            eq(clientPackages.status, "active"),
+            eq(clientPackages.status, "exhausted")
+          )
+        )
+      )
+      .orderBy(desc(clientPackages.purchasedAt));
+    pkg = candidates.find((p) => p.usedSessions > 0);
+  }
+
   if (!pkg) return { restored: false as const };
 
-  const used = Math.max(0, pkg.usedSessions - 1);
+  const expectedUsed = pkg.usedSessions;
+  const used = Math.max(0, expectedUsed - 1);
   const remaining = pkg.totalSessions - used;
   const status = remaining <= 0 ? "exhausted" : "active";
 
   await db
     .update(clientPackages)
     .set({ usedSessions: used, status })
-    .where(eq(clientPackages.id, pkg.id));
+    .where(
+      and(
+        eq(clientPackages.id, pkg.id),
+        eq(clientPackages.usedSessions, expectedUsed)
+      )
+    );
+
+  const [after] = await db
+    .select()
+    .from(clientPackages)
+    .where(eq(clientPackages.id, pkg.id))
+    .limit(1);
+  if (!after || after.usedSessions !== used) {
+    return { restored: false as const, reason: "race" as const };
+  }
+
   await db
     .update(clients)
     .set({ updatedAt: new Date() })
@@ -360,6 +503,7 @@ export async function cancelClientPackageAction(
   clientId: string
 ) {
   const session = await requireSession();
+  assertCanManageMoney(session.role);
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
   await db
@@ -561,9 +705,24 @@ export async function createClientInvoiceAction(input: {
   packageId?: string | null;
 }) {
   const session = await requireSession();
+  assertCanManageMoney(session.role);
   await assertClientInOrg(input.clientId, session.organizationId);
-  const title = input.title.trim() || "Session pack";
-  const amountCents = parseMoneyToCents(input.amount);
+  const title = (input.title || "").trim() || "Session pack";
+  if (title.length > 120) {
+    throw new Error("Title is too long (max 120 characters)");
+  }
+  let amountCents: number;
+  try {
+    amountCents = parseMoneyToCents(input.amount);
+  } catch (e) {
+    throw new Error(
+      e instanceof Error ? e.message : "Invalid amount — use e.g. 600 or 120.50"
+    );
+  }
+  const notes = (input.notes || "").trim() || null;
+  if (notes && notes.length > 500) {
+    throw new Error("Notes are too long (max 500 characters)");
+  }
   const currency = (input.currency || "SGD").trim().toUpperCase().slice(0, 8) || "SGD";
   const db = await getDb();
   const invId = id("inv");
@@ -575,7 +734,7 @@ export async function createClientInvoiceAction(input: {
     amountCents,
     currency,
     status: "unpaid",
-    notes: input.notes?.trim() || null,
+    notes,
     packageId: input.packageId?.trim() || null,
     issuedAt: new Date(),
   });
@@ -589,6 +748,7 @@ export async function setClientInvoicePaidAction(
   paid: boolean
 ) {
   const session = await requireSession();
+  assertCanManageMoney(session.role);
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
   const [row] = await db
@@ -620,6 +780,7 @@ export async function voidClientInvoiceAction(
   clientId: string
 ) {
   const session = await requireSession();
+  assertCanManageMoney(session.role);
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
   const [row] = await db

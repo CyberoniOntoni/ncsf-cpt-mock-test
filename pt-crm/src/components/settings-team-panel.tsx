@@ -42,12 +42,15 @@ export function SettingsTeamPanel({
   members,
   invites,
   canManage,
+  canInviteAdmin = false,
   appOrigin,
   currentUserId,
 }: {
   members: Member[];
   invites: Invite[];
   canManage: boolean;
+  /** Only owners may invite role=admin */
+  canInviteAdmin?: boolean;
   appOrigin: string;
   currentUserId?: string;
 }) {
@@ -60,6 +63,13 @@ export function SettingsTeamPanel({
   );
   const [lastLink, setLastLink] = useState<string | null>(null);
   const [origin, setOrigin] = useState(appOrigin);
+
+  // If admin option is hidden and role was admin, fall back to trainer
+  useEffect(() => {
+    if (!canInviteAdmin && role === "admin") {
+      setRole("trainer");
+    }
+  }, [canInviteAdmin, role]);
 
   // Prefer live browser origin so invite links work even if APP_URL is stale
   useEffect(() => {
@@ -203,7 +213,9 @@ export function SettingsTeamPanel({
               className="mt-0.5 min-h-11"
             >
               <option value="trainer">Trainer</option>
-              <option value="admin">Admin</option>
+              {canInviteAdmin ? (
+                <option value="admin">Admin</option>
+              ) : null}
               <option value="front_desk">Front desk</option>
             </Select>
           </div>

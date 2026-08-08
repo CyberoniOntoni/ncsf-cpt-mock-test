@@ -38,7 +38,16 @@ import {
   formatSchemeName,
 } from "@/lib/workout-labels";
 import { cn, fullName } from "@/lib/utils";
-import { Badge, Button, Card, Input, Label, SectionLabel, Textarea } from "./ui";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Input,
+  Label,
+  SectionLabel,
+  Textarea,
+} from "./ui";
 import { PageShell } from "./page-shell";
 import { StartSessionButton } from "./start-session-button";
 import { ExerciseBankPicker } from "./exercise-bank-picker";
@@ -528,7 +537,7 @@ export function ProgramDetail({
               ? `/programs?client=${encodeURIComponent(program.clientId)}`
               : "/programs"
           }
-          className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 hover:underline"
+          className="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-emerald-400 hover:underline"
         >
           ← Programs
         </Link>
@@ -538,14 +547,28 @@ export function ProgramDetail({
               <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
                 {program.title}
               </h1>
-              <Badge tone={status === "active" ? "green" : "default"}>
+              <Badge
+                tone={
+                  status === "active"
+                    ? "green"
+                    : status === "draft"
+                      ? "amber"
+                      : "default"
+                }
+                className="capitalize"
+              >
                 {status.replaceAll("_", " ")}
               </Badge>
-              <Badge>{program.goal.replaceAll("_", " ")}</Badge>
+              <Badge className="capitalize">
+                {program.goal.replaceAll("_", " ")}
+              </Badge>
             </div>
             <p className="mt-1 text-sm text-zinc-500">
-              {program.splitType.replaceAll("_", " ")} · {program.daysPerWeek}×/wk
-              · {program.sessionMinutes} min
+              <span className="capitalize">
+                {program.splitType.replaceAll("_", " ")}
+              </span>
+              {" · "}
+              {program.daysPerWeek}×/wk · {program.sessionMinutes} min
               {client && (
                 <>
                   {" · "}
@@ -557,6 +580,9 @@ export function ProgramDetail({
                   </Link>
                 </>
               )}
+              {!client && (
+                <span className="text-zinc-600"> · Unassigned</span>
+              )}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -566,21 +592,19 @@ export function ProgramDetail({
               size="sm"
               onClick={saveMeta}
               disabled={pending}
+              className="min-h-11"
             >
-              Save
+              Save details
             </Button>
           </div>
         </div>
         {msg && (
-          <p
-            className={
-              "mt-2 text-xs " +
-              (isSuccessFlash(msg) ? "text-emerald-400/90" : "text-amber-200/90")
-            }
-            role="status"
+          <Alert
+            tone={isSuccessFlash(msg) ? "success" : "warning"}
+            className="mt-3"
           >
             {msg}
-          </p>
+          </Alert>
         )}
       </div>
 
@@ -589,7 +613,7 @@ export function ProgramDetail({
         <button
           type="button"
           onClick={() => setMetaOpen((o) => !o)}
-          className="flex w-full items-center justify-between gap-2 text-left"
+          className="flex min-h-11 w-full items-center justify-between gap-2 text-left"
           aria-expanded={metaOpen}
           aria-controls="program-details-panel"
           aria-label="Program details"
@@ -614,7 +638,7 @@ export function ProgramDetail({
               <div>
                 <Label>Status</Label>
                 <select
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  className="min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
@@ -626,7 +650,7 @@ export function ProgramDetail({
               <div className="sm:col-span-2">
                 <Label>Assign client</Label>
                 <select
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  className="min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
                 >
@@ -639,10 +663,11 @@ export function ProgramDetail({
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <Label>Notes</Label>
+                <Label>Coach notes</Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Floor notes, constraints, cues for this plan…"
                 />
               </div>
             </div>
@@ -652,6 +677,7 @@ export function ProgramDetail({
               size="sm"
               onClick={saveMeta}
               disabled={pending}
+              className="min-h-11"
             >
               Save details
             </Button>
@@ -659,11 +685,11 @@ export function ProgramDetail({
         )}
       </Card>
 
-      {/* Mesocycle strip */}
+      {/* Training week strip */}
       <Card padding="sm" className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <SectionLabel as="span">Mesocycle</SectionLabel>
+            <SectionLabel as="span">Training week</SectionLabel>
             <span className="text-sm font-medium text-zinc-200">
               {mesoInfo.label}
             </span>
@@ -724,7 +750,7 @@ export function ProgramDetail({
                 disabled={pending}
                 onClick={() => setMesoWeek(opt.value)}
                 className={cn(
-                  "rounded-lg border px-2 py-2 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                  "min-h-11 rounded-lg border px-2 py-2 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                   selected
                     ? plan.isDeload
                       ? "border-amber-600 bg-amber-950/40 text-amber-100 ring-1 ring-amber-500/40"
@@ -841,29 +867,40 @@ export function ProgramDetail({
       </div>
 
       {/* Days */}
-      <section className="space-y-2.5">
-        <SectionLabel as="h2" className="mb-0">
-          Days
-        </SectionLabel>
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <SectionLabel as="h2" className="mb-0">
+            Training days
+          </SectionLabel>
+          {days.length > 0 && (
+            <p className="text-[11px] text-zinc-600">
+              Start a session, add from the bank, or edit sets / reps / load
+            </p>
+          )}
+        </div>
         {days.length === 0 && (
-          <p className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/30 px-3 py-3 text-sm text-zinc-500">
-            No days yet — regenerate the program or design a new one.
+          <p className="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/30 px-4 py-6 text-center text-sm text-zinc-500">
+            No days yet — use{" "}
+            <span className="font-medium text-zinc-400">Regenerate</span> below
+            or design a new program.
           </p>
         )}
         {days.map((day) => (
-          <Card key={day.id} padding="sm">
+          <Card key={day.id} padding="sm" className="space-y-0">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-zinc-100">
                 {day.name}
-                {day.focus && (
-                  <span className="ml-2 text-xs font-normal text-zinc-500">
-                    {day.focus}
-                  </span>
-                )}
               </h3>
               <p className="mt-0.5 text-[11px] text-zinc-500">
-                {day.exercises.length} exercise
+                {day.focus ? (
+                  <>
+                    <span className="text-zinc-400">{day.focus}</span>
+                    <span className="mx-1.5 text-zinc-700">·</span>
+                  </>
+                ) : null}
+                <span className="tabular-nums">{day.exercises.length}</span>{" "}
+                exercise
                 {day.exercises.length === 1 ? "" : "s"}
               </p>
             </div>
@@ -871,7 +908,7 @@ export function ProgramDetail({
               <StartSessionButton programDayId={day.id} />
               <Button
                 type="button"
-                variant="secondary"
+                variant={addDayId === day.id ? "primary" : "secondary"}
                 size="sm"
                 disabled={pending}
                 onClick={() => {
@@ -881,7 +918,7 @@ export function ProgramDetail({
                 }}
                 className="min-h-11"
               >
-                {addDayId === day.id ? "Cancel add" : "Add exercise"}
+                {addDayId === day.id ? "Cancel" : "Add exercise"}
               </Button>
               <Button
                 type="button"
@@ -892,12 +929,12 @@ export function ProgramDetail({
                 title="Rebuild this day only"
                 className="min-h-11"
               >
-                Regen day
+                Rebuild day
               </Button>
             </div>
           </div>
           {addDayId === day.id && (
-            <div className="mt-3">
+            <div className="mt-3 border-t border-zinc-800 pt-3">
               <ExerciseBankPicker
                 title={`Add to ${day.name}`}
                 disabled={pending}
@@ -907,11 +944,28 @@ export function ProgramDetail({
             </div>
           )}
           <div className="mt-3 space-y-2">
+            {day.exercises.length === 0 && addDayId !== day.id && (
+              <p className="rounded-lg border border-dashed border-zinc-800 bg-zinc-950/30 px-3 py-3 text-center text-xs text-zinc-500">
+                Empty day — tap{" "}
+                <button
+                  type="button"
+                  className="font-medium text-emerald-400 hover:underline"
+                  onClick={() => {
+                    setSwapId(null);
+                    setEditId(null);
+                    setAddDayId(day.id);
+                  }}
+                >
+                  Add exercise
+                </button>{" "}
+                or rebuild the day.
+              </p>
+            )}
             {groupExercisesIntoBlocks(day.exercises).map((block) => {
               const renderEx = (ex: Ex, nested: boolean) => (
                 <li
                   key={ex.id}
-                  className={`list-none rounded-lg border px-2.5 py-2 ${
+                  className={`list-none rounded-lg border px-3 py-2.5 ${
                     nested
                       ? "border-zinc-800/80 bg-zinc-950/60"
                       : "border-zinc-800 bg-zinc-950/40"
@@ -1074,6 +1128,7 @@ export function ProgramDetail({
                           <Label>Sets</Label>
                           <Input
                             type="number"
+                            inputMode="numeric"
                             value={editDraft.sets ?? ex.sets}
                             onChange={(e) =>
                               setEditDraft({
@@ -1087,6 +1142,7 @@ export function ProgramDetail({
                           <Label>Reps</Label>
                           <Input
                             value={editDraft.reps ?? ex.reps}
+                            placeholder="e.g. 8–10"
                             onChange={(e) =>
                               setEditDraft({
                                 ...editDraft,
@@ -1096,9 +1152,10 @@ export function ProgramDetail({
                           />
                         </div>
                         <div>
-                          <Label>RPE</Label>
+                          <Label>RPE / load</Label>
                           <Input
                             value={editDraft.rpe ?? ex.rpe ?? ""}
+                            placeholder="e.g. 7–8"
                             onChange={(e) =>
                               setEditDraft({
                                 ...editDraft,
@@ -1108,10 +1165,12 @@ export function ProgramDetail({
                           />
                         </div>
                         <div>
-                          <Label>Rest (s)</Label>
+                          <Label>Rest (sec)</Label>
                           <Input
                             type="number"
+                            inputMode="numeric"
                             value={editDraft.restSec ?? ex.restSec ?? ""}
+                            placeholder="90"
                             onChange={(e) =>
                               setEditDraft({
                                 ...editDraft,
@@ -1159,7 +1218,7 @@ export function ProgramDetail({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           {nested && (
@@ -1186,7 +1245,9 @@ export function ProgramDetail({
                             )}
                           </div>
                         </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-zinc-400">
+
+                        {/* Prescription chips — scan sets / reps / load */}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           {!nested && (
                             <Badge
                               tone={
@@ -1198,19 +1259,56 @@ export function ProgramDetail({
                               {formatSchemeName(ex.setScheme)}
                             </Badge>
                           )}
-                          <span className="tabular-nums">
-                            {formatPrescription({
-                              sets: ex.sets,
-                              reps: ex.reps,
-                              rpe: ex.rpe,
-                              summary: nested
-                                ? null
-                                : ex.setSchemeMeta?.summary,
-                            })}
-                          </span>
+                          {nested || !ex.setSchemeMeta?.summary ? (
+                            <>
+                              <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900/80 px-1.5 py-0.5 text-[11px] tabular-nums ring-1 ring-zinc-800">
+                                <span className="font-medium text-zinc-500">
+                                  Sets
+                                </span>
+                                <span className="text-zinc-200">{ex.sets}</span>
+                              </span>
+                              <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900/80 px-1.5 py-0.5 text-[11px] tabular-nums ring-1 ring-zinc-800">
+                                <span className="font-medium text-zinc-500">
+                                  Reps
+                                </span>
+                                <span className="text-zinc-200">{ex.reps}</span>
+                              </span>
+                              {ex.rpe ? (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900/80 px-1.5 py-0.5 text-[11px] tabular-nums ring-1 ring-zinc-800">
+                                  <span className="font-medium text-zinc-500">
+                                    RPE
+                                  </span>
+                                  <span className="text-zinc-200">{ex.rpe}</span>
+                                </span>
+                              ) : null}
+                              {!nested && ex.restSec ? (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900/80 px-1.5 py-0.5 text-[11px] tabular-nums ring-1 ring-zinc-800">
+                                  <span className="font-medium text-zinc-500">
+                                    Rest
+                                  </span>
+                                  <span className="text-zinc-200">
+                                    {formatRestLabel(ex.restSec)}
+                                  </span>
+                                </span>
+                              ) : null}
+                            </>
+                          ) : (
+                            <span className="text-xs tabular-nums text-zinc-400">
+                              {formatPrescription({
+                                sets: ex.sets,
+                                reps: ex.reps,
+                                rpe: ex.rpe,
+                                summary: ex.setSchemeMeta.summary,
+                              })}
+                              {ex.restSec
+                                ? ` · ${formatRestLabel(ex.restSec)}`
+                                : ""}
+                            </span>
+                          )}
                         </div>
+
                         {nested && (
-                          <div className="mt-0.5 text-[11px] text-zinc-500">
+                          <div className="mt-1 text-[11px] text-zinc-500">
                             {ex.restAfterSec != null && ex.restAfterSec > 0
                               ? `${formatRestLabel(ex.restAfterSec)} before next`
                               : ex.restBetweenRoundsSec != null
@@ -1219,12 +1317,12 @@ export function ProgramDetail({
                           </div>
                         )}
                         {!nested && ex.setSchemeMeta?.howTo && (
-                          <div className="mt-0.5 line-clamp-1 text-[11px] text-zinc-600">
+                          <div className="mt-1 line-clamp-2 text-[11px] leading-snug text-zinc-600">
                             {ex.setSchemeMeta.howTo}
                           </div>
                         )}
                         {ex.notes && (
-                          <div className="mt-0.5 line-clamp-1 text-xs text-zinc-500">
+                          <div className="mt-1 line-clamp-2 text-xs text-zinc-500">
                             {ex.notes}
                           </div>
                         )}
@@ -1326,8 +1424,9 @@ export function ProgramDetail({
             size="sm"
             onClick={regenerateProgram}
             disabled={pending}
+            className="min-h-11"
           >
-            Regenerate
+            Rebuild program
           </Button>
           <Button
             type="button"
@@ -1335,13 +1434,14 @@ export function ProgramDetail({
             size="sm"
             onClick={insertCorrectives}
             disabled={pending || !hasClient}
+            className="min-h-11"
             title={
               !hasClient
-                ? "Assign a client to use assessment correctives"
+                ? "Assign a client to pull assessment correctives"
                 : undefined
             }
           >
-            Insert correctives
+            Add correctives
           </Button>
           <Button
             type="button"
@@ -1349,11 +1449,12 @@ export function ProgramDetail({
             size="sm"
             onClick={removeProgram}
             disabled={pending}
+            className="min-h-11"
           >
-            Delete
+            Delete program
           </Button>
           {!hasClient && (
-            <span className="text-[11px] text-zinc-500">
+            <span className="text-[11px] leading-snug text-zinc-500">
               Assign a client for correctives and injury-aware rebuilds.
             </span>
           )}

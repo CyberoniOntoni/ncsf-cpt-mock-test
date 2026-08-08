@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Calendar",
-  description: "Month view of FloorScribe appointments.",
+  description: "Month view of FloorScribe bookings — pick a day, book, start session.",
 };
 
 export default function CalendarPage() {
@@ -17,7 +17,7 @@ export default function CalendarPage() {
     <PageShell className="space-y-4">
       <PageHeader
         title="Calendar"
-        description="Month grid of bookings. Pick a sticky client, tap a day, then Book."
+        description="Month grid of bookings. Set a sticky client, tap a day, Book — then Start session on the floor."
         eyebrow={<AreaEyebrow areaId="people" current="Calendar" />}
       />
       <StickyClientFilterBanner />

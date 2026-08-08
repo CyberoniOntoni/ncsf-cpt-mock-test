@@ -111,6 +111,7 @@ export async function updateProfileAction(input: {
   email: string;
   phone?: string;
   title?: string;
+  currentPassword?: string;
 }) {
   return updateUserProfile(input);
 }

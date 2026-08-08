@@ -71,18 +71,51 @@ function formatTime(d: Date | string) {
   }
 }
 
+/** Compact length from ends − starts, e.g. "60m" */
+function formatDuration(
+  startsAt: Date | string,
+  endsAt: Date | string | null | undefined
+): string | null {
+  if (!endsAt) return null;
+  try {
+    const s = new Date(startsAt).getTime();
+    const e = new Date(endsAt).getTime();
+    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return null;
+    const mins = Math.round((e - s) / 60_000);
+    if (mins < 1 || mins > 24 * 60) return null;
+    if (mins < 60) return `${mins}m`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m === 0 ? `${h}h` : `${h}h${m}m`;
+  } catch {
+    return null;
+  }
+}
+
 function statusTone(
-  status: string
+  status: string,
+  overdue?: boolean
 ): "default" | "green" | "amber" | "red" {
+  if (overdue && status === "scheduled") return "amber";
   if (status === "scheduled") return "green";
   if (status === "completed") return "default";
   if (status === "cancelled" || status === "no_show") return "red";
   return "amber";
 }
 
-function statusLabel(status: string) {
+function statusLabel(status: string, overdue?: boolean) {
+  if (overdue && status === "scheduled") return "Past due";
   if (status === "no_show") return "No-show";
+  if (status === "scheduled") return "Booked";
+  if (status === "completed") return "Done";
+  if (status === "cancelled") return "Cancelled";
   return status.replaceAll("_", " ");
+}
+
+function isPastDue(startsAt: Date | string, status: string) {
+  if (status !== "scheduled") return false;
+  const t = new Date(startsAt).getTime();
+  return Number.isFinite(t) && t < Date.now() - 60_000;
 }
 
 function firstName(full: string) {
@@ -146,11 +179,31 @@ export function CalendarMonth() {
   const cells = useMemo(() => buildMonthGrid(year, month), [year, month]);
 
   const selectedItems = selectedKey ? byDay.get(selectedKey) ?? [] : [];
+  const selectedPastDue = useMemo(
+    () => selectedItems.filter((a) => isPastDue(a.startsAt, a.status)).length,
+    [selectedItems]
+  );
 
   const monthScheduledCount = useMemo(() => {
     let n = 0;
     for (const a of items) {
       if (a.status !== "scheduled") continue;
+      const d = new Date(a.startsAt);
+      if (
+        Number.isFinite(d.getTime()) &&
+        d.getFullYear() === year &&
+        d.getMonth() + 1 === month
+      ) {
+        n += 1;
+      }
+    }
+    return n;
+  }, [items, year, month]);
+
+  const monthPastDueCount = useMemo(() => {
+    let n = 0;
+    for (const a of items) {
+      if (!isPastDue(a.startsAt, a.status)) continue;
       const d = new Date(a.startsAt);
       if (
         Number.isFinite(d.getTime()) &&
@@ -234,8 +287,10 @@ export function CalendarMonth() {
             {loaded && (
               <p className="text-[11px] tabular-nums text-zinc-500">
                 {monthScheduledCount === 0
-                  ? "No scheduled sessions"
-                  : `${monthScheduledCount} scheduled`}
+                  ? "No open bookings this month"
+                  : monthPastDueCount > 0
+                    ? `${monthScheduledCount} booked · ${monthPastDueCount} past due`
+                    : `${monthScheduledCount} booked`}
               </p>
             )}
           </div>
@@ -251,7 +306,13 @@ export function CalendarMonth() {
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="secondary" size="sm" onClick={goToday}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="min-h-11"
+            onClick={goToday}
+          >
             Today
           </Button>
           {stickyClientId ? (
@@ -280,6 +341,18 @@ export function CalendarMonth() {
           )}
         </div>
       </div>
+
+      {!stickyClientId && loaded && (
+        <p className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-xs leading-relaxed text-zinc-500">
+          Tip: set a sticky client on{" "}
+          <Link href="/" className="font-medium text-emerald-400 hover:underline">
+            Today
+          </Link>{" "}
+          or a client profile, then tap a day and{" "}
+          <span className="text-zinc-400">Book</span> — time is prefilled for
+          that day.
+        </p>
+      )}
 
       {error && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm text-red-200">
@@ -327,6 +400,9 @@ export function CalendarMonth() {
             const scheduledN = dayItems.filter(
               (a) => a.status === "scheduled"
             ).length;
+            const pastDueN = dayItems.filter((a) =>
+              isPastDue(a.startsAt, a.status)
+            ).length;
             const count = dayItems.length;
             const selected = selectedKey === cell.dateKey;
             return (
@@ -336,16 +412,33 @@ export function CalendarMonth() {
                 role="gridcell"
                 aria-selected={selected}
                 aria-current={cell.isToday ? "date" : undefined}
+                title={
+                  stickyClientId
+                    ? "Click to view · double-click to book"
+                    : undefined
+                }
                 aria-label={`${(parseLocalDateKey(cell.dateKey) ?? new Date()).toLocaleDateString(undefined, {
                   weekday: "long",
                   month: "long",
                   day: "numeric",
                 })}${
                   count
-                    ? `, ${count} appointment${count === 1 ? "" : "s"}`
-                    : ", no appointments"
-                }`}
+                    ? `, ${count} booking${count === 1 ? "" : "s"}${
+                        pastDueN ? `, ${pastDueN} past due` : ""
+                      }`
+                    : ", no bookings"
+                }${stickyClientId ? ". Double-click to book." : ""}`}
                 onClick={() => selectDay(cell.dateKey, cell.month, cell.year)}
+                onDoubleClick={() => {
+                  selectDay(cell.dateKey, cell.month, cell.year);
+                  if (!stickyClientId) return;
+                  setStoredActiveClient(
+                    stickyClientId,
+                    stickyClientName ?? null
+                  );
+                  const href = `/clients/${stickyClientId}?bookAt=${encodeURIComponent(bookAtLocalFromDateKey(cell.dateKey))}#crm-appointments`;
+                  window.location.assign(href);
+                }}
                 className={cn(
                   "flex min-h-11 flex-col rounded-md border p-1 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:min-h-[5.5rem] sm:rounded-lg sm:p-2",
                   cell.outside
@@ -354,6 +447,10 @@ export function CalendarMonth() {
                   cell.isToday &&
                     !selected &&
                     "border-emerald-800/60 ring-1 ring-emerald-700/40",
+                  pastDueN > 0 &&
+                    !selected &&
+                    !cell.outside &&
+                    "border-amber-900/40",
                   selected &&
                     "border-emerald-600/70 bg-emerald-950/25 ring-1 ring-emerald-600/50"
                 )}
@@ -368,7 +465,7 @@ export function CalendarMonth() {
                   {cell.day}
                 </span>
 
-                {/* Mobile: dots only */}
+                {/* Mobile: dots — amber for past-due priority */}
                 {count > 0 && (
                   <div
                     className="mt-auto flex items-center justify-center gap-0.5 pt-0.5 sm:hidden"
@@ -379,9 +476,11 @@ export function CalendarMonth() {
                         key={i}
                         className={cn(
                           "h-1.5 w-1.5 rounded-full",
-                          i < scheduledN
-                            ? "bg-emerald-400"
-                            : "bg-zinc-600"
+                          i < pastDueN
+                            ? "bg-amber-400"
+                            : i < scheduledN
+                              ? "bg-emerald-400"
+                              : "bg-zinc-600"
                         )}
                       />
                     ))}
@@ -391,25 +490,30 @@ export function CalendarMonth() {
                 {/* sm+: event chips */}
                 {count > 0 && (
                   <div className="mt-1 hidden min-h-0 flex-1 flex-col gap-0.5 overflow-hidden sm:flex">
-                    {dayItems.slice(0, 2).map((a) => (
-                      <span
-                        key={a.id}
-                        className={cn(
-                          "truncate rounded px-1 py-0.5 text-[10px] leading-tight",
-                          a.status === "scheduled"
-                            ? "bg-emerald-950/50 text-emerald-200/90"
-                            : a.status === "cancelled" ||
-                                a.status === "no_show"
-                              ? "bg-red-950/40 text-red-200/80"
-                              : "bg-zinc-800/80 text-zinc-300"
-                        )}
-                      >
-                        <span className="tabular-nums opacity-80">
-                          {formatTime(a.startsAt)}
-                        </span>{" "}
-                        {firstName(a.clientName)}
-                      </span>
-                    ))}
+                    {dayItems.slice(0, 2).map((a) => {
+                      const overdue = isPastDue(a.startsAt, a.status);
+                      return (
+                        <span
+                          key={a.id}
+                          className={cn(
+                            "truncate rounded px-1 py-0.5 text-[10px] leading-tight",
+                            overdue
+                              ? "bg-amber-950/50 text-amber-100/90"
+                              : a.status === "scheduled"
+                                ? "bg-emerald-950/50 text-emerald-200/90"
+                                : a.status === "cancelled" ||
+                                    a.status === "no_show"
+                                  ? "bg-red-950/40 text-red-200/80"
+                                  : "bg-zinc-800/80 text-zinc-300"
+                          )}
+                        >
+                          <span className="tabular-nums opacity-80">
+                            {formatTime(a.startsAt)}
+                          </span>{" "}
+                          {firstName(a.clientName)}
+                        </span>
+                      );
+                    })}
                     {count > 2 && (
                       <span className="px-1 text-[10px] text-zinc-500">
                         +{count - 2} more
@@ -429,91 +533,149 @@ export function CalendarMonth() {
         id="calendar-day"
         tabIndex={-1}
         aria-label={
-          selectedKey ? `Appointments on ${selectedKey}` : "Day detail"
+          selectedKey ? `Bookings on ${selectedKey}` : "Day detail"
         }
         className="scroll-mt-24 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 sm:p-4 md:scroll-mt-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-zinc-100">
-            {selectedKey
-              ? (
-                  parseLocalDateKey(selectedKey) ?? new Date()
-                ).toLocaleDateString(undefined, {
-                  weekday: "long",
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
-              : "Select a day"}
-          </h3>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-zinc-100">
+              {selectedKey
+                ? (
+                    parseLocalDateKey(selectedKey) ?? new Date()
+                  ).toLocaleDateString(undefined, {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "Select a day"}
+            </h3>
+            {selectedKey && selectedItems.length > 0 && (
+              <p className="mt-0.5 text-[11px] text-zinc-500">
+                {selectedItems.length} booking
+                {selectedItems.length === 1 ? "" : "s"}
+                {selectedPastDue > 0
+                  ? ` · ${selectedPastDue} past due`
+                  : ""}
+              </p>
+            )}
+          </div>
           {selectedKey && stickyClientId && (
             <Link
               href={bookHref}
-              className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 rounded-sm"
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-emerald-900/40 bg-emerald-950/30 px-3 text-xs font-medium text-emerald-300 transition hover:border-emerald-800/50 hover:bg-emerald-950/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
               onClick={() =>
                 setStoredActiveClient(stickyClientId, stickyClientName ?? null)
               }
             >
-              Book this day →
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              Book this day
             </Link>
           )}
         </div>
 
         {!selectedKey ? (
-          <p className="mt-2 text-sm text-zinc-500">Tap a day on the grid.</p>
+          <p className="mt-3 text-sm text-zinc-500">Tap a day on the grid.</p>
         ) : selectedItems.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-500">
-            No appointments.
-            {stickyClientId
-              ? " Use Book to schedule for the sticky client."
-              : " Set a sticky client from Today or People, then book."}
-          </p>
-        ) : (
-          <ul className="mt-3 space-y-1.5">
-            {selectedItems.map((a) => (
-              <li
-                key={a.id}
-                className={cn(
-                  "flex flex-col gap-2 rounded-lg border bg-zinc-950/50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between",
-                  a.status === "scheduled"
-                    ? "border-zinc-800"
-                    : "border-zinc-800/80 opacity-80"
-                )}
+          <div className="mt-3 space-y-2">
+            <p className="text-sm text-zinc-500">
+              No bookings this day.
+              {stickyClientId
+                ? " Schedule for your sticky client with Book this day."
+                : " Pick a sticky client first, then book."}
+            </p>
+            {stickyClientId ? (
+              <Link
+                href={bookHref}
+                onClick={() =>
+                  setStoredActiveClient(
+                    stickyClientId,
+                    stickyClientName ?? null
+                  )
+                }
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-sm font-medium text-white shadow-sm shadow-emerald-950/40 transition hover:bg-emerald-500"
               >
-                <Link
-                  href={`/clients/${a.clientId}#crm-appointments`}
-                  onClick={() =>
-                    setStoredActiveClient(a.clientId, a.clientName)
-                  }
-                  className="min-w-0 flex-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-                >
-                  <p className="truncate text-sm font-medium text-zinc-100">
-                    {a.clientName}
-                  </p>
-                  <p className="text-xs text-zinc-400">
-                    <span className="tabular-nums">
-                      {formatTime(a.startsAt)}
-                    </span>
-                    {" · "}
-                    {a.title}
-                  </p>
-                </Link>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge tone={statusTone(a.status)}>
-                    {statusLabel(a.status)}
-                  </Badge>
-                  {a.status === "scheduled" && (
-                    <StartFromAppointmentButton
-                      appointmentId={a.id}
-                      clientId={a.clientId}
-                      clientName={a.clientName}
-                      hasLinkedSession={!!a.sessionId}
-                      className="min-h-11"
-                    />
+                <Plus className="h-4 w-4" aria-hidden />
+                {bookLabel}
+              </Link>
+            ) : (
+              <Link
+                href="/clients"
+                className="inline-flex min-h-11 items-center text-sm font-medium text-emerald-400 hover:underline"
+              >
+                Choose a client →
+              </Link>
+            )}
+          </div>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {selectedItems.map((a) => {
+              const overdue = isPastDue(a.startsAt, a.status);
+              return (
+                <li
+                  key={a.id}
+                  className={cn(
+                    "flex flex-col gap-2 rounded-lg border bg-zinc-950/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between",
+                    overdue
+                      ? "border-amber-900/45 bg-amber-950/15"
+                      : a.status === "scheduled"
+                        ? "border-zinc-800"
+                        : "border-zinc-800/80 opacity-85"
                   )}
-                </div>
-              </li>
-            ))}
+                >
+                  <Link
+                    href={`/clients/${a.clientId}#crm-appointments`}
+                    onClick={() =>
+                      setStoredActiveClient(a.clientId, a.clientName)
+                    }
+                    className="min-w-0 flex-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+                  >
+                    <p className="truncate text-sm font-medium text-zinc-100">
+                      {a.clientName}
+                    </p>
+                    <p className="text-xs text-zinc-400">
+                      <span className="tabular-nums">
+                        {formatTime(a.startsAt)}
+                      </span>
+                      {(() => {
+                        const dur = formatDuration(a.startsAt, a.endsAt);
+                        return dur ? (
+                          <span className="tabular-nums text-zinc-500">
+                            {" "}
+                            · {dur}
+                          </span>
+                        ) : null;
+                      })()}
+                      {" · "}
+                      {a.title}
+                    </p>
+                  </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge tone={statusTone(a.status, overdue)}>
+                      {statusLabel(a.status, overdue)}
+                    </Badge>
+                    {a.status === "scheduled" && (
+                      <StartFromAppointmentButton
+                        appointmentId={a.id}
+                        clientId={a.clientId}
+                        clientName={a.clientName}
+                        hasLinkedSession={!!a.sessionId}
+                        className="min-h-11"
+                      />
+                    )}
+                    {a.sessionId && a.status !== "scheduled" && (
+                      <Link
+                        href={`/sessions/${a.sessionId}`}
+                        className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-100 hover:bg-zinc-700"
+                      >
+                        Open log
+                      </Link>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
 import { listExercisesAction } from "@/app/actions/library";
 import { patternLabel } from "@/lib/exercise-meta";
+import { cn } from "@/lib/utils";
 import { Badge, Button, Input } from "./ui";
 
 export type BankExercisePick = {
@@ -20,7 +22,7 @@ export function ExerciseBankPicker({
   onPick,
   onCancel,
   preferPattern,
-  title = "Swap from exercise bank",
+  title = "Pick from exercise bank",
   disabled = false,
 }: {
   onPick: (ex: BankExercisePick) => void;
@@ -80,9 +82,10 @@ export function ExerciseBankPicker({
 
   return (
     <div
-      className={`space-y-2 rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3 ${
-        disabled ? "pointer-events-none opacity-60" : ""
-      }`}
+      className={cn(
+        "space-y-3 rounded-xl border border-emerald-900/50 bg-emerald-950/20 p-3",
+        disabled && "pointer-events-none opacity-60"
+      )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-xs font-semibold uppercase tracking-wide text-emerald-400">
@@ -91,28 +94,48 @@ export function ExerciseBankPicker({
         <Button
           type="button"
           variant="ghost"
-          className="text-xs"
+          size="sm"
+          className="min-h-11 px-3 text-xs"
           disabled={disabled}
           onClick={onCancel}
         >
           Close
         </Button>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <div className="min-w-[160px] flex-1">
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative min-w-0 flex-1 sm:min-w-[12rem]">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500"
+            aria-hidden
+          />
           <Input
-            placeholder="Search exercises…"
+            placeholder="Search name, muscle, gear…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             autoFocus
             disabled={disabled}
+            className="pl-9 pr-9"
+            aria-label="Search exercises"
           />
+          {q.trim() && (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => setQ("")}
+              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
         <select
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm disabled:opacity-50"
+          className="min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 sm:w-auto sm:min-w-[10rem]"
           value={pattern}
           onChange={(e) => setPattern(e.target.value)}
           disabled={disabled}
+          aria-label="Movement pattern"
         >
           {patterns.map((p) => (
             <option key={p} value={p}>
@@ -120,48 +143,88 @@ export function ExerciseBankPicker({
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-1.5 text-xs text-zinc-300">
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 text-xs text-zinc-300">
           <input
             type="checkbox"
+            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-emerald-600 focus:ring-emerald-500/50"
             checked={availableOnly}
             onChange={(e) => setAvailableOnly(e.target.checked)}
             disabled={disabled}
           />
-          Available only
+          Floor gear only
         </label>
       </div>
-      {loading && <p className="text-xs text-zinc-500">Loading bank…</p>}
-      <ul className="max-h-56 overflow-auto rounded-lg border border-zinc-800">
+
+      {loading && (
+        <p className="text-xs text-zinc-500" role="status">
+          Loading bank…
+        </p>
+      )}
+
+      <ul
+        className="max-h-64 overflow-auto rounded-lg border border-zinc-800 bg-zinc-950/40"
+        role="listbox"
+        aria-label="Exercise results"
+      >
         {filtered.map((ex) => (
-          <li key={ex.id}>
+          <li key={ex.id} role="option">
             <button
               type="button"
               disabled={disabled}
-              className="flex w-full items-start justify-between gap-2 border-b border-zinc-800 px-3 py-2 text-left last:border-0 hover:bg-zinc-800/80 disabled:opacity-50"
+              className="flex min-h-11 w-full items-start justify-between gap-3 border-b border-zinc-800/90 px-3 py-2.5 text-left transition last:border-0 hover:bg-zinc-800/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/50 active:bg-zinc-800 disabled:opacity-50"
               onClick={() => onPick(ex)}
             >
-              <div>
-                <div className="text-sm font-medium text-zinc-100">{ex.name}</div>
-                <div className="text-xs text-zinc-500">
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-zinc-100">
+                  {ex.name}
+                </div>
+                <div className="mt-0.5 text-xs leading-snug text-zinc-500">
                   {ex.primaryMuscles}
                   {ex.equipmentNames.length
                     ? ` · ${ex.equipmentNames.join(", ")}`
                     : " · Bodyweight"}
                 </div>
               </div>
-              <div className="flex shrink-0 flex-col items-end gap-0.5">
+              <div className="flex shrink-0 flex-col items-end gap-1 pt-0.5">
                 <Badge>{patternLabel(ex.movementPattern)}</Badge>
-                {!ex.available && <Badge tone="amber">gear</Badge>}
+                {!ex.available && <Badge tone="amber">Missing gear</Badge>}
               </div>
             </button>
           </li>
         ))}
         {!loading && filtered.length === 0 && (
-          <li className="px-3 py-4 text-sm text-zinc-500">
-            No matches. Try another pattern or turn off “Available only”.
+          <li className="px-4 py-8 text-center">
+            <p className="text-sm font-medium text-zinc-300">No matches</p>
+            <p className="mt-1 text-xs leading-snug text-zinc-500">
+              Try another name or pattern
+              {availableOnly ? ", or turn off “Floor gear only”" : ""}.
+            </p>
+            {(q.trim() || pattern !== "all" || availableOnly) && (
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  setQ("");
+                  setPattern("all");
+                  setAvailableOnly(false);
+                }}
+                className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+              >
+                Clear filters
+              </button>
+            )}
           </li>
         )}
       </ul>
+
+      {!loading && filtered.length > 0 && (
+        <p className="text-[11px] tabular-nums text-zinc-600">
+          {filtered.length} exercise{filtered.length === 1 ? "" : "s"}
+          {preferPattern && pattern === preferPattern
+            ? ` · matching ${patternLabel(preferPattern)} first`
+            : ""}
+        </p>
+      )}
     </div>
   );
 }

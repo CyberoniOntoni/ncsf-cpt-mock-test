@@ -51,8 +51,8 @@ nano .env
 AUTH_SECRET=$(openssl rand -base64 48)
 # put that value into .env
 
-APP_URL=https://floorscribe.example.com   # or http://YOUR_LXC_IP:3000
-FLOORSCRIBE_PORT=3000
+APP_URL=https://floorscribe.example.com   # or http://YOUR_LXC_IP:4000
+FLOORSCRIBE_PORT=4000
 # PTCRM_PORT still accepted as a legacy alias
 ```
 
@@ -71,12 +71,12 @@ Without `XAI_API_KEY`, the coach still works in **rule-based playbook** mode.
 cd /opt/pt-crm
 docker compose up -d --build
 docker compose ps
-curl -s http://127.0.0.1:3000/api/health | jq .
+curl -s http://127.0.0.1:4000/api/health | jq .
 ```
 
 Expect `"ok": true` and `"authSecretConfigured": true`.
 
-Open `http://YOUR_LXC_IP:3000` (or your domain).
+Open `http://YOUR_LXC_IP:4000` (or your domain).
 
 **Demo login** (change password later / create your own flow):  
 `pt@demo.local` / `trainer123`

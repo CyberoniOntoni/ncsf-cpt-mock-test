@@ -255,6 +255,10 @@ export async function createOrgInvite(input: {
     return { error: "You can't invite yourself" as const };
   }
   const role = parseInviteRole(input.role || "trainer");
+  // Only owners may invite admins; admins can invite trainer / front_desk only
+  if (role === "admin" && session.role !== "owner") {
+    return { error: "Only owners can invite admins" as const };
+  }
 
   const db = await getDb();
   // Already a member?
@@ -537,21 +541,20 @@ export async function acceptInviteExistingUser(token: string) {
       .update(orgInvites)
       .set({ status: "accepted", acceptedAt: new Date() })
       .where(eq(orgInvites.id, invite.id));
-    return { ok: true as const, alreadyMember: true as const };
+  } else {
+    await db.insert(memberships).values({
+      id: id("mem"),
+      userId: session.userId,
+      organizationId: invite.organizationId,
+      role: invite.role || "trainer",
+    });
+    await db
+      .update(orgInvites)
+      .set({ status: "accepted", acceptedAt: new Date() })
+      .where(eq(orgInvites.id, invite.id));
   }
 
-  await db.insert(memberships).values({
-    id: id("mem"),
-    userId: session.userId,
-    organizationId: invite.organizationId,
-    role: invite.role || "trainer",
-  });
-  await db
-    .update(orgInvites)
-    .set({ status: "accepted", acceptedAt: new Date() })
-    .where(eq(orgInvites.id, invite.id));
-
-  // Switch session to the invited org
+  // Switch session to the invited org (including alreadyMember path)
   const payload = await buildSessionForUserInOrg(
     session.userId,
     invite.organizationId
@@ -562,7 +565,7 @@ export async function acceptInviteExistingUser(token: string) {
   }
   revalidatePath("/");
   revalidatePath("/settings");
-  return { ok: true as const, alreadyMember: false as const };
+  return { ok: true as const, alreadyMember: !!mem };
 }
 
 async function buildSessionForUserInOrg(
@@ -606,6 +609,8 @@ export async function updateUserProfile(input: {
   email: string;
   phone?: string | null;
   title?: string | null;
+  /** Required when changing email — verified against passwordHash */
+  currentPassword?: string;
 }) {
   const session = await requireSession();
   const name = input.name.trim();
@@ -621,7 +626,24 @@ export async function updateUserProfile(input: {
   }
 
   const db = await getDb();
-  if (email !== session.email) {
+  if (email !== normalizeEmail(session.email)) {
+    const currentPassword = input.currentPassword ?? "";
+    if (!currentPassword) {
+      return {
+        error: "Enter your current password to change email" as const,
+      };
+    }
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+    if (!user) return { error: "User not found" as const };
+    const pwOk = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!pwOk) {
+      return { error: "Current password is incorrect" as const };
+    }
+
     const [taken] = await db
       .select({ id: users.id })
       .from(users)

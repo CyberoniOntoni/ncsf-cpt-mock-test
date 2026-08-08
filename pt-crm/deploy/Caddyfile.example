@@ -6,7 +6,7 @@
 
 floorscribe.example.com {
 	encode gzip
-	reverse_proxy 127.0.0.1:3000
+	reverse_proxy 127.0.0.1:4000
 
 	# Optional: basic rate limit at edge (Caddy v2.8+ rate_limit plugin, or use fail2ban)
 	header {

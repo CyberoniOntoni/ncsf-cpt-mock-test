@@ -114,10 +114,10 @@ export type CrmSnapshot = {
 const INV_STATUS_LABEL: Record<string, string> = {
   unpaid: "Unpaid",
   paid: "Paid",
-  void: "Void",
+  void: "Voided",
 };
 
-/** One-tap title chips on new invoice */
+/** One-tap title chips on new invoice (active/last pack name injected at runtime) */
 const INV_TITLE_PRESETS = [
   "10-pack",
   "Single session",
@@ -167,6 +167,27 @@ function fmtDateShort(d: Date | string | null | undefined) {
     });
   } catch {
     return "";
+  }
+}
+
+/** e.g. "60 min" from endsAt − startsAt when both parse */
+function fmtApptDuration(
+  startsAt: Date | string | null | undefined,
+  endsAt?: Date | string | null
+): string | null {
+  if (!startsAt || !endsAt) return null;
+  try {
+    const s = new Date(startsAt).getTime();
+    const e = new Date(endsAt).getTime();
+    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return null;
+    const mins = Math.round((e - s) / 60_000);
+    if (mins < 1 || mins > 24 * 60) return null;
+    if (mins < 60) return `${mins} min`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  } catch {
+    return null;
   }
 }
 
@@ -271,10 +292,11 @@ export function ClientCrmPanel({
   /** Voided invoices stay out of the way until expanded */
   const [showVoidInvoices, setShowVoidInvoices] = useState(false);
 
-  // Package form
+  // Package form — "used" is advanced (importing a mid-pack); default 0
   const [pkgName, setPkgName] = useState("");
   const [pkgTotal, setPkgTotal] = useState("10");
   const [pkgUsed, setPkgUsed] = useState("0");
+  const [showPkgUsed, setShowPkgUsed] = useState(false);
 
   // Appointment form
   const [apptStart, setApptStart] = useState(defaultAppointmentLocal);
@@ -336,9 +358,12 @@ export function ClientCrmPanel({
         if (!snapshot.activePackage) {
           const last = snapshot.lastPackage;
           if (last) {
-            setPkgName(last.name || "Session pack");
-            setPkgTotal(String(last.totalSessions || 10));
-            setPkgUsed("0");
+            resetPackageForm({
+              name: last.name || `${last.totalSessions || 10}-pack`,
+              total: last.totalSessions || 10,
+            });
+          } else {
+            resetPackageForm({ total: 10 });
           }
           setShowAddPack(true);
           scrollToId("crm-pack", "input, textarea");
@@ -497,6 +522,22 @@ export function ClientCrmPanel({
     }
   })();
 
+  /** Title chips: pack name first when known, then common presets */
+  const invTitlePresets = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    const push = (t: string | null | undefined) => {
+      const s = (t || "").trim();
+      if (!s || seen.has(s.toLowerCase())) return;
+      seen.add(s.toLowerCase());
+      out.push(s);
+    };
+    push(activePackage?.name);
+    push(snapshot.lastPackage?.name);
+    for (const t of INV_TITLE_PRESETS) push(t);
+    return out.slice(0, 6);
+  }, [activePackage?.name, snapshot.lastPackage?.name]);
+
   const packPct = activePackage
     ? Math.min(
         100,
@@ -590,36 +631,64 @@ export function ClientCrmPanel({
     });
   }
 
+  function resetPackageForm(prefills?: {
+    name?: string;
+    total?: number;
+  }) {
+    const total = Math.max(1, Math.floor(prefills?.total || 10));
+    setPkgName(prefills?.name?.trim() || "");
+    setPkgTotal(String(total));
+    setPkgUsed("0");
+    setShowPkgUsed(false);
+  }
+
+  function openAddPackage() {
+    resetPackageForm({ total: 10 });
+    setShowAddPack(true);
+  }
+
   function startRenewPack() {
     const last = snapshot.lastPackage;
-    setPkgName(last?.name || "Session pack");
-    setPkgTotal(String(last?.totalSessions || 10));
-    setPkgUsed("0");
+    const total = last?.totalSessions || 10;
+    resetPackageForm({
+      name: last?.name || `${total}-pack`,
+      total,
+    });
     setShowAddPack(true);
   }
 
   function onCreatePackage(e: FormEvent) {
     e.preventDefault();
-    const total = Number(pkgTotal);
+    // Parse as integers — avoid Number("") quirks and float noise
+    const total = Number.parseInt(String(pkgTotal).trim(), 10);
     if (!Number.isFinite(total) || total < 1) {
-      fail("Total sessions must be at least 1");
+      fail("Enter how many sessions are in this pack (at least 1)");
       return;
     }
-    const used = Math.max(0, Math.floor(Number(pkgUsed) || 0));
-    if (used > total) {
-      fail("Used cannot exceed total sessions");
-      return;
+    // Only honor "already used" when the advanced field is open
+    let used = 0;
+    if (showPkgUsed) {
+      const raw = String(pkgUsed).trim();
+      used = raw === "" ? 0 : Number.parseInt(raw, 10);
+      if (!Number.isFinite(used) || used < 0) {
+        fail("Already-used sessions must be 0 or a whole number");
+        return;
+      }
+      if (used > total) {
+        fail(
+          `Already used (${used}) can’t be higher than pack size (${total}). Leave “already used” at 0 for a new pack.`
+        );
+        return;
+      }
     }
     run(async () => {
       await createClientPackageAction({
         clientId,
         name: pkgName.trim() || undefined,
-        totalSessions: Math.floor(total),
+        totalSessions: total,
         usedSessions: used,
       });
-      setPkgName("");
-      setPkgTotal("10");
-      setPkgUsed("0");
+      resetPackageForm({ total: 10 });
       setShowAddPack(false);
     });
   }
@@ -646,28 +715,38 @@ export function ClientCrmPanel({
     });
   }
 
+  function openBookForm() {
+    // If already open, collapse; else open with a sensible start (keep deep-link time if set)
+    setShowBookForm((open) => {
+      if (open) return false;
+      if (!apptStart) setApptStart(defaultAppointmentLocal());
+      return true;
+    });
+  }
+
   function onCreateAppointment(e: FormEvent) {
     e.preventDefault();
-    if (!apptStart) {
-      fail("Start time is required");
+    if (!apptStart?.trim()) {
+      fail("Pick a start date and time");
       return;
     }
     const startDate = new Date(apptStart);
     if (Number.isNaN(startDate.getTime())) {
-      fail("Invalid start time");
+      fail("That start time isn’t valid — use the date/time picker");
       return;
     }
-    const rawDur = Math.floor(Number(apptDuration) || 60);
-    if (rawDur < 15) {
+    const rawDur = Number.parseInt(String(apptDuration).trim(), 10);
+    if (!Number.isFinite(rawDur) || rawDur < 15) {
       fail("Duration must be at least 15 minutes");
       return;
     }
     const duration = Math.min(240, rawDur);
+    const title = apptTitle.trim() || "Training session";
     run(async () => {
       await createClientAppointmentAction({
         clientId,
         startsAt: startDate.toISOString(),
-        title: apptTitle.trim() || undefined,
+        title,
         durationMin: duration,
       });
       setApptTitle("");
@@ -726,34 +805,53 @@ export function ClientCrmPanel({
     const prior = (snapshot.invoices || []).find(
       (i) => (i.status || "").toLowerCase() !== "void"
     );
-    if (lastPack?.name) {
-      setInvTitle(lastPack.name);
-    } else if (prior?.title) {
-      setInvTitle(prior.title);
+    // Title: prior invoice → active pack name → last pack → default
+    // Never invent amounts from pack session counts
+    if (prior?.title?.trim()) {
+      setInvTitle(prior.title.trim());
+    } else if (activePackage?.name?.trim()) {
+      setInvTitle(activePackage.name.trim());
+    } else if (lastPack?.name?.trim()) {
+      setInvTitle(lastPack.name.trim());
     } else {
       setInvTitle("Session pack");
     }
     if (prior?.amountCents != null && prior.amountCents > 0) {
       setInvAmount(centsToMoneyInput(prior.amountCents));
+    } else {
+      setInvAmount("");
     }
   }
 
   function onCreateInvoice(e: FormEvent) {
     e.preventDefault();
+    const amountRaw = invAmount.trim();
+    if (!amountRaw) {
+      fail("Enter an amount (e.g. 600 or 120.50)");
+      return;
+    }
     try {
-      parseMoneyToCents(invAmount);
+      parseMoneyToCents(amountRaw);
     } catch (err) {
       fail(err instanceof Error ? err.message : "Invalid amount");
       return;
     }
     const savedTitle = invTitle.trim() || "Session pack";
-    const savedAmount = invAmount.trim();
+    if (savedTitle.length > 120) {
+      fail("Title is too long (max 120 characters)");
+      return;
+    }
+    const notesRaw = invNotes.trim();
+    if (notesRaw.length > 500) {
+      fail("Notes are too long (max 500 characters)");
+      return;
+    }
     run(async () => {
       await createClientInvoiceAction({
         clientId,
         title: savedTitle,
-        amount: savedAmount,
-        notes: invNotes.trim() || undefined,
+        amount: amountRaw,
+        notes: notesRaw || undefined,
         packageId: activePackage?.id ?? null,
       });
       // Keep amount/title for next create (repeat packs); clear notes
@@ -1055,7 +1153,7 @@ export function ClientCrmPanel({
                   variant="secondary"
                   disabled={pending}
                   aria-expanded={showAddPack}
-                  onClick={() => setShowAddPack(true)}
+                  onClick={openAddPackage}
                   className="min-h-11"
                 >
                   Add package
@@ -1068,41 +1166,84 @@ export function ClientCrmPanel({
         {showAddPack && (
           <form
             onSubmit={onCreatePackage}
-            className="grid gap-2 sm:grid-cols-[1fr_5.5rem_5rem_auto]"
+            className="space-y-2.5 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
           >
-            <Input
-              value={pkgName}
-              onChange={(e) => setPkgName(e.target.value)}
-              placeholder="Pack name (e.g. 10-pack)"
-              disabled={pending}
-              className="min-h-11 py-1.5 text-xs"
-              aria-label="Package name"
-            />
-            <Input
-              type="number"
-              min={1}
-              step={1}
-              inputMode="numeric"
-              value={pkgTotal}
-              onChange={(e) => setPkgTotal(e.target.value)}
-              placeholder="Total"
-              disabled={pending}
-              required
-              className="min-h-11 py-1.5 text-xs tabular-nums"
-              aria-label="Total sessions"
-            />
-            <Input
-              type="number"
-              min={0}
-              step={1}
-              inputMode="numeric"
-              value={pkgUsed}
-              onChange={(e) => setPkgUsed(e.target.value)}
-              placeholder="Used"
-              disabled={pending}
-              className="min-h-11 py-1.5 text-xs tabular-nums"
-              aria-label="Already used sessions"
-            />
+            <div className="grid gap-2 sm:grid-cols-[1fr_7.5rem]">
+              <div>
+                <label
+                  htmlFor="crm-pkg-name"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Pack name
+                </label>
+                <Input
+                  id="crm-pkg-name"
+                  value={pkgName}
+                  onChange={(e) => setPkgName(e.target.value)}
+                  placeholder="e.g. 10-pack"
+                  disabled={pending}
+                  className="min-h-11 py-1.5 text-xs"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="crm-pkg-total"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Sessions in pack
+                </label>
+                <Input
+                  id="crm-pkg-total"
+                  type="number"
+                  min={1}
+                  step={1}
+                  inputMode="numeric"
+                  value={pkgTotal}
+                  onChange={(e) => setPkgTotal(e.target.value)}
+                  placeholder="10"
+                  disabled={pending}
+                  required
+                  className="min-h-11 py-1.5 text-xs tabular-nums"
+                />
+              </div>
+            </div>
+            {showPkgUsed ? (
+              <div className="max-w-[10rem]">
+                <label
+                  htmlFor="crm-pkg-used"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Already used
+                </label>
+                <Input
+                  id="crm-pkg-used"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  value={pkgUsed}
+                  onChange={(e) => setPkgUsed(e.target.value)}
+                  placeholder="0"
+                  disabled={pending}
+                  className="min-h-11 py-1.5 text-xs tabular-nums"
+                />
+                <p className="mt-1 text-[10px] leading-snug text-zinc-600">
+                  For a new pack leave this at 0. Only raise it if you’re
+                  importing a pack that’s partly used.
+                </p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+                onClick={() => {
+                  setShowPkgUsed(true);
+                  setPkgUsed("0");
+                }}
+              >
+                Already used some sessions?
+              </button>
+            )}
             <div className="flex flex-wrap gap-1.5">
               <Button
                 type="submit"
@@ -1113,18 +1254,19 @@ export function ClientCrmPanel({
               >
                 Add pack
               </Button>
-              {!activePackage && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={pending}
-                  className="min-h-11"
-                  onClick={() => setShowAddPack(false)}
-                >
-                  Cancel
-                </Button>
-              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={pending}
+                className="min-h-11"
+                onClick={() => {
+                  setShowAddPack(false);
+                  resetPackageForm({ total: 10 });
+                }}
+              >
+                Cancel
+              </Button>
             </div>
           </form>
         )}
@@ -1137,15 +1279,15 @@ export function ClientCrmPanel({
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-            Appointments
+            Bookings
           </p>
           <button
             type="button"
-            className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
+            className="min-h-11 rounded-md px-2 text-[11px] font-medium text-emerald-400/90 transition hover:bg-emerald-950/30 hover:text-emerald-300"
             aria-expanded={showBookForm}
-            onClick={() => setShowBookForm((v) => !v)}
+            onClick={openBookForm}
           >
-            {showBookForm ? "Done" : "Book"}
+            {showBookForm ? "Close form" : "Book session"}
           </button>
         </div>
 
@@ -1181,6 +1323,19 @@ export function ClientCrmPanel({
             </p>
             <p className="mt-0.5 text-xs tabular-nums text-zinc-400">
               {fmtWhen(nextAppointment.startsAt)}
+              {(() => {
+                const dur = fmtApptDuration(
+                  nextAppointment.startsAt,
+                  nextAppointment.endsAt
+                );
+                return dur ? (
+                  <span className="text-zinc-500"> · {dur}</span>
+                ) : null;
+              })()}
+            </p>
+            <p className="mt-1 text-[10px] leading-snug text-zinc-600">
+              Start session logs on the floor. Close booking only ends the
+              calendar slot — it does not burn a pack.
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {nextAppointment.status === "scheduled" && (
@@ -1255,54 +1410,122 @@ export function ClientCrmPanel({
         ) : (
           <p className="text-xs text-zinc-500">
             {showBookForm
-              ? "Pick a time below."
-              : "No upcoming booking."}
+              ? "Choose start time and length below."
+              : "No upcoming booking — Book session to schedule the floor."}
           </p>
         )}
 
         {showBookForm && (
           <form
             onSubmit={onCreateAppointment}
-            className="grid gap-2 sm:grid-cols-[1fr_1fr_5rem_auto]"
+            className="space-y-2.5 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
           >
-            <Input
-              type="datetime-local"
-              value={apptStart}
-              onChange={(e) => setApptStart(e.target.value)}
-              disabled={pending}
-              required
-              className="min-h-11 py-1.5 text-xs tabular-nums"
-              aria-label="Appointment start"
-            />
-            <Input
-              value={apptTitle}
-              onChange={(e) => setApptTitle(e.target.value)}
-              placeholder="Title (optional)"
-              disabled={pending}
-              className="min-h-11 py-1.5 text-xs"
-              aria-label="Appointment title"
-            />
-            <Input
-              type="number"
-              min={15}
-              step={5}
-              inputMode="numeric"
-              value={apptDuration}
-              onChange={(e) => setApptDuration(e.target.value)}
-              placeholder="Min"
-              disabled={pending}
-              className="min-h-11 py-1.5 text-xs tabular-nums"
-              aria-label="Duration minutes"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              variant="secondary"
-              disabled={pending}
-              className="min-h-11"
-            >
-              Book
-            </Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="crm-appt-start"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Start
+                </label>
+                <Input
+                  id="crm-appt-start"
+                  type="datetime-local"
+                  value={apptStart}
+                  onChange={(e) => setApptStart(e.target.value)}
+                  disabled={pending}
+                  required
+                  className="min-h-11 py-1.5 text-xs tabular-nums"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="crm-appt-title"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Title
+                </label>
+                <Input
+                  id="crm-appt-title"
+                  value={apptTitle}
+                  onChange={(e) => setApptTitle(e.target.value)}
+                  placeholder="Training session"
+                  disabled={pending}
+                  className="min-h-11 py-1.5 text-xs"
+                />
+              </div>
+            </div>
+            <div>
+              <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+                Duration
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {[30, 45, 60, 90].map((m) => {
+                  const active = String(m) === String(apptDuration);
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      disabled={pending}
+                      onClick={() => setApptDuration(String(m))}
+                      className={cn(
+                        "min-h-11 rounded-full border px-3 text-xs font-medium tabular-nums transition",
+                        active
+                          ? "border-emerald-700/60 bg-emerald-950/50 text-emerald-300"
+                          : "border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                      )}
+                    >
+                      {m} min
+                    </button>
+                  );
+                })}
+              </div>
+              <input type="hidden" name="duration" value={apptDuration} />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {["Training session", "Assessment", "Check-in"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => setApptTitle(t)}
+                  className={cn(
+                    "min-h-11 rounded-full border px-3 text-[11px] font-medium transition",
+                    apptTitle === t
+                      ? "border-zinc-600 bg-zinc-800 text-zinc-100"
+                      : "border-zinc-800 bg-zinc-950/40 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={pending}
+                className="min-h-11"
+              >
+                {pending ? "Booking…" : "Book session"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={pending}
+                className="min-h-11"
+                onClick={() => setShowBookForm(false)}
+              >
+                Cancel
+              </Button>
+              <Link
+                href="/calendar"
+                className="inline-flex min-h-11 items-center px-2 text-xs text-zinc-500 hover:text-emerald-400"
+              >
+                Open calendar
+              </Link>
+            </div>
           </form>
         )}
 
@@ -1343,6 +1566,10 @@ export function ClientCrmPanel({
                     </div>
                     <p className="mt-0.5 text-[11px] tabular-nums text-zinc-500">
                       {fmtWhen(a.startsAt)}
+                      {(() => {
+                        const dur = fmtApptDuration(a.startsAt, a.endsAt);
+                        return dur ? ` · ${dur}` : "";
+                      })()}
                     </p>
                   </div>
                   {a.status === "scheduled" && !isNext && (
@@ -1432,7 +1659,7 @@ export function ClientCrmPanel({
           </p>
           <button
             type="button"
-            className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
+            className="min-h-11 px-1 text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
             aria-expanded={showInvoiceForm}
             onClick={() => {
               if (showInvoiceForm) setShowInvoiceForm(false);
@@ -1445,7 +1672,7 @@ export function ClientCrmPanel({
 
         {unpaidInvoices.length >= 2 && unpaidSameCurrency && (
           <div
-            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-900/40 bg-amber-950/15 px-3 py-2"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-900/40 bg-amber-950/15 px-3 py-2.5"
             role="status"
           >
             <p className="text-xs text-amber-100/90">
@@ -1459,13 +1686,24 @@ export function ClientCrmPanel({
                 unpaid · {unpaidInvoices.length} invoices
               </span>
             </p>
+            <p className="text-[10px] text-amber-200/50">
+              Unpaid first · mark paid when cash lands
+            </p>
           </div>
+        )}
+
+        {unpaidInvoices.length === 1 && !showInvoiceForm && (
+          <p className="text-[11px] text-amber-200/60" role="status">
+            1 unpaid · mark paid when cash lands
+          </p>
         )}
 
         {visibleInvoices.length === 0 && !showInvoiceForm ? (
           <div className="space-y-2">
-            <p className="text-xs text-zinc-600">
-              Record what they owe — mark paid when cash lands. No cards or tax.
+            <p className="text-xs text-zinc-500">
+              {voidInvoices.length > 0
+                ? "No open invoices — voided stay hidden until you expand them."
+                : "Record what they owe — mark paid when cash lands. No cards or tax."}
             </p>
             <Button
               type="button"
@@ -1480,40 +1718,51 @@ export function ClientCrmPanel({
           </div>
         ) : (
           visibleInvoices.length > 0 && (
-            <ul className="space-y-1.5" aria-label="Invoices">
+            <ul className="space-y-2" aria-label="Invoices">
               {visibleInvoices.map((inv) => {
                 const st = (inv.status || "unpaid").toLowerCase();
                 const unpaid = st === "unpaid";
                 const paid = st === "paid";
                 const voided = st === "void";
+                const money = formatMoney(inv.amountCents, inv.currency, {
+                  compact: true,
+                });
                 return (
                   <li
                     key={inv.id}
                     id={`inv-row-${inv.id}`}
                     className={cn(
-                      "flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 transition",
+                      "flex flex-col gap-2 rounded-lg border px-3 py-2.5 transition sm:flex-row sm:items-center sm:justify-between",
                       unpaid
                         ? "border-amber-900/40 bg-amber-950/20"
                         : voided
-                          ? "border-zinc-800/50 bg-zinc-950/20 opacity-60"
-                          : "border-zinc-800 bg-zinc-950/40"
+                          ? "border-zinc-800/50 bg-zinc-950/20 opacity-70"
+                          : paid
+                            ? "border-emerald-900/30 bg-emerald-950/10"
+                            : "border-zinc-800 bg-zinc-950/40"
                     )}
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span
                           className={cn(
-                            "text-xs font-medium",
+                            "text-sm font-medium",
                             voided
                               ? "text-zinc-500 line-through"
-                              : "text-zinc-200"
+                              : "text-zinc-100"
                           )}
                         >
                           {inv.title}
                         </span>
                         <Badge
                           tone={
-                            unpaid ? "amber" : paid ? "green" : "default"
+                            unpaid
+                              ? "amber"
+                              : paid
+                                ? "green"
+                                : voided
+                                  ? "red"
+                                  : "default"
                           }
                         >
                           {INV_STATUS_LABEL[st] || st}
@@ -1527,17 +1776,17 @@ export function ClientCrmPanel({
                               ? "text-amber-300"
                               : voided
                                 ? "text-zinc-500"
-                                : "text-zinc-200"
+                                : paid
+                                  ? "text-emerald-300/90"
+                                  : "text-zinc-200"
                           )}
                         >
-                          {formatMoney(inv.amountCents, inv.currency, {
-                            compact: true,
-                          })}
+                          {money}
                         </span>
                         {inv.issuedAt && (
                           <span className="text-zinc-600">
                             {" "}
-                            · {fmtDateShort(inv.issuedAt)}
+                            · issued {fmtDateShort(inv.issuedAt)}
                           </span>
                         )}
                         {paid && inv.paidAt && (
@@ -1545,6 +1794,9 @@ export function ClientCrmPanel({
                             {" "}
                             · paid {fmtDateShort(inv.paidAt)}
                           </span>
+                        )}
+                        {voided && (
+                          <span className="text-zinc-600"> · not owed</span>
                         )}
                       </p>
                       {inv.notes?.trim() && !voided && (
@@ -1554,7 +1806,7 @@ export function ClientCrmPanel({
                       )}
                     </div>
                     {!voided && (
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5 sm:shrink-0">
                         {unpaid ? (
                           <Button
                             type="button"
@@ -1582,11 +1834,11 @@ export function ClientCrmPanel({
                             disabled={pending}
                             className="min-h-11"
                             title="Move back to unpaid (e.g. payment bounced)"
-                            aria-label={`Reopen ${inv.title} as unpaid`}
+                            aria-label={`Mark ${inv.title} unpaid`}
                             onClick={() => {
                               if (
                                 !window.confirm(
-                                  `Reopen “${inv.title}” as unpaid?\n\nUse if payment bounced or was marked paid by mistake.`
+                                  `Mark “${inv.title}” (${money}) unpaid?\n\nUse if payment bounced or was marked paid by mistake.`
                                 )
                               ) {
                                 return;
@@ -1600,7 +1852,7 @@ export function ClientCrmPanel({
                               });
                             }}
                           >
-                            Reopen
+                            Mark unpaid
                           </Button>
                         )}
                         <Button
@@ -1611,11 +1863,6 @@ export function ClientCrmPanel({
                           className="min-h-11 text-zinc-500"
                           aria-label={`Void ${inv.title}`}
                           onClick={() => {
-                            const money = formatMoney(
-                              inv.amountCents,
-                              inv.currency,
-                              { compact: true }
-                            );
                             const msg = paid
                               ? `Void paid invoice “${inv.title}” (${money})?\n\nIt was marked paid — void only if you should not have recorded this payment.`
                               : `Void “${inv.title}” (${money})?\n\nIt stays in history but no longer counts as owed.`;
@@ -1639,7 +1886,7 @@ export function ClientCrmPanel({
         {voidInvoices.length > 0 && (
           <button
             type="button"
-            className="text-[11px] font-medium text-zinc-600 transition hover:text-zinc-400 hover:underline"
+            className="min-h-11 px-1 text-[11px] font-medium text-zinc-600 transition hover:text-zinc-400 hover:underline"
             aria-expanded={showVoidInvoices}
             onClick={() => setShowVoidInvoices((v) => !v)}
           >
@@ -1652,53 +1899,81 @@ export function ClientCrmPanel({
         {showInvoiceForm && (
           <form
             onSubmit={onCreateInvoice}
-            className="space-y-2.5 rounded-lg border border-zinc-800 bg-zinc-950/40 p-2.5"
+            className="space-y-2.5 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-600">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">
                 New invoice · SGD
               </p>
               {invAmountPreview && (
-                <p className="text-xs font-semibold tabular-nums text-emerald-300/90">
+                <p
+                  className="text-xs font-semibold tabular-nums text-emerald-300/90"
+                  aria-live="polite"
+                >
                   {invAmountPreview}
                 </p>
               )}
             </div>
-            <div className="grid gap-2 sm:grid-cols-[7.5rem_1fr]">
+            <div className="grid gap-2 sm:grid-cols-[9rem_1fr]">
               <div>
-                <label className="sr-only" htmlFor="inv-amount">
-                  Amount
+                <label
+                  htmlFor="inv-amount"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Amount (SGD)
+                </label>
+                <div className="relative">
+                  <span
+                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-medium text-zinc-500"
+                    aria-hidden
+                  >
+                    $
+                  </span>
+                  <Input
+                    id="inv-amount"
+                    value={invAmount}
+                    onChange={(e) =>
+                      setInvAmount(sanitizeMoneyInput(e.target.value))
+                    }
+                    placeholder="600"
+                    disabled={pending}
+                    required
+                    inputMode="decimal"
+                    autoComplete="off"
+                    className="min-h-11 pl-7 text-sm tabular-nums"
+                    aria-label="Amount in SGD"
+                    aria-describedby="inv-amount-hint"
+                  />
+                </div>
+                <p id="inv-amount-hint" className="mt-1 text-[10px] text-zinc-600">
+                  e.g. 600 or 120.50
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="inv-title"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Title
                 </label>
                 <Input
-                  id="inv-amount"
-                  value={invAmount}
-                  onChange={(e) =>
-                    setInvAmount(sanitizeMoneyInput(e.target.value))
-                  }
-                  placeholder="600"
+                  id="inv-title"
+                  value={invTitle}
+                  onChange={(e) => setInvTitle(e.target.value)}
+                  placeholder="e.g. 10-pack"
                   disabled={pending}
-                  required
-                  inputMode="decimal"
-                  autoComplete="off"
-                  className="min-h-11 text-sm tabular-nums"
-                  aria-label="Amount in SGD"
+                  maxLength={120}
+                  className="min-h-11 text-sm"
+                  aria-label="Invoice title"
                 />
               </div>
-              <Input
-                value={invTitle}
-                onChange={(e) => setInvTitle(e.target.value)}
-                placeholder="Title (e.g. 10-pack)"
-                disabled={pending}
-                className="min-h-11 text-sm"
-                aria-label="Invoice title"
-              />
             </div>
             <div
               className="flex flex-wrap gap-1.5"
               role="group"
               aria-label="Title presets"
             >
-              {INV_TITLE_PRESETS.map((t) => {
+              {invTitlePresets.map((t) => {
                 const active = invTitle === t;
                 return (
                   <button
@@ -1708,7 +1983,7 @@ export function ClientCrmPanel({
                     onClick={() => setInvTitle(t)}
                     aria-pressed={active}
                     className={cn(
-                      "min-h-9 rounded-full border px-2.5 py-1 text-[11px] font-medium transition",
+                      "min-h-11 rounded-full border px-3 py-1.5 text-[11px] font-medium transition",
                       active
                         ? "border-emerald-700/60 bg-emerald-950/50 text-emerald-300"
                         : "border-zinc-800 bg-zinc-950/50 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
@@ -1719,17 +1994,37 @@ export function ClientCrmPanel({
                 );
               })}
             </div>
-            <Input
-              value={invNotes}
-              onChange={(e) => setInvNotes(e.target.value)}
-              placeholder="Notes (optional)"
-              disabled={pending}
-              className="min-h-11 text-sm"
-              aria-label="Invoice notes"
-            />
-            {!activePackage && (
-              <p className="text-[11px] text-zinc-600">
-                Tip: add a package after they pay so floor sessions track remaining.
+            <div>
+              <label
+                htmlFor="inv-notes"
+                className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+              >
+                Notes{" "}
+                <span className="font-normal normal-case text-zinc-600">
+                  (optional)
+                </span>
+              </label>
+              <Input
+                id="inv-notes"
+                value={invNotes}
+                onChange={(e) => setInvNotes(e.target.value)}
+                placeholder="Payment terms, bank ref…"
+                disabled={pending}
+                maxLength={500}
+                className="min-h-11 text-sm"
+                aria-label="Invoice notes"
+              />
+            </div>
+            {activePackage ? (
+              <p className="text-[11px] leading-snug text-zinc-600">
+                Links to active pack “{activePackage.name}” (
+                {activePackage.remaining} left). Amount is not auto-filled from
+                sessions — enter what they owe.
+              </p>
+            ) : (
+              <p className="text-[11px] leading-snug text-zinc-600">
+                Tip: add a package after they pay so floor sessions track
+                remaining.
               </p>
             )}
             <div className="flex flex-wrap gap-1.5">

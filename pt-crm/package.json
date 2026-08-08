@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1 -p 4000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 0.0.0.0 -p 4000",
     "lint": "eslint",
     "smoke": "tsx scripts/smoke.ts",
     "smoke:floor": "tsx scripts/smoke-floor.ts",

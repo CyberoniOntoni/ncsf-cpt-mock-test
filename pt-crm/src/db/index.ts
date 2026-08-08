@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 15; // 15 = org kind + org_invites
+const SCHEMA_VERSION = 16; // 16 = training_sessions.package_id
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -408,6 +408,7 @@ async function ensureSchema() {
       pain_notes TEXT,
       notes TEXT,
       appointment_id TEXT,
+      package_id TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -469,6 +470,7 @@ async function ensureSchema() {
     ALTER TABLE equipment_items ADD COLUMN IF NOT EXISTS description TEXT;
     ALTER TABLE client_appointments ADD COLUMN IF NOT EXISTS session_id TEXT;
     ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS appointment_id TEXT;
+    ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS package_id TEXT;
     CREATE INDEX IF NOT EXISTS appointments_session_idx ON client_appointments(session_id);
     CREATE INDEX IF NOT EXISTS sessions_appointment_idx ON training_sessions(appointment_id);
     -- User profile (SCHEMA 14)

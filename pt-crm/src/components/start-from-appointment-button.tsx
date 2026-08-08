@@ -49,14 +49,15 @@ export function StartFromAppointmentButton({
       <Button
         type="button"
         size={size}
+        variant={hasLinkedSession ? "secondary" : "primary"}
         disabled={pending}
         onClick={go}
-        className={className ?? "min-h-11 font-semibold"}
+        className={className ?? "min-h-11 gap-1.5 font-semibold"}
         aria-busy={pending}
         aria-label={
           hasLinkedSession
             ? "Resume or open session from booking"
-            : "Start session from booking"
+            : "Start floor session from this booking"
         }
       >
         {hasLinkedSession ? (

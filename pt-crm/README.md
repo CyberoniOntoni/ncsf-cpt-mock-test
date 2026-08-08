@@ -22,19 +22,20 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000) — logged out shows the **product site**; signed in opens the floor board.
+Open [http://127.0.0.1:4000](http://127.0.0.1:4000) — logged out shows the **product site**; signed in opens the floor board.
 
 | | |
 |--|--|
-| **Marketing** | [/marketing](http://127.0.0.1:3000/marketing) (also `/` when logged out) |
+| **Marketing** | [/marketing](http://127.0.0.1:4000/marketing) (also `/` when logged out) |
 | **Demo login** | `pt@demo.local` / `trainer123` |
-| **Create account** | [/register](http://127.0.0.1:3000/register) — solo PT or studio |
+| **Create account** | [/register](http://127.0.0.1:4000/register) — solo PT or studio |
 
 Set in `.env` for real sessions and correct invite links:
 
 ```env
 AUTH_SECRET=long-random-string-at-least-24-chars
-APP_URL=http://127.0.0.1:3000
+APP_URL=http://127.0.0.1:4000
+FLOORSCRIBE_PORT=4000
 ```
 
 Restart the dev server after pulls so schema + seed upserts apply (`SCHEMA_VERSION` in `src/db/index.ts`).
@@ -123,7 +124,7 @@ cp .env.example .env
 # set AUTH_SECRET=$(openssl rand -base64 48)
 # set APP_URL=https://your-host
 docker compose up -d --build
-curl -s http://127.0.0.1:3000/api/health
+curl -s http://127.0.0.1:4000/api/health
 ```
 
 Data volume: `ptcrm_data` (stable name). Backup: `./scripts/backup-host.sh /var/backups/floorscribe`

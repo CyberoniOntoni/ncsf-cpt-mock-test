@@ -6,6 +6,15 @@ const COOKIE = "floorscribe_session";
 /** Pre-rebrand cookie — still accepted so existing sessions stay signed in. */
 const LEGACY_COOKIE = "ptcrm_session";
 
+/** Dev-only fallback — never treat as production-ok. */
+const DEV_AUTH_SECRET = "dev-only-change-me-floorscribe-secret-key";
+
+const WEAK_AUTH_SECRETS = new Set([
+  "change-me-in-production",
+  "dev-only-change-me-floorscribe-secret-key",
+  "dev-only-change-me-pt-crm-secret-key",
+]);
+
 export type SessionPayload = {
   userId: string;
   email: string;
@@ -18,9 +27,34 @@ export type SessionPayload = {
   isPlatformAdmin: boolean;
 };
 
+/** True when secret is missing, too short, or a known placeholder/example value. */
+export function isWeakAuthSecret(s: string | undefined | null): boolean {
+  if (!s) return true;
+  if (WEAK_AUTH_SECRETS.has(s)) return true;
+  if (s.length < 24) return true;
+  return false;
+}
+
+/**
+ * Resolve AUTH_SECRET for JWT sign/verify.
+ * Production: fail closed (throw) if missing or weak — never sign with a hardcoded default.
+ * Development: allow a distinct dev default that isWeakAuthSecret flags as weak.
+ */
+function resolveAuthSecretString(): string {
+  const s = process.env.AUTH_SECRET || "";
+  if (process.env.NODE_ENV === "production") {
+    if (isWeakAuthSecret(s)) {
+      throw new Error(
+        "AUTH_SECRET is missing or weak in production. Set a long random secret (≥24 characters)."
+      );
+    }
+    return s;
+  }
+  return s || DEV_AUTH_SECRET;
+}
+
 function secret() {
-  const s = process.env.AUTH_SECRET || "dev-only-change-me-floorscribe-secret-key";
-  return new TextEncoder().encode(s);
+  return new TextEncoder().encode(resolveAuthSecretString());
 }
 
 export async function createSessionToken(payload: SessionPayload) {

@@ -2,10 +2,11 @@ import type { NextConfig } from "next";
 
 /**
  * Next.js 16 blocks cross-origin access to /_next/* in dev by default.
- * Opening the app from a phone/PC on LAN (e.g. http://192.168.x.x:3000)
+ * Opening the app from a phone/PC on LAN (e.g. http://192.168.x.x:4000)
  * then serves HTML but **no client JS** — buttons look dead.
  *
- * Set ALLOWED_DEV_ORIGINS=192.168.11.18,my-pc.local in .env.local if needed.
+ * Add LAN hosts via env only (never hardcode private IPs in the repo):
+ *   ALLOWED_DEV_ORIGINS=192.168.x.x,my-pc.local
  */
 function allowedDevOrigins(): string[] {
   const fromEnv = (process.env.ALLOWED_DEV_ORIGINS || "")
@@ -13,14 +14,7 @@ function allowedDevOrigins(): string[] {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  return [
-    "localhost",
-    "127.0.0.1",
-    // Hosts seen in this project's dev / LAN access
-    "192.168.11.18",
-    "100.98.110.105",
-    ...fromEnv,
-  ];
+  return ["localhost", "127.0.0.1", ...fromEnv];
 }
 
 const nextConfig: NextConfig = {
@@ -30,3 +24,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+}

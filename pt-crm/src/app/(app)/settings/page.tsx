@@ -6,6 +6,7 @@ import {
   listPendingInvites,
   listTeamMembers,
 } from "@/lib/auth";
+import { isWeakAuthSecret } from "@/lib/session";
 import { aiEnabled } from "@/lib/ai/client";
 import { AreaEyebrow } from "@/components/area-eyebrow";
 import { PageShell } from "@/components/page-shell";
@@ -19,12 +20,7 @@ export const dynamic = "force-dynamic";
 function authSecretStatus() {
   const s = process.env.AUTH_SECRET || "";
   if (!s) return { ok: false, label: "Missing" };
-  if (
-    s === "change-me-in-production" ||
-    s === "dev-only-change-me-floorscribe-secret-key" ||
-    s === "dev-only-change-me-pt-crm-secret-key" ||
-    s.length < 24
-  ) {
+  if (isWeakAuthSecret(s)) {
     return { ok: false, label: "Weak / default — change for production" };
   }
   return { ok: true, label: "Configured" };
@@ -44,11 +40,20 @@ export default async function SettingsPage() {
   const appUrl = process.env.APP_URL || "(not set)";
   const canEditOrg = session.role === "owner" || session.role === "admin";
   const canManageTeam = canEditOrg;
+  const canInviteAdmin = session.role === "owner";
   const orgKind = org?.kind === "solo" ? "solo" : "studio";
-  const [members, pendingInvites] = await Promise.all([
-    listTeamMembers(),
-    listPendingInvites(),
-  ]);
+  // Invite tokens only for managers — non-managers never load or receive tokens
+  const members = await listTeamMembers();
+  const pendingInvites = canManageTeam ? await listPendingInvites() : [];
+  const invitesForClient = canManageTeam
+    ? pendingInvites.map((inv) => ({
+        id: inv.id,
+        email: inv.email,
+        role: inv.role,
+        token: inv.token,
+        expiresAt: inv.expiresAt,
+      }))
+    : [];
   const appOrigin =
     (process.env.APP_URL || "").replace(/\/$/, "") || "http://127.0.0.1:3000";
 
@@ -136,8 +141,9 @@ export default async function SettingsPage() {
         <div className="mt-4">
           <SettingsTeamPanel
             members={members}
-            invites={pendingInvites}
+            invites={invitesForClient}
             canManage={canManageTeam}
+            canInviteAdmin={canInviteAdmin}
             appOrigin={appOrigin}
             currentUserId={session.userId}
           />

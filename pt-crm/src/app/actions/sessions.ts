@@ -23,6 +23,7 @@ import {
   suggestProgression,
   type ProgressionSuggestion,
 } from "@/lib/progression";
+import { assertCanDestroyRecords } from "@/lib/rbac";
 import {
   isProgramMetaDump,
   seedSessionNotes,
@@ -48,31 +49,56 @@ export async function findInProgressSessionForDayAction(programDayId: string) {
   return row || null;
 }
 
-/** Bidirectional booking ↔ floor log link (idempotent). */
+/**
+ * Bidirectional booking ↔ floor log link (idempotent).
+ * Verifies appointment belongs to the same client + org as the session.
+ */
 async function linkSessionAndAppointment(
   sessionId: string,
   appointmentId: string,
-  clientId: string | null | undefined
+  clientId: string | null | undefined,
+  organizationId: string
 ) {
   const db = await getDb();
+  const [appt] = await db
+    .select({
+      id: clientAppointments.id,
+      clientId: clientAppointments.clientId,
+      orgId: clients.organizationId,
+    })
+    .from(clientAppointments)
+    .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
+    .where(eq(clientAppointments.id, appointmentId))
+    .limit(1);
+  if (!appt || appt.orgId !== organizationId) {
+    throw new Error("Appointment not found");
+  }
+  if (clientId && appt.clientId !== clientId) {
+    throw new Error("Appointment does not belong to this client");
+  }
+  const resolvedClientId = clientId || appt.clientId;
+
   await db
     .update(trainingSessions)
     .set({ appointmentId, updatedAt: new Date() })
-    .where(eq(trainingSessions.id, sessionId));
+    .where(
+      and(
+        eq(trainingSessions.id, sessionId),
+        eq(trainingSessions.organizationId, organizationId)
+      )
+    );
   await db
     .update(clientAppointments)
     .set({ sessionId })
     .where(
-      clientId
-        ? and(
-            eq(clientAppointments.id, appointmentId),
-            eq(clientAppointments.clientId, clientId)
-          )
-        : eq(clientAppointments.id, appointmentId)
+      and(
+        eq(clientAppointments.id, appointmentId),
+        eq(clientAppointments.clientId, resolvedClientId)
+      )
     );
   revalidatePath("/calendar");
   revalidatePath("/");
-  if (clientId) revalidatePath(`/clients/${clientId}`);
+  if (resolvedClientId) revalidatePath(`/clients/${resolvedClientId}`);
 }
 
 /**
@@ -198,7 +224,12 @@ export async function startSessionFromProgramDayAction(
     if (existing) {
       // Attach booking to an already-open day log when starting from calendar
       if (appointmentId && !existing.appointmentId) {
-        await linkSessionAndAppointment(existing.id, appointmentId, existing.clientId);
+        await linkSessionAndAppointment(
+          existing.id,
+          appointmentId,
+          existing.clientId,
+          session.organizationId
+        );
       }
       return { sessionId: existing.id, resumed: true as const };
     }
@@ -252,7 +283,12 @@ export async function startSessionFromProgramDayAction(
   });
 
   if (appointmentId) {
-    await linkSessionAndAppointment(sessionId, appointmentId, program.clientId);
+    await linkSessionAndAppointment(
+      sessionId,
+      appointmentId,
+      program.clientId,
+      session.organizationId
+    );
   }
 
   const { initSetLogsFromScheme } = await import("@/lib/set-schemes");
@@ -786,6 +822,9 @@ export async function saveSessionProgressAction(
     .limit(1);
   if (!row) throw new Error("Session not found");
   if (row.status === "cancelled") throw new Error("Session was cancelled");
+  if (row.status === "completed") {
+    throw new Error("Session is completed and cannot be edited");
+  }
 
   await db
     .update(trainingSessions)
@@ -925,7 +964,10 @@ export async function completeSessionAction(
         tryConsumePackageSessionAction,
         promoteLeadToActiveIfNeeded,
       } = await import("@/app/actions/crm");
-      const burn = await tryConsumePackageSessionAction(row.clientId);
+      const burn = await tryConsumePackageSessionAction(
+        row.clientId,
+        sessionId
+      );
       if (burn.consumed) {
         packBurn = {
           consumed: true,
@@ -937,7 +979,12 @@ export async function completeSessionAction(
       } else {
         packBurn = {
           consumed: false,
-          reason: burn.reason === "empty" ? "empty" : "no_pack",
+          reason:
+            burn.reason === "empty"
+              ? "empty"
+              : burn.reason === "race"
+                ? "error"
+                : "no_pack",
           remaining: "remaining" in burn ? burn.remaining : undefined,
           packageName: "packageName" in burn ? burn.packageName : undefined,
           status: "status" in burn ? burn.status : undefined,
@@ -950,15 +997,36 @@ export async function completeSessionAction(
     }
   }
 
-  // Close linked booking when the floor log completes
+  // Close linked booking when the floor log completes (same client + org only)
   if (wasInProgress && row.appointmentId) {
     try {
-      await db
-        .update(clientAppointments)
-        .set({ status: "completed", sessionId: sessionId })
-        .where(eq(clientAppointments.id, row.appointmentId));
-      revalidatePath("/calendar");
-      if (row.clientId) revalidatePath(`/clients/${row.clientId}`);
+      const [appt] = await db
+        .select({
+          id: clientAppointments.id,
+          clientId: clientAppointments.clientId,
+          orgId: clients.organizationId,
+        })
+        .from(clientAppointments)
+        .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
+        .where(eq(clientAppointments.id, row.appointmentId))
+        .limit(1);
+      if (
+        appt &&
+        appt.orgId === session.organizationId &&
+        (!row.clientId || appt.clientId === row.clientId)
+      ) {
+        await db
+          .update(clientAppointments)
+          .set({ status: "completed", sessionId: sessionId })
+          .where(
+            and(
+              eq(clientAppointments.id, row.appointmentId),
+              eq(clientAppointments.clientId, appt.clientId)
+            )
+          );
+        revalidatePath("/calendar");
+        if (row.clientId) revalidatePath(`/clients/${row.clientId}`);
+      }
     } catch {
       // booking update optional
     }
@@ -1172,6 +1240,10 @@ export async function promoteSessionExerciseToProgramAction(
     )
     .limit(1);
   if (!row) throw new Error("Session not found");
+  if (row.status === "completed") {
+    throw new Error("Session is completed and cannot be edited");
+  }
+  if (row.status === "cancelled") throw new Error("Session was cancelled");
   if (!row.programDayId) {
     throw new Error("Session has no program day — open a program session first");
   }
@@ -1281,6 +1353,7 @@ export async function cancelSessionAction(sessionId: string) {
  */
 export async function deleteSessionAction(sessionId: string) {
   const session = await requireSession();
+  assertCanDestroyRecords(session.role);
   const db = await getDb();
   const [row] = await db
     .select()
@@ -1299,29 +1372,51 @@ export async function deleteSessionAction(sessionId: string) {
 
   if (row.appointmentId) {
     try {
-      await db
-        .update(clientAppointments)
-        .set({ sessionId: null })
-        .where(eq(clientAppointments.id, row.appointmentId));
+      const [appt] = await db
+        .select({
+          id: clientAppointments.id,
+          clientId: clientAppointments.clientId,
+          orgId: clients.organizationId,
+        })
+        .from(clientAppointments)
+        .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
+        .where(eq(clientAppointments.id, row.appointmentId))
+        .limit(1);
+      if (
+        appt &&
+        appt.orgId === session.organizationId &&
+        (!clientId || appt.clientId === clientId)
+      ) {
+        await db
+          .update(clientAppointments)
+          .set({ sessionId: null })
+          .where(
+            and(
+              eq(clientAppointments.id, row.appointmentId),
+              eq(clientAppointments.clientId, appt.clientId)
+            )
+          );
+      }
     } catch {
       // optional
     }
   }
 
-  await db.delete(trainingSessions).where(eq(trainingSessions.id, sessionId));
-
+  // Restore pack before delete so we can read packageId from the session row
   let packRestored = false;
   if (wasCompleted && clientId) {
     try {
       const { tryRestorePackageSessionAction } = await import(
         "@/app/actions/crm"
       );
-      const res = await tryRestorePackageSessionAction(clientId);
+      const res = await tryRestorePackageSessionAction(clientId, sessionId);
       packRestored = !!res.restored;
     } catch {
       // pack optional
     }
   }
+
+  await db.delete(trainingSessions).where(eq(trainingSessions.id, sessionId));
 
   revalidatePath("/sessions");
   revalidatePath("/");

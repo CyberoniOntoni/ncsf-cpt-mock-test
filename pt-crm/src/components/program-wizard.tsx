@@ -49,17 +49,17 @@ const GOALS: { value: ProgramGoal; label: string; hint: string }[] = [
   {
     value: "general",
     label: "General fitness",
-    hint: "Balanced full-body mix",
+    hint: "Balanced mix — good default",
   },
   {
     value: "strength",
     label: "Strength",
-    hint: "Lower reps, heavier compounds",
+    hint: "Heavier compounds, lower reps",
   },
   {
     value: "hypertrophy",
-    label: "Hypertrophy",
-    hint: "Volume and muscle focus",
+    label: "Build muscle",
+    hint: "More volume, pump work",
   },
   {
     value: "fat_loss",
@@ -69,11 +69,11 @@ const GOALS: { value: ProgramGoal; label: string; hint: string }[] = [
   {
     value: "mobility",
     label: "Mobility focus",
-    hint: "More prep and control work",
+    hint: "Extra prep and control",
   },
 ];
 
-const STEPS = ["Basics", "Client & constraints", "Preview"] as const;
+const STEPS = ["Basics", "Constraints", "Preview"] as const;
 
 const DAYS_OPTIONS = [2, 3, 4, 5, 6] as const;
 const MINUTES_OPTIONS = [30, 45, 60, 75] as const;
@@ -84,10 +84,10 @@ const EXPERIENCE_OPTIONS = [
 ] as const;
 
 const selectClass =
-  "w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500";
+  "min-h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500";
 
 const chipBase =
-  "rounded-lg border px-3 py-2 text-sm tabular-nums transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70";
+  "min-h-11 rounded-lg border px-3.5 py-2 text-sm tabular-nums transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70";
 
 function chipClass(selected: boolean, className?: string) {
   return cn(
@@ -214,12 +214,12 @@ export function ProgramWizard({
 
   const subtitle = useMemo(() => {
     if (selectedClient) {
-      return `Equipment-aware plan for ${fullName(
+      return `Building for ${fullName(
         selectedClient.firstName,
         selectedClient.lastName
-      )} — schemes, split, and load tailored to their profile.`;
+      )} — split, schemes, and load from their profile and your floor gear.`;
     }
-    return "Equipment-aware plan with set schemes. Optionally link a client for goals and constraints.";
+    return "Three steps: goal & days → constraints → preview. Link a client anytime for goals and injuries.";
   }, [selectedClient]);
 
   function initExpandedDays(draft: BuiltProgram) {
@@ -250,7 +250,7 @@ export function ProgramWizard({
         initExpandedDays(draft);
         setStep(2);
         if (opts?.regenerate) {
-          setMsg("New variation ready — check set schemes under each exercise.");
+          setMsg("New variation ready — skim schemes under each exercise.");
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Preview failed");
@@ -322,6 +322,7 @@ export function ProgramWizard({
   return (
     <FocusShell floorFooter={step === 2 && !!preview} className="space-y-4">
       <div>
+        <p className="section-label mb-1 text-emerald-500/90">Programs</p>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
           Design program
         </h1>
@@ -329,26 +330,30 @@ export function ProgramWizard({
       </div>
 
       {/* Step indicator */}
-      <nav aria-label="Wizard steps" className="flex gap-1 border-b border-zinc-800">
+      <nav
+        aria-label="Wizard steps"
+        className="flex gap-1 rounded-xl border border-zinc-800 bg-zinc-950/40 p-1"
+      >
         {STEPS.map((label, i) => {
           const active = i === step;
           const done = i < step;
+          const locked = i > step || (i === 2 && !preview);
           return (
             <button
               key={label}
               type="button"
-              disabled={i > step || (i === 2 && !preview)}
+              disabled={locked}
               onClick={() => {
                 if (i <= step && !(i === 2 && !preview)) setStep(i);
               }}
               className={cn(
-                "relative -mb-px flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium transition sm:text-sm",
+                "relative flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition sm:text-sm",
                 active
-                  ? "border-b-2 border-emerald-500 text-emerald-300"
+                  ? "bg-emerald-950/60 text-emerald-200 ring-1 ring-emerald-700/50"
                   : done
-                    ? "border-b-2 border-transparent text-zinc-400 hover:text-zinc-200"
-                    : "border-b-2 border-transparent text-zinc-600",
-                (i > step || (i === 2 && !preview)) && "cursor-not-allowed opacity-50"
+                    ? "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+                    : "text-zinc-600",
+                locked && "cursor-not-allowed opacity-50"
               )}
             >
               <span
@@ -363,8 +368,7 @@ export function ProgramWizard({
               >
                 {done ? <Check className="h-3 w-3" strokeWidth={2.5} /> : i + 1}
               </span>
-              <span className="hidden sm:inline">{label}</span>
-              <span className="sm:hidden">{i + 1 === 1 ? "Basics" : i + 1 === 2 ? "Setup" : "Preview"}</span>
+              <span className="truncate">{label}</span>
             </button>
           );
         })}
@@ -405,7 +409,7 @@ export function ProgramWizard({
                 }));
               }}
             >
-              <option value="">— No client / template —</option>
+              <option value="">— Template / no client —</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
                   {fullName(c.firstName, c.lastName)}
@@ -413,7 +417,7 @@ export function ProgramWizard({
               ))}
             </select>
             {selectedClient && (selectedClient.goals || selectedClient.injuries) && (
-              <div className="mt-2 flex flex-col gap-1.5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-2 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
+              <div className="mt-2 flex flex-col gap-1.5 rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-2.5 sm:flex-row sm:flex-wrap sm:items-start sm:gap-3">
                 {selectedClient.goals && (
                   <p className="min-w-0 flex-1 text-xs leading-snug text-emerald-200/90">
                     <span className="font-semibold text-emerald-400/90">
@@ -438,7 +442,7 @@ export function ProgramWizard({
             <Label htmlFor="pw-title">Title (optional)</Label>
             <Input
               id="pw-title"
-              placeholder="Auto-named from goal and days if empty"
+              placeholder="Leave blank to auto-name from goal + days"
               value={form.title || ""}
               onChange={(e) =>
                 setForm((f) => ({ ...f, title: e.target.value }))
@@ -448,6 +452,9 @@ export function ProgramWizard({
 
           <div>
             <SectionLabel className="mb-1.5">Primary goal</SectionLabel>
+            <p className="mb-2 text-[11px] leading-snug text-zinc-500">
+              Shapes split emphasis and set schemes — you can tweak after save.
+            </p>
             <div
               className="grid gap-2 sm:grid-cols-2"
               role="group"
@@ -466,7 +473,7 @@ export function ProgramWizard({
                       setGoal(g.value);
                     }}
                     className={cn(
-                      "rounded-lg border px-3 py-2.5 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                      "min-h-11 rounded-lg border px-3 py-2.5 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                       selected
                         ? "border-emerald-500 bg-emerald-950/50 text-emerald-50 ring-2 ring-emerald-500/35"
                         : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-900/80"
@@ -487,55 +494,57 @@ export function ProgramWizard({
             </div>
           </div>
 
-          <div>
-            <SectionLabel className="mb-1.5">Days / week</SectionLabel>
-            <div
-              className="flex flex-wrap gap-2"
-              role="group"
-              aria-label="Days per week"
-            >
-              {DAYS_OPTIONS.map((n) => {
-                const selected = form.daysPerWeek === n;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() =>
-                      setForm((f) => ({ ...f, daysPerWeek: n }))
-                    }
-                    className={chipClass(selected, "min-w-[3.25rem]")}
-                  >
-                    {n}
-                  </button>
-                );
-              })}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <SectionLabel className="mb-1.5">Days / week</SectionLabel>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Days per week"
+              >
+                {DAYS_OPTIONS.map((n) => {
+                  const selected = form.daysPerWeek === n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() =>
+                        setForm((f) => ({ ...f, daysPerWeek: n }))
+                      }
+                      className={chipClass(selected, "min-w-[3.25rem]")}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <SectionLabel className="mb-1.5">Session length</SectionLabel>
-            <div
-              className="flex flex-wrap gap-2"
-              role="group"
-              aria-label="Session minutes"
-            >
-              {MINUTES_OPTIONS.map((n) => {
-                const selected = form.sessionMinutes === n;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() =>
-                      setForm((f) => ({ ...f, sessionMinutes: n }))
-                    }
-                    className={chipClass(selected)}
-                  >
-                    {n} min
-                  </button>
-                );
-              })}
+            <div>
+              <SectionLabel className="mb-1.5">Session length</SectionLabel>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Session minutes"
+              >
+                {MINUTES_OPTIONS.map((n) => {
+                  const selected = form.sessionMinutes === n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() =>
+                        setForm((f) => ({ ...f, sessionMinutes: n }))
+                      }
+                      className={chipClass(selected)}
+                    >
+                      {n} min
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -569,8 +578,13 @@ export function ProgramWizard({
             </div>
           </div>
 
-          <div className="flex justify-end pt-1">
-            <Button type="button" onClick={() => setStep(1)} disabled={pending}>
+          <div className="flex justify-end border-t border-zinc-800 pt-4">
+            <Button
+              type="button"
+              onClick={() => setStep(1)}
+              disabled={pending}
+              className="min-h-11"
+            >
               Continue
             </Button>
           </div>
@@ -613,7 +627,7 @@ export function ProgramWizard({
               }))
             }
             className={cn(
-              "flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+              "flex min-h-11 w-full items-start gap-3 rounded-lg border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
               form.preferMobility
                 ? "border-emerald-600/60 bg-emerald-950/30"
                 : "border-zinc-700 bg-zinc-900/60 hover:border-zinc-600"
@@ -636,14 +650,16 @@ export function ProgramWizard({
                 Prefer mobility & warm-up work
               </span>
               <span className="mt-0.5 block text-[11px] leading-snug text-zinc-500">
-                Extra prep and control work — useful with shoulder or movement
-                limits.
+                Extra prep and control — useful with shoulder or movement limits.
               </span>
             </span>
           </button>
 
           <div>
-            <SectionLabel className="mb-1.5">Mesocycle week</SectionLabel>
+            <SectionLabel className="mb-1.5">Training week</SectionLabel>
+            <p className="mb-2 text-[11px] leading-snug text-zinc-500">
+              Week in the block — scales volume and RPE (W4–6 often taper / deload).
+            </p>
             <div
               className="grid grid-cols-3 gap-2 sm:grid-cols-6"
               role="group"
@@ -662,9 +678,11 @@ export function ProgramWizard({
                       setForm((f) => ({ ...f, mesocycleWeek: opt.value }))
                     }
                     className={cn(
-                      "rounded-lg border px-2 py-2 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
+                      "min-h-11 rounded-lg border px-2 py-2 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70",
                       selected
-                        ? "border-emerald-600 bg-emerald-950/40 text-emerald-100 ring-1 ring-emerald-500/40"
+                        ? plan.isDeload
+                          ? "border-amber-600 bg-amber-950/40 text-amber-100 ring-1 ring-amber-500/40"
+                          : "border-emerald-600 bg-emerald-950/40 text-emerald-100 ring-1 ring-emerald-500/40"
                         : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
                     )}
                   >
@@ -686,10 +704,10 @@ export function ProgramWizard({
           </div>
 
           <div>
-            <Label htmlFor="pw-notes">Coach notes / constraints</Label>
+            <Label htmlFor="pw-notes">Notes for the builder</Label>
             <Textarea
               id="pw-notes"
-              placeholder="e.g. no barbell back squat, prefer dumbbells, short on time Tuesdays, avoid overhead pressing…"
+              placeholder="e.g. no back squat, prefer dumbbells, short Tuesdays, avoid overhead press…"
               value={form.notes || ""}
               onChange={(e) =>
                 setForm((f) => ({ ...f, notes: e.target.value }))
@@ -697,7 +715,7 @@ export function ProgramWizard({
             />
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-300">
+          <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-zinc-300">
             <input
               type="checkbox"
               className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-emerald-600 focus:ring-emerald-500/50"
@@ -706,15 +724,16 @@ export function ProgramWizard({
                 setForm((f) => ({ ...f, activate: e.target.checked }))
               }
             />
-            Mark as active when saved
+            Mark active when saved
           </label>
 
-          <div className="flex justify-between gap-2 pt-1">
+          <div className="flex justify-between gap-2 border-t border-zinc-800 pt-4">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setStep(0)}
               disabled={pending}
+              className="min-h-11"
             >
               Back
             </Button>
@@ -723,6 +742,7 @@ export function ProgramWizard({
               onClick={() => runPreview()}
               loading={pending}
               disabled={pending}
+              className="min-h-11"
             >
               {pending ? "Building…" : "Generate preview"}
             </Button>
@@ -738,24 +758,30 @@ export function ProgramWizard({
           <Card>
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <h2 className="text-lg font-semibold text-zinc-50">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-emerald-400/80">
+                  Preview
+                </p>
+                <h2 className="mt-0.5 text-lg font-semibold text-zinc-50">
                   {preview.title}
                 </h2>
-                <p className="mt-0.5 text-xs text-zinc-500">
+                <p className="mt-1 text-xs text-zinc-500">
                   <span className="capitalize">
                     {preview.splitType.replace(/_/g, " ")}
                   </span>
                   {" · "}
-                  <span className="tabular-nums">{preview.daysPerWeek}</span>{" "}
-                  days ·{" "}
+                  <span className="tabular-nums">{preview.daysPerWeek}</span>
+                  ×/wk ·{" "}
                   <span className="tabular-nums">
                     {preview.sessionMinutes}
                   </span>{" "}
-                  min · pool{" "}
-                  <span className="tabular-nums">
-                    {String(preview.meta.availableExerciseCount ?? "?")}
-                  </span>{" "}
-                  exercises
+                  min
+                  {estimatedMinutes != null && (
+                    <>
+                      {" · ~"}
+                      <span className="tabular-nums">{estimatedMinutes}</span>
+                      {" min/day"}
+                    </>
+                  )}
                 </p>
               </div>
               <Badge tone="green" className="capitalize">
@@ -768,12 +794,12 @@ export function ProgramWizard({
               </p>
             )}
 
-            {/* Scheme mix legend */}
-            <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2">
-              <SectionLabel className="text-zinc-500">
-                Scheme mix
-              </SectionLabel>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {/* Scheme mix — compact */}
+            {Object.keys(schemeCounts).length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-medium text-zinc-500">
+                  Schemes
+                </span>
                 {Object.entries(schemeCounts).map(([id, count]) => (
                   <Badge
                     key={id}
@@ -783,17 +809,11 @@ export function ProgramWizard({
                     <span className="tabular-nums">×{count}</span>
                   </Badge>
                 ))}
-                {Object.keys(schemeCounts).length === 0 && (
-                  <span className="text-[11px] text-zinc-600">
-                    No schemes yet
-                  </span>
-                )}
               </div>
-              <p className="mt-1.5 text-[11px] text-zinc-600">
-                Pyramid, drops, contrast, and more. Edit after save on the
-                program page.
-              </p>
-            </div>
+            )}
+            <p className="mt-2 text-[11px] text-zinc-600">
+              Swap or edit exercises after you save.
+            </p>
           </Card>
 
           {/* Why this plan */}
@@ -941,7 +961,7 @@ export function ProgramWizard({
                 <button
                   type="button"
                   onClick={() => toggleDay(day.id)}
-                  className="flex w-full items-center gap-2 px-4 py-3 text-left transition hover:bg-zinc-800/30"
+                  className="flex min-h-11 w-full items-center gap-2 px-4 py-3 text-left transition hover:bg-zinc-800/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/50"
                   aria-expanded={open}
                 >
                   {open ? (
@@ -1095,11 +1115,11 @@ export function ProgramWizard({
                 variant="ghost"
                 onClick={() => setStep(1)}
                 disabled={pending}
-                className="min-h-11"
+                className="min-h-11 shrink-0"
               >
                 Back
               </Button>
-              <div className="ml-auto flex flex-wrap items-center gap-2">
+              <div className="ml-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 sm:flex-initial">
                 <Button
                   type="button"
                   variant="secondary"
@@ -1108,14 +1128,14 @@ export function ProgramWizard({
                   disabled={pending}
                   className="min-h-11"
                 >
-                  {pending ? "Regenerating…" : "Regenerate"}
+                  {pending ? "…" : "Try again"}
                 </Button>
                 <Button
                   type="button"
                   onClick={save}
                   loading={pending}
                   disabled={pending}
-                  className="min-h-11"
+                  className="min-h-11 flex-1 sm:flex-initial"
                 >
                   {pending ? "Saving…" : "Save program"}
                 </Button>

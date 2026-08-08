@@ -2,7 +2,7 @@
 # Usage:
 #   cp .env.example .env   # set AUTH_SECRET (required)
 #   docker compose up -d --build
-#   curl -s http://localhost:3000/api/health
+#   curl -s http://localhost:4000/api/health
 
 services:
   app:
@@ -12,7 +12,8 @@ services:
     image: floorscribe:latest
     container_name: floorscribe
     ports:
-      - "${FLOORSCRIBE_PORT:-${PTCRM_PORT:-3000}}:3000"
+      # Host:container — app listens on 3000 inside; host default is 4000
+      - "${FLOORSCRIBE_PORT:-${PTCRM_PORT:-4000}}:3000"
     environment:
       NODE_ENV: production
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env — use a long random string}
@@ -21,7 +22,7 @@ services:
       AI_BASE_URL: ${AI_BASE_URL:-https://api.x.ai/v1}
       AI_MODEL: ${AI_MODEL:-grok-4.5}
       PGLITE_DATA_DIR: /data/pglite
-      APP_URL: ${APP_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:-http://localhost:4000}
     volumes:
       # Persistent client/program/session data — back this up
       - ptcrm_data:/data/pglite
