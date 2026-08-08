@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -28,6 +28,12 @@ import {
   nextMesocycleWeek,
   suggestMesocycleWeekFromStartDate,
 } from "@/lib/mesocycle";
+import {
+  analyzeProgramPlan,
+  formatRestSuggestion,
+  recommendedRestSec,
+  suggestFillPatterns,
+} from "@/lib/program-science";
 import { SET_SCHEMES } from "@/lib/set-schemes";
 import {
   formatGroupBadge,
@@ -137,6 +143,8 @@ export function ProgramDetail({
   const [editDraft, setEditDraft] = useState<Partial<Ex>>({});
   const [swapId, setSwapId] = useState<string | null>(null);
   const [addDayId, setAddDayId] = useState<string | null>(null);
+  /** When opening Add exercise from a fill chip, prefer this pattern. */
+  const [addPreferPattern, setAddPreferPattern] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<SubSuggestion[]>([]);
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [metaOpen, setMetaOpen] = useState(
@@ -338,7 +346,10 @@ export function ProgramDetail({
           bankExerciseId: bank.id,
         });
         setAddDayId(null);
-        setMsg(`Added ${res.name} to ${res.dayName}`);
+        setAddPreferPattern(null);
+        setMsg(
+          `Added ${res.name} to ${res.dayName} (${program.goal.replaceAll("_", " ")} defaults)`
+        );
         router.refresh();
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Add failed");
@@ -526,6 +537,60 @@ export function ProgramDetail({
     volume && volume.totalSets > 0
       ? volume.byPattern.slice(0, 3).map((p) => p.label)
       : [];
+
+  /** Planned weekly structure (not logged volume) — sets, push:pull, order, time. */
+  const planScience = useMemo(
+    () =>
+      analyzeProgramPlan(
+        days.map((d) => ({
+          name: d.name,
+          exercises: d.exercises.map((ex) => ({
+            sets: ex.sets,
+            reps: ex.reps,
+            rpe: ex.rpe,
+            restSec: ex.restSec,
+            isWarmup: ex.isWarmup,
+            movementPattern: ex.movementPattern,
+            exerciseName: ex.exerciseName,
+            setScheme: ex.setScheme,
+          })),
+        })),
+        { goal: program.goal, sessionMinutes: program.sessionMinutes }
+      ),
+    [days, program.goal, program.sessionMinutes]
+  );
+
+  const dayMinuteByName = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const d of planScience.dayEstimates) m.set(d.name, d.minutes);
+    return m;
+  }, [planScience.dayEstimates]);
+
+  const fillSuggestions = useMemo(
+    () =>
+      suggestFillPatterns(planScience, {
+        goal: program.goal,
+        limit: 4,
+      }),
+    [planScience, program.goal]
+  );
+
+  function openAddOnFirstDay(pattern?: string | null) {
+    const day = days[0];
+    if (!day) {
+      setMsg("No training days — regenerate or design a program first");
+      return;
+    }
+    setSwapId(null);
+    setEditId(null);
+    setAddPreferPattern(pattern || null);
+    setAddDayId(day.id);
+    setMsg(
+      pattern
+        ? `Pick a ${pattern.replaceAll("_", " ")} exercise for ${day.name}`
+        : null
+    );
+  }
 
   return (
     <PageShell className="space-y-4">
@@ -832,10 +897,10 @@ export function ProgramDetail({
         )}
       </Card>
 
-      {/* Volume — compact strip */}
+      {/* Volume — compact strip (logged) */}
       <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-3 py-2.5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <span className="font-medium text-zinc-400">Volume (7d)</span>
+          <span className="font-medium text-zinc-400">Logged volume (7d)</span>
           {volumeLoading && !volume ? (
             <span className="text-zinc-600">Loading…</span>
           ) : !volume || volume.totalSets === 0 ? (
@@ -866,6 +931,126 @@ export function ProgramDetail({
         </div>
       </div>
 
+      {/* Plan science — planned weekly sets, push:pull, session length */}
+      {planScience.weeklyWorkingSets > 0 && (
+        <Card padding="sm" className="space-y-3">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <SectionLabel as="h2" className="mb-0.5">
+                Plan balance
+              </SectionLabel>
+              <p className="text-[11px] text-zinc-500">
+                Planned working sets across the week ·{" "}
+                <span className="capitalize">
+                  {program.goal.replaceAll("_", " ")}
+                </span>{" "}
+                landmarks (not medical protocol)
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="tabular-nums text-zinc-200">
+                <span className="text-zinc-500">Working sets </span>
+                {planScience.weeklyWorkingSets}
+              </span>
+              {planScience.pushPullNote && (
+                <span
+                  className={cn(
+                    "rounded-md border px-2 py-0.5 tabular-nums",
+                    planScience.pushPullRatio != null &&
+                      planScience.pushPullRatio < 0.75
+                      ? "border-amber-800/50 bg-amber-950/30 text-amber-100/90"
+                      : "border-zinc-800 bg-zinc-950/50 text-zinc-400"
+                  )}
+                  title="Pull:push working-set ratio"
+                >
+                  Pull {planScience.pullSets} · Push {planScience.pushSets}
+                  {planScience.pushPullRatio != null
+                    ? ` (${planScience.pushPullRatio}:1)`
+                    : ""}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {planScience.byPattern.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {planScience.byPattern.map((row) => (
+                <span
+                  key={row.pattern}
+                  title={`${row.label}: ${row.sets} working sets/wk · guide ${row.guide}`}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px]",
+                    row.band === "ok" &&
+                      "border-emerald-900/40 bg-emerald-950/20 text-emerald-100/90",
+                    row.band === "low" &&
+                      "border-zinc-700 bg-zinc-900/80 text-zinc-400",
+                    row.band === "high" &&
+                      "border-amber-800/50 bg-amber-950/25 text-amber-100/90",
+                    row.band === "na" &&
+                      "border-zinc-800 bg-zinc-950/40 text-zinc-500"
+                  )}
+                >
+                  <span className="font-medium">{row.label}</span>
+                  <span className="tabular-nums">{row.sets}</span>
+                  <span className="text-[10px] opacity-70">{row.guide}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {fillSuggestions.length > 0 && days.length > 0 && (
+            <div className="border-t border-zinc-800/80 pt-2">
+              <p className="mb-1.5 text-[11px] font-medium text-zinc-500">
+                Fill next (science)
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {fillSuggestions.map((s) => (
+                  <button
+                    key={s.pattern}
+                    type="button"
+                    disabled={pending}
+                    title={s.reason}
+                    onClick={() => openAddOnFirstDay(s.pattern)}
+                    className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-2.5 py-1.5 text-left text-[11px] text-emerald-100/90 transition hover:border-emerald-600 hover:bg-emerald-950/40 disabled:opacity-50"
+                  >
+                    <span className="font-medium">+ {s.label}</span>
+                    <span className="ml-1.5 tabular-nums text-emerald-400/70">
+                      ~{s.setsShort} sets
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {planScience.flags.length > 0 && (
+            <ul className="space-y-1 border-t border-zinc-800/80 pt-2">
+              {planScience.flags.slice(0, 5).map((f) => (
+                <li
+                  key={f.message}
+                  className={cn(
+                    "text-[11px] leading-snug",
+                    f.severity === "warn"
+                      ? "text-amber-200/90"
+                      : "text-zinc-500"
+                  )}
+                >
+                  <span className="mr-1 opacity-70">
+                    {f.severity === "warn" ? "⚠" : "·"}
+                  </span>
+                  {f.message}
+                </li>
+              ))}
+              {planScience.flags.length > 5 && (
+                <li className="text-[11px] text-zinc-600">
+                  +{planScience.flags.length - 5} more notes
+                </li>
+              )}
+            </ul>
+          )}
+        </Card>
+      )}
+
       {/* Days */}
       <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
@@ -874,7 +1059,7 @@ export function ProgramDetail({
           </SectionLabel>
           {days.length > 0 && (
             <p className="text-[11px] text-zinc-600">
-              Start a session, add from the bank, or edit sets / reps / load
+              Start a session, add from the bank, or edit sets / reps / rest
             </p>
           )}
         </div>
@@ -902,6 +1087,25 @@ export function ProgramDetail({
                 <span className="tabular-nums">{day.exercises.length}</span>{" "}
                 exercise
                 {day.exercises.length === 1 ? "" : "s"}
+                {dayMinuteByName.get(day.name) != null &&
+                  day.exercises.length > 0 && (
+                    <>
+                      <span className="mx-1.5 text-zinc-700">·</span>
+                      <span
+                        className={cn(
+                          "tabular-nums",
+                          planScience.dayEstimates.find(
+                            (d) => d.name === day.name
+                          )?.overSessionCap
+                            ? "text-amber-300/90"
+                            : "text-zinc-400"
+                        )}
+                        title="Estimated session length from sets + rest"
+                      >
+                        ~{dayMinuteByName.get(day.name)} min
+                      </span>
+                    </>
+                  )}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -914,7 +1118,13 @@ export function ProgramDetail({
                 onClick={() => {
                   setSwapId(null);
                   setEditId(null);
-                  setAddDayId((cur) => (cur === day.id ? null : day.id));
+                  if (addDayId === day.id) {
+                    setAddDayId(null);
+                    setAddPreferPattern(null);
+                  } else {
+                    setAddPreferPattern(null);
+                    setAddDayId(day.id);
+                  }
                 }}
                 className="min-h-11"
               >
@@ -938,8 +1148,21 @@ export function ProgramDetail({
               <ExerciseBankPicker
                 title={`Add to ${day.name}`}
                 disabled={pending}
-                onCancel={() => setAddDayId(null)}
-                onPick={(bank) => addExercise(day.id, bank)}
+                goal={program.goal}
+                preferPattern={addPreferPattern}
+                preferPatterns={
+                  addPreferPattern
+                    ? [addPreferPattern, ...fillSuggestions.map((f) => f.pattern)]
+                    : fillSuggestions.map((f) => f.pattern)
+                }
+                onCancel={() => {
+                  setAddDayId(null);
+                  setAddPreferPattern(null);
+                }}
+                onPick={(bank) => {
+                  setAddPreferPattern(null);
+                  addExercise(day.id, bank);
+                }}
               />
             </div>
           )}
@@ -1183,6 +1406,48 @@ export function ProgramDetail({
                           />
                         </div>
                       </div>
+                      {(() => {
+                        const restHint = recommendedRestSec({
+                          goal: program.goal,
+                          pattern: ex.movementPattern,
+                          isWarmup: ex.isWarmup,
+                          reps: editDraft.reps ?? ex.reps,
+                        });
+                        const current =
+                          editDraft.restSec !== undefined
+                            ? editDraft.restSec
+                            : ex.restSec;
+                        const differs =
+                          current == null || current !== restHint.restSec;
+                        return (
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-500">
+                            <span title={restHint.rationale}>
+                              Science rest:{" "}
+                              <span className="tabular-nums text-zinc-300">
+                                {formatRestSuggestion(restHint.restSec)}
+                              </span>
+                              <span className="text-zinc-600">
+                                {" "}
+                                ({restHint.restSec}s)
+                              </span>
+                            </span>
+                            {differs && (
+                              <button
+                                type="button"
+                                className="font-medium text-emerald-400 underline-offset-2 hover:underline"
+                                onClick={() =>
+                                  setEditDraft({
+                                    ...editDraft,
+                                    restSec: restHint.restSec,
+                                  })
+                                }
+                              >
+                                Apply
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {!ex.groupId && (
                         <p className="text-[11px] text-zinc-600">
                           Changing scheme rebuilds the set plan. Contrast /

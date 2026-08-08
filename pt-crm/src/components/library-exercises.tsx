@@ -14,6 +14,7 @@ import {
   DIFFICULTY_TONE,
   PATTERN_ORDER,
   patternLabel,
+  patternScienceBlurb,
 } from "@/lib/exercise-meta";
 
 export type LibraryExercise = {
@@ -321,7 +322,7 @@ export function LibraryExercises({ initial }: { initial: LibraryExercise[] }) {
         <div className="space-y-5">
           {grouped.map(([pat, items]) => (
             <section key={pat}>
-              <div className="mb-2 flex items-baseline justify-between gap-2">
+              <div className="mb-1 flex items-baseline justify-between gap-2">
                 <h3 className="text-sm font-semibold text-zinc-100">
                   {patternLabel(pat)}
                 </h3>
@@ -329,6 +330,9 @@ export function LibraryExercises({ initial }: { initial: LibraryExercise[] }) {
                   {items.filter((i) => i.available).length}/{items.length}
                 </span>
               </div>
+              <p className="mb-2 max-w-2xl text-[11px] leading-snug text-zinc-500">
+                {patternScienceBlurb(pat)}
+              </p>
               <div className="grid gap-2">
                 {items.map((ex) => (
                   <ExerciseCard

@@ -95,10 +95,12 @@ Header whisper links (package left · next booking) jump to `#crm`.
 ## 5b. Program edit & mesocycle (desk)
 
 1. Open **Programs →** a plan.
-2. Per day: **Add exercise** opens the bank picker (append only — no full regen). Swap / edit / remove still work per row.
-3. **Mesocycle** chips W1–W6 (deload = amber). Selecting does not write until **Apply**.
-4. Progress `n / threshold` sessions + auto-advance on/off.
-5. **Advance** steps week; session complete may auto-advance when on.
+2. Per day: **Add exercise** opens the bank picker (append only — no full regen). New rows get **goal + pattern** defaults; picker shows pattern science + typical Rx.
+3. **Plan balance** card: weekly working sets by pattern, pull:push, session estimates, science flags, and **Fill next** chips (MEV / antagonist gaps).
+4. Edit rest → **Science rest** + **Apply**. Design wizard preview shows the same balance strip.
+5. Floor tips use **double progression** (reps → then load) and hold cues at high RPE.
+6. **Mesocycle** chips W1–W6 (deload = amber). Selecting does not write until **Apply**.
+7. Progress `n / threshold` sessions + auto-advance on/off; **Advance** steps week.
 
 ---
 

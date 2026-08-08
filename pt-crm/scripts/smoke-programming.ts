@@ -28,6 +28,24 @@ import {
   rxFromSessionSetLogs,
   canPromoteSessionLogToProgram,
 } from "../src/lib/program-exercise-add";
+import {
+  analyzeProgramPlan,
+  bandForSets,
+  defaultRxForGoal,
+  estimateDayMinutes,
+  planBalanceSummaryLine,
+  recommendedRestSec,
+  sessionOrderHints,
+  suggestFillPatterns,
+  weeklySetBand,
+} from "../src/lib/program-science";
+import {
+  antagonistPatterns,
+  patternScienceBlurb,
+  resolveExerciseCues,
+  sortPatternsForUi,
+} from "../src/lib/exercise-meta";
+import { suggestProgression } from "../src/lib/progression";
 import { detectIntent } from "../src/lib/ai/intents";
 
 function assert(cond: unknown, msg: string): asserts cond {
@@ -331,6 +349,181 @@ function main() {
     assert(corr.kind === "insert_correctives", "insert correctives");
   }
   console.log("ok detectIntent append/correctives");
+
+  // program-science: rest, volume bands, push:pull, order, duration
+  {
+    const strengthRest = recommendedRestSec({
+      goal: "strength",
+      pattern: "squat",
+      reps: "3-5",
+    });
+    assert(strengthRest.restSec >= 150, "strength compound rest ≥150s");
+
+    const hypIso = recommendedRestSec({
+      goal: "hypertrophy",
+      pattern: "core",
+      reps: "10-15",
+    });
+    assert(hypIso.restSec <= 90, "hypertrophy isolation rest ≤90s");
+
+    const strRx = defaultRxForGoal(false, {
+      goal: "strength",
+      pattern: "hinge",
+    });
+    assert(
+      strRx.reps.includes("3") || strRx.reps.includes("5"),
+      "strength low reps"
+    );
+    assert(strRx.restSec >= 150, "strength rest long");
+
+    // Goal-aware append defaults
+    const strAppend = defaultAddExerciseRx(false, {
+      goal: "strength",
+      pattern: "squat",
+    });
+    assert(strAppend.restSec >= 150, "append strength rest");
+    assert(defaultAddExerciseRx(true).restSec === 45, "warmup rest");
+
+    const hypBand = weeklySetBand("horizontal_pull", "hypertrophy");
+    assert(
+      !!hypBand && hypBand.low <= 8 && hypBand.high >= 16,
+      "hypertrophy pull band"
+    );
+    assert(bandForSets(4, hypBand) === "low", "4 sets low for hypertrophy pull");
+    assert(bandForSets(12, hypBand) === "ok", "12 sets ok");
+    assert(bandForSets(30, hypBand) === "high", "30 sets high");
+
+    const analysis = analyzeProgramPlan(
+      [
+        {
+          name: "Day A",
+          exercises: [
+            {
+              sets: 3,
+              reps: "5",
+              restSec: 180,
+              movementPattern: "squat",
+              isWarmup: false,
+            },
+            {
+              sets: 3,
+              reps: "8",
+              restSec: 90,
+              movementPattern: "horizontal_push",
+              isWarmup: false,
+            },
+            {
+              sets: 2,
+              reps: "12",
+              restSec: 60,
+              movementPattern: "horizontal_pull",
+              isWarmup: false,
+            },
+          ],
+        },
+        {
+          name: "Day B",
+          exercises: [
+            {
+              sets: 4,
+              reps: "5",
+              restSec: 180,
+              movementPattern: "hinge",
+              isWarmup: false,
+            },
+            {
+              sets: 3,
+              reps: "10",
+              restSec: 75,
+              movementPattern: "horizontal_pull",
+              isWarmup: false,
+            },
+          ],
+        },
+      ],
+      { goal: "hypertrophy", sessionMinutes: 45 }
+    );
+    assert(analysis.weeklyWorkingSets === 15, "weekly working sets 15");
+    assert(analysis.pullSets === 5, "pull sets 5");
+    assert(analysis.pushSets === 3, "push sets 3");
+    assert(
+      analysis.pushPullRatio != null && analysis.pushPullRatio > 1,
+      "pull:push > 1"
+    );
+    assert(analysis.dayEstimates.length === 2, "two day estimates");
+    assert(
+      estimateDayMinutes([
+        { sets: 5, restSec: 180, movementPattern: "squat" },
+        { sets: 5, restSec: 180, movementPattern: "hinge" },
+        { sets: 4, restSec: 120, movementPattern: "horizontal_push" },
+        { sets: 4, restSec: 90, movementPattern: "horizontal_pull" },
+        { sets: 3, restSec: 60, movementPattern: "core" },
+      ]) > 40,
+      "long day estimate > 40 min"
+    );
+
+    const order = sessionOrderHints("Day X", [
+      { sets: 3, movementPattern: "core", isWarmup: false },
+      { sets: 4, movementPattern: "squat", isWarmup: false },
+      { sets: 3, movementPattern: "plyometric", isWarmup: false },
+    ]);
+    assert(
+      order.some((f) => /power|plyo/i.test(f.message)),
+      "order flags plyo after compound"
+    );
+
+    const fills = suggestFillPatterns(analysis, {
+      goal: "hypertrophy",
+      limit: 4,
+    });
+    assert(fills.length >= 1, "fill suggestions non-empty");
+    assert(
+      planBalanceSummaryLine(analysis).includes("working sets"),
+      "summary line"
+    );
+
+    assert(
+      antagonistPatterns("horizontal_push").includes("horizontal_pull"),
+      "push antagonist is pull"
+    );
+    assert(
+      /press|row|shoulder/i.test(patternScienceBlurb("horizontal_push")),
+      "pattern science blurb"
+    );
+    assert(
+      sortPatternsForUi(["core", "squat", "mobility"])[0] === "mobility",
+      "pattern ui order mobility first"
+    );
+    assert(
+      resolveExerciseCues(null, "hinge").toLowerCase().includes("hip"),
+      "default hinge cue"
+    );
+    assert(
+      resolveExerciseCues("Own the brace", "core") === "Own the brace",
+      "custom cue wins"
+    );
+
+    // Double progression messaging
+    const prog = suggestProgression({
+      plannedReps: "8-10",
+      lastSets: [
+        { setIndex: 0, reps: "10", weightKg: 60, rpe: "7", completed: true },
+        { setIndex: 1, reps: "10", weightKg: 60, rpe: "7", completed: true },
+        { setIndex: 2, reps: "10", weightKg: 60, rpe: "7.5", completed: true },
+      ],
+    });
+    assert(prog?.kind === "load", "double progression load");
+    assert(/double progression/i.test(prog?.message || ""), "DP message");
+
+    const holdHard = suggestProgression({
+      plannedReps: "5",
+      lastSets: [
+        { setIndex: 0, reps: "3", weightKg: 100, rpe: "9.5", completed: true },
+      ],
+    });
+    assert(holdHard?.kind === "hold", "high RPE hold");
+  }
+  console.log("ok program-science");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

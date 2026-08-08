@@ -79,16 +79,36 @@ export function suggestProgression(input: {
     repNums.length > 0 &&
     repNums.every((r) => r >= range.low);
 
-  // Hard session — hold or deload cue
+  // Hard session — hold or deload cue (RPE ≥ 9, or ≥ 8.5 with missed target)
   if (rpe != null && rpe >= 9) {
+    const drop =
+      topKg != null && topKg > 0
+        ? Math.round(topKg * 0.9 * 2) / 2
+        : null;
     return {
       kind: "hold",
-      message: `Last RPE ~${rpe.toFixed(1)} — hold load or drop 5–10% and own form.`,
+      message:
+        drop != null
+          ? `Last RPE ~${rpe.toFixed(1)} — hold or try ~${drop} kg (−10%) and own form.`
+          : `Last RPE ~${rpe.toFixed(1)} — hold load or drop 5–10% and own form.`,
+      suggestedKg: drop ?? topKg,
+    };
+  }
+
+  if (
+    rpe != null &&
+    rpe >= 8.5 &&
+    range != null &&
+    !hitTarget
+  ) {
+    return {
+      kind: "hold",
+      message: `RPE ~${rpe.toFixed(1)} without hitting ${range.low}+ reps — repeat load; earn progression with cleaner sets.`,
       suggestedKg: topKg,
     };
   }
 
-  // Clean top-end sets → bump load (skip bodyweight / zero-load patterns)
+  // Double progression: top of range + recoverable RPE → add load
   if (
     allDone &&
     hitTopOfRange &&
@@ -100,21 +120,25 @@ export function suggestProgression(input: {
     const next = Math.round((topKg + bump) * 2) / 2;
     return {
       kind: "load",
-      message: `Hit top of range clean${rpe != null ? ` @ RPE ${rpe.toFixed(1)}` : ""} — try ${next} kg next.`,
+      message: `Double progression: hit ${range!.high} clean${rpe != null ? ` @ RPE ${rpe.toFixed(1)}` : ""} — try ${next} kg next.`,
       suggestedKg: next,
     };
   }
 
   // Bodyweight / zero load: progress via reps, not fake +1 kg
   if (allDone && hitTopOfRange && (topKg == null || topKg === 0)) {
+    const nextReps = range ? range.high + 1 : null;
     return {
       kind: "reps",
-      message: `Clean bodyweight sets${rpe != null ? ` @ RPE ${rpe.toFixed(1)}` : ""} — add reps or a harder variation.`,
+      message:
+        nextReps != null
+          ? `Clean bodyweight top-end${rpe != null ? ` @ RPE ${rpe.toFixed(1)}` : ""} — chase ${nextReps}+ reps or a harder variation.`
+          : `Clean bodyweight sets${rpe != null ? ` @ RPE ${rpe.toFixed(1)}` : ""} — add reps or a harder variation.`,
       suggestedKg: null,
     };
   }
 
-  // In range but room for more reps
+  // In range but room for more reps (double progression step 1)
   if (
     allDone &&
     hitTarget &&
@@ -124,7 +148,7 @@ export function suggestProgression(input: {
   ) {
     return {
       kind: "reps",
-      message: `Solid sets — push toward ${range.high} reps before adding load.`,
+      message: `Double progression: stay at this load until all sets hit ${range.high} (now ≥${range.low}).`,
       suggestedKg: topKg,
     };
   }
@@ -141,7 +165,9 @@ export function suggestProgression(input: {
   if (topKg != null) {
     return {
       kind: "hold",
-      message: `Last top set ${topKg} kg — repeat and chase clean reps.`,
+      message: `Last top set ${topKg} kg — repeat and chase clean reps${
+        range ? ` in the ${range.low}–${range.high} band` : ""
+      }.`,
       suggestedKg: topKg,
     };
   }

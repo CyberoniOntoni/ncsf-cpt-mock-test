@@ -3,7 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { listExercisesAction } from "@/app/actions/library";
-import { patternLabel } from "@/lib/exercise-meta";
+import {
+  DIFFICULTY_TONE,
+  patternLabel,
+  patternScienceBlurb,
+  sortPatternsForUi,
+} from "@/lib/exercise-meta";
+import {
+  defaultRxForGoal,
+  formatRestSuggestion,
+  recommendedRestSec,
+} from "@/lib/program-science";
 import { cn } from "@/lib/utils";
 import { Badge, Button, Input } from "./ui";
 
@@ -22,19 +32,28 @@ export function ExerciseBankPicker({
   onPick,
   onCancel,
   preferPattern,
+  preferPatterns,
+  goal,
   title = "Pick from exercise bank",
   disabled = false,
 }: {
   onPick: (ex: BankExercisePick) => void;
   onCancel: () => void;
   preferPattern?: string | null;
+  /** Soft-rank these patterns first (e.g. fill-balance suggestions). */
+  preferPatterns?: string[] | null;
+  /** Program goal — shows science rest/rx hint for active pattern filter. */
+  goal?: string | null;
   title?: string;
   /** Disable pick/close while a parent mutation is pending */
   disabled?: boolean;
 }) {
+  const primaryPrefer =
+    preferPattern ||
+    (preferPatterns && preferPatterns.length ? preferPatterns[0] : null);
   const [all, setAll] = useState<BankExercisePick[]>([]);
   const [q, setQ] = useState("");
-  const [pattern, setPattern] = useState(preferPattern || "all");
+  const [pattern, setPattern] = useState(primaryPrefer || "all");
   const [availableOnly, setAvailableOnly] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -47,12 +66,21 @@ export function ExerciseBankPicker({
 
   useEffect(() => {
     if (preferPattern) setPattern(preferPattern);
-  }, [preferPattern]);
+    else if (preferPatterns?.length) setPattern(preferPatterns[0]);
+  }, [preferPattern, preferPatterns]);
 
   const patterns = useMemo(() => {
     const s = new Set(all.map((e) => e.movementPattern));
-    return ["all", ...Array.from(s).sort()];
+    return ["all", ...sortPatternsForUi(Array.from(s))];
   }, [all]);
+
+  const preferSet = useMemo(() => {
+    const list = [
+      ...(preferPattern ? [preferPattern] : []),
+      ...(preferPatterns || []),
+    ];
+    return new Set(list.filter(Boolean));
+  }, [preferPattern, preferPatterns]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -70,15 +98,39 @@ export function ExerciseBankPicker({
         );
       })
       .sort((a, b) => {
-        // Prefer matching pattern first
-        if (preferPattern) {
-          const ap = a.movementPattern === preferPattern ? 0 : 1;
-          const bp = b.movementPattern === preferPattern ? 0 : 1;
+        if (preferSet.size) {
+          const ap = preferSet.has(a.movementPattern) ? 0 : 1;
+          const bp = preferSet.has(b.movementPattern) ? 0 : 1;
           if (ap !== bp) return ap - bp;
         }
+        if (query) {
+          const aStart = a.name.toLowerCase().startsWith(query) ? 0 : 1;
+          const bStart = b.name.toLowerCase().startsWith(query) ? 0 : 1;
+          if (aStart !== bStart) return aStart - bStart;
+        }
+        // Prefer available + lower difficulty for general picks
+        if (a.available !== b.available) return a.available ? -1 : 1;
         return a.name.localeCompare(b.name);
       });
-  }, [all, q, pattern, availableOnly, preferPattern]);
+  }, [all, q, pattern, availableOnly, preferSet]);
+
+  const activePattern = pattern !== "all" ? pattern : primaryPrefer;
+  const scienceHint = useMemo(() => {
+    if (!activePattern) return null;
+    const rest = recommendedRestSec({
+      goal: goal || "general",
+      pattern: activePattern,
+    });
+    const rx = defaultRxForGoal(false, {
+      goal: goal || "general",
+      pattern: activePattern,
+    });
+    return {
+      blurb: patternScienceBlurb(activePattern),
+      rest,
+      rx,
+    };
+  }, [activePattern, goal]);
 
   return (
     <div
@@ -103,6 +155,26 @@ export function ExerciseBankPicker({
         </Button>
       </div>
 
+      {scienceHint && (
+        <div className="rounded-lg border border-emerald-900/30 bg-zinc-950/40 px-2.5 py-2 text-[11px] leading-snug text-zinc-400">
+          <span className="font-medium text-emerald-200/90">
+            {patternLabel(activePattern!)}
+          </span>
+          <span className="text-zinc-600"> · </span>
+          {scienceHint.blurb}
+          <div className="mt-1 tabular-nums text-zinc-500">
+            Typical append: {scienceHint.rx.sets}×{scienceHint.rx.reps} @ RPE{" "}
+            {scienceHint.rx.rpe} · rest {formatRestSuggestion(scienceHint.rest.restSec)}
+            {goal ? (
+              <span className="capitalize">
+                {" "}
+                ({String(goal).replaceAll("_", " ")})
+              </span>
+            ) : null}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative min-w-0 flex-1 sm:min-w-[12rem]">
           <Search
@@ -110,7 +182,7 @@ export function ExerciseBankPicker({
             aria-hidden
           />
           <Input
-            placeholder="Search name, muscle, gear…"
+            placeholder="Search name, muscle, gear, cue…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             autoFocus
@@ -155,6 +227,35 @@ export function ExerciseBankPicker({
         </label>
       </div>
 
+      {preferSet.size > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {Array.from(preferSet).map((p) => (
+            <button
+              key={p}
+              type="button"
+              disabled={disabled}
+              onClick={() => setPattern(p)}
+              className={cn(
+                "rounded-md border px-2 py-1 text-[11px] transition",
+                pattern === p
+                  ? "border-emerald-600 bg-emerald-950/40 text-emerald-100"
+                  : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500"
+              )}
+            >
+              {patternLabel(p)}
+            </button>
+          ))}
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setPattern("all")}
+            className="rounded-md border border-zinc-800 px-2 py-1 text-[11px] text-zinc-500 hover:text-zinc-300"
+          >
+            All
+          </button>
+        </div>
+      )}
+
       {loading && (
         <p className="text-xs text-zinc-500" role="status">
           Loading bank…
@@ -184,9 +285,17 @@ export function ExerciseBankPicker({
                     ? ` · ${ex.equipmentNames.join(", ")}`
                     : " · Bodyweight"}
                 </div>
+                {ex.cues ? (
+                  <div className="mt-0.5 line-clamp-1 text-[11px] text-zinc-600">
+                    {ex.cues}
+                  </div>
+                ) : null}
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1 pt-0.5">
                 <Badge>{patternLabel(ex.movementPattern)}</Badge>
+                <Badge tone={DIFFICULTY_TONE[ex.difficulty] || "default"}>
+                  {ex.difficulty}
+                </Badge>
                 {!ex.available && <Badge tone="amber">Missing gear</Badge>}
               </div>
             </button>
@@ -220,8 +329,8 @@ export function ExerciseBankPicker({
       {!loading && filtered.length > 0 && (
         <p className="text-[11px] tabular-nums text-zinc-600">
           {filtered.length} exercise{filtered.length === 1 ? "" : "s"}
-          {preferPattern && pattern === preferPattern
-            ? ` · matching ${patternLabel(preferPattern)} first`
+          {preferSet.size > 0
+            ? ` · balance patterns first`
             : ""}
         </p>
       )}

@@ -16,6 +16,11 @@ import {
   MESOCYCLE_WEEK_OPTIONS,
 } from "@/lib/mesocycle";
 import {
+  analyzeProgramPlan,
+  planBalanceSummaryLine,
+  suggestFillPatterns,
+} from "@/lib/program-science";
+import {
   formatGroupBadge,
   formatGroupRoleTitle,
   formatGroupTitle,
@@ -318,6 +323,34 @@ export function ProgramWizard({
       estimatedMinutes != null ||
       constraintSummary
     );
+
+  const previewScience = useMemo(() => {
+    if (!preview) return null;
+    const analysis = analyzeProgramPlan(
+      preview.days.map((d) => ({
+        name: d.name,
+        exercises: d.exercises.map((ex) => ({
+          sets: ex.sets,
+          reps: ex.reps,
+          rpe: ex.rpe,
+          restSec: ex.restSec,
+          isWarmup: ex.isWarmup,
+          movementPattern: ex.movementPattern,
+          exerciseName: ex.exerciseName,
+          setScheme: ex.setScheme,
+        })),
+      })),
+      { goal: preview.goal, sessionMinutes: preview.sessionMinutes }
+    );
+    return {
+      analysis,
+      line: planBalanceSummaryLine(analysis),
+      fills: suggestFillPatterns(analysis, {
+        goal: preview.goal,
+        limit: 3,
+      }),
+    };
+  }, [preview]);
 
   return (
     <FocusShell floorFooter={step === 2 && !!preview} className="space-y-4">
@@ -815,6 +848,55 @@ export function ProgramWizard({
               Swap or edit exercises after you save.
             </p>
           </Card>
+
+          {previewScience && previewScience.analysis.weeklyWorkingSets > 0 && (
+            <Card className="border-zinc-800 bg-zinc-950/40">
+              <SectionLabel className="mb-1.5">Plan balance</SectionLabel>
+              <p className="text-xs text-zinc-400">{previewScience.line}</p>
+              {previewScience.analysis.byPattern.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {previewScience.analysis.byPattern
+                    .filter((r) => r.sets > 0)
+                    .slice(0, 8)
+                    .map((row) => (
+                      <span
+                        key={row.pattern}
+                        title={row.guide}
+                        className={cn(
+                          "rounded-md border px-2 py-0.5 text-[11px] tabular-nums",
+                          row.band === "ok" &&
+                            "border-emerald-900/40 bg-emerald-950/20 text-emerald-100/90",
+                          row.band === "low" &&
+                            "border-zinc-700 text-zinc-400",
+                          row.band === "high" &&
+                            "border-amber-800/50 bg-amber-950/20 text-amber-100/90",
+                          row.band === "na" && "border-zinc-800 text-zinc-500"
+                        )}
+                      >
+                        {row.label} {row.sets}
+                      </span>
+                    ))}
+                </div>
+              )}
+              {previewScience.fills.length > 0 && (
+                <p className="mt-2 text-[11px] text-zinc-500">
+                  After save, consider adding:{" "}
+                  {previewScience.fills.map((f) => f.label).join(", ")}
+                </p>
+              )}
+              {previewScience.analysis.flags
+                .filter((f) => f.severity === "warn")
+                .slice(0, 2)
+                .map((f) => (
+                  <p
+                    key={f.message}
+                    className="mt-1 text-[11px] leading-snug text-amber-200/85"
+                  >
+                    ⚠ {f.message}
+                  </p>
+                ))}
+            </Card>
+          )}
 
           {/* Why this plan */}
           {hasWhyCard && (

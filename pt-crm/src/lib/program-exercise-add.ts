@@ -1,3 +1,5 @@
+import { defaultRxForGoal } from "@/lib/program-science";
+
 /** Next sortOrder when appending to a program day (max existing + 1, or 0). */
 export function nextProgramExerciseSortOrder(
   existingSortOrders: number[]
@@ -6,16 +8,23 @@ export function nextProgramExerciseSortOrder(
   return Math.max(...existingSortOrders) + 1;
 }
 
-export function defaultAddExerciseRx(isWarmup: boolean): {
+/**
+ * Default sets/reps/RPE/rest when appending to a day.
+ * Prefer goal + pattern (exercise science); falls back to general 3×8–10.
+ */
+export function defaultAddExerciseRx(
+  isWarmup: boolean,
+  opts?: { goal?: string | null; pattern?: string | null }
+): {
   sets: number;
   reps: string;
   rpe: string;
   restSec: number;
 } {
-  if (isWarmup) {
-    return { sets: 2, reps: "8-10", rpe: "5-6", restSec: 45 };
-  }
-  return { sets: 3, reps: "8-10", rpe: "7", restSec: 90 };
+  return defaultRxForGoal(isWarmup, {
+    goal: opts?.goal,
+    pattern: opts?.pattern,
+  });
 }
 
 /** Rank bank exercises by name query for coach append (includes match, startsWith first). */

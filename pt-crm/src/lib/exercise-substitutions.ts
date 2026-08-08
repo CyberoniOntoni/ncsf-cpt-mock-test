@@ -88,6 +88,19 @@ function nameHitsAvoidPattern(
   return false;
 }
 
+/** Push/pull families and lower pairs — soft score when exact pattern missing. */
+function isNearPattern(a: string, b: string): boolean {
+  const families: string[][] = [
+    ["horizontal_push", "vertical_push"],
+    ["horizontal_pull", "vertical_pull"],
+    ["squat", "hinge"],
+  ];
+  for (const fam of families) {
+    if (fam.includes(a) && fam.includes(b) && a !== b) return true;
+  }
+  return false;
+}
+
 function scoreOne(
   current: ExerciseLike,
   candidate: ExerciseLike,
@@ -102,6 +115,13 @@ function scoreOne(
   ) {
     score += 5;
     reasons.push(`Same pattern (${candidate.movementPattern})`);
+  } else if (
+    candidate.movementPattern &&
+    current.movementPattern &&
+    isNearPattern(current.movementPattern, candidate.movementPattern)
+  ) {
+    score += 2;
+    reasons.push("Related pattern (same family)");
   }
 
   const curTags = new Set(tagList(current.tags));

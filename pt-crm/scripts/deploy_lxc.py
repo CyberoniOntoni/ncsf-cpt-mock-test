@@ -62,10 +62,12 @@ def main() -> None:
     app_url = APP_URL or f"http://{HOST}:{PORT}"
 
     print(f"Connecting to {USER}@{HOST}...")
-    # Prefer Transport + password (some hosts fail SSHClient.connect quirks)
+    # Prefer Transport + password (some hosts fail SSHClient.connect quirks).
+    # Slow/busy LXC often needs a long banner wait (sshd accepts TCP before banner).
     transport = paramiko.Transport((HOST, 22))
-    transport.connect()
-    transport.auth_password(USER, PASSWORD)
+    transport.banner_timeout = 90
+    transport.auth_timeout = 60
+    transport.connect(username=USER, password=PASSWORD)
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client._transport = transport  # noqa: SLF001 — intentional after auth

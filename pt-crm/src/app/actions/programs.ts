@@ -658,7 +658,11 @@ export async function addProgramExerciseAction(input: {
   const sortOrder = nextProgramExerciseSortOrder(
     existing.map((e) => e.sortOrder)
   );
-  const defaults = defaultAddExerciseRx(isWarmup);
+  // Goal + pattern aware defaults (strength rest/reps, hypertrophy density, etc.)
+  const defaults = defaultAddExerciseRx(isWarmup, {
+    goal: dayRow.program.goal,
+    pattern: pick.movementPattern,
+  });
   const sets = input.opts?.sets ?? defaults.sets;
   const reps = input.opts?.reps ?? defaults.reps;
   const rpe =

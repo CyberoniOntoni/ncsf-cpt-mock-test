@@ -15,6 +15,25 @@ export const PATTERN_LABEL: Record<string, string> = {
   other: "Other",
 };
 
+/**
+ * Session design order: prep → power → primary compounds → accessories → finisher.
+ * (Distinct from PATTERN_ORDER which is library grouping.)
+ */
+export const SESSION_PATTERN_ORDER = [
+  "mobility",
+  "plyometric",
+  "squat",
+  "hinge",
+  "horizontal_push",
+  "vertical_push",
+  "horizontal_pull",
+  "vertical_pull",
+  "carry",
+  "core",
+  "cardio",
+  "other",
+] as const;
+
 export const PATTERN_ORDER = [
   "mobility",
   "squat",
@@ -30,6 +49,42 @@ export const PATTERN_ORDER = [
   "other",
 ] as const;
 
+/** Antagonist / balance pairs for push–pull programming. */
+export const PATTERN_ANTAGONISTS: Record<string, string[]> = {
+  horizontal_push: ["horizontal_pull"],
+  horizontal_pull: ["horizontal_push"],
+  vertical_push: ["vertical_pull"],
+  vertical_pull: ["vertical_push"],
+  squat: ["hinge"],
+  hinge: ["squat"],
+};
+
+/**
+ * One-line exercise-science role for each pattern (library headers, pickers).
+ */
+export const PATTERN_SCIENCE: Record<string, string> = {
+  mobility:
+    "Prep & tissue quality — open ranges you’ll train; don’t fatigue the main lifts.",
+  squat:
+    "Knee-dominant lower — depth you own; primary strength/hypertrophy driver.",
+  hinge:
+    "Hip-dominant posterior chain — load the hips, protect the lumbar hinge.",
+  horizontal_push:
+    "Horizontal pressing — pair with rows for shoulder balance.",
+  vertical_push:
+    "Overhead pressing — needs scapular upward rotation + trunk stability.",
+  horizontal_pull:
+    "Horizontal rows — posture, scapular control, balances bench volume.",
+  vertical_pull:
+    "Vertical pulls — lat + scap depression; balances overhead press.",
+  core: "Anti-movement trunk — brace transfer for big lifts; usually last.",
+  carry: "Loaded locomotion — posture under fatigue; great finisher.",
+  plyometric:
+    "Power / elastic — early in the session while fresh; quality over volume.",
+  cardio: "Work capacity / conditioning — separate from heavy strength when possible.",
+  other: "Accessory or specialty pattern — program with intent.",
+};
+
 export const DIFFICULTY_TONE: Record<
   string,
   "default" | "green" | "amber" | "red"
@@ -41,6 +96,30 @@ export const DIFFICULTY_TONE: Record<
 
 export function patternLabel(pattern: string): string {
   return PATTERN_LABEL[pattern] || pattern.replace(/_/g, " ");
+}
+
+/** Coach blurb for a movement pattern (science role). */
+export function patternScienceBlurb(pattern: string): string {
+  const p = (pattern || "other").trim().toLowerCase() || "other";
+  return PATTERN_SCIENCE[p] || PATTERN_SCIENCE.other;
+}
+
+/** Patterns that balance this one (push↔pull, squat↔hinge). */
+export function antagonistPatterns(pattern: string): string[] {
+  const p = (pattern || "").trim().toLowerCase();
+  return PATTERN_ANTAGONISTS[p] ? [...PATTERN_ANTAGONISTS[p]] : [];
+}
+
+/** Sort patterns for library chips / pickers (canonical order). */
+export function sortPatternsForUi(patterns: string[]): string[] {
+  return [...patterns].sort((a, b) => {
+    const ia = PATTERN_ORDER.indexOf(a as (typeof PATTERN_ORDER)[number]);
+    const ib = PATTERN_ORDER.indexOf(b as (typeof PATTERN_ORDER)[number]);
+    const oa = ia === -1 ? 99 : ia;
+    const ob = ib === -1 ? 99 : ib;
+    if (oa !== ob) return oa - ob;
+    return a.localeCompare(b);
+  });
 }
 
 /** Short coach-facing blurb when an exercise has no description. */
@@ -84,4 +163,14 @@ export function defaultExerciseCues(pattern: string): string {
     default:
       return "Quality reps only; stop 1–2 reps before form breaks.";
   }
+}
+
+/** Resolve cues: exercise-specific first, then pattern default. */
+export function resolveExerciseCues(
+  cues: string | null | undefined,
+  pattern: string | null | undefined
+): string {
+  const own = (cues || "").trim();
+  if (own) return own;
+  return defaultExerciseCues(pattern || "other");
 }
