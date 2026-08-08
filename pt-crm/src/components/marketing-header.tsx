@@ -6,9 +6,9 @@ import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "#how", id: "how", label: "Why" },
-  { href: "#day", id: "day", label: "Day" },
-  { href: "#start", id: "start", label: "Start" },
+  { href: "#how", id: "how", label: "How it works" },
+  { href: "#included", id: "included", label: "What's included" },
+  { href: "#start", id: "start", label: "Get started" },
 ] as const;
 
 const linkFocus =
@@ -78,7 +78,7 @@ export function MarketingHeader() {
             aria-hidden
           />
           <span className="hidden truncate text-[11px] font-medium text-stone-500 sm:inline">
-            For trainers who run the day
+            For personal trainers
           </span>
         </div>
 
@@ -115,7 +115,7 @@ export function MarketingHeader() {
             Sign in
           </Link>
           <Link href="/register" className={cn(btnPrimarySm, linkFocus)}>
-            Get started
+            Create account
           </Link>
         </div>
       </div>

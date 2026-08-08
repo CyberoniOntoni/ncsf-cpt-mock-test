@@ -6,14 +6,14 @@ export const metadata: Metadata = {
   ),
   title: "FloorScribe - run the day, not the paperwork",
   description:
-    "Session logs, packs, bookings, and simple invoices for personal trainers. Solo practice or studio team - one board for the floor day.",
+    "FloorScribe helps personal trainers keep session logs, packs, bookings, and simple invoices in one place - solo or with a small team.",
   alternates: {
     canonical: "https://floorscribe.com",
   },
   openGraph: {
     title: "FloorScribe - run the day, not the paperwork",
     description:
-      "Session logs, packs, bookings, and invoices on one board. Built for solo PTs and small studios.",
+      "Session logs, packs, bookings, and invoices together - so you can stay with the client instead of juggling tabs.",
     type: "website",
     url: "https://floorscribe.com",
     siteName: "FloorScribe",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "FloorScribe - run the day, not the paperwork",
     description:
-      "Session logs, packs, bookings, and invoices on one board. Solo or studio.",
+      "Session logs, packs, bookings, and invoices in one place for personal trainers.",
     images: ["/marketing/hero-calm.jpg"],
   },
 };
