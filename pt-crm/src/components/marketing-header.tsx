@@ -6,7 +6,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "#paths", id: "paths", label: "Paths" },
+  { href: "#how", id: "how", label: "Why" },
   { href: "#day", id: "day", label: "Day" },
   { href: "#start", id: "start", label: "Start" },
 ] as const;

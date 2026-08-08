@@ -27,7 +27,7 @@
 | Accent | Soft sage (muted green-gray) for CTAs and focus rings |
 | Signal | Soft amber only inside product mock badges |
 | Motion | Subdued reveal; honor `prefers-reduced-motion` |
-| Imagery | New calm studio stills; desaturated warm grade |
+| Imagery | Calm boutique **gym** stills (racks, dumbbells, PT floor) — not empty rooms; desaturated warm grade |
 
 ### Copy voice
 

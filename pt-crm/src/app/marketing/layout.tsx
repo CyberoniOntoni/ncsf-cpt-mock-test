@@ -4,16 +4,16 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.APP_URL || "https://floorscribe.com"
   ),
-  title: "FloorScribe - for trainers who run the day",
+  title: "FloorScribe - run the day, not the paperwork",
   description:
-    "FloorScribe is a calm day board for personal trainers: sessions, packs, bookings, and invoices. Solo practice or studio team.",
+    "Session logs, packs, bookings, and simple invoices for personal trainers. Solo practice or studio team - one board for the floor day.",
   alternates: {
     canonical: "https://floorscribe.com",
   },
   openGraph: {
     title: "FloorScribe - run the day, not the paperwork",
     description:
-      "Sessions, packs, CRM, and coach on one quiet board. Built for solo PTs and studios.",
+      "Session logs, packs, bookings, and invoices on one board. Built for solo PTs and small studios.",
     type: "website",
     url: "https://floorscribe.com",
     siteName: "FloorScribe",
@@ -21,9 +21,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FloorScribe - for trainers who run the day",
+    title: "FloorScribe - run the day, not the paperwork",
     description:
-      "Sessions, packs, CRM, and coach on one quiet board. Solo or studio.",
+      "Session logs, packs, bookings, and invoices on one board. Solo or studio.",
     images: ["/marketing/hero-calm.jpg"],
   },
 };

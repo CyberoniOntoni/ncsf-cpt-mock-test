@@ -17,7 +17,7 @@ import { Reveal, RevealStagger } from "@/components/reveal";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "#paths", label: "Paths" },
+  { href: "#how", label: "Why" },
   { href: "#day", label: "Day" },
   { href: "#start", label: "Start" },
 ] as const;
@@ -25,15 +25,15 @@ const NAV = [
 const DAY = [
   {
     t: "Open Today",
-    d: "Sticky client, 48h agenda, and Needs you - one place to see the day.",
+    d: "Who you're training, what's booked, and what still needs you - one glance.",
   },
   {
-    t: "Train & complete",
-    d: "Log on the floor. Complete once; an active pack loses a credit.",
+    t: "Train and complete",
+    d: "Log sets on the floor. Finish the session and the pack count updates with it.",
   },
   {
     t: "Keep the week moving",
-    d: "Book next, check in, invoice, stage - without leaving the client.",
+    d: "Rebook, check in, or mark paid - still on that client, not in another app.",
   },
 ] as const;
 
@@ -41,30 +41,30 @@ const PROOF = [
   {
     icon: Timer,
     title: "Floor log",
-    body: "Sets, RPE, cues - between-set glances, not a spreadsheet.",
+    body: "Sets, RPE, and cues for glances between sets - not a spreadsheet on a laptop.",
   },
   {
     icon: Package,
     title: "Session packs",
-    body: "Remaining on the board. Renew when empty.",
+    body: "Sessions left, always visible. Renew when a pack runs out.",
   },
   {
     icon: CalendarDays,
     title: "Bookings",
-    body: "Month calendar, book from the client, start from a booking.",
+    body: "Month calendar. Book from the client. Start the session from the booking.",
   },
   {
     icon: Users,
     title: "Solo or studio",
-    body: "Own practice today. Invite trainers when you grow.",
+    body: "Run your own practice now. Invite trainers when the studio needs them.",
   },
 ] as const;
 
 const START_STEPS = [
-  "Register solo or studio",
-  "Today board & Needs you",
-  "Session to pack burn",
-  "Invite trainers anytime",
+  "Create a solo or studio account",
+  "Open Today and see the day",
+  "Log a session - packs stay in sync",
+  "Invite trainers when you grow",
 ] as const;
 
 const sectionShell = "mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16 lg:py-20";
@@ -223,7 +223,7 @@ export default function MarketingPage() {
                   aria-hidden
                 />
                 <span className="truncate text-[11px] font-medium text-stone-400">
-                  Solo practice · Studio team
+                  For solo trainers and small studios
                 </span>
               </div>
               <h1
@@ -236,8 +236,8 @@ export default function MarketingPage() {
                 </span>
               </h1>
               <p className="mkt-hero-in mkt-hero-in-delay-3 mt-5 max-w-md text-[0.95rem] leading-relaxed text-stone-400 sm:text-lg sm:leading-relaxed">
-                Sessions, packs, bookings, and invoices on one quiet board -
-                for trainers who live on the floor.
+                Session logs, packs, bookings, and simple invoices in one place
+                - so the floor day and the business stay together.
               </p>
 
               <div
@@ -248,14 +248,14 @@ export default function MarketingPage() {
                   href="/register/solo"
                   icon={User}
                   title="Solo practice"
-                  body="Your clients, packs, and floor log - start today."
+                  body="Your clients, packs, and floor log. Built for one trainer."
                   cta="Create account"
                 />
                 <PathCard
                   href="/register/studio"
                   icon={Building2}
-                  title="Studio / team"
-                  body="Shared board. Invite trainers when you are ready."
+                  title="Studio team"
+                  body="One shared board. Invite trainers when you hire."
                   cta="Create studio"
                 />
               </div>
@@ -284,7 +284,7 @@ export default function MarketingPage() {
                   <div className="relative aspect-[16/11] sm:aspect-[4/3]">
                     <Image
                       src="/marketing/paths-calm.jpg"
-                      alt="Quiet boutique training studio"
+                      alt="Boutique gym with dumbbell rack and training zones"
                       fill
                       priority
                       sizes="(max-width: 640px) 100vw, 30rem"
@@ -303,10 +303,14 @@ export default function MarketingPage() {
         </section>
 
         {/* Problem */}
-        <section className={sectionBorder} aria-labelledby="problem-heading">
+        <section
+          id="how"
+          className={sectionBorder}
+          aria-labelledby="problem-heading"
+        >
           <div className={sectionShell}>
             <Reveal variant="up">
-              <SectionLabel>The day, simplified</SectionLabel>
+              <SectionLabel>Why FloorScribe</SectionLabel>
               <h2
                 id="problem-heading"
                 className="mt-3 max-w-2xl text-[1.75rem] font-semibold leading-tight tracking-tight text-stone-50 sm:text-4xl"
@@ -334,26 +338,27 @@ export default function MarketingPage() {
                 <div className="relative grid sm:grid-cols-2">
                   <div className="border-b border-stone-800/80 p-5 sm:border-b-0 sm:border-r sm:p-7">
                     <p className="text-[11px] font-medium tracking-wide text-stone-500">
-                      The mess
+                      The usual stack
                     </p>
                     <p className="mt-3 text-lg font-medium leading-snug text-stone-100 sm:text-xl">
                       Notes in chat. Packs in a sheet. Money in your head.
                     </p>
                     <p className="mt-3 text-sm leading-relaxed text-stone-500">
-                      Spreadsheets do not burn a pack when you complete a
-                      session. Generic CRMs want pipelines, not floor logs.
+                      Spreadsheets do not use a pack credit when a session ends.
+                      Generic CRMs want sales pipelines - not a set log between
+                      clients.
                     </p>
                   </div>
                   <div className="bg-emerald-950/20 p-5 sm:p-7">
                     <p className="text-[11px] font-medium tracking-wide text-emerald-600/90">
-                      The board
+                      With FloorScribe
                     </p>
                     <p className="mt-3 text-lg font-medium leading-snug text-stone-50 sm:text-xl">
-                      Today. Sticky client. Needs you. Start.
+                      Today&apos;s board. Your client. What needs you. Start.
                     </p>
                     <p className="mt-3 text-sm leading-relaxed text-stone-400">
-                      Between sessions: stage, pack, book, invoice. On the
-                      floor: log, complete, share, rebook.
+                      Between sessions: pack, book, invoice. On the floor: log,
+                      finish, rebook - same client, same day.
                     </p>
                   </div>
                 </div>
@@ -375,11 +380,11 @@ export default function MarketingPage() {
                 id="day-heading"
                 className="mt-3 text-[1.75rem] font-semibold tracking-tight text-stone-50 sm:text-3xl"
               >
-                Three steps. Then you are with the client.
+                Three steps. Then you&apos;re with the client.
               </h2>
               <p className="mt-2 max-w-lg text-sm leading-relaxed text-stone-500">
-                Open the board, train, keep the week moving - without a second
-                system for money and packs.
+                Open the board, train, then handle packs and money without
+                opening another tool.
               </p>
             </Reveal>
 
@@ -408,7 +413,7 @@ export default function MarketingPage() {
                 <div className="relative aspect-[21/9] min-h-[9.5rem] sm:min-h-[11.5rem]">
                   <Image
                     src="/marketing/studio-calm.jpg"
-                    alt="Quiet boutique training studio interior"
+                    alt="Personal training floor with rack, kettlebells, and bands"
                     fill
                     sizes="(max-width: 1024px) 100vw, 64rem"
                     className={cn(imgCalm, "object-center opacity-65")}
@@ -416,8 +421,8 @@ export default function MarketingPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-[#141210]/85 via-[#141210]/40 to-[#141210]/75" />
                   <div className="absolute inset-0 flex items-end p-5 sm:p-7">
                     <p className="max-w-md text-sm font-medium leading-relaxed text-stone-200 sm:text-base">
-                      Built for the hour between sets - not for a laptop at a
-                      desk.
+                      Built for the minutes between sets - not admin between
+                      clients.
                     </p>
                   </div>
                 </div>
@@ -430,15 +435,16 @@ export default function MarketingPage() {
         <section className={sectionBorder} aria-labelledby="proof-heading">
           <div className={sectionShell}>
             <Reveal variant="up">
-              <SectionLabel>What stays with you</SectionLabel>
+              <SectionLabel>What you get</SectionLabel>
               <h2
                 id="proof-heading"
                 className="mt-3 max-w-xl text-[1.75rem] font-semibold tracking-tight text-stone-50 sm:text-3xl"
               >
-                Enough product to run a practice.
+                What keeps a paid day moving.
               </h2>
               <p className="mt-2 max-w-md text-sm text-stone-500">
-                Not a feature dump - the few tools that keep a paid day moving.
+                Floor work and client work stay connected - without a second
+                system for each.
               </p>
             </Reveal>
 
@@ -488,11 +494,12 @@ export default function MarketingPage() {
                       id="start-heading"
                       className="mt-3 text-[1.75rem] font-semibold tracking-tight text-stone-50 sm:text-3xl"
                     >
-                      Choose your path.
+                      Pick how you work.
                     </h2>
                     <p className="mt-3 text-sm leading-relaxed text-stone-400 sm:text-base">
-                      Create an account, add clients, design a program, start
-                      from Today. Invite trainers when the practice grows.
+                      Create an account, add a client, build a program, and
+                      start from Today. Invite trainers later if the practice
+                      grows.
                     </p>
                     <div className="mt-7 flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3">
                       <Link
@@ -514,7 +521,7 @@ export default function MarketingPage() {
                           linkFocus
                         )}
                       >
-                        Studio / team
+                        Studio team
                       </Link>
                       <Link
                         href="/login"
@@ -557,7 +564,8 @@ export default function MarketingPage() {
             <div className="max-w-xs">
               <BrandMark href="/marketing" className="text-emerald-600" />
               <p className="mt-2.5 text-xs leading-relaxed text-stone-500">
-                For trainers who run the day - sessions, packs, bookings, CRM.
+                For trainers who run the day - sessions, packs, bookings, and
+                client follow-through.
               </p>
               <a
                 href="https://floorscribe.com"
