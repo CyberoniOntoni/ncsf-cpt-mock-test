@@ -29,7 +29,9 @@ import { cn, fullName } from "@/lib/utils";
 import { Badge, Button, Card, SectionLabel, Skeleton } from "./ui";
 import { ListRow } from "./list-row";
 import { StartSessionButton } from "./start-session-button";
+import { StartFromAppointmentButton } from "./start-from-appointment-button";
 import { HomeQuickCheckIn } from "./home-quick-checkin";
+import { QuickAddClient } from "./quick-add-client";
 import {
   AlertTriangle,
   ChevronDown,
@@ -41,6 +43,8 @@ import {
   Timer,
   UserPlus,
 } from "lucide-react";
+
+const ONBOARD_DISMISS_KEY = "floorscribe_onboarding_dismissed";
 
 type ClientHit = {
   id: string;
@@ -77,8 +81,24 @@ function needsYouBadge(kind: HomeNeedsYouItem["kind"]): {
   if (kind === "open_task") return { label: "Task", tone: "amber" };
   if (kind === "unpaid_invoice") return { label: "Unpaid", tone: "amber" };
   if (kind === "quiet_lead") return { label: "Lead", tone: "default" };
-  // quiet_client fallback (actionLabel usually "Open on floor")
   return { label: "Quiet", tone: "default" };
+}
+
+function readOnboardDismissed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(ONBOARD_DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeOnboardDismissed() {
+  try {
+    window.localStorage.setItem(ONBOARD_DISMISS_KEY, "1");
+  } catch {
+    /* ignore */
+  }
 }
 
 export function HomeWorkspace({
@@ -98,6 +118,7 @@ export function HomeWorkspace({
   const [agenda, setAgenda] = useState<HomeAgendaItem[]>([]);
   const [needsYou, setNeedsYou] = useState<HomeNeedsYouItem[]>([]);
   const [clientCount, setClientCount] = useState(0);
+  const [onboardDismissed, setOnboardDismissed] = useState(true);
   const [dashLoading, setDashLoading] = useState(true);
 
   const [clientPrograms, setClientPrograms] = useState<HomeClientProgram[]>(
@@ -123,6 +144,7 @@ export function HomeWorkspace({
       syncActiveClientUrl(stored);
     }
     setHydrated(true);
+    setOnboardDismissed(readOnboardDismissed());
   }, [initialClientId]);
 
   // Shell chip clear / other tabs → stay in sync
@@ -175,6 +197,9 @@ export function HomeWorkspace({
         // Always show header; expand only when there is work (collapsed "All clear")
         if (!opts?.soft) {
           setNeedsOpen(d.needsYou.length > 0);
+        } else if (d.needsYou.length > 0) {
+          // Soft refresh: surface new work when returning to the tab
+          setNeedsOpen(true);
         }
         // Soft return-to-tab: also refresh launch-card programs for sticky client
         if (opts?.soft) {
@@ -327,21 +352,30 @@ export function HomeWorkspace({
     });
   }, [selectedId, openSession, anyProgram, programDayId]);
 
+  const showFirstRun =
+    hydrated &&
+    !onboardDismissed &&
+    clientCount === 0 &&
+    !hasClient &&
+    !dashLoading;
+
   const headerHint = !hasClient
-    ? "Resume open sessions, clear Needs you, or pick a client."
+    ? clientCount === 0
+      ? "Add a client, then run the day from here."
+      : "Pick who's on the floor — or clear what's waiting below."
     : openSession
-      ? "Resume session, or open the program without resuming."
+      ? "Session open — resume when you're ready."
       : anyProgram
         ? programDayId
-          ? "Start session from the program day, or open the full plan."
-          : "Open the program to start a session day."
-        : "Design program, then start a session from a day.";
+          ? "Start from the program day, or open the full plan."
+          : "Open the program to pick a day and start."
+        : "Design a program, then start a session from a day.";
 
   const openSessionsEmpty = !hasClient
-    ? "Pick a client to resume or start a session."
+    ? "Pick a client to start or resume."
     : anyProgram
-      ? "Start session from the program below."
-      : "Design program, then start a session from a day.";
+      ? "Start from the program below."
+      : "Design a program, then start a session.";
 
   return (
     <div className="page-pad flex flex-1 flex-col gap-4 animate-in sm:gap-5">
@@ -349,7 +383,7 @@ export function HomeWorkspace({
       <header className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-500/90">
-            Floor ·{" "}
+            Today ·{" "}
             {new Date().toLocaleDateString(undefined, {
               weekday: "short",
               month: "short",
@@ -362,6 +396,82 @@ export function HomeWorkspace({
           <p className="mt-1 max-w-xl text-sm text-zinc-500">{headerHint}</p>
         </div>
       </header>
+
+      {/* First-run checklist — zero clients after register */}
+      {showFirstRun && (
+        <section
+          aria-label="Getting started"
+          className="rounded-xl border border-emerald-900/35 bg-emerald-950/15 p-4 sm:p-5"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-500/90">
+                Getting started
+              </p>
+              <h2 className="mt-1 text-base font-semibold text-zinc-50">
+                Your first five minutes
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Add a client, then you can book, design a program, and start a
+                session from this board.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="min-h-11 rounded-lg px-2 text-xs font-medium text-zinc-500 hover:text-zinc-300"
+              onClick={() => {
+                writeOnboardDismissed();
+                setOnboardDismissed(true);
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+          <ol className="mt-4 space-y-2 text-sm text-zinc-400">
+            <li className="flex gap-2">
+              <span className="font-semibold tabular-nums text-emerald-500">
+                1.
+              </span>
+              <span>
+                <span className="font-medium text-zinc-200">Add a client</span>
+                {" — "}
+                quick add below, or full intake if you need more detail.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="font-semibold tabular-nums text-zinc-600">2.</span>
+              <span>Optional: add a pack on the client profile.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="font-semibold tabular-nums text-zinc-600">3.</span>
+              <span>Design a program, book, then start from Today.</span>
+            </li>
+          </ol>
+          <div className="mt-4">
+            <QuickAddClient
+              defaultOpen
+              onCreated={(c) => {
+                const name = [c.firstName, c.lastName]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim();
+                setSelectedId(c.clientId);
+                setStoredActiveClient(c.clientId, name || c.firstName);
+                syncActiveClientUrl(c.clientId);
+                setClientCount((n) => Math.max(n, 1));
+                void loadDashboard();
+                void loadDetail(c.clientId);
+              }}
+            />
+            <Link
+              href="/clients/new"
+              className="mt-2 inline-flex min-h-11 items-center text-xs font-medium text-zinc-500 hover:text-emerald-400"
+            >
+              Or full intake →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Today agenda — booked sessions next 48h (always visible) */}
       <section aria-label="Agenda, next 48 hours">
@@ -385,15 +495,24 @@ export function HomeWorkspace({
         ) : agenda.length === 0 ? (
           <div className="space-y-1">
             <p className="text-sm text-zinc-600">
-              Nothing booked in the next 48h.
+              Nothing booked in the next two days.
             </p>
-            {hasClient && selectedId && (
+            {hasClient && selectedId ? (
               <Link
                 href={`/clients/${selectedId}#crm-appointments`}
                 className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400/90 hover:underline"
               >
                 Book for {clientName || "client"} →
               </Link>
+            ) : clientCount === 0 ? (
+              <p className="text-xs text-zinc-600">
+                Add a client first, then you can book from their profile.
+              </p>
+            ) : (
+              <p className="text-xs text-zinc-600">
+                Pick a client above, then book from their profile or the
+                calendar.
+              </p>
             )}
           </div>
         ) : (
@@ -407,19 +526,36 @@ export function HomeWorkspace({
                 minute: "2-digit",
               });
               return (
-                <li key={a.appointmentId}>
-                  <ListRow
+                <li
+                  key={a.appointmentId}
+                  className="flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-950/40 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-2.5"
+                >
+                  <Link
                     href={a.href}
-                    tone="default"
-                    title={a.clientName}
-                    subtitle={`${a.title} · ${when}`}
-                    trailing={<Badge tone="sky">Booked</Badge>}
+                    className="min-w-0 flex-1 rounded-lg px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
                     onClick={() => {
                       setSelectedId(a.clientId);
                       setStoredActiveClient(a.clientId, a.clientName);
                       syncActiveClientUrl(a.clientId);
                     }}
-                  />
+                  >
+                    <p className="truncate text-sm font-medium text-zinc-100">
+                      {a.clientName}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {a.title} · {when}
+                    </p>
+                  </Link>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 sm:px-0">
+                    <Badge tone="sky">Booked</Badge>
+                    <StartFromAppointmentButton
+                      appointmentId={a.appointmentId}
+                      clientId={a.clientId}
+                      clientName={a.clientName}
+                      hasLinkedSession={!!a.sessionId}
+                      className="min-h-11"
+                    />
+                  </div>
                 </li>
               );
             })}
@@ -442,7 +578,7 @@ export function HomeWorkspace({
         ) : inProgress.length === 0 ? (
           <Card className="border-dashed border-zinc-800 bg-zinc-950/40 py-3">
             <p className="text-sm text-zinc-500">
-              No open sessions. {openSessionsEmpty}
+              No session in progress. {openSessionsEmpty}
             </p>
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
               {!hasClient && (
@@ -502,15 +638,21 @@ export function HomeWorkspace({
         />
       </section>
 
-      {/* Empty activation (no client) */}
-      {!hasClient && hydrated && (
-        <section className="grid gap-2 sm:grid-cols-3" aria-label="Get started">
+      {/* Empty activation (no client) — demote Programs/Sessions until first client */}
+      {!hasClient && hydrated && !showFirstRun && (
+        <section
+          className={cn(
+            "grid gap-2",
+            clientCount === 0 ? "sm:grid-cols-1" : "sm:grid-cols-3"
+          )}
+          aria-label="Get started"
+        >
           <Card className="border-dashed border-zinc-700/80 bg-zinc-950/40 p-3">
             <div className="flex items-start gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-emerald-400">
                 <UserPlus className="h-4 w-4" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-zinc-200">
                   {clientCount === 0
                     ? "Add your first client"
@@ -518,18 +660,47 @@ export function HomeWorkspace({
                 </div>
                 <p className="mt-0.5 text-xs text-zinc-500">
                   {clientCount === 0
-                    ? "Search above or run full intake."
+                    ? "Quick add keeps the day moving. Full intake when you need more detail."
                     : "Search above to lock a client for the floor."}
                 </p>
-                <Link
-                  href="/clients/new"
-                  className="mt-2 inline-block text-xs font-medium text-emerald-400 hover:underline"
-                >
-                  Full intake →
-                </Link>
+                {clientCount === 0 ? (
+                  <div className="mt-2">
+                    <QuickAddClient
+                      onCreated={(c) => {
+                        const name = [c.firstName, c.lastName]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim();
+                        setSelectedId(c.clientId);
+                        setStoredActiveClient(
+                          c.clientId,
+                          name || c.firstName
+                        );
+                        syncActiveClientUrl(c.clientId);
+                        setClientCount((n) => Math.max(n, 1));
+                        void loadDashboard();
+                        void loadDetail(c.clientId);
+                      }}
+                    />
+                    <Link
+                      href="/clients/new"
+                      className="mt-2 inline-block text-xs font-medium text-zinc-500 hover:text-emerald-400"
+                    >
+                      Full intake →
+                    </Link>
+                  </div>
+                ) : (
+                  <Link
+                    href="/clients"
+                    className="mt-2 inline-block text-xs font-medium text-emerald-400 hover:underline"
+                  >
+                    Open clients →
+                  </Link>
+                )}
               </div>
             </div>
           </Card>
+          {clientCount > 0 && (
           <Card className="border-dashed border-zinc-700/80 bg-zinc-950/40 p-3">
             <div className="flex items-start gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-emerald-400">
@@ -551,6 +722,8 @@ export function HomeWorkspace({
               </div>
             </div>
           </Card>
+          )}
+          {clientCount > 0 && (
           <Card className="border-dashed border-zinc-700/80 bg-zinc-950/40 p-3">
             <div className="flex items-start gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-emerald-400">
@@ -572,6 +745,7 @@ export function HomeWorkspace({
               </div>
             </div>
           </Card>
+          )}
         </section>
       )}
 
@@ -780,13 +954,27 @@ export function HomeWorkspace({
               <Skeleton className="h-20 w-full rounded-xl" />
             ) : needsYou.length === 0 ? (
               <Card className="border-dashed border-zinc-800 bg-zinc-950/40 py-3.5">
-                <p className="text-sm text-zinc-400">
-                  Nothing needs you right now.
-                </p>
-                <p className="mt-0.5 text-xs text-zinc-600">
-                  Open tasks, unpaid invoices, soon bookings, quiet leads, low
-                  packs, and open sessions show up here.
-                </p>
+                {clientCount === 0 ? (
+                  <>
+                    <p className="text-sm text-zinc-400">
+                      Add a client to start Needs you.
+                    </p>
+                    <p className="mt-0.5 text-xs text-zinc-600">
+                      Tasks, packs, invoices, and quiet leads show up here when
+                      they need a touch.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-zinc-400">
+                      You&apos;re clear for now.
+                    </p>
+                    <p className="mt-0.5 text-xs text-zinc-600">
+                      Tasks, packs, invoices, and quiet leads show up here when
+                      they need a touch.
+                    </p>
+                  </>
+                )}
               </Card>
             ) : (
               <ul className="space-y-1.5">

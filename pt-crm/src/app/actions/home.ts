@@ -45,6 +45,7 @@ export type HomeAgendaItem = {
   title: string;
   startsAt: Date | string;
   href: string;
+  sessionId: string | null;
 };
 
 export type HomeClientProgram = {
@@ -208,7 +209,7 @@ export async function getHomeDashboardAction() {
           title: name,
           subtitle: "Has program · no completed session yet",
           href: `/?client=${c.id}`,
-          actionLabel: "Open on floor",
+          actionLabel: "Start session",
           clientId: c.id,
           urgency: "medium",
         });
@@ -225,7 +226,7 @@ export async function getHomeDashboardAction() {
         title: name,
         subtitle: `No session in ${days} days`,
         href: `/?client=${c.id}`,
-        actionLabel: "Open on floor",
+        actionLabel: "Start session",
         clientId: c.id,
         urgency: days >= 21 ? "high" : "medium",
       });
@@ -244,6 +245,7 @@ export async function getHomeDashboardAction() {
     title: a.title || "Session",
     startsAt: a.startsAt,
     href: `/clients/${a.clientId}#crm-appointments`,
+    sessionId: a.sessionId ?? null,
   }));
 
   for (const p of signals.lowPackages) {
@@ -281,7 +283,7 @@ export async function getHomeDashboardAction() {
       title: a.name,
       subtitle: `${a.title || "Session"} · ${when}`,
       href: `/clients/${a.clientId}#crm-appointments`,
-      actionLabel: "View booking",
+      actionLabel: a.sessionId ? "Resume session" : "Start session",
       clientId: a.clientId,
       urgency: "high",
     });

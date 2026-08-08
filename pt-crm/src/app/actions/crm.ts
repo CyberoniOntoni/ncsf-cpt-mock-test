@@ -921,6 +921,7 @@ export async function listOrgCrmSignalsAction() {
         startsAt: Date;
         title: string;
         appointmentId: string;
+        sessionId: string | null;
       }>,
       quietLeads: [] as Array<{ clientId: string; name: string }>,
       openTasks: [] as Array<{
@@ -975,6 +976,7 @@ export async function listOrgCrmSignalsAction() {
         clientId: clientAppointments.clientId,
         startsAt: clientAppointments.startsAt,
         title: clientAppointments.title,
+        sessionId: clientAppointments.sessionId,
       })
       .from(clientAppointments)
       .where(
@@ -1109,6 +1111,7 @@ export async function listOrgCrmSignalsAction() {
         startsAt: a.startsAt as Date,
         title: a.title,
         appointmentId: a.id,
+        sessionId: a.sessionId ?? null,
       };
     })
     .filter((x): x is NonNullable<typeof x> => x != null);

@@ -181,7 +181,7 @@ export async function startSessionFromAppointmentAction(appointmentId: string) {
 
   if (!program) {
     throw new Error(
-      "No active program for this client — design a plan before starting from the booking"
+      "Add a program for this client first, then start from the booking."
     );
   }
 

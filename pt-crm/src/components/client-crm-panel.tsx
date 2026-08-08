@@ -302,6 +302,9 @@ export function ClientCrmPanel({
   const [apptStart, setApptStart] = useState(defaultAppointmentLocal);
   const [apptTitle, setApptTitle] = useState("");
   const [apptDuration, setApptDuration] = useState("60");
+  /** Deep-linked from calendar with prefilled time */
+  const [fromCalendar, setFromCalendar] = useState(false);
+  const [bookSuccess, setBookSuccess] = useState<string | null>(null);
 
   // Check-in form
   const [channel, setChannel] = useState<CheckInChannel>("message");
@@ -371,23 +374,34 @@ export function ClientCrmPanel({
           scrollToId("crm-pack");
         }
       } else if (hash === "crm-appointments") {
-        const bookAt = parseBookAtParam(
+        const params =
           typeof window !== "undefined"
-            ? new URLSearchParams(window.location.search).get("bookAt")
-            : null
-        );
+            ? new URLSearchParams(window.location.search)
+            : null;
+        const bookAt = parseBookAtParam(params?.get("bookAt") ?? null);
+        const fromCal = params?.get("from") === "calendar";
         if (bookAt) {
           setApptStart(bookAt);
           setShowBookForm(true);
+          setFromCalendar(fromCal || true);
+          setBookSuccess(null);
           scrollToId(
             "crm-appointments",
             'input[type="datetime-local"], input, textarea'
           );
-          // Drop bookAt from URL so refresh doesn't re-open a stale prefill
+          // Drop bookAt / from so refresh doesn't re-open a stale prefill
           try {
             const url = new URL(window.location.href);
+            let dirty = false;
             if (url.searchParams.has("bookAt")) {
               url.searchParams.delete("bookAt");
+              dirty = true;
+            }
+            if (url.searchParams.has("from")) {
+              url.searchParams.delete("from");
+              dirty = true;
+            }
+            if (dirty) {
               const qs = url.searchParams.toString();
               window.history.replaceState(
                 {},
@@ -742,6 +756,19 @@ export function ClientCrmPanel({
     }
     const duration = Math.min(240, rawDur);
     const title = apptTitle.trim() || "Training session";
+    const whenLabel = (() => {
+      try {
+        return startDate.toLocaleString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch {
+        return title;
+      }
+    })();
     run(async () => {
       await createClientAppointmentAction({
         clientId,
@@ -753,6 +780,12 @@ export function ClientCrmPanel({
       setApptDuration("60");
       setApptStart(defaultAppointmentLocal());
       setShowBookForm(false);
+      setBookSuccess(
+        fromCalendar
+          ? `Booked ${whenLabel}. Back to calendar or start from the booking below when you're ready.`
+          : `Booked ${whenLabel}. Start from Next up when you're on the floor.`
+      );
+      setFromCalendar(false);
     });
   }
 
@@ -1415,11 +1448,38 @@ export function ClientCrmPanel({
           </p>
         )}
 
+        {bookSuccess && !showBookForm && (
+          <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-2.5 text-sm text-emerald-100/90">
+            <p>{bookSuccess}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Link
+                href="/calendar"
+                className="inline-flex min-h-11 items-center rounded-lg border border-emerald-800/50 bg-emerald-950/40 px-3 text-xs font-medium text-emerald-300 hover:bg-emerald-950/60"
+              >
+                Back to calendar
+              </Link>
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center px-2 text-xs font-medium text-zinc-500 hover:text-zinc-300"
+                onClick={() => setBookSuccess(null)}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         {showBookForm && (
           <form
             onSubmit={onCreateAppointment}
             className="space-y-2.5 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
           >
+            {fromCalendar && (
+              <p className="rounded-md border border-emerald-900/35 bg-emerald-950/20 px-2.5 py-2 text-[11px] leading-snug text-emerald-200/90">
+                From calendar — start time is prefilled for the day you picked.
+                Confirm duration and book.
+              </p>
+            )}
             <div className="grid gap-2 sm:grid-cols-2">
               <div>
                 <label
@@ -1523,7 +1583,7 @@ export function ClientCrmPanel({
                 href="/calendar"
                 className="inline-flex min-h-11 items-center px-2 text-xs text-zinc-500 hover:text-emerald-400"
               >
-                Open calendar
+                {fromCalendar ? "Cancel to calendar" : "Open calendar"}
               </Link>
             </div>
           </form>

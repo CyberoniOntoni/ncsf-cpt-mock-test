@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -9,7 +10,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, User } from "lucide-react";
 import {
   listCalendarAppointmentsAction,
   type CalendarAppointmentItem,
@@ -124,7 +125,22 @@ function firstName(full: string) {
   return t.split(/\s+/)[0] ?? t;
 }
 
+function bookClientHref(
+  clientId: string,
+  dateKey: string | null,
+  fromCalendar = true
+) {
+  const params = new URLSearchParams();
+  if (dateKey) {
+    params.set("bookAt", bookAtLocalFromDateKey(dateKey));
+  }
+  if (fromCalendar) params.set("from", "calendar");
+  const qs = params.toString();
+  return `/clients/${clientId}${qs ? `?${qs}` : ""}#crm-appointments`;
+}
+
 export function CalendarMonth() {
+  const router = useRouter();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -254,16 +270,25 @@ export function CalendarMonth() {
     setSelectedKey(toLocalDateKey(t));
   };
 
-  const bookHref =
-    stickyClientId && selectedKey
-      ? `/clients/${stickyClientId}?bookAt=${encodeURIComponent(bookAtLocalFromDateKey(selectedKey))}#crm-appointments`
-      : stickyClientId
-        ? `/clients/${stickyClientId}#crm-appointments`
-        : "/clients";
+  const bookHref = stickyClientId
+    ? bookClientHref(stickyClientId, selectedKey)
+    : "/clients";
 
   const bookLabel = stickyClientName
     ? `Book · ${firstName(stickyClientName)}`
     : "Book";
+
+  const goBookDay = useCallback(
+    (dateKey: string) => {
+      if (!stickyClientId) {
+        router.push("/clients");
+        return;
+      }
+      setStoredActiveClient(stickyClientId, stickyClientName ?? null);
+      router.push(bookClientHref(stickyClientId, dateKey));
+    },
+    [router, stickyClientId, stickyClientName]
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -342,17 +367,42 @@ export function CalendarMonth() {
         </div>
       </div>
 
-      {!stickyClientId && loaded && (
+      {loaded && stickyClientId ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-emerald-900/35 bg-emerald-950/15 px-3 py-2 text-xs text-emerald-100/90">
+          <span className="inline-flex items-center gap-1.5 font-medium text-emerald-200/90">
+            <User className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            Booking for
+          </span>
+          <span
+            className="min-w-0 max-w-[14rem] truncate font-medium text-zinc-100"
+            title={stickyClientName ?? undefined}
+          >
+            {stickyClientName || "Selected client"}
+          </span>
+          <span className="text-zinc-500">
+            Tap a day, then Book — time is prefilled.
+          </span>
+          <Link
+            href="/"
+            className="font-medium text-emerald-400 hover:underline"
+          >
+            Change on Today
+          </Link>
+        </div>
+      ) : loaded ? (
         <p className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-xs leading-relaxed text-zinc-500">
-          Tip: set a sticky client on{" "}
-          <Link href="/" className="font-medium text-emerald-400 hover:underline">
+          Set who you&apos;re booking for on{" "}
+          <Link
+            href="/"
+            className="font-medium text-emerald-400 hover:underline"
+          >
             Today
           </Link>{" "}
-          or a client profile, then tap a day and{" "}
-          <span className="text-zinc-400">Book</span> — time is prefilled for
-          that day.
+          (sticky client), then tap a day and{" "}
+          <span className="text-zinc-400">Book</span>. Double-click a day to
+          jump straight to the form.
         </p>
-      )}
+      ) : null}
 
       {error && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm text-red-200">
@@ -431,13 +481,11 @@ export function CalendarMonth() {
                 onClick={() => selectDay(cell.dateKey, cell.month, cell.year)}
                 onDoubleClick={() => {
                   selectDay(cell.dateKey, cell.month, cell.year);
-                  if (!stickyClientId) return;
-                  setStoredActiveClient(
-                    stickyClientId,
-                    stickyClientName ?? null
-                  );
-                  const href = `/clients/${stickyClientId}?bookAt=${encodeURIComponent(bookAtLocalFromDateKey(cell.dateKey))}#crm-appointments`;
-                  window.location.assign(href);
+                  if (!stickyClientId) {
+                    router.push("/clients");
+                    return;
+                  }
+                  goBookDay(cell.dateKey);
                 }}
                 className={cn(
                   "flex min-h-11 flex-col rounded-md border p-1 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:min-h-[5.5rem] sm:rounded-lg sm:p-2",
@@ -570,7 +618,7 @@ export function CalendarMonth() {
               }
             >
               <Plus className="h-3.5 w-3.5" aria-hidden />
-              Book this day
+              {selectedItems.length > 0 ? "Book another" : "Book this day"}
             </Link>
           )}
         </div>
@@ -582,8 +630,8 @@ export function CalendarMonth() {
             <p className="text-sm text-zinc-500">
               No bookings this day.
               {stickyClientId
-                ? " Schedule for your sticky client with Book this day."
-                : " Pick a sticky client first, then book."}
+                ? ` Book ${firstName(stickyClientName || "client")} with a prefilled start time.`
+                : " Pick who you're booking for, then book this day."}
             </p>
             {stickyClientId ? (
               <Link
@@ -609,74 +657,96 @@ export function CalendarMonth() {
             )}
           </div>
         ) : (
-          <ul className="mt-3 space-y-2">
-            {selectedItems.map((a) => {
-              const overdue = isPastDue(a.startsAt, a.status);
-              return (
-                <li
-                  key={a.id}
-                  className={cn(
-                    "flex flex-col gap-2 rounded-lg border bg-zinc-950/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between",
-                    overdue
-                      ? "border-amber-900/45 bg-amber-950/15"
-                      : a.status === "scheduled"
-                        ? "border-zinc-800"
-                        : "border-zinc-800/80 opacity-85"
-                  )}
-                >
-                  <Link
-                    href={`/clients/${a.clientId}#crm-appointments`}
-                    onClick={() =>
-                      setStoredActiveClient(a.clientId, a.clientName)
-                    }
-                    className="min-w-0 flex-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
+          <>
+            <ul className="mt-3 space-y-2">
+              {selectedItems.map((a) => {
+                const overdue = isPastDue(a.startsAt, a.status);
+                return (
+                  <li
+                    key={a.id}
+                    className={cn(
+                      "flex flex-col gap-2 rounded-lg border bg-zinc-950/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between",
+                      overdue
+                        ? "border-amber-900/45 bg-amber-950/15"
+                        : a.status === "scheduled"
+                          ? "border-zinc-800"
+                          : "border-zinc-800/80 opacity-85"
+                    )}
                   >
-                    <p className="truncate text-sm font-medium text-zinc-100">
-                      {a.clientName}
-                    </p>
-                    <p className="text-xs text-zinc-400">
-                      <span className="tabular-nums">
-                        {formatTime(a.startsAt)}
-                      </span>
-                      {(() => {
-                        const dur = formatDuration(a.startsAt, a.endsAt);
-                        return dur ? (
-                          <span className="tabular-nums text-zinc-500">
-                            {" "}
-                            · {dur}
-                          </span>
-                        ) : null;
-                      })()}
-                      {" · "}
-                      {a.title}
-                    </p>
-                  </Link>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone={statusTone(a.status, overdue)}>
-                      {statusLabel(a.status, overdue)}
-                    </Badge>
-                    {a.status === "scheduled" && (
-                      <StartFromAppointmentButton
-                        appointmentId={a.id}
-                        clientId={a.clientId}
-                        clientName={a.clientName}
-                        hasLinkedSession={!!a.sessionId}
-                        className="min-h-11"
-                      />
-                    )}
-                    {a.sessionId && a.status !== "scheduled" && (
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-100">
+                        {a.clientName}
+                      </p>
+                      <p className="text-xs text-zinc-400">
+                        <span className="tabular-nums">
+                          {formatTime(a.startsAt)}
+                        </span>
+                        {(() => {
+                          const dur = formatDuration(a.startsAt, a.endsAt);
+                          return dur ? (
+                            <span className="tabular-nums text-zinc-500">
+                              {" "}
+                              · {dur}
+                            </span>
+                          ) : null;
+                        })()}
+                        {" · "}
+                        {a.title}
+                      </p>
                       <Link
-                        href={`/sessions/${a.sessionId}`}
-                        className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-100 hover:bg-zinc-700"
+                        href={`/clients/${a.clientId}#crm-appointments`}
+                        onClick={() =>
+                          setStoredActiveClient(a.clientId, a.clientName)
+                        }
+                        className="mt-1 inline-flex min-h-9 items-center text-[11px] font-medium text-zinc-500 hover:text-emerald-400"
                       >
-                        Open log
+                        Open booking on client →
                       </Link>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={statusTone(a.status, overdue)}>
+                        {statusLabel(a.status, overdue)}
+                      </Badge>
+                      {a.status === "scheduled" && (
+                        <StartFromAppointmentButton
+                          appointmentId={a.id}
+                          clientId={a.clientId}
+                          clientName={a.clientName}
+                          hasLinkedSession={!!a.sessionId}
+                          className="min-h-11"
+                        />
+                      )}
+                      {a.sessionId && a.status !== "scheduled" && (
+                        <Link
+                          href={`/sessions/${a.sessionId}`}
+                          className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-100 hover:bg-zinc-700"
+                        >
+                          Open log
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {stickyClientId && (
+              <p className="mt-3 text-[11px] text-zinc-600">
+                Need another slot?{" "}
+                <Link
+                  href={bookHref}
+                  onClick={() =>
+                    setStoredActiveClient(
+                      stickyClientId,
+                      stickyClientName ?? null
+                    )
+                  }
+                  className="font-medium text-emerald-400/90 hover:underline"
+                >
+                  Book another for {firstName(stickyClientName || "client")}
+                </Link>
+              </p>
+            )}
+          </>
         )}
       </section>
     </div>

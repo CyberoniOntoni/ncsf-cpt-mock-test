@@ -1300,7 +1300,14 @@ export function SessionLogger({
           setPackBurnEmpty(true);
         } else if (pb?.reason === "no_pack" && client?.id) {
           packBit = " · No pack";
-          setPackBurnLine("No active pack — add one on the client to track remaining");
+          setPackBurnLine(
+            "No active pack — add one on the client to track remaining"
+          );
+        } else if (pb?.reason === "error") {
+          packBit = " · Pack not updated";
+          setPackBurnLine(
+            "Pack not updated — check the client package, then adjust if needed"
+          );
         } else {
           setPackBurnLine(null);
         }
