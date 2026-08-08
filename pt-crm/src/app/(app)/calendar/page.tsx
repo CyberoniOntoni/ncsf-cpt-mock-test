@@ -18,7 +18,7 @@ export default function CalendarPage() {
     <PageShell className="space-y-4">
       <PageHeader
         title="Calendar"
-        description="See the month, pick a day, book your client, then start the session from the booking."
+        description="Pick a day, choose a client, set time and session type — book without leaving the calendar."
         eyebrow={<AreaEyebrow areaId="people" current="Calendar" />}
       />
       <StickyClientFilterBanner />

@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -16,6 +19,8 @@ import {
 } from "@/lib/client-timeline";
 import { cn } from "@/lib/utils";
 import { Badge, EmptyState, SectionLabel } from "./ui";
+
+const TIMELINE_PREVIEW = 8;
 
 function KindIcon({ kind }: { kind: TimelineKind }) {
   const cls = "h-3.5 w-3.5";
@@ -78,6 +83,10 @@ export function ClientTimeline({
   items: ClientTimelineItem[];
   clientId: string;
 }) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? items : items.slice(0, TIMELINE_PREVIEW);
+  const overflow = items.length - TIMELINE_PREVIEW;
+
   return (
     <section
       id="timeline"
@@ -92,7 +101,7 @@ export function ClientTimeline({
           </SectionLabel>
         </div>
         <p className="text-[11px] text-zinc-600">
-          Sessions · bookings · invoices · tasks · check-ins
+          Sessions · bookings · invoices · follow-ups · check-ins
         </p>
       </div>
 
@@ -112,8 +121,9 @@ export function ClientTimeline({
           className="rounded-xl border border-zinc-800/60 bg-zinc-950/40 py-6"
         />
       ) : (
+        <>
         <ol className="relative space-y-0 border-l border-zinc-800 ml-2 pl-0">
-          {items.map((item, i) => {
+          {visible.map((item, i) => {
             const when = fmtWhen(item.at);
             const inner = (
               <>
@@ -192,6 +202,16 @@ export function ClientTimeline({
             );
           })}
         </ol>
+        {overflow > 0 && (
+          <button
+            type="button"
+            className="mt-3 min-h-11 text-xs font-medium text-emerald-400/90 hover:underline"
+            onClick={() => setShowAll((v) => !v)}
+          >
+            {showAll ? "Show less" : `Show all (${items.length})`}
+          </button>
+        )}
+        </>
       )}
     </section>
   );

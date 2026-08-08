@@ -53,7 +53,7 @@ export function StickyClientFilterBanner({
       aria-label={`Workspace client ${name}${filteredHere ? `, filtered to this ${listNoun} list` : ""}`}
     >
       <span className="shrink-0 font-medium text-emerald-200/90">
-        Workspace
+        Client on hand
       </span>
       <span className="min-w-0 max-w-[12rem] truncate font-medium text-zinc-100 sm:max-w-[16rem]" title={name}>
         {name}

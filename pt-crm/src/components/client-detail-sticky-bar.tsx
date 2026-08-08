@@ -172,7 +172,7 @@ export function ClientDetailStickyBar({
                     ? "bg-amber-900/40 text-amber-200 hover:bg-amber-900/55"
                     : "bg-zinc-800/80 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
                 )}
-                title="Jump to packages"
+                title="Jump to pack"
               >
                 {packLabel}
               </Link>

@@ -39,7 +39,7 @@ function kindLabel(kind: TimelineKind): string {
     case "appointment":
       return "Booking";
     case "task":
-      return "Task";
+      return "Follow-up";
     case "checkin":
       return "Check-in";
     case "note":

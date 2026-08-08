@@ -206,7 +206,11 @@ export default async function ClientDetailPage({
     });
   }
   if (!assessments.length) {
-    gaps.push({ key: "screens", label: "Screens", href: "#movement-screens" });
+    gaps.push({
+      key: "screens",
+      label: "Screens",
+      href: `/clients/${client.id}/assessments`,
+    });
   }
 
   const goalsPreview = client.goals?.trim()
@@ -338,8 +342,30 @@ export default async function ClientDetailPage({
         ? null
         : { label: next.label, href: next.href };
 
-  /** Up next: only exceptional context (not a second dashboard) */
-  const showUpNext = !!(liveSession || injuriesText || gaps.length > 0);
+  const nextBooking = crm.nextAppointment;
+  const nextBookingMs = nextBooking
+    ? new Date(nextBooking.startsAt).getTime()
+    : NaN;
+  const nextBookingOverdue =
+    nextBooking?.status === "scheduled" &&
+    Number.isFinite(nextBookingMs) &&
+    nextBookingMs < Date.now() - 60_000;
+  const packLow =
+    !!crm.activePackage && crm.activePackage.remaining <= 2;
+  const unpaidN = (crm.invoices || []).filter(
+    (i) => i.status === "unpaid"
+  ).length;
+
+  /** Up next: ops + risk + gaps when anything needs a glance */
+  const showUpNext = !!(
+    liveSession ||
+    injuriesText ||
+    nextBooking ||
+    packLow ||
+    hadExhaustedPack ||
+    unpaidN > 0 ||
+    gaps.length > 0
+  );
 
   /** Human next line — skip when live session already says it */
   const showUpNextOutcome = !liveSession;
@@ -556,15 +582,6 @@ export default async function ClientDetailPage({
                     Open program
                   </Link>
                 )}
-              {/* Single Deactivate for active roster — Reactivate lives in inactive banner */}
-              {!isInactive && (
-                <ClientDeactivateControl
-                  clientId={client.id}
-                  clientName={name}
-                  status={client.status}
-                  compact
-                />
-              )}
             </div>
           }
         />
@@ -601,6 +618,61 @@ export default async function ClientDetailPage({
                       <ChevronRight className="h-4 w-4 text-amber-500/80" />
                     </span>
                   }
+                />
+              </li>
+            )}
+
+            {nextBooking && (
+              <li>
+                <ListRow
+                  href={`#crm-appointments`}
+                  tone={nextBookingOverdue ? "warn" : "default"}
+                  title={nextBooking.title || "Booking"}
+                  subtitle={`${fmtWhen(nextBooking.startsAt)}${
+                    nextBookingOverdue ? " · past due" : ""
+                  }`}
+                  trailing={
+                    <Badge tone={nextBookingOverdue ? "amber" : "sky"}>
+                      {nextBookingOverdue ? "Past due" : "Booked"}
+                    </Badge>
+                  }
+                />
+              </li>
+            )}
+
+            {(packLow || hadExhaustedPack) && (
+              <li>
+                <ListRow
+                  href="#crm-pack"
+                  tone="warn"
+                  title={
+                    crm.activePackage
+                      ? crm.activePackage.remaining === 0
+                        ? "Pack empty"
+                        : `Pack · ${crm.activePackage.remaining} left`
+                      : "Renew pack"
+                  }
+                  subtitle={
+                    crm.activePackage?.name ||
+                    "Add or renew a pack to track sessions"
+                  }
+                  trailing={<Badge tone="amber">Pack</Badge>}
+                />
+              </li>
+            )}
+
+            {unpaidN > 0 && (
+              <li>
+                <ListRow
+                  href="#crm-invoices"
+                  tone="warn"
+                  title={
+                    unpaidN === 1
+                      ? "1 unpaid invoice"
+                      : `${unpaidN} unpaid invoices`
+                  }
+                  subtitle="Mark paid when cash lands"
+                  trailing={<Badge tone="amber">Unpaid</Badge>}
                 />
               </li>
             )}
@@ -826,12 +898,7 @@ export default async function ClientDetailPage({
         </Card>
       </div>
 
-      {/* Relationship diary — sessions + bookings + tasks + check-ins */}
-      <Card padding="sm" className="border-zinc-800/80">
-        <ClientTimeline items={timelineItems} clientId={client.id} />
-      </Card>
-
-      {/* CRM spine — packages, calendar, check-ins (after floor work) */}
+      {/* Desk — write surfaces before diary */}
       <div id="crm" className="scroll-mt-client">
         <ClientCrmPanel
           clientId={client.id}
@@ -840,6 +907,11 @@ export default async function ClientDetailPage({
           snapshot={crm}
         />
       </div>
+
+      {/* Relationship diary — after pack / book / pay */}
+      <Card padding="sm" className="border-zinc-800/80">
+        <ClientTimeline items={timelineItems} clientId={client.id} />
+      </Card>
 
       {/* Progress = proof (after work) */}
       {progress && (
@@ -984,6 +1056,21 @@ export default async function ClientDetailPage({
           })()}
         </Card>
       </div>
+
+      {/* Admin — away from floor primary CTA */}
+      {!isInactive && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-900/80 pt-4">
+          <p className="text-[11px] text-zinc-600">
+            Roster admin — does not delete history.
+          </p>
+          <ClientDeactivateControl
+            clientId={client.id}
+            clientName={name}
+            status={client.status}
+            compact
+          />
+        </div>
+      )}
     </PageShell>
   );
 }

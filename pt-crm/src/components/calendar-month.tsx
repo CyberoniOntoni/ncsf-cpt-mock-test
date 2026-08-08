@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -17,7 +16,6 @@ import {
 } from "@/app/actions/crm";
 import {
   WEEKDAY_LABELS,
-  bookAtLocalFromDateKey,
   buildMonthGrid,
   monthGridRange,
   monthTitle,
@@ -31,6 +29,7 @@ import {
   subscribeActiveClient,
 } from "@/lib/active-client";
 import { cn } from "@/lib/utils";
+import { CalendarBookDialog } from "./calendar-book-dialog";
 import { StartFromAppointmentButton } from "./start-from-appointment-button";
 import { Badge, Button, Skeleton } from "./ui";
 
@@ -125,22 +124,7 @@ function firstName(full: string) {
   return t.split(/\s+/)[0] ?? t;
 }
 
-function bookClientHref(
-  clientId: string,
-  dateKey: string | null,
-  fromCalendar = true
-) {
-  const params = new URLSearchParams();
-  if (dateKey) {
-    params.set("bookAt", bookAtLocalFromDateKey(dateKey));
-  }
-  if (fromCalendar) params.set("from", "calendar");
-  const qs = params.toString();
-  return `/clients/${clientId}${qs ? `?${qs}` : ""}#crm-appointments`;
-}
-
 export function CalendarMonth() {
-  const router = useRouter();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -153,6 +137,9 @@ export function CalendarMonth() {
   const [loaded, setLoaded] = useState(false);
   const [stickyClientId, setStickyClientId] = useState<string | null>(null);
   const [stickyClientName, setStickyClientName] = useState<string | null>(null);
+  const [bookOpen, setBookOpen] = useState(false);
+  const [bookDateKey, setBookDateKey] = useState<string | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
   const loadGen = useRef(0);
   const dayPanelRef = useRef<HTMLElement | null>(null);
 
@@ -270,28 +257,36 @@ export function CalendarMonth() {
     setSelectedKey(toLocalDateKey(t));
   };
 
-  const bookHref = stickyClientId
-    ? bookClientHref(stickyClientId, selectedKey)
-    : "/clients";
-
   const bookLabel = stickyClientName
     ? `Book · ${firstName(stickyClientName)}`
     : "Book";
 
-  const goBookDay = useCallback(
-    (dateKey: string) => {
-      if (!stickyClientId) {
-        router.push("/clients");
-        return;
-      }
-      setStoredActiveClient(stickyClientId, stickyClientName ?? null);
-      router.push(bookClientHref(stickyClientId, dateKey));
+  const openBook = useCallback(
+    (dateKey: string | null) => {
+      const key = dateKey || selectedKey || toLocalDateKey(new Date());
+      setSelectedKey(key);
+      setBookDateKey(key);
+      setBookOpen(true);
+      setFlash(null);
     },
-    [router, stickyClientId, stickyClientName]
+    [selectedKey]
   );
 
   return (
     <div className="flex flex-col gap-4">
+      {bookDateKey && (
+        <CalendarBookDialog
+          open={bookOpen}
+          dateKey={bookDateKey}
+          initialClientId={stickyClientId}
+          initialClientName={stickyClientName}
+          onClose={() => setBookOpen(false)}
+          onBooked={(summary) => {
+            setFlash(summary || "Session booked — it shows on this day.");
+            load(year, month);
+          }}
+        />
+      )}
       {/* Month chrome */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-0.5 sm:gap-1">
@@ -340,69 +335,60 @@ export function CalendarMonth() {
           >
             Today
           </Button>
-          {stickyClientId ? (
-            <Link
-              href={bookHref}
-              title={
-                stickyClientName
-                  ? `Book for ${stickyClientName}`
-                  : "Book appointment"
-              }
-              onClick={() =>
-                setStoredActiveClient(stickyClientId, stickyClientName ?? null)
-              }
-              className="inline-flex min-h-11 max-w-[12rem] items-center justify-center gap-1.5 truncate rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm shadow-emerald-950/40 transition hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70 sm:max-w-[16rem]"
-            >
-              <Plus className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="truncate">{bookLabel}</span>
-            </Link>
-          ) : (
-            <Link
-              href="/clients"
-              className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 px-3.5 py-2 text-sm font-medium text-zinc-100 transition hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/70"
-            >
-              Pick client to book
-            </Link>
-          )}
+          <Button
+            type="button"
+            size="sm"
+            className="min-h-11 max-w-[14rem] gap-1.5 truncate px-3.5"
+            title={
+              stickyClientName
+                ? `Book for ${stickyClientName}`
+                : "Book a session on the selected day"
+            }
+            onClick={() => openBook(selectedKey)}
+          >
+            <Plus className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">{bookLabel}</span>
+          </Button>
         </div>
       </div>
 
-      {loaded && stickyClientId ? (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-emerald-900/35 bg-emerald-950/15 px-3 py-2 text-xs text-emerald-100/90">
-          <span className="inline-flex items-center gap-1.5 font-medium text-emerald-200/90">
-            <User className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            Booking for
-          </span>
-          <span
-            className="min-w-0 max-w-[14rem] truncate font-medium text-zinc-100"
-            title={stickyClientName ?? undefined}
+      {flash && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-900/40 bg-emerald-950/20 px-3 py-2 text-sm text-emerald-100/90"
+        >
+          <p>{flash}</p>
+          <button
+            type="button"
+            className="min-h-9 text-xs font-medium text-emerald-400/90 hover:underline"
+            onClick={() => setFlash(null)}
           >
-            {stickyClientName || "Selected client"}
-          </span>
-          <span className="text-zinc-500">
-            Tap a day, then Book — time is prefilled.
-          </span>
-          <Link
-            href="/"
-            className="font-medium text-emerald-400 hover:underline"
-          >
-            Change on Today
-          </Link>
+            Dismiss
+          </button>
         </div>
-      ) : loaded ? (
+      )}
+
+      {loaded && (
         <p className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-xs leading-relaxed text-zinc-500">
-          Set who you&apos;re booking for on{" "}
-          <Link
-            href="/"
-            className="font-medium text-emerald-400 hover:underline"
-          >
-            Today
-          </Link>{" "}
-          (sticky client), then tap a day and{" "}
-          <span className="text-zinc-400">Book</span>. Double-click a day to
-          jump straight to the form.
+          {stickyClientId ? (
+            <>
+              <span className="inline-flex items-center gap-1 font-medium text-zinc-300">
+                <User className="h-3.5 w-3.5" aria-hidden />
+                {stickyClientName || "Client"}
+              </span>
+              {" pre-selected. "}
+              Tap a day and <span className="text-zinc-400">Book</span>, or
+              double-click a day. You can still change the client in the form.
+            </>
+          ) : (
+            <>
+              Tap a day and <span className="text-zinc-400">Book</span> — pick
+              the client, time, and session type without leaving the calendar.
+              Double-click a day for the same form.
+            </>
+          )}
         </p>
-      ) : null}
+      )}
 
       {error && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm text-red-200">
@@ -462,11 +448,7 @@ export function CalendarMonth() {
                 role="gridcell"
                 aria-selected={selected}
                 aria-current={cell.isToday ? "date" : undefined}
-                title={
-                  stickyClientId
-                    ? "Click to view · double-click to book"
-                    : undefined
-                }
+                title="Click to view · double-click to book"
                 aria-label={`${(parseLocalDateKey(cell.dateKey) ?? new Date()).toLocaleDateString(undefined, {
                   weekday: "long",
                   month: "long",
@@ -477,15 +459,11 @@ export function CalendarMonth() {
                         pastDueN ? `, ${pastDueN} past due` : ""
                       }`
                     : ", no bookings"
-                }${stickyClientId ? ". Double-click to book." : ""}`}
+                }. Double-click to book.`}
                 onClick={() => selectDay(cell.dateKey, cell.month, cell.year)}
                 onDoubleClick={() => {
                   selectDay(cell.dateKey, cell.month, cell.year);
-                  if (!stickyClientId) {
-                    router.push("/clients");
-                    return;
-                  }
-                  goBookDay(cell.dateKey);
+                  openBook(cell.dateKey);
                 }}
                 className={cn(
                   "flex min-h-11 flex-col rounded-md border p-1 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 sm:min-h-[5.5rem] sm:rounded-lg sm:p-2",
@@ -609,17 +587,17 @@ export function CalendarMonth() {
               </p>
             )}
           </div>
-          {selectedKey && stickyClientId && (
-            <Link
-              href={bookHref}
-              className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-emerald-900/40 bg-emerald-950/30 px-3 text-xs font-medium text-emerald-300 transition hover:border-emerald-800/50 hover:bg-emerald-950/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-              onClick={() =>
-                setStoredActiveClient(stickyClientId, stickyClientName ?? null)
-              }
+          {selectedKey && (
+            <Button
+              type="button"
+              size="sm"
+              variant={selectedItems.length > 0 ? "secondary" : "primary"}
+              className="min-h-11 gap-1"
+              onClick={() => openBook(selectedKey)}
             >
               <Plus className="h-3.5 w-3.5" aria-hidden />
               {selectedItems.length > 0 ? "Book another" : "Book this day"}
-            </Link>
+            </Button>
           )}
         </div>
 
@@ -628,33 +606,17 @@ export function CalendarMonth() {
         ) : selectedItems.length === 0 ? (
           <div className="mt-3 space-y-2">
             <p className="text-sm text-zinc-500">
-              No bookings this day.
-              {stickyClientId
-                ? ` Book ${firstName(stickyClientName || "client")} with a prefilled start time.`
-                : " Pick who you're booking for, then book this day."}
+              No bookings this day. Book here — pick client, time, and session
+              type without opening a profile.
             </p>
-            {stickyClientId ? (
-              <Link
-                href={bookHref}
-                onClick={() =>
-                  setStoredActiveClient(
-                    stickyClientId,
-                    stickyClientName ?? null
-                  )
-                }
-                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-sm font-medium text-white shadow-sm shadow-emerald-950/40 transition hover:bg-emerald-500"
-              >
-                <Plus className="h-4 w-4" aria-hidden />
-                {bookLabel}
-              </Link>
-            ) : (
-              <Link
-                href="/clients"
-                className="inline-flex min-h-11 items-center text-sm font-medium text-emerald-400 hover:underline"
-              >
-                Choose a client →
-              </Link>
-            )}
+            <Button
+              type="button"
+              className="min-h-11 gap-1.5"
+              onClick={() => openBook(selectedKey)}
+            >
+              <Plus className="h-4 w-4" aria-hidden />
+              {bookLabel}
+            </Button>
           </div>
         ) : (
           <>
@@ -729,23 +691,19 @@ export function CalendarMonth() {
                 );
               })}
             </ul>
-            {stickyClientId && (
-              <p className="mt-3 text-[11px] text-zinc-600">
-                Need another slot?{" "}
-                <Link
-                  href={bookHref}
-                  onClick={() =>
-                    setStoredActiveClient(
-                      stickyClientId,
-                      stickyClientName ?? null
-                    )
-                  }
-                  className="font-medium text-emerald-400/90 hover:underline"
-                >
-                  Book another for {firstName(stickyClientName || "client")}
-                </Link>
-              </p>
-            )}
+            <p className="mt-3 text-[11px] text-zinc-600">
+              Need another slot?{" "}
+              <button
+                type="button"
+                className="font-medium text-emerald-400/90 hover:underline"
+                onClick={() => openBook(selectedKey)}
+              >
+                Book another
+                {stickyClientName
+                  ? ` for ${firstName(stickyClientName)}`
+                  : ""}
+              </button>
+            </p>
           </>
         )}
       </section>

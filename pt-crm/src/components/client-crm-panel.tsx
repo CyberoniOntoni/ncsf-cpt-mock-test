@@ -291,6 +291,12 @@ export function ClientCrmPanel({
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   /** Voided invoices stay out of the way until expanded */
   const [showVoidInvoices, setShowVoidInvoices] = useState(false);
+  /** Pack ±1 adjust — behind disclosure unless pack is low */
+  const [showPackAdjust, setShowPackAdjust] = useState(false);
+  /** Next booking: show No-show / Cancel */
+  const [showNextApptMore, setShowNextApptMore] = useState(false);
+  /** History row expanded actions */
+  const [expandedApptId, setExpandedApptId] = useState<string | null>(null);
 
   // Package form — "used" is advanced (importing a mid-pack); default 0
   const [pkgName, setPkgName] = useState("");
@@ -908,10 +914,10 @@ export function ClientCrmPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <SectionLabel as="h2" className="mb-0">
-            Packages & schedule
+            Desk
           </SectionLabel>
           <p className="mt-0.5 text-[11px] text-zinc-600">
-            Packs · bookings · invoices · check-ins
+            Bookings · pack · invoices · follow-ups · check-ins
           </p>
         </div>
         {pending && (
@@ -939,21 +945,25 @@ export function ClientCrmPanel({
         </p>
       )}
 
-      {/* Summary strip — omit stage while pipeline is open (chips are source of truth) */}
+      {/* Summary strip — pack / next booking / unpaid (stage lives on page header) */}
       <div
         className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-zinc-800/80 bg-zinc-950/30 px-3 py-2 text-xs text-zinc-500"
         aria-label={summaryAria}
       >
-        {!showStagePipeline && (
-          <>
-            <span className="font-medium text-zinc-300">
-              {clientStageLabel(stage)}
-            </span>
-            <span className="text-zinc-700" aria-hidden>
-              ·
-            </span>
-          </>
-        )}
+        <a
+          href="#crm-appointments"
+          className={cn(
+            "tabular-nums transition hover:underline",
+            nextAppointment
+              ? "text-zinc-300 hover:text-zinc-100"
+              : "text-zinc-600 hover:text-zinc-400"
+          )}
+        >
+          {summaryBooking}
+        </a>
+        <span className="text-zinc-700" aria-hidden>
+          ·
+        </span>
         <a
           href="#crm-pack"
           className={cn(
@@ -968,20 +978,6 @@ export function ClientCrmPanel({
           )}
         >
           {summaryPack}
-        </a>
-        <span className="text-zinc-700" aria-hidden>
-          ·
-        </span>
-        <a
-          href="#crm-appointments"
-          className={cn(
-            "tabular-nums transition hover:underline",
-            nextAppointment
-              ? "text-zinc-400 hover:text-zinc-200"
-              : "text-zinc-600 hover:text-zinc-400"
-          )}
-        >
-          {summaryBooking}
         </a>
         {summaryUnpaid && (
           <>
@@ -998,313 +994,6 @@ export function ClientCrmPanel({
         )}
       </div>
 
-      {/* Stage pipeline — collapsed when set (except draft). Deactivate/reactivate live in page header. */}
-      <section className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-            Stage
-          </p>
-          <button
-            type="button"
-            className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline disabled:opacity-50"
-            disabled={pending}
-            aria-expanded={showStagePipeline}
-            onClick={() => setShowStagePipeline((v) => !v)}
-          >
-            {showStagePipeline ? "Done" : "Change stage"}
-          </button>
-        </div>
-        {showStagePipeline && (
-          <div
-            className="flex flex-wrap gap-1.5"
-            role="group"
-            aria-label={stageAria}
-          >
-            {stageButtons.map((s) => {
-              const active = stage === s;
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  disabled={pending}
-                  onClick={() => onStageChange(s)}
-                  aria-pressed={active}
-                  className={cn(
-                    "min-h-11 rounded-full border px-3 py-1.5 text-xs font-medium transition",
-                    active
-                      ? "border-emerald-700/60 bg-emerald-950/50 text-emerald-300"
-                      : "border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200",
-                    pending && "opacity-60"
-                  )}
-                >
-                  {clientStageLabel(s)}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* Package */}
-      <section
-        id="crm-pack"
-        className="scroll-mt-client space-y-2 border-t border-zinc-800/80 pt-4"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-            Package
-          </p>
-          {activePackage && (
-            <button
-              type="button"
-              className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
-              aria-expanded={showAddPack}
-              onClick={() => setShowAddPack((v) => !v)}
-            >
-              {showAddPack ? "Done" : "Add package"}
-            </button>
-          )}
-        </div>
-
-        {activePackage ? (
-          <div
-            className={cn(
-              "rounded-lg border px-3 py-2.5",
-              lowRemaining
-                ? "border-amber-900/45 bg-amber-950/20"
-                : "border-zinc-800 bg-zinc-950/40"
-            )}
-          >
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <p className="text-sm font-medium text-zinc-100">
-                    {activePackage.name}
-                  </p>
-                  {lowRemaining && (
-                    <Badge tone="amber">
-                      {activePackage.remaining === 0
-                        ? "Empty"
-                        : "Low"}
-                    </Badge>
-                  )}
-                </div>
-                <p className="mt-0.5 text-xs tabular-nums text-zinc-400">
-                  <span
-                    className={cn(
-                      "font-semibold",
-                      lowRemaining ? "text-amber-300" : "text-zinc-200"
-                    )}
-                  >
-                    {activePackage.remaining}
-                  </span>
-                  {" of "}
-                  {activePackage.total} remaining
-                  <span className="text-zinc-600">
-                    {" "}
-                    · {activePackage.used} used
-                  </span>
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={pending || activePackage.used <= 0}
-                  onClick={() => onAdjustUsed(-1)}
-                  aria-label="Undo one used session"
-                  className="min-h-11"
-                >
-                  −1 used
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={
-                    pending || activePackage.used >= activePackage.total
-                  }
-                  onClick={() => onAdjustUsed(1)}
-                  aria-label="Mark one session used"
-                  className="min-h-11"
-                >
-                  +1 used
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={pending}
-                  onClick={onCancelPackage}
-                  className="min-h-11"
-                >
-                  Cancel pack
-                </Button>
-              </div>
-            </div>
-            <div
-              className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-zinc-800"
-              role="progressbar"
-              aria-valuenow={activePackage.used}
-              aria-valuemin={0}
-              aria-valuemax={activePackage.total}
-              aria-label="Package usage"
-            >
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all",
-                  lowRemaining ? "bg-amber-500/80" : "bg-zinc-500/90"
-                )}
-                style={{ width: `${packPct}%` }}
-              />
-            </div>
-          </div>
-        ) : (
-          !showAddPack && (
-            <div className="space-y-2">
-              <p className="text-xs text-zinc-500">
-                {hadExhaustedPack
-                  ? "No active pack — renew to keep tracking sessions."
-                  : "No active pack — add one to track remaining sessions."}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {hadExhaustedPack || snapshot.lastPackage ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={pending}
-                    onClick={startRenewPack}
-                    className="min-h-11"
-                  >
-                    Renew pack
-                  </Button>
-                ) : null}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  disabled={pending}
-                  aria-expanded={showAddPack}
-                  onClick={openAddPackage}
-                  className="min-h-11"
-                >
-                  Add package
-                </Button>
-              </div>
-            </div>
-          )
-        )}
-
-        {showAddPack && (
-          <form
-            onSubmit={onCreatePackage}
-            className="space-y-2.5 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
-          >
-            <div className="grid gap-2 sm:grid-cols-[1fr_7.5rem]">
-              <div>
-                <label
-                  htmlFor="crm-pkg-name"
-                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
-                >
-                  Pack name
-                </label>
-                <Input
-                  id="crm-pkg-name"
-                  value={pkgName}
-                  onChange={(e) => setPkgName(e.target.value)}
-                  placeholder="e.g. 10-pack"
-                  disabled={pending}
-                  className="min-h-11 py-1.5 text-xs"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="crm-pkg-total"
-                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
-                >
-                  Sessions in pack
-                </label>
-                <Input
-                  id="crm-pkg-total"
-                  type="number"
-                  min={1}
-                  step={1}
-                  inputMode="numeric"
-                  value={pkgTotal}
-                  onChange={(e) => setPkgTotal(e.target.value)}
-                  placeholder="10"
-                  disabled={pending}
-                  required
-                  className="min-h-11 py-1.5 text-xs tabular-nums"
-                />
-              </div>
-            </div>
-            {showPkgUsed ? (
-              <div className="max-w-[10rem]">
-                <label
-                  htmlFor="crm-pkg-used"
-                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
-                >
-                  Already used
-                </label>
-                <Input
-                  id="crm-pkg-used"
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  value={pkgUsed}
-                  onChange={(e) => setPkgUsed(e.target.value)}
-                  placeholder="0"
-                  disabled={pending}
-                  className="min-h-11 py-1.5 text-xs tabular-nums"
-                />
-                <p className="mt-1 text-[10px] leading-snug text-zinc-600">
-                  For a new pack leave this at 0. Only raise it if you’re
-                  importing a pack that’s partly used.
-                </p>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
-                onClick={() => {
-                  setShowPkgUsed(true);
-                  setPkgUsed("0");
-                }}
-              >
-                Already used some sessions?
-              </button>
-            )}
-            <div className="flex flex-wrap gap-1.5">
-              <Button
-                type="submit"
-                size="sm"
-                variant="secondary"
-                disabled={pending}
-                className="min-h-11"
-              >
-                Add pack
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={pending}
-                className="min-h-11"
-                onClick={() => {
-                  setShowAddPack(false);
-                  resetPackageForm({ total: 10 });
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        )}
-      </section>
-
       {/* Appointments */}
       <section
         id="crm-appointments"
@@ -1320,7 +1009,7 @@ export function ClientCrmPanel({
             aria-expanded={showBookForm}
             onClick={openBookForm}
           >
-            {showBookForm ? "Close form" : "Book session"}
+            {showBookForm ? "Done" : "Book"}
           </button>
         </div>
 
@@ -1367,8 +1056,8 @@ export function ClientCrmPanel({
               })()}
             </p>
             <p className="mt-1 text-[10px] leading-snug text-zinc-600">
-              Start session logs on the floor. Close booking only ends the
-              calendar slot — it does not burn a pack.
+              Start logs the floor session (can burn a pack). Close booking only
+              ends the calendar slot.
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {nextAppointment.status === "scheduled" && (
@@ -1387,56 +1076,72 @@ export function ClientCrmPanel({
                   Open log
                 </Link>
               )}
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                disabled={pending}
-                className="min-h-11"
-                title="Closes the booking only — does not burn a pack session"
-                onClick={() =>
-                  onApptStatus(
-                    nextAppointment.id,
-                    "completed",
-                    nextAppointment.title
-                  )
-                }
-              >
-                Close booking
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={pending}
-                className="min-h-11"
-                onClick={() =>
-                  onApptStatus(
-                    nextAppointment.id,
-                    "no_show",
-                    nextAppointment.title
-                  )
-                }
-              >
-                No-show
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={pending}
-                className="min-h-11"
-                onClick={() =>
-                  onApptStatus(
-                    nextAppointment.id,
-                    "cancelled",
-                    nextAppointment.title
-                  )
-                }
-              >
-                Cancel
-              </Button>
+              {nextAppointment.status === "scheduled" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={pending}
+                  className="min-h-11"
+                  title="Closes the booking only — does not burn a pack"
+                  onClick={() =>
+                    onApptStatus(
+                      nextAppointment.id,
+                      "completed",
+                      nextAppointment.title
+                    )
+                  }
+                >
+                  Close booking
+                </Button>
+              )}
+              {nextAppointment.status === "scheduled" && (
+                <button
+                  type="button"
+                  className="min-h-11 px-2 text-[11px] font-medium text-zinc-500 hover:text-zinc-300"
+                  aria-expanded={showNextApptMore}
+                  onClick={() => setShowNextApptMore((v) => !v)}
+                >
+                  {showNextApptMore ? "Less" : "More"}
+                </button>
+              )}
             </div>
+            {showNextApptMore && nextAppointment.status === "scheduled" && (
+              <div className="mt-1.5 flex flex-wrap gap-1.5 border-t border-zinc-800/60 pt-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={pending}
+                  className="min-h-11"
+                  onClick={() =>
+                    onApptStatus(
+                      nextAppointment.id,
+                      "no_show",
+                      nextAppointment.title
+                    )
+                  }
+                >
+                  No-show
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={pending}
+                  className="min-h-11"
+                  onClick={() =>
+                    onApptStatus(
+                      nextAppointment.id,
+                      "cancelled",
+                      nextAppointment.title
+                    )
+                  }
+                >
+                  Cancel booking
+                </Button>
+              </div>
+            )}
           </div>
             );
           })()
@@ -1444,7 +1149,7 @@ export function ClientCrmPanel({
           <p className="text-xs text-zinc-500">
             {showBookForm
               ? "Choose start time and length below."
-              : "No upcoming booking — Book session to schedule the floor."}
+              : "No upcoming booking — Book to schedule the floor."}
           </p>
         )}
 
@@ -1590,16 +1295,16 @@ export function ClientCrmPanel({
         )}
 
         {appointmentList.length > 0 && (
-          <ul className="space-y-1.5" aria-label="Appointment history">
+          <ul className="space-y-1.5" aria-label="Booking history">
             {appointmentList.map((a) => {
               const startMs = new Date(a.startsAt).getTime();
               const overdue =
                 a.status === "scheduled" &&
                 Number.isFinite(startMs) &&
                 startMs < now - 60_000;
-              // Next-up card already owns actions — avoid duplicate CTAs
               const isNext =
                 nextAppointment != null && a.id === nextAppointment.id;
+              const expanded = expandedApptId === a.id;
               return (
                 <li
                   key={a.id}
@@ -1633,7 +1338,7 @@ export function ClientCrmPanel({
                     </p>
                   </div>
                   {a.status === "scheduled" && !isNext && (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
                       <StartFromAppointmentButton
                         appointmentId={a.id}
                         clientId={clientId}
@@ -1641,51 +1346,65 @@ export function ClientCrmPanel({
                         hasLinkedSession={!!a.sessionId}
                         className="min-h-11"
                       />
-                      {a.sessionId && (
-                        <Link
-                          href={`/sessions/${a.sessionId}`}
-                          className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-100 hover:bg-zinc-700"
-                        >
-                          Open log
-                        </Link>
+                      <button
+                        type="button"
+                        className="min-h-11 px-2 text-[11px] font-medium text-zinc-500 hover:text-zinc-300"
+                        aria-expanded={expanded}
+                        onClick={() =>
+                          setExpandedApptId(expanded ? null : a.id)
+                        }
+                      >
+                        {expanded ? "Less" : "More"}
+                      </button>
+                      {expanded && (
+                        <>
+                          {a.sessionId && (
+                            <Link
+                              href={`/sessions/${a.sessionId}`}
+                              className="inline-flex min-h-11 items-center rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-100 hover:bg-zinc-700"
+                            >
+                              Open log
+                            </Link>
+                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            disabled={pending}
+                            className="min-h-11"
+                            title="Closes the booking only — does not burn a pack"
+                            onClick={() =>
+                              onApptStatus(a.id, "completed", a.title)
+                            }
+                          >
+                            Close booking
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={pending}
+                            className="min-h-11"
+                            onClick={() =>
+                              onApptStatus(a.id, "no_show", a.title)
+                            }
+                          >
+                            No-show
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={pending}
+                            className="min-h-11"
+                            onClick={() =>
+                              onApptStatus(a.id, "cancelled", a.title)
+                            }
+                          >
+                            Cancel
+                          </Button>
+                        </>
                       )}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        disabled={pending}
-                        className="min-h-11"
-                        title="Closes the booking only — does not burn a pack session"
-                        onClick={() =>
-                          onApptStatus(a.id, "completed", a.title)
-                        }
-                      >
-                        Close booking
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        disabled={pending}
-                        className="min-h-11"
-                        onClick={() =>
-                          onApptStatus(a.id, "no_show", a.title)
-                        }
-                      >
-                        No-show
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        disabled={pending}
-                        className="min-h-11"
-                        onClick={() =>
-                          onApptStatus(a.id, "cancelled", a.title)
-                        }
-                      >
-                        Cancel
-                      </Button>
                     </div>
                   )}
                   {a.status !== "scheduled" && a.sessionId && (
@@ -1700,6 +1419,296 @@ export function ClientCrmPanel({
               );
             })}
           </ul>
+        )}
+      </section>
+
+      {/* Pack */}
+      <section
+        id="crm-pack"
+        className="scroll-mt-client space-y-2 border-t border-zinc-800/80 pt-4"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            Pack
+          </p>
+          {activePackage && (
+            <button
+              type="button"
+              className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline"
+              aria-expanded={showAddPack}
+              onClick={() => setShowAddPack((v) => !v)}
+            >
+              {showAddPack ? "Done" : "Add pack"}
+            </button>
+          )}
+        </div>
+
+        {activePackage ? (
+          <div
+            className={cn(
+              "rounded-lg border px-3 py-2.5",
+              lowRemaining
+                ? "border-amber-900/45 bg-amber-950/20"
+                : "border-zinc-800 bg-zinc-950/40"
+            )}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="text-sm font-medium text-zinc-100">
+                    {activePackage.name}
+                  </p>
+                  {lowRemaining && (
+                    <Badge tone="amber">
+                      {activePackage.remaining === 0
+                        ? "Empty"
+                        : "Low"}
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-0.5 text-xs tabular-nums text-zinc-400">
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      lowRemaining ? "text-amber-300" : "text-zinc-200"
+                    )}
+                  >
+                    {activePackage.remaining}
+                  </span>
+                  {" of "}
+                  {activePackage.total} remaining
+                  <span className="text-zinc-600">
+                    {" "}
+                    · {activePackage.used} used
+                  </span>
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={pending}
+                  onClick={onCancelPackage}
+                  className="min-h-11"
+                >
+                  Cancel pack
+                </Button>
+              </div>
+            </div>
+            <div
+              className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-zinc-800"
+              role="progressbar"
+              aria-valuenow={activePackage.used}
+              aria-valuemin={0}
+              aria-valuemax={activePackage.total}
+              aria-label="Pack usage"
+            >
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  lowRemaining ? "bg-amber-500/80" : "bg-zinc-500/90"
+                )}
+                style={{ width: `${packPct}%` }}
+              />
+            </div>
+            {(showPackAdjust || lowRemaining) && (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-zinc-800/60 pt-2">
+                <span className="mr-1 text-[10px] text-zinc-600">
+                  Adjust used (prefer complete on floor)
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={pending || activePackage.used <= 0}
+                  onClick={() => onAdjustUsed(-1)}
+                  aria-label="Undo one used session"
+                  className="min-h-11"
+                >
+                  −1 used
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={
+                    pending || activePackage.used >= activePackage.total
+                  }
+                  onClick={() => onAdjustUsed(1)}
+                  aria-label="Mark one session used"
+                  className="min-h-11"
+                >
+                  +1 used
+                </Button>
+              </div>
+            )}
+            {!lowRemaining && (
+              <button
+                type="button"
+                className="mt-1.5 text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+                aria-expanded={showPackAdjust}
+                onClick={() => setShowPackAdjust((v) => !v)}
+              >
+                {showPackAdjust ? "Hide adjust" : "Adjust sessions used"}
+              </button>
+            )}
+          </div>
+        ) : (
+          !showAddPack && (
+            <div className="space-y-2">
+              <p className="text-xs text-zinc-500">
+                {hadExhaustedPack
+                  ? "No active pack — renew to keep tracking sessions."
+                  : "No active pack — add one to track remaining sessions."}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {hadExhaustedPack || snapshot.lastPackage ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pending}
+                    onClick={startRenewPack}
+                    className="min-h-11"
+                  >
+                    Renew pack
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pending}
+                    aria-expanded={showAddPack}
+                    onClick={openAddPackage}
+                    className="min-h-11"
+                  >
+                    Add pack
+                  </Button>
+                )}
+                {(hadExhaustedPack || snapshot.lastPackage) && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={pending}
+                    aria-expanded={showAddPack}
+                    onClick={openAddPackage}
+                    className="min-h-11"
+                  >
+                    Add different pack
+                  </Button>
+                )}
+              </div>
+            </div>
+          )
+        )}
+
+        {showAddPack && (
+          <form
+            onSubmit={onCreatePackage}
+            className="space-y-2.5 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3"
+          >
+            <div className="grid gap-2 sm:grid-cols-[1fr_7.5rem]">
+              <div>
+                <label
+                  htmlFor="crm-pkg-name"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Pack name
+                </label>
+                <Input
+                  id="crm-pkg-name"
+                  value={pkgName}
+                  onChange={(e) => setPkgName(e.target.value)}
+                  placeholder="e.g. 10-pack"
+                  disabled={pending}
+                  className="min-h-11 py-1.5 text-xs"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="crm-pkg-total"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Sessions in pack
+                </label>
+                <Input
+                  id="crm-pkg-total"
+                  type="number"
+                  min={1}
+                  step={1}
+                  inputMode="numeric"
+                  value={pkgTotal}
+                  onChange={(e) => setPkgTotal(e.target.value)}
+                  placeholder="10"
+                  disabled={pending}
+                  required
+                  className="min-h-11 py-1.5 text-xs tabular-nums"
+                />
+              </div>
+            </div>
+            {showPkgUsed ? (
+              <div className="max-w-[10rem]">
+                <label
+                  htmlFor="crm-pkg-used"
+                  className="mb-0.5 block text-[10px] font-medium uppercase tracking-wide text-zinc-500"
+                >
+                  Already used
+                </label>
+                <Input
+                  id="crm-pkg-used"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  value={pkgUsed}
+                  onChange={(e) => setPkgUsed(e.target.value)}
+                  placeholder="0"
+                  disabled={pending}
+                  className="min-h-11 py-1.5 text-xs tabular-nums"
+                />
+                <p className="mt-1 text-[10px] leading-snug text-zinc-600">
+                  For a new pack leave this at 0. Only raise it if you’re
+                  importing a pack that’s partly used.
+                </p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+                onClick={() => {
+                  setShowPkgUsed(true);
+                  setPkgUsed("0");
+                }}
+              >
+                Already used some sessions?
+              </button>
+            )}
+            <div className="flex flex-wrap gap-1.5">
+              <Button
+                type="submit"
+                size="sm"
+                variant="secondary"
+                disabled={pending}
+                className="min-h-11"
+              >
+                Add pack
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={pending}
+                className="min-h-11"
+                onClick={() => {
+                  setShowAddPack(false);
+                  resetPackageForm({ total: 10 });
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
         )}
       </section>
 
@@ -2132,16 +2141,16 @@ export function ClientCrmPanel({
             aria-expanded={showTaskForm}
             onClick={() => setShowTaskForm((v) => !v)}
           >
-            {showTaskForm ? "Done" : "Add task"}
+            {showTaskForm ? "Done" : "Add follow-up"}
           </button>
         </div>
 
         {taskList.length === 0 ? (
           <p className="text-xs text-zinc-600">
-            No follow-ups — add a due task for rebook, renew, or check-in.
+            No follow-ups — add one for rebook, renew, or a check-in.
           </p>
         ) : (
-          <ul className="space-y-1.5" aria-label="Client tasks">
+          <ul className="space-y-1.5" aria-label="Follow-ups">
             {taskList.map((t) => {
               const done = t.status === "done";
               const due = t.dueAt ? new Date(t.dueAt) : null;
@@ -2230,7 +2239,7 @@ export function ClientCrmPanel({
             onSubmit={(e) => {
               e.preventDefault();
               if (!taskTitle.trim()) {
-                fail("Task title is required");
+                fail("Follow-up title is required");
                 return;
               }
               run(async () => {
@@ -2252,7 +2261,7 @@ export function ClientCrmPanel({
               placeholder="e.g. Rebook next week"
               disabled={pending}
               className="min-h-11 text-sm"
-              aria-label="Task title"
+              aria-label="Follow-up title"
               required
             />
             <div>
@@ -2268,15 +2277,27 @@ export function ClientCrmPanel({
                 aria-label="Due date"
               />
             </div>
-            <Button
-              type="submit"
-              size="sm"
-              loading={pending}
-              disabled={pending || !taskTitle.trim()}
-              className="min-h-11"
-            >
-              Save task
-            </Button>
+            <div className="flex flex-wrap gap-1.5">
+              <Button
+                type="submit"
+                size="sm"
+                loading={pending}
+                disabled={pending || !taskTitle.trim()}
+                className="min-h-11"
+              >
+                Save follow-up
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={pending}
+                className="min-h-11"
+                onClick={() => setShowTaskForm(false)}
+              >
+                Cancel
+              </Button>
+            </div>
           </form>
         )}
       </section>
@@ -2393,6 +2414,53 @@ export function ClientCrmPanel({
           </form>
         )}
       </section>
+      {/* Stage pipeline — collapsed when set (except draft). Deactivate/reactivate live in page header. */}
+      <section className="space-y-2 border-t border-zinc-800/80 pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            Stage
+          </p>
+          <button
+            type="button"
+            className="text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200 hover:underline disabled:opacity-50"
+            disabled={pending}
+            aria-expanded={showStagePipeline}
+            onClick={() => setShowStagePipeline((v) => !v)}
+          >
+            {showStagePipeline ? "Done" : "Change stage"}
+          </button>
+        </div>
+        {showStagePipeline && (
+          <div
+            className="flex flex-wrap gap-1.5"
+            role="group"
+            aria-label={stageAria}
+          >
+            {stageButtons.map((s) => {
+              const active = stage === s;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => onStageChange(s)}
+                  aria-pressed={active}
+                  className={cn(
+                    "min-h-11 rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                    active
+                      ? "border-emerald-700/60 bg-emerald-950/50 text-emerald-300"
+                      : "border-zinc-800 bg-zinc-950/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200",
+                    pending && "opacity-60"
+                  )}
+                >
+                  {clientStageLabel(s)}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
     </Card>
   );
 }

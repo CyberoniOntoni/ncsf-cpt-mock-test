@@ -521,6 +521,59 @@ export async function cancelClientPackageAction(
 
 // ── Appointments ───────────────────────────────────────────────────
 
+/** Lightweight context for calendar book dialog (pack remaining). */
+export async function getClientBookContextAction(clientId: string) {
+  const session = await requireSession();
+  await assertClientInOrg(clientId, session.organizationId);
+  const db = await getDb();
+  const [client] = await db
+    .select({
+      id: clients.id,
+      firstName: clients.firstName,
+      lastName: clients.lastName,
+      status: clients.status,
+    })
+    .from(clients)
+    .where(eq(clients.id, clientId))
+    .limit(1);
+  if (!client) throw new Error("Client not found");
+
+  const pkgs = await db
+    .select({
+      id: clientPackages.id,
+      name: clientPackages.name,
+      status: clientPackages.status,
+      totalSessions: clientPackages.totalSessions,
+      usedSessions: clientPackages.usedSessions,
+    })
+    .from(clientPackages)
+    .where(
+      and(
+        eq(clientPackages.clientId, clientId),
+        eq(clientPackages.status, "active")
+      )
+    )
+    .orderBy(desc(clientPackages.purchasedAt))
+    .limit(5);
+
+  const active = pkgs
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      remaining: Math.max(0, p.totalSessions - p.usedSessions),
+      total: p.totalSessions,
+    }))
+    .sort((a, b) => a.remaining - b.remaining);
+
+  return {
+    clientId: client.id,
+    name: [client.firstName, client.lastName].filter(Boolean).join(" ").trim(),
+    status: client.status,
+    activePackage: active[0] ?? null,
+    packages: active,
+  };
+}
+
 export async function createClientAppointmentAction(input: {
   clientId: string;
   startsAt: string;
@@ -553,6 +606,147 @@ export async function createClientAppointmentAction(input: {
     .where(eq(clients.id, input.clientId));
   revalidateClient(input.clientId);
   return { id: apptId };
+}
+
+/**
+ * Calendar book: appointment + optional invoice in one step.
+ * billingMode:
+ *  - pack: use session pack (no invoice; note on booking)
+ *  - invoice: create unpaid (or paid) invoice for this session
+ *  - none: no billing
+ */
+export async function createBookingWithBillingAction(input: {
+  clientId: string;
+  startsAt: string;
+  title?: string;
+  durationMin?: number;
+  billingMode: "pack" | "invoice" | "none";
+  /** Required when billingMode === "invoice" */
+  amount?: string;
+  currency?: string;
+  /** When invoice: mark paid immediately */
+  markPaid?: boolean;
+  /** Link invoice to package when known */
+  packageId?: string | null;
+}) {
+  const session = await requireSession();
+  await assertClientInOrg(input.clientId, session.organizationId);
+
+  const mode = input.billingMode;
+  if (mode !== "pack" && mode !== "invoice" && mode !== "none") {
+    throw new Error("Invalid billing mode");
+  }
+  if (mode === "invoice") {
+    assertCanManageMoney(session.role);
+  }
+
+  const starts = new Date(input.startsAt);
+  if (Number.isNaN(starts.getTime())) throw new Error("Invalid start time");
+  const duration = Math.max(15, Math.floor(input.durationMin ?? 60));
+  const ends = new Date(starts.getTime() + duration * 60_000);
+  const title =
+    (input.title || "Training session").trim() || "Training session";
+
+  const db = await getDb();
+
+  // Pack context for notes / validation
+  let packNote: string | null = null;
+  let packageId: string | null = input.packageId?.trim() || null;
+  if (mode === "pack") {
+    const pkgs = await db
+      .select()
+      .from(clientPackages)
+      .where(
+        and(
+          eq(clientPackages.clientId, input.clientId),
+          eq(clientPackages.status, "active")
+        )
+      )
+      .orderBy(desc(clientPackages.purchasedAt))
+      .limit(8);
+    const withRemain = pkgs
+      .map((p) => ({
+        ...p,
+        remaining: Math.max(0, p.totalSessions - p.usedSessions),
+      }))
+      .filter((p) => p.remaining > 0)
+      .sort((a, b) => a.remaining - b.remaining);
+    const pkg = packageId
+      ? withRemain.find((p) => p.id === packageId) || withRemain[0]
+      : withRemain[0];
+    if (!pkg) {
+      throw new Error(
+        "No pack with remaining sessions — switch to invoice or add a pack"
+      );
+    }
+    packageId = pkg.id;
+    packNote = `Billing: pack credit · ${pkg.name} · ${pkg.remaining} left before session`;
+  }
+
+  let invoiceNote: string | null = null;
+  let invoiceId: string | null = null;
+  let amountCents: number | null = null;
+  let currency = "SGD";
+
+  if (mode === "invoice") {
+    try {
+      amountCents = parseMoneyToCents(input.amount || "");
+    } catch (e) {
+      throw new Error(
+        e instanceof Error ? e.message : "Enter a valid amount (e.g. 100)"
+      );
+    }
+    currency =
+      (input.currency || "SGD").trim().toUpperCase().slice(0, 8) || "SGD";
+    invoiceNote = `Billing: invoice · ${currency} ${(amountCents / 100).toFixed(2)}${input.markPaid ? " · paid" : " · unpaid"}`;
+  }
+
+  const notes = [packNote, invoiceNote].filter(Boolean).join(" · ") || null;
+
+  const apptId = id("apt");
+  await db.insert(clientAppointments).values({
+    id: apptId,
+    clientId: input.clientId,
+    title,
+    startsAt: starts,
+    endsAt: ends,
+    status: "scheduled",
+    notes,
+    location: null,
+  });
+
+  if (mode === "invoice" && amountCents != null) {
+    invoiceId = id("inv");
+    const whenLabel = starts.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    await db.insert(clientInvoices).values({
+      id: invoiceId,
+      organizationId: session.organizationId,
+      clientId: input.clientId,
+      title: `${title} · ${whenLabel}`.slice(0, 120),
+      amountCents,
+      currency,
+      status: input.markPaid ? "paid" : "unpaid",
+      notes: `Booked with session on ${whenLabel}`,
+      packageId: packageId || null,
+      issuedAt: new Date(),
+      paidAt: input.markPaid ? new Date() : null,
+    });
+  }
+
+  await db
+    .update(clients)
+    .set({ updatedAt: new Date() })
+    .where(eq(clients.id, input.clientId));
+  revalidateClient(input.clientId);
+  return {
+    appointmentId: apptId,
+    invoiceId,
+    billingMode: mode,
+  };
 }
 
 export async function updateAppointmentStatusAction(
