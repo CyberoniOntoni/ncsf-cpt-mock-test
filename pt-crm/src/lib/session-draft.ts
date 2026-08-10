@@ -140,11 +140,11 @@ export function isDraftNewerThan(
 ): boolean {
   const serverMs = serverTimeMs(serverUpdatedAt);
   if (serverMs != null) {
-    if (draft.updatedAt >= serverMs - skewMarginMs) {
-      return true;
-    }
-    return hasDraftContent(draft);
+    // Prefer draft when it is newer than or within clock-skew tolerance of the server.
+    // If the server is clearly newer (outside skew window), trust the server.
+    return draft.updatedAt >= serverMs - skewMarginMs;
   }
+  // No server timestamp (offline / unknown) — use content as signal.
   return hasDraftContent(draft);
 }
 

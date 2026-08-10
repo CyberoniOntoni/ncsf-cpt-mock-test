@@ -193,10 +193,17 @@ function main() {
     isDraftNewerThan(draft, olderServer) === true,
     "isDraftNewerThan should prefer newer draft"
   );
-  const newerServer = new Date(Date.now() + 60_000);
+  // Server 1 min ahead but within 5-min skew tolerance — draft should still win
+  const skewServer = new Date(Date.now() + 60_000);
+  assert(
+    isDraftNewerThan(draft, skewServer) === true,
+    "isDraftNewerThan should prefer draft within clock-skew tolerance"
+  );
+  // Server 6 min ahead — clearly outside skew tolerance, server wins
+  const newerServer = new Date(Date.now() + 6 * 60_000);
   assert(
     isDraftNewerThan(draft, newerServer) === false,
-    "isDraftNewerThan should lose to newer server"
+    "isDraftNewerThan should lose to server newer than skew tolerance"
   );
 
   const serverLogs = [
