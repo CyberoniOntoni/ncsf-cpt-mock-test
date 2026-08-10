@@ -141,8 +141,10 @@ export function isDraftNewerThan(
   const serverMs = serverTimeMs(serverUpdatedAt);
   if (serverMs != null) {
     // Prefer draft when it is newer than or within clock-skew tolerance of the server.
-    // If the server is clearly newer (outside skew window), trust the server.
-    return draft.updatedAt >= serverMs - skewMarginMs;
+    if (draft.updatedAt >= serverMs - skewMarginMs) return true;
+    // Server is clearly newer — still keep the draft if it has real content
+    // (trainer may have logged offline and their clock lagged behind server).
+    return hasDraftContent(draft);
   }
   // No server timestamp (offline / unknown) — use content as signal.
   return hasDraftContent(draft);
