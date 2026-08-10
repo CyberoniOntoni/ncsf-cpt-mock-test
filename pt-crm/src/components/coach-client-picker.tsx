@@ -32,12 +32,14 @@ export function CoachClientPicker({
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    void searchClientsAction(q).then((rows) => {
-      if (!cancelled) {
-        setHits(rows as CoachClientPick[]);
-        setLoading(false);
-      }
-    });
+    void searchClientsAction(q)
+      .then((rows) => {
+        if (!cancelled) {
+          setHits(rows as CoachClientPick[]);
+          setLoading(false);
+        }
+      })
+      .catch((err) => console.error(err));
     return () => {
       cancelled = true;
     };

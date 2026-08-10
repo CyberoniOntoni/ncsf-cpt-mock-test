@@ -99,26 +99,53 @@ function serverTimeMs(serverUpdatedAt?: Date | string | null): number | null {
   return Number.isFinite(t) ? t : null;
 }
 
+const DEFAULT_CLOCK_SKEW_MARGIN_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
- * Prefer draft when it is newer than the server timestamp.
- * If no server time is provided, treat as "newer" when the draft has any
- * completed set or a non-empty weight entry.
+ * Checks whether draft has non-empty entries (sets completed/weight/reps/rpe/notes, or session notes).
+ */
+export function hasDraftContent(draft: SessionDraftPayload): boolean {
+  if (!draft) return false;
+  if (
+    (draft.durationMin && draft.durationMin.trim() !== "") ||
+    (draft.overallRpe && draft.overallRpe.trim() !== "") ||
+    (draft.painNotes && draft.painNotes.trim() !== "") ||
+    (draft.notes && draft.notes.trim() !== "")
+  ) {
+    return true;
+  }
+  for (const log of draft.logs ?? []) {
+    if (log.notes && log.notes.trim() !== "") return true;
+    if (log.completed) return true;
+    for (const set of log.setLogs ?? []) {
+      if (set.completed) return true;
+      if (set.weightKg != null && Number.isFinite(set.weightKg)) return true;
+      if (set.reps != null && set.reps.trim() !== "") return true;
+      if (set.rpe != null && set.rpe.trim() !== "") return true;
+      if (set.note != null && set.note.trim() !== "") return true;
+      if (set.pain) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Prefer draft when it is newer than (or within clock-skew tolerance of) the server timestamp.
+ * If no server time is provided, treat as "newer" when the draft has non-empty entries.
  */
 export function isDraftNewerThan(
   draft: SessionDraftPayload,
   serverUpdatedAt?: Date | string | null,
+  skewMarginMs: number = DEFAULT_CLOCK_SKEW_MARGIN_MS,
 ): boolean {
   const serverMs = serverTimeMs(serverUpdatedAt);
   if (serverMs != null) {
-    return draft.updatedAt > serverMs;
-  }
-  for (const log of draft.logs ?? []) {
-    for (const set of log.setLogs ?? []) {
-      if (set.completed) return true;
-      if (set.weightKg != null && Number.isFinite(set.weightKg)) return true;
+    if (draft.updatedAt >= serverMs - skewMarginMs) {
+      return true;
     }
+    return hasDraftContent(draft);
   }
-  return false;
+  return hasDraftContent(draft);
 }
 
 type DraftLog = SessionDraftPayload["logs"][number];

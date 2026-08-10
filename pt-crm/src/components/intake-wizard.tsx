@@ -87,6 +87,7 @@ export function IntakeWizard() {
   useEffect(() => {
     void listAssessmentTemplatesAction()
       .then((rows) => setTemplates(rows as unknown as Template[]))
+      .catch((err) => console.error(err))
       .finally(() => setTemplatesLoading(false));
   }, []);
 

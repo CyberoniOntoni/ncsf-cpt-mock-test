@@ -15,6 +15,11 @@ import {
   stripMesocycleNotes,
   suggestMesocycleWeekFromStartDate,
 } from "../src/lib/mesocycle";
+import {
+  isDraftNewerThan,
+  hasDraftContent,
+  type SessionDraftPayload,
+} from "../src/lib/session-draft";
 import { correctivesFromAssessmentResults } from "../src/lib/assessment-correctives";
 import {
   accumulateVolumeByPattern,
@@ -661,7 +666,79 @@ function main() {
     const pushOnPull = scoreExerciseOrder(bench, { sessionKind: "pull" });
     assert(pullBias.rank < pushOnPull.rank, "on pull day, rows before bench");
   }
-  console.log("ok exercise-order prioritization");
+  // Draft clock skew & content check
+  {
+    const serverTime = "2026-08-10T12:00:00.000Z";
+    const serverMs = new Date(serverTime).getTime();
+    
+    // Client clock 2 minutes behind server clock
+    const draftSkewed: SessionDraftPayload = {
+      sessionId: "s1",
+      updatedAt: serverMs - 2 * 60 * 1000,
+      durationMin: "",
+      overallRpe: "",
+      painNotes: "",
+      notes: "",
+      logs: [],
+    };
+
+    assert(
+      isDraftNewerThan(draftSkewed, serverTime),
+      "draft within 5-min clock skew margin should be accepted"
+    );
+
+    // Older than skew window but has set log content
+    const draftOlderWithContent: SessionDraftPayload = {
+      sessionId: "s1",
+      updatedAt: serverMs - 10 * 60 * 1000,
+      durationMin: "",
+      overallRpe: "",
+      painNotes: "",
+      notes: "",
+      logs: [
+        {
+          id: "ex1",
+          notes: null,
+          completed: false,
+          setLogs: [
+            {
+              setIndex: 1,
+              reps: "10",
+              weightKg: 80,
+              rpe: "8",
+              completed: true,
+            },
+          ],
+        },
+      ],
+    };
+
+    assert(
+      hasDraftContent(draftOlderWithContent),
+      "draft has content when completed set exists"
+    );
+    assert(
+      isDraftNewerThan(draftOlderWithContent, serverTime),
+      "draft older than skew margin with content should be accepted"
+    );
+
+    // Stale empty draft older than skew margin
+    const draftStaleEmpty: SessionDraftPayload = {
+      sessionId: "s1",
+      updatedAt: serverMs - 10 * 60 * 1000,
+      durationMin: "",
+      overallRpe: "",
+      painNotes: "",
+      notes: "",
+      logs: [],
+    };
+
+    assert(
+      !isDraftNewerThan(draftStaleEmpty, serverTime),
+      "stale empty draft should be rejected"
+    );
+  }
+  console.log("ok session-draft clock-skew tolerance");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, gte } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import {
@@ -187,15 +187,31 @@ export async function getProgramAction(programId: string) {
     .where(eq(programDays.programId, programId))
     .orderBy(asc(programDays.dayIndex));
 
-  const daysWithExercises = [];
-  for (const day of days) {
-    const exercises = await db
-      .select()
-      .from(programExercises)
-      .where(eq(programExercises.programDayId, day.id))
-      .orderBy(asc(programExercises.sortOrder));
-    daysWithExercises.push({ ...day, exercises });
+  if (days.length === 0) {
+    return { program, client, days: [] };
   }
+
+  const dayIds = days.map((d) => d.id);
+  const allExercises = await db
+    .select()
+    .from(programExercises)
+    .where(inArray(programExercises.programDayId, dayIds))
+    .orderBy(asc(programExercises.sortOrder));
+
+  const exercisesByDay = new Map<string, typeof allExercises>();
+  for (const ex of allExercises) {
+    let list = exercisesByDay.get(ex.programDayId);
+    if (!list) {
+      list = [];
+      exercisesByDay.set(ex.programDayId, list);
+    }
+    list.push(ex);
+  }
+
+  const daysWithExercises = days.map((day) => ({
+    ...day,
+    exercises: exercisesByDay.get(day.id) || [],
+  }));
 
   return { program, client, days: daysWithExercises };
 }
@@ -810,9 +826,34 @@ export async function updateProgramExerciseAction(
     })
     .where(eq(programExercises.id, exerciseRowId));
 
+  const prevMeta =
+    (row.program.generationMeta as Record<string, unknown> | null) || {};
+  const baselines = prevMeta.baselinePrescriptions as
+    | Record<string, BaselineRx>
+    | undefined;
+
+  let nextMeta = prevMeta;
+  if (baselines && typeof baselines === "object") {
+    nextMeta = {
+      ...prevMeta,
+      baselinePrescriptions: {
+        ...baselines,
+        [exerciseRowId]: {
+          sets: finalSets,
+          reps: finalReps,
+          rpe: finalRpe,
+          restSec: finalRest,
+        },
+      },
+    };
+  }
+
   await db
     .update(programs)
-    .set({ updatedAt: new Date() })
+    .set({
+      generationMeta: nextMeta,
+      updatedAt: new Date(),
+    })
     .where(eq(programs.id, row.program.id));
 
   revalidatePath(`/programs/${row.program.id}`);
@@ -855,6 +896,11 @@ export async function swapProgramExerciseAction(
   }
 
   const keep = opts?.keepPrescription !== false;
+  const newSets = keep ? row.pe.sets : 3;
+  const newReps = keep ? row.pe.reps : "8-10";
+  const newRpe = keep ? row.pe.rpe : "7";
+  const newRest = keep ? row.pe.restSec : 90;
+
   // Preserve group rest cues in notes when swapping a group member
   let notes = row.pe.notes;
   if (opts?.applyCues !== false && pick.cues) {
@@ -873,16 +919,41 @@ export async function swapProgramExerciseAction(
       movementPattern: pick.movementPattern,
       notes,
       // keep sets/reps/rpe/rest/scheme/group unless caller wants reset
-      sets: keep ? row.pe.sets : 3,
-      reps: keep ? row.pe.reps : "8-10",
-      rpe: keep ? row.pe.rpe : "7",
-      restSec: keep ? row.pe.restSec : 90,
+      sets: newSets,
+      reps: newReps,
+      rpe: newRpe,
+      restSec: newRest,
     })
     .where(eq(programExercises.id, exerciseRowId));
 
+  const swapPrevMeta =
+    (row.program.generationMeta as Record<string, unknown> | null) || {};
+  const swapBaselines = swapPrevMeta.baselinePrescriptions as
+    | Record<string, BaselineRx>
+    | undefined;
+
+  let swapNextMeta = swapPrevMeta;
+  if (swapBaselines && typeof swapBaselines === "object") {
+    swapNextMeta = {
+      ...swapPrevMeta,
+      baselinePrescriptions: {
+        ...swapBaselines,
+        [exerciseRowId]: {
+          sets: newSets,
+          reps: newReps,
+          rpe: newRpe,
+          restSec: newRest,
+        },
+      },
+    };
+  }
+
   await db
     .update(programs)
-    .set({ updatedAt: new Date() })
+    .set({
+      generationMeta: swapNextMeta,
+      updatedAt: new Date(),
+    })
     .where(eq(programs.id, row.program.id));
 
   revalidatePath(`/programs/${row.program.id}`);
@@ -1097,9 +1168,28 @@ export async function deleteProgramExerciseAction(exerciseRowId: string) {
   }
 
   await db.delete(programExercises).where(eq(programExercises.id, exerciseRowId));
+
+  const prevMeta =
+    (row.program.generationMeta as Record<string, unknown> | null) || {};
+  const baselines = prevMeta.baselinePrescriptions as
+    | Record<string, BaselineRx>
+    | undefined;
+
+  let nextMeta = prevMeta;
+  if (baselines && typeof baselines === "object" && exerciseRowId in baselines) {
+    const { [exerciseRowId]: _, ...restBaselines } = baselines;
+    nextMeta = {
+      ...prevMeta,
+      baselinePrescriptions: restBaselines,
+    };
+  }
+
   await db
     .update(programs)
-    .set({ updatedAt: new Date() })
+    .set({
+      generationMeta: nextMeta,
+      updatedAt: new Date(),
+    })
     .where(eq(programs.id, row.program.id));
   revalidatePath(`/programs/${row.program.id}`);
   return { ok: true };
@@ -1292,16 +1382,31 @@ export async function applyMesocycleToProgramAction(
     .where(eq(programDays.programId, programId))
     .orderBy(asc(programDays.dayIndex));
 
+  const dayIds = days.map((d) => d.id);
+  const allExercises =
+    dayIds.length > 0
+      ? await db
+          .select()
+          .from(programExercises)
+          .where(inArray(programExercises.programDayId, dayIds))
+      : [];
+
   // Capture baselines on first apply (or for any new exercise rows)
   const needBaselineCapture = Object.keys(baselines).length === 0;
   if (needBaselineCapture) {
     baselines = {};
-    for (const day of days) {
-      const rows = await db
-        .select()
-        .from(programExercises)
-        .where(eq(programExercises.programDayId, day.id));
-      for (const pe of rows) {
+    for (const pe of allExercises) {
+      baselines[pe.id] = {
+        sets: pe.sets,
+        reps: pe.reps,
+        rpe: pe.rpe,
+        restSec: pe.restSec,
+      };
+    }
+  } else {
+    // Add baselines for any exercises added since last capture
+    for (const pe of allExercises) {
+      if (!baselines[pe.id]) {
         baselines[pe.id] = {
           sets: pe.sets,
           reps: pe.reps,
@@ -1310,57 +1415,32 @@ export async function applyMesocycleToProgramAction(
         };
       }
     }
-  } else {
-    // Add baselines for any exercises added since last capture
-    for (const day of days) {
-      const rows = await db
-        .select()
-        .from(programExercises)
-        .where(eq(programExercises.programDayId, day.id));
-      for (const pe of rows) {
-        if (!baselines[pe.id]) {
-          baselines[pe.id] = {
-            sets: pe.sets,
-            reps: pe.reps,
-            rpe: pe.rpe,
-            restSec: pe.restSec,
-          };
-        }
-      }
-    }
   }
 
-  for (const day of days) {
-    const rows = await db
-      .select()
-      .from(programExercises)
-      .where(eq(programExercises.programDayId, day.id));
+  for (const pe of allExercises) {
+    const base = baselines[pe.id] || {
+      sets: pe.sets,
+      reps: pe.reps,
+      rpe: pe.rpe,
+      restSec: pe.restSec,
+    };
+    const scaled = applyMesocycleToPrescription(base, plan);
 
-    for (const pe of rows) {
-      const base = baselines[pe.id] || {
-        sets: pe.sets,
-        reps: pe.reps,
-        rpe: pe.rpe,
-        restSec: pe.restSec,
-      };
-      const scaled = applyMesocycleToPrescription(base, plan);
-
-      let notes = stripMesocycleNotes(pe.notes);
-      if (scaled.note) {
-        notes = [notes, scaled.note].filter(Boolean).join(" · ");
-      }
-
-      await db
-        .update(programExercises)
-        .set({
-          sets: scaled.sets,
-          reps: scaled.reps,
-          rpe: scaled.rpe,
-          restSec: scaled.restSec,
-          notes,
-        })
-        .where(eq(programExercises.id, pe.id));
+    let notes = stripMesocycleNotes(pe.notes);
+    if (scaled.note) {
+      notes = [notes, scaled.note].filter(Boolean).join(" · ");
     }
+
+    await db
+      .update(programExercises)
+      .set({
+        sets: scaled.sets,
+        reps: scaled.reps,
+        rpe: scaled.rpe,
+        restSec: scaled.restSec,
+        notes,
+      })
+      .where(eq(programExercises.id, pe.id));
   }
 
   await db

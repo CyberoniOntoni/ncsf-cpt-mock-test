@@ -251,7 +251,8 @@ export function ProgramDetail({
           setVolumeLoading(false);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         if (!cancelled) {
           setVolume(null);
           setVolumeLoading(false);
@@ -278,7 +279,8 @@ export function ProgramDetail({
           setSuggestLoading(false);
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         if (!cancelled) {
           setSuggestions([]);
           setSuggestLoading(false);
@@ -430,8 +432,8 @@ export function ProgramDetail({
         });
         setAppliedWeek(p.appliedWeek);
       })
-      .catch(() => {
-        /* ignore */
+      .catch((err) => {
+        console.error(err);
       });
     return () => {
       cancelled = true;

@@ -58,10 +58,12 @@ export function ExerciseBankPicker({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void listExercisesAction().then((rows) => {
-      setAll(rows as BankExercisePick[]);
-      setLoading(false);
-    });
+    void listExercisesAction()
+      .then((rows) => {
+        setAll(rows as BankExercisePick[]);
+        setLoading(false);
+      })
+      .catch((err) => console.error(err));
   }, []);
 
   useEffect(() => {

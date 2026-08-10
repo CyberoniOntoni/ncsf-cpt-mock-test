@@ -16,31 +16,36 @@ import { CLIENT_LIST_STAGES } from "@/lib/crm-constants";
 import { clientSearchHaystack, fullName, id } from "@/lib/utils";
 
 export async function searchClientsAction(query: string) {
-  const session = await requireSession();
-  const db = await getDb();
-  const all = await db
-    .select()
-    .from(clients)
-    .where(eq(clients.organizationId, session.organizationId))
-    .orderBy(desc(clients.updatedAt))
-    .limit(100);
+  try {
+    const session = await requireSession();
+    const db = await getDb();
+    const all = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.organizationId, session.organizationId))
+      .orderBy(desc(clients.updatedAt))
+      .limit(100);
 
-  const q = query.trim().toLowerCase();
-  if (!q) {
-    // Floor picker: active roster only (not draft / inactive)
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      // Floor picker: active roster only (not draft / inactive)
+      return all
+        .filter((c) => c.status !== "draft" && c.status !== "inactive")
+        .slice(0, 12);
+    }
+    // Named search can still find inactive clients to reopen them
     return all
-      .filter((c) => c.status !== "draft" && c.status !== "inactive")
-      .slice(0, 12);
+      .filter(
+        (c) =>
+          c.status !== "draft" &&
+          (clientSearchHaystack(c).includes(q) ||
+            fullName(c.firstName, c.lastName).toLowerCase().includes(q))
+      )
+      .slice(0, 20);
+  } catch (e) {
+    console.error("[searchClientsAction]", e);
+    return [];
   }
-  // Named search can still find inactive clients to reopen them
-  return all
-    .filter(
-      (c) =>
-        c.status !== "draft" &&
-        (clientSearchHaystack(c).includes(q) ||
-          fullName(c.firstName, c.lastName).toLowerCase().includes(q))
-    )
-    .slice(0, 20);
 }
 
 /**
@@ -48,8 +53,13 @@ export async function searchClientsAction(query: string) {
  * Named UX API — delegates to updateClientStageAction (single status writer).
  */
 export async function deactivateClientAction(clientId: string) {
-  await updateClientStageAction(clientId, "inactive");
-  return { ok: true as const, status: "inactive" as const };
+  try {
+    await updateClientStageAction(clientId, "inactive");
+    return { ok: true as const, status: "inactive" as const };
+  } catch (e) {
+    console.error("[deactivateClientAction]", e);
+    return { ok: false as const, error: e instanceof Error ? e.message : "Failed to deactivate client" };
+  }
 }
 
 /**
@@ -57,68 +67,88 @@ export async function deactivateClientAction(clientId: string) {
  * Named UX API — delegates to updateClientStageAction (single status writer).
  */
 export async function reactivateClientAction(clientId: string) {
-  await updateClientStageAction(clientId, "active");
-  return { ok: true as const, status: "active" as const };
+  try {
+    await updateClientStageAction(clientId, "active");
+    return { ok: true as const, status: "active" as const };
+  } catch (e) {
+    console.error("[reactivateClientAction]", e);
+    return { ok: false as const, error: e instanceof Error ? e.message : "Failed to reactivate client" };
+  }
 }
 
 export async function listClientsAction() {
-  const session = await requireSession();
-  const db = await getDb();
-  return db
-    .select()
-    .from(clients)
-    .where(
-      and(
-        eq(clients.organizationId, session.organizationId),
-        inArray(clients.status, [...CLIENT_LIST_STAGES])
+  try {
+    const session = await requireSession();
+    const db = await getDb();
+    return await db
+      .select()
+      .from(clients)
+      .where(
+        and(
+          eq(clients.organizationId, session.organizationId),
+          inArray(clients.status, [...CLIENT_LIST_STAGES])
+        )
       )
-    )
-    .orderBy(desc(clients.updatedAt));
+      .orderBy(desc(clients.updatedAt));
+  } catch (e) {
+    console.error("[listClientsAction]", e);
+    return [];
+  }
 }
 
 export async function getClientAction(clientId: string) {
-  const session = await requireSession();
-  const db = await getDb();
-  const [client] = await db
-    .select()
-    .from(clients)
-    .where(and(eq(clients.id, clientId), eq(clients.organizationId, session.organizationId)))
-    .limit(1);
-  if (!client) return null;
+  try {
+    const session = await requireSession();
+    const db = await getDb();
+    const [client] = await db
+      .select()
+      .from(clients)
+      .where(and(eq(clients.id, clientId), eq(clients.organizationId, session.organizationId)))
+      .limit(1);
+    if (!client) return null;
 
-  const measurements = await db
-    .select()
-    .from(clientMeasurements)
-    .where(eq(clientMeasurements.clientId, clientId))
-    .orderBy(desc(clientMeasurements.takenAt));
+    const measurements = await db
+      .select()
+      .from(clientMeasurements)
+      .where(eq(clientMeasurements.clientId, clientId))
+      .orderBy(desc(clientMeasurements.takenAt));
 
-  const assessments = await db
-    .select({
-      assessment: clientAssessments,
-      template: assessmentTemplates,
-    })
-    .from(clientAssessments)
-    .leftJoin(assessmentTemplates, eq(clientAssessments.templateId, assessmentTemplates.id))
-    .where(eq(clientAssessments.clientId, clientId))
-    .orderBy(desc(clientAssessments.takenAt));
+    const assessments = await db
+      .select({
+        assessment: clientAssessments,
+        template: assessmentTemplates,
+      })
+      .from(clientAssessments)
+      .leftJoin(assessmentTemplates, eq(clientAssessments.templateId, assessmentTemplates.id))
+      .where(eq(clientAssessments.clientId, clientId))
+      .orderBy(desc(clientAssessments.takenAt));
 
-  const notes = await db
-    .select()
-    .from(clientNotes)
-    .where(eq(clientNotes.clientId, clientId))
-    .orderBy(desc(clientNotes.createdAt));
+    const notes = await db
+      .select()
+      .from(clientNotes)
+      .where(eq(clientNotes.clientId, clientId))
+      .orderBy(desc(clientNotes.createdAt));
 
-  return { client, measurements, assessments, notes };
+    return { client, measurements, assessments, notes };
+  } catch (e) {
+    console.error("[getClientAction]", e);
+    return null;
+  }
 }
 
 export async function listAssessmentTemplatesAction() {
-  await requireSession();
-  const db = await getDb();
-  return db
-    .select()
-    .from(assessmentTemplates)
-    .where(eq(assessmentTemplates.active, true))
-    .orderBy(assessmentTemplates.sortOrder);
+  try {
+    await requireSession();
+    const db = await getDb();
+    return await db
+      .select()
+      .from(assessmentTemplates)
+      .where(eq(assessmentTemplates.active, true))
+      .orderBy(assessmentTemplates.sortOrder);
+  } catch (e) {
+    console.error("[listAssessmentTemplatesAction]", e);
+    return [];
+  }
 }
 
 export type IntakeBasics = {
@@ -157,13 +187,16 @@ export type IntakeMeasurement = {
 
 export async function createDraftClientAction(basics: IntakeBasics) {
   const session = await requireSession();
+  const firstName = basics.firstName?.trim();
+  if (!firstName) throw new Error("First name is required");
+
   const db = await getDb();
   const clientId = id("cli");
   await db.insert(clients).values({
     id: clientId,
     organizationId: session.organizationId,
     status: "draft",
-    firstName: basics.firstName.trim(),
+    firstName,
     lastName: (basics.lastName || "").trim(),
     email: basics.email || null,
     phone: basics.phone || null,
@@ -171,16 +204,19 @@ export async function createDraftClientAction(basics: IntakeBasics) {
     sex: basics.sex || null,
     emergencyContact: basics.emergencyContact || null,
   });
-  return { clientId };
+  return { clientId, ok: true };
 }
 
 export async function updateClientBasicsAction(clientId: string, basics: IntakeBasics) {
   const session = await requireSession();
+  const firstName = basics.firstName?.trim();
+  if (!firstName) throw new Error("First name is required");
+
   const db = await getDb();
   await db
     .update(clients)
     .set({
-      firstName: basics.firstName.trim(),
+      firstName,
       lastName: (basics.lastName || "").trim(),
       email: basics.email || null,
       phone: basics.phone || null,
@@ -190,6 +226,7 @@ export async function updateClientBasicsAction(clientId: string, basics: IntakeB
       updatedAt: new Date(),
     })
     .where(and(eq(clients.id, clientId), eq(clients.organizationId, session.organizationId)));
+  return { ok: true };
 }
 
 export async function updateClientHistoryAction(clientId: string, history: IntakeHistory) {
@@ -209,6 +246,7 @@ export async function updateClientHistoryAction(clientId: string, history: Intak
       updatedAt: new Date(),
     })
     .where(and(eq(clients.id, clientId), eq(clients.organizationId, session.organizationId)));
+  return { ok: true };
 }
 
 export async function addClientMeasurementAction(clientId: string, m: IntakeMeasurement) {
@@ -254,6 +292,7 @@ export async function addClientMeasurementAction(clientId: string, m: IntakeMeas
 
   revalidatePath(`/clients/${clientId}`);
   revalidatePath("/");
+  return { ok: true };
 }
 
 export type MeasurementFormState = {
@@ -350,7 +389,7 @@ export async function saveClientAssessmentAction(
   revalidatePath(`/clients/${clientId}`);
   revalidatePath(`/clients/${clientId}/assessments`);
   revalidatePath("/");
-  return { assessmentId };
+  return { assessmentId, ok: true };
 }
 
 /**
@@ -403,6 +442,7 @@ export async function quickAddClientAction(input: {
     email: input.email?.trim() || null,
     status: "lead" as const,
     goals: null as string | null,
+    ok: true,
   };
 }
 

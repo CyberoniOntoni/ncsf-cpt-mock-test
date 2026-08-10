@@ -398,9 +398,11 @@ export function SessionLogger({
   useEffect(() => {
     if (!client?.id) return;
     let cancelled = false;
-    void getPreviousLoadsForSessionAction(session.id).then((map) => {
-      if (!cancelled) setPrevLoads(map);
-    });
+    void getPreviousLoadsForSessionAction(session.id)
+      .then((map) => {
+        if (!cancelled) setPrevLoads(map);
+      })
+      .catch((err) => console.error(err));
     return () => {
       cancelled = true;
     };
@@ -409,9 +411,11 @@ export function SessionLogger({
   // Floor coaching cues (bank / notes / pattern default)
   useEffect(() => {
     let cancelled = false;
-    void getExerciseCuesForSessionAction(session.id).then((map) => {
-      if (!cancelled) setExerciseCues(map);
-    });
+    void getExerciseCuesForSessionAction(session.id)
+      .then((map) => {
+        if (!cancelled) setExerciseCues(map);
+      })
+      .catch((err) => console.error(err));
     return () => {
       cancelled = true;
     };
@@ -431,9 +435,7 @@ export function SessionLogger({
       .then((text) => {
         if (!cancelled) setSummaryText(text);
       })
-      .catch(() => {
-        /* ignore */
-      });
+      .catch((err) => console.error(err));
     return () => {
       cancelled = true;
     };

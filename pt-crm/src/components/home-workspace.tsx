@@ -226,7 +226,7 @@ export function HomeWorkspace({
 
   useEffect(() => {
     if (!hydrated) return;
-    void loadDashboard();
+    void loadDashboard().catch((err) => console.error(err));
   }, [hydrated, loadDashboard]);
 
   // Soft refresh when returning to the tab (debounce visibility + focus double-fire)
@@ -236,7 +236,7 @@ export function HomeWorkspace({
     function softRefresh() {
       if (t) clearTimeout(t);
       t = setTimeout(() => {
-        void loadDashboard({ soft: true });
+        void loadDashboard({ soft: true }).catch((err) => console.error(err));
       }, 280);
     }
     function onVisible() {
@@ -254,7 +254,7 @@ export function HomeWorkspace({
   useEffect(() => {
     if (!hydrated) return;
     if (selectedId) {
-      void loadDetail(selectedId);
+      void loadDetail(selectedId).catch((err) => console.error(err));
     } else {
       setDetail(null);
       setClientPrograms([]);
@@ -288,7 +288,8 @@ export function HomeWorkspace({
         }
         if (!cancelled) setProgramsLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         if (!cancelled) {
           setClientPrograms([]);
           setProgramDayId(null);

@@ -473,12 +473,27 @@ async function loadLastSetLogsMap(
     .orderBy(desc(trainingSessions.performedAt))
     .limit(15);
 
+  if (completed.length === 0) return map;
+
+  const sessionIds = completed.map((s) => s.id);
+  const logs = await db
+    .select()
+    .from(sessionExerciseLogs)
+    .where(inArray(sessionExerciseLogs.sessionId, sessionIds));
+
+  const logsBySession = new Map<string, typeof logs>();
+  for (const log of logs) {
+    let list = logsBySession.get(log.sessionId);
+    if (!list) {
+      list = [];
+      logsBySession.set(log.sessionId, list);
+    }
+    list.push(log);
+  }
+
   for (const s of completed) {
-    const logs = await db
-      .select()
-      .from(sessionExerciseLogs)
-      .where(eq(sessionExerciseLogs.sessionId, s.id));
-    for (const log of logs) {
+    const sLogs = logsBySession.get(s.id) || [];
+    for (const log of sLogs) {
       const key = exerciseKey(log.exerciseId, log.exerciseName);
       if (map.has(key)) continue;
       const sets = ensureSetLogs(log);
@@ -498,53 +513,75 @@ export async function getLastWeightsForExerciseAction(opts: {
   excludeSessionId?: string;
   plannedReps?: string | null;
 }) {
-  const session = await requireSession();
-  if (!opts.clientId) return { setLogs: [] as SessionSetLog[] };
-  await assertClientInOrg(opts.clientId, session.organizationId);
+  try {
+    const session = await requireSession();
+    if (!opts.clientId) return { setLogs: [] as SessionSetLog[] };
+    await assertClientInOrg(opts.clientId, session.organizationId);
 
-  const db = await getDb();
-  const completed = await db
-    .select()
-    .from(trainingSessions)
-    .where(
-      and(
-        eq(trainingSessions.organizationId, session.organizationId),
-        eq(trainingSessions.clientId, opts.clientId),
-        eq(trainingSessions.status, "completed")
+    const db = await getDb();
+    const completed = await db
+      .select()
+      .from(trainingSessions)
+      .where(
+        and(
+          eq(trainingSessions.organizationId, session.organizationId),
+          eq(trainingSessions.clientId, opts.clientId),
+          eq(trainingSessions.status, "completed")
+        )
       )
-    )
-    .orderBy(desc(trainingSessions.performedAt))
-    .limit(20);
+      .orderBy(desc(trainingSessions.performedAt))
+      .limit(20);
 
-  for (const s of completed) {
-    if (opts.excludeSessionId && s.id === opts.excludeSessionId) continue;
+    const filteredSessions = completed.filter(
+      (s) => !opts.excludeSessionId || s.id !== opts.excludeSessionId
+    );
+    if (filteredSessions.length === 0) return { setLogs: [] as SessionSetLog[] };
+
+    const sessionIds = filteredSessions.map((s) => s.id);
     const logs = await db
       .select()
       .from(sessionExerciseLogs)
-      .where(eq(sessionExerciseLogs.sessionId, s.id));
+      .where(inArray(sessionExerciseLogs.sessionId, sessionIds));
+
+    const logsBySession = new Map<string, typeof logs>();
     for (const log of logs) {
-      const matchId =
-        opts.exerciseId && log.exerciseId && opts.exerciseId === log.exerciseId;
-      const matchName =
-        log.exerciseName.toLowerCase().trim() ===
-        opts.exerciseName.toLowerCase().trim();
-      if (!matchId && !matchName) continue;
-      const sets = ensureSetLogs(log);
-      if (sets.some((x) => x.weightKg != null || x.completed)) {
-        return {
-          setLogs: sets,
-          sessionTitle: s.title,
-          performedAt: s.performedAt,
-          lastLine: formatLastPerformance(sets),
-          suggestion: suggestProgression({
-            plannedReps: opts.plannedReps ?? log.plannedReps,
-            lastSets: sets,
-          }),
-        };
+      let list = logsBySession.get(log.sessionId);
+      if (!list) {
+        list = [];
+        logsBySession.set(log.sessionId, list);
+      }
+      list.push(log);
+    }
+
+    for (const s of filteredSessions) {
+      const sLogs = logsBySession.get(s.id) || [];
+      for (const log of sLogs) {
+        const matchId =
+          opts.exerciseId && log.exerciseId && opts.exerciseId === log.exerciseId;
+        const matchName =
+          log.exerciseName.toLowerCase().trim() ===
+          opts.exerciseName.toLowerCase().trim();
+        if (!matchId && !matchName) continue;
+        const sets = ensureSetLogs(log);
+        if (sets.some((x) => x.weightKg != null || x.completed)) {
+          return {
+            setLogs: sets,
+            sessionTitle: s.title,
+            performedAt: s.performedAt,
+            lastLine: formatLastPerformance(sets),
+            suggestion: suggestProgression({
+              plannedReps: opts.plannedReps ?? log.plannedReps,
+              lastSets: sets,
+            }),
+          };
+        }
       }
     }
+    return { setLogs: [] as SessionSetLog[] };
+  } catch (e) {
+    console.error("[getLastWeightsForExercise]", e);
+    return { setLogs: [] as SessionSetLog[] };
   }
-  return { setLogs: [] as SessionSetLog[] };
 }
 
 export type PreviousLoadEntry = {
@@ -736,13 +773,30 @@ async function loadLastSetLogsMapDetailed(
     .orderBy(desc(trainingSessions.performedAt))
     .limit(15);
 
-  for (const s of completed) {
-    if (excludeSessionId && s.id === excludeSessionId) continue;
-    const logs = await db
-      .select()
-      .from(sessionExerciseLogs)
-      .where(eq(sessionExerciseLogs.sessionId, s.id));
-    for (const log of logs) {
+  const filteredSessions = completed.filter(
+    (s) => !excludeSessionId || s.id !== excludeSessionId
+  );
+  if (filteredSessions.length === 0) return map;
+
+  const sessionIds = filteredSessions.map((s) => s.id);
+  const logs = await db
+    .select()
+    .from(sessionExerciseLogs)
+    .where(inArray(sessionExerciseLogs.sessionId, sessionIds));
+
+  const logsBySession = new Map<string, typeof logs>();
+  for (const log of logs) {
+    let list = logsBySession.get(log.sessionId);
+    if (!list) {
+      list = [];
+      logsBySession.set(log.sessionId, list);
+    }
+    list.push(log);
+  }
+
+  for (const s of filteredSessions) {
+    const sLogs = logsBySession.get(s.id) || [];
+    for (const log of sLogs) {
       const key = exerciseKey(log.exerciseId, log.exerciseName);
       if (map.has(key)) continue;
       const sets = ensureSetLogs(log);
@@ -1020,12 +1074,19 @@ export async function completeSessionAction(
     }
   }
 
-  const wasInProgress = row.status === "in_progress";
-
-  await db
+  const updatedSessions = await db
     .update(trainingSessions)
     .set({ status: "completed", updatedAt: new Date() })
-    .where(eq(trainingSessions.id, sessionId));
+    .where(
+      and(
+        eq(trainingSessions.id, sessionId),
+        eq(trainingSessions.organizationId, session.organizationId),
+        eq(trainingSessions.status, "in_progress")
+      )
+    )
+    .returning();
+
+  const wasInProgress = updatedSessions.length > 0;
 
   /** Pack burn result for floor flash + close-loop (null = no client / not first complete). */
   let packBurn: {

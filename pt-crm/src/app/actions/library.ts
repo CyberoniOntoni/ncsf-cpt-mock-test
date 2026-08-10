@@ -10,8 +10,13 @@ import {
 import { id } from "@/lib/utils";
 
 export async function listEquipmentAction() {
-  const session = await requireSession();
-  return listEquipmentCatalogWithOrg(session.organizationId);
+  try {
+    const session = await requireSession();
+    return await listEquipmentCatalogWithOrg(session.organizationId);
+  } catch (e) {
+    console.error("[listEquipmentAction]", e);
+    return [];
+  }
 }
 
 /** Upsert — avoids unique-constraint errors when a row already exists. */
@@ -50,74 +55,108 @@ export async function setEquipmentAvailableAction(
   equipmentId: string,
   available: boolean
 ) {
-  const session = await requireSession();
-  if (!equipmentId) throw new Error("Missing equipment id");
-  await upsertOrgEquipment(session.organizationId, equipmentId, available);
-  revalidatePath("/library");
-  revalidatePath("/library/equipment");
-  return { ok: true };
+  try {
+    const session = await requireSession();
+    if (!equipmentId) {
+      return { ok: false, success: false, error: "Missing equipment id" };
+    }
+    await upsertOrgEquipment(session.organizationId, equipmentId, available);
+    revalidatePath("/library");
+    revalidatePath("/library/equipment");
+    return { ok: true, success: true };
+  } catch (e) {
+    console.error("[setEquipmentAvailableAction]", e);
+    return {
+      ok: false,
+      success: false,
+      error: e instanceof Error ? e.message : "Failed to update equipment",
+    };
+  }
 }
 
 export async function setAllEquipmentAction(available: boolean) {
-  const session = await requireSession();
-  const rows = await listEquipmentCatalogWithOrg(session.organizationId);
+  try {
+    const session = await requireSession();
+    const rows = await listEquipmentCatalogWithOrg(session.organizationId);
 
-  for (const r of rows) {
-    await upsertOrgEquipment(session.organizationId, r.id, available);
+    for (const r of rows) {
+      await upsertOrgEquipment(session.organizationId, r.id, available);
+    }
+
+    revalidatePath("/library");
+    revalidatePath("/library/equipment");
+    return { ok: true, success: true };
+  } catch (e) {
+    console.error("[setAllEquipmentAction]", e);
+    return {
+      ok: false,
+      success: false,
+      error: e instanceof Error ? e.message : "Failed to update all equipment",
+    };
   }
-
-  revalidatePath("/library");
-  revalidatePath("/library/equipment");
-  return { ok: true };
 }
 
 /** Bulk set availability (presets, multi-toggle). */
 export async function setEquipmentBulkAction(
   updates: { equipmentId: string; available: boolean }[]
 ) {
-  const session = await requireSession();
-  if (!Array.isArray(updates) || !updates.length) {
-    throw new Error("No equipment updates");
+  try {
+    const session = await requireSession();
+    if (!Array.isArray(updates) || !updates.length) {
+      return { ok: false, success: false, error: "No equipment updates" };
+    }
+    for (const u of updates) {
+      if (!u.equipmentId) continue;
+      await upsertOrgEquipment(session.organizationId, u.equipmentId, !!u.available);
+    }
+    revalidatePath("/library");
+    revalidatePath("/library/equipment");
+    return { ok: true, success: true };
+  } catch (e) {
+    console.error("[setEquipmentBulkAction]", e);
+    return {
+      ok: false,
+      success: false,
+      error: e instanceof Error ? e.message : "Failed to update equipment bulk",
+    };
   }
-  for (const u of updates) {
-    if (!u.equipmentId) continue;
-    await upsertOrgEquipment(session.organizationId, u.equipmentId, !!u.available);
-  }
-  revalidatePath("/library");
-  revalidatePath("/library/equipment");
-  return { ok: true };
 }
 
 export async function listExercisesAction(opts?: {
   availableOnly?: boolean;
   q?: string;
 }) {
-  const session = await requireSession();
-  let rows = await listExercisesForOrg(session.organizationId);
-  if (opts?.availableOnly) {
-    rows = rows.filter((e) => e.available);
+  try {
+    const session = await requireSession();
+    let rows = await listExercisesForOrg(session.organizationId);
+    if (opts?.availableOnly) {
+      rows = rows.filter((e) => e.available);
+    }
+    if (opts?.q?.trim()) {
+      const tokens = opts.q
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean);
+      rows = rows.filter((e) => {
+        const hay = [
+          e.name,
+          e.tags,
+          e.primaryMuscles,
+          e.secondaryMuscles || "",
+          e.movementPattern,
+          e.cues || "",
+          e.description || "",
+          ...(e.equipmentNames || []),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return tokens.every((t) => hay.includes(t));
+      });
+    }
+    return rows;
+  } catch (e) {
+    console.error("[listExercisesAction]", e);
+    return [];
   }
-  if (opts?.q?.trim()) {
-    const tokens = opts.q
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(Boolean);
-    rows = rows.filter((e) => {
-      const hay = [
-        e.name,
-        e.tags,
-        e.primaryMuscles,
-        e.secondaryMuscles || "",
-        e.movementPattern,
-        e.cues || "",
-        e.description || "",
-        ...(e.equipmentNames || []),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return tokens.every((t) => hay.includes(t));
-    });
-  }
-  return rows;
 }

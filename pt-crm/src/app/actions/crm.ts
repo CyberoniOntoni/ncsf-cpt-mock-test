@@ -51,16 +51,17 @@ export async function listCalendarAppointmentsAction(
   rangeStartIso: string,
   rangeEndIso: string
 ): Promise<CalendarAppointmentItem[]> {
-  const session = await requireSession();
-  const rangeStart = new Date(rangeStartIso);
-  const rangeEnd = new Date(rangeEndIso);
-  if (Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) {
-    throw new Error("Invalid calendar range");
-  }
-  // Guard absurd ranges (e.g. > 90 days)
-  if (rangeEnd.getTime() - rangeStart.getTime() > 90 * 24 * 60 * 60 * 1000) {
-    throw new Error("Calendar range too large");
-  }
+  try {
+    const session = await requireSession();
+    const rangeStart = new Date(rangeStartIso);
+    const rangeEnd = new Date(rangeEndIso);
+    if (Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) {
+      return [];
+    }
+    // Guard absurd ranges (e.g. > 90 days)
+    if (rangeEnd.getTime() - rangeStart.getTime() > 90 * 24 * 60 * 60 * 1000) {
+      return [];
+    }
 
   const db = await getDb();
   const orgId = session.organizationId;
@@ -99,6 +100,10 @@ export async function listCalendarAppointmentsAction(
     status: r.status,
     sessionId: r.sessionId ?? null,
   }));
+  } catch (e) {
+    console.error("[listCalendarAppointmentsAction]", e);
+    return [];
+  }
 }
 
 // ── Stage ──────────────────────────────────────────────────────────
@@ -757,6 +762,27 @@ export async function updateAppointmentStatusAction(
   const session = await requireSession();
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
+
+  const [existing] = await db
+    .select({
+      status: clientAppointments.status,
+      sessionId: clientAppointments.sessionId,
+    })
+    .from(clientAppointments)
+    .where(
+      and(
+        eq(clientAppointments.id, appointmentId),
+        eq(clientAppointments.clientId, clientId)
+      )
+    )
+    .limit(1);
+
+  if (!existing) {
+    throw new Error("Appointment not found");
+  }
+
+  const wasCompleted = existing.status === "completed";
+
   await db
     .update(clientAppointments)
     .set({ status })
@@ -766,8 +792,18 @@ export async function updateAppointmentStatusAction(
         eq(clientAppointments.clientId, clientId)
       )
     );
-  // Calendar complete does not burn pack sessions — floor session complete does.
-  // Avoids double-count when both appointment and floor log are closed.
+
+  if (status === "completed" && !wasCompleted) {
+    try {
+      await tryConsumePackageSessionAction(
+        clientId,
+        existing.sessionId || appointmentId
+      );
+    } catch {
+      // pack consume optional — do not block appointment status update
+    }
+  }
+
   revalidateClient(clientId);
   return { ok: true as const };
 }
@@ -1000,422 +1036,410 @@ export async function voidClientInvoiceAction(
 
 /** CRM snapshot for client detail header + panel */
 export async function getClientCrmSnapshotAction(clientId: string) {
-  const session = await requireSession();
-  await assertClientInOrg(clientId, session.organizationId);
-  const db = await getDb();
+  try {
+    const session = await requireSession();
+    await assertClientInOrg(clientId, session.organizationId);
+    const db = await getDb();
 
-  const [packages, appointments, checkIns, nextAppt, tasks, invoices] =
-    await Promise.all([
-    db
-      .select()
-      .from(clientPackages)
-      .where(eq(clientPackages.clientId, clientId))
-      .orderBy(desc(clientPackages.purchasedAt)),
-    db
-      .select()
-      .from(clientAppointments)
-      .where(eq(clientAppointments.clientId, clientId))
-      .orderBy(desc(clientAppointments.startsAt))
-      .limit(12),
-    db
-      .select()
-      .from(clientCheckIns)
-      .where(eq(clientCheckIns.clientId, clientId))
-      .orderBy(desc(clientCheckIns.createdAt))
-      .limit(12),
-    // Next booking = earliest still-scheduled (includes past-due so floor can start)
-    db
-      .select()
-      .from(clientAppointments)
-      .where(
-        and(
-          eq(clientAppointments.clientId, clientId),
-          eq(clientAppointments.status, "scheduled")
+    const [packages, appointments, checkIns, nextAppt, tasks, invoices] =
+      await Promise.all([
+      db
+        .select()
+        .from(clientPackages)
+        .where(eq(clientPackages.clientId, clientId))
+        .orderBy(desc(clientPackages.purchasedAt)),
+      db
+        .select()
+        .from(clientAppointments)
+        .where(eq(clientAppointments.clientId, clientId))
+        .orderBy(desc(clientAppointments.startsAt))
+        .limit(12),
+      db
+        .select()
+        .from(clientCheckIns)
+        .where(eq(clientCheckIns.clientId, clientId))
+        .orderBy(desc(clientCheckIns.createdAt))
+        .limit(12),
+      // Next booking = earliest still-scheduled (includes past-due so floor can start)
+      db
+        .select()
+        .from(clientAppointments)
+        .where(
+          and(
+            eq(clientAppointments.clientId, clientId),
+            eq(clientAppointments.status, "scheduled")
+          )
         )
-      )
-      .orderBy(asc(clientAppointments.startsAt))
-      .limit(1),
-    db
-      .select()
-      .from(clientTasks)
-      .where(eq(clientTasks.clientId, clientId))
-      .orderBy(asc(clientTasks.dueAt), desc(clientTasks.createdAt))
-      .limit(20),
-    db
-      .select()
-      .from(clientInvoices)
-      .where(eq(clientInvoices.clientId, clientId))
-      .orderBy(desc(clientInvoices.issuedAt))
-      .limit(20),
-  ]);
+        .orderBy(asc(clientAppointments.startsAt))
+        .limit(1),
+      db
+        .select()
+        .from(clientTasks)
+        .where(eq(clientTasks.clientId, clientId))
+        .orderBy(asc(clientTasks.dueAt), desc(clientTasks.createdAt))
+        .limit(20),
+      db
+        .select()
+        .from(clientInvoices)
+        .where(eq(clientInvoices.clientId, clientId))
+        .orderBy(desc(clientInvoices.issuedAt))
+        .limit(20),
+    ]);
 
-  const activePkgs = packages.filter((p) => p.status === "active");
-  activePkgs.sort(
-    (a, b) =>
-      a.totalSessions - a.usedSessions - (b.totalSessions - b.usedSessions)
-  );
-  const activePackage = activePkgs[0]
-    ? {
-        id: activePkgs[0].id,
-        name: activePkgs[0].name,
-        remaining:
-          activePkgs[0].totalSessions - activePkgs[0].usedSessions,
-        total: activePkgs[0].totalSessions,
-        used: activePkgs[0].usedSessions,
-      }
-    : null;
+    const activePkgs = packages.filter((p) => p.status === "active");
+    activePkgs.sort(
+      (a, b) =>
+        a.totalSessions - a.usedSessions - (b.totalSessions - b.usedSessions)
+    );
+    const activePackage = activePkgs[0]
+      ? {
+          id: activePkgs[0].id,
+          name: activePkgs[0].name,
+          remaining:
+            activePkgs[0].totalSessions - activePkgs[0].usedSessions,
+          total: activePkgs[0].totalSessions,
+          used: activePkgs[0].usedSessions,
+        }
+      : null;
 
-  // Last purchased pack (any status) for one-tap renew prefill
-  const lastPackage = packages[0]
-    ? {
-        name: packages[0].name,
-        totalSessions: packages[0].totalSessions,
-      }
-    : null;
+    // Last purchased pack (any status) for one-tap renew prefill
+    const lastPackage = packages[0]
+      ? {
+          name: packages[0].name,
+          totalSessions: packages[0].totalSessions,
+        }
+      : null;
 
-  return {
-    packages,
-    appointments,
-    checkIns,
-    tasks,
-    invoices,
-    nextAppointment: nextAppt[0] ?? null,
-    activePackage,
-    lastPackage,
-  };
+    return {
+      packages,
+      appointments,
+      checkIns,
+      tasks,
+      invoices,
+      nextAppointment: nextAppt[0] ?? null,
+      activePackage,
+      lastPackage,
+    };
+  } catch (e) {
+    console.error("[getClientCrmSnapshotAction]", e);
+    return {
+      packages: [],
+      appointments: [],
+      checkIns: [],
+      tasks: [],
+      invoices: [],
+      nextAppointment: null,
+      activePackage: null,
+      lastPackage: null,
+    };
+  }
 }
 
 /** Org-wide CRM signals for home needs-you (packages low, appts due, leads). */
 export async function listOrgCrmSignalsAction() {
-  const session = await requireSession();
-  const db = await getDb();
-  const orgId = session.organizationId;
+  try {
+    const session = await requireSession();
+    const db = await getDb();
+    const orgId = session.organizationId;
 
-  const orgClients = await db
-    .select({
-      id: clients.id,
-      firstName: clients.firstName,
-      lastName: clients.lastName,
-      status: clients.status,
-    })
-    .from(clients)
-    .where(eq(clients.organizationId, orgId));
-
-  if (!orgClients.length) {
-    return {
-      lowPackages: [] as Array<{
-        clientId: string;
-        name: string;
-        remaining: number;
-        packageName: string;
-      }>,
-      upcomingAppts: [] as Array<{
-        clientId: string;
-        name: string;
-        startsAt: Date;
-        title: string;
-        appointmentId: string;
-        sessionId: string | null;
-      }>,
-      quietLeads: [] as Array<{ clientId: string; name: string }>,
-      openTasks: [] as Array<{
-        taskId: string;
-        clientId: string;
-        name: string;
-        title: string;
-        dueAt: Date | null;
-      }>,
-      unpaidInvoices: [] as Array<{
-        invoiceId: string;
-        clientId: string;
-        name: string;
-        title: string;
-        amountCents: number;
-        currency: string;
-      }>,
-    };
-  }
-
-  const clientById = new Map(orgClients.map((c) => [c.id, c]));
-  const clientIdList = orgClients.map((c) => c.id);
-  const leadIds = orgClients
-    .filter((c) => c.status === "lead")
-    .map((c) => c.id);
-
-  const nowDate = new Date();
-  const horizon = new Date(Date.now() + 48 * 60 * 60 * 1000);
-
-  const [pkgs, allAppts, checkIns, unpaidInvRows] = await Promise.all([
-    db
+    const orgClients = await db
       .select({
-        clientId: clientPackages.clientId,
-        name: clientPackages.name,
-        status: clientPackages.status,
-        totalSessions: clientPackages.totalSessions,
-        usedSessions: clientPackages.usedSessions,
+        id: clients.id,
+        firstName: clients.firstName,
+        lastName: clients.lastName,
+        status: clients.status,
+        updatedAt: clients.updatedAt,
       })
-      .from(clientPackages)
-      .where(
-        and(
-          inArray(clientPackages.clientId, clientIdList),
-          or(
-            eq(clientPackages.status, "active"),
-            eq(clientPackages.status, "exhausted")
+      .from(clients)
+      .where(eq(clients.organizationId, orgId));
+
+    if (!orgClients.length) {
+      return {
+        lowPackages: [],
+        upcomingAppts: [],
+        quietLeads: [],
+        openTasks: [],
+        unpaidInvoices: [],
+      };
+    }
+
+    const clientById = new Map(orgClients.map((c) => [c.id, c]));
+    const clientIdList = orgClients.map((c) => c.id);
+    const leadIds = orgClients
+      .filter((c) => c.status === "lead")
+      .map((c) => c.id);
+
+    const nowDate = new Date();
+    const horizon = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+    const [pkgs, allAppts, checkIns, unpaidInvRows] = await Promise.all([
+      db
+        .select({
+          clientId: clientPackages.clientId,
+          name: clientPackages.name,
+          status: clientPackages.status,
+          totalSessions: clientPackages.totalSessions,
+          usedSessions: clientPackages.usedSessions,
+        })
+        .from(clientPackages)
+        .where(
+          and(
+            inArray(clientPackages.clientId, clientIdList),
+            or(
+              eq(clientPackages.status, "active"),
+              eq(clientPackages.status, "exhausted")
+            )
+          )
+        ),
+      db
+        .select({
+          id: clientAppointments.id,
+          clientId: clientAppointments.clientId,
+          startsAt: clientAppointments.startsAt,
+          title: clientAppointments.title,
+          sessionId: clientAppointments.sessionId,
+        })
+        .from(clientAppointments)
+        .where(
+          and(
+            inArray(clientAppointments.clientId, clientIdList),
+            eq(clientAppointments.status, "scheduled"),
+            gte(clientAppointments.startsAt, nowDate),
+            lte(clientAppointments.startsAt, horizon)
           )
         )
-      ),
-    db
-      .select({
-        id: clientAppointments.id,
-        clientId: clientAppointments.clientId,
-        startsAt: clientAppointments.startsAt,
-        title: clientAppointments.title,
-        sessionId: clientAppointments.sessionId,
-      })
-      .from(clientAppointments)
-      .where(
-        and(
-          inArray(clientAppointments.clientId, clientIdList),
-          eq(clientAppointments.status, "scheduled"),
-          gte(clientAppointments.startsAt, nowDate),
-          lte(clientAppointments.startsAt, horizon)
+        .orderBy(asc(clientAppointments.startsAt))
+        .limit(40),
+      leadIds.length
+        ? db
+            .select({
+              clientId: clientCheckIns.clientId,
+              createdAt: clientCheckIns.createdAt,
+            })
+            .from(clientCheckIns)
+            .where(inArray(clientCheckIns.clientId, leadIds))
+        : Promise.resolve([] as Array<{ clientId: string; createdAt: Date }>),
+      db
+        .select({
+          id: clientInvoices.id,
+          clientId: clientInvoices.clientId,
+          title: clientInvoices.title,
+          amountCents: clientInvoices.amountCents,
+          currency: clientInvoices.currency,
+        })
+        .from(clientInvoices)
+        .where(
+          and(
+            inArray(clientInvoices.clientId, clientIdList),
+            eq(clientInvoices.status, "unpaid")
+          )
         )
-      )
-      .orderBy(asc(clientAppointments.startsAt))
-      .limit(40),
-    leadIds.length
-      ? db
-          .select({
-            clientId: clientCheckIns.clientId,
-            createdAt: clientCheckIns.createdAt,
-          })
-          .from(clientCheckIns)
-          .where(inArray(clientCheckIns.clientId, leadIds))
-      : Promise.resolve(
-          [] as Array<{ clientId: string; createdAt: Date }>
-        ),
-    db
-      .select({
-        id: clientInvoices.id,
-        clientId: clientInvoices.clientId,
-        title: clientInvoices.title,
-        amountCents: clientInvoices.amountCents,
-        currency: clientInvoices.currency,
-      })
-      .from(clientInvoices)
-      .where(
-        and(
-          inArray(clientInvoices.clientId, clientIdList),
-          eq(clientInvoices.status, "unpaid")
-        )
-      )
-      .orderBy(desc(clientInvoices.issuedAt))
-      .limit(30),
-  ]);
+        .orderBy(desc(clientInvoices.issuedAt))
+        .limit(30),
+    ]);
 
-  /**
-   * Low pack = total remaining across *active* packs ≤ 2.
-   * Exhausted packs alone (no active renewal) → remaining 0.
-   * Never flag renew when a healthy active pack exists.
-   */
-  type PackAgg = {
-    activeRemaining: number;
-    activeName: string | null;
-    lowestActive: number;
-    hasExhausted: boolean;
-    exhaustedName: string | null;
-  };
-  const packAgg = new Map<string, PackAgg>();
-  for (const p of pkgs) {
-    const remaining = Math.max(0, p.totalSessions - p.usedSessions);
-    let agg = packAgg.get(p.clientId);
-    if (!agg) {
-      agg = {
-        activeRemaining: 0,
-        activeName: null,
-        lowestActive: Infinity,
-        hasExhausted: false,
-        exhaustedName: null,
-      };
-      packAgg.set(p.clientId, agg);
-    }
-    if (p.status === "active") {
-      agg.activeRemaining += remaining;
-      if (remaining < agg.lowestActive) {
-        agg.lowestActive = remaining;
-        agg.activeName = p.name;
+    type PackAgg = {
+      activeRemaining: number;
+      activeName: string | null;
+      lowestActive: number;
+      hasExhausted: boolean;
+      exhaustedName: string | null;
+    };
+    const packAgg = new Map<string, PackAgg>();
+    for (const p of pkgs) {
+      const remaining = Math.max(0, p.totalSessions - p.usedSessions);
+      let agg = packAgg.get(p.clientId);
+      if (!agg) {
+        agg = {
+          activeRemaining: 0,
+          activeName: null,
+          lowestActive: Infinity,
+          hasExhausted: false,
+          exhaustedName: null,
+        };
+        packAgg.set(p.clientId, agg);
       }
-    } else if (p.status === "exhausted") {
-      agg.hasExhausted = true;
-      if (!agg.exhaustedName) agg.exhaustedName = p.name;
+      if (p.status === "active") {
+        agg.activeRemaining += remaining;
+        if (remaining < agg.lowestActive) {
+          agg.lowestActive = remaining;
+          agg.activeName = p.name;
+        }
+      } else if (p.status === "exhausted") {
+        agg.hasExhausted = true;
+        if (!agg.exhaustedName) agg.exhaustedName = p.name;
+      }
     }
-  }
 
-  const lowPackages: Array<{
-    clientId: string;
-    name: string;
-    remaining: number;
-    packageName: string;
-  }> = [];
-  for (const [clientId, agg] of packAgg) {
-    const c = clientById.get(clientId);
-    if (
-      !c ||
-      c.status === "inactive" ||
-      c.status === "draft" ||
-      c.status === "paused"
-    ) {
-      continue;
-    }
-    // Healthy active pack(s) → no renew signal
-    if (agg.activeRemaining > 2) continue;
-    // Has active but low, or only exhausted leftovers
-    const remaining =
-      agg.activeRemaining > 0 || !agg.hasExhausted
-        ? agg.activeRemaining
-        : 0;
-    if (remaining > 2) continue;
-    // Skip clients with no pack history at all (shouldn't happen in map)
-    if (agg.activeRemaining === 0 && !agg.hasExhausted) continue;
-    lowPackages.push({
-      clientId,
-      name: `${c.firstName} ${c.lastName || ""}`.trim(),
-      remaining,
-      packageName:
-        agg.activeName || agg.exhaustedName || "Session pack",
-    });
-  }
-  lowPackages.sort((a, b) => a.remaining - b.remaining);
-
-  const upcomingAppts = allAppts
-    .map((a) => {
-      const c = clientById.get(a.clientId);
-      // Align with packs: hide inactive, draft, and paused from floor CRM
+    const lowPackages: Array<{
+      clientId: string;
+      name: string;
+      remaining: number;
+      packageName: string;
+    }> = [];
+    for (const [clientId, agg] of packAgg) {
+      const c = clientById.get(clientId);
       if (
         !c ||
         c.status === "inactive" ||
         c.status === "draft" ||
         c.status === "paused"
       ) {
-        return null;
+        continue;
       }
-      return {
-        clientId: a.clientId,
+      if (agg.activeRemaining > 2) continue;
+      const remaining =
+        agg.activeRemaining > 0 || !agg.hasExhausted
+          ? agg.activeRemaining
+          : 0;
+      if (remaining > 2) continue;
+      if (agg.activeRemaining === 0 && !agg.hasExhausted) continue;
+      lowPackages.push({
+        clientId,
         name: `${c.firstName} ${c.lastName || ""}`.trim(),
-        startsAt: a.startsAt as Date,
-        title: a.title,
-        appointmentId: a.id,
-        sessionId: a.sessionId ?? null,
-      };
-    })
-    .filter((x): x is NonNullable<typeof x> => x != null);
-
-  // Leads with no check-in in 7 days (or never)
-  const lastCheckIn = new Map<string, number>();
-  for (const ci of checkIns) {
-    const t = new Date(ci.createdAt).getTime();
-    const prev = lastCheckIn.get(ci.clientId) ?? 0;
-    if (t > prev) lastCheckIn.set(ci.clientId, t);
-  }
-  const week = 7 * 24 * 60 * 60 * 1000;
-  const now = Date.now();
-  const quietLeads: Array<{ clientId: string; name: string }> = [];
-  for (const c of orgClients) {
-    if (c.status !== "lead") continue;
-    if (quietLeads.length >= 10) break;
-    const last = lastCheckIn.get(c.id);
-    if (!last || now - last >= week) {
-      quietLeads.push({
-        clientId: c.id,
-        name: `${c.firstName} ${c.lastName || ""}`.trim(),
+        remaining,
+        packageName:
+          agg.activeName || agg.exhaustedName || "Session pack",
       });
     }
-  }
+    lowPackages.sort((a, b) => a.remaining - b.remaining);
 
-  // Open follow-ups (due within 7 days, overdue, or no due date) — cap 15
-  const openTaskRows = await db
-    .select({
-      id: clientTasks.id,
-      clientId: clientTasks.clientId,
-      title: clientTasks.title,
-      dueAt: clientTasks.dueAt,
-    })
-    .from(clientTasks)
-    .where(
-      and(
-        eq(clientTasks.organizationId, orgId),
-        eq(clientTasks.status, "open")
+    const upcomingAppts = allAppts
+      .map((a) => {
+        const c = clientById.get(a.clientId);
+        if (
+          !c ||
+          c.status === "inactive" ||
+          c.status === "draft" ||
+          c.status === "paused"
+        ) {
+          return null;
+        }
+        return {
+          clientId: a.clientId,
+          name: `${c.firstName} ${c.lastName || ""}`.trim(),
+          startsAt: a.startsAt as Date,
+          title: a.title,
+          appointmentId: a.id,
+          sessionId: a.sessionId ?? null,
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x != null);
+
+    const lastCheckIn = new Map<string, number>();
+    for (const ci of checkIns) {
+      const t = new Date(ci.createdAt).getTime();
+      const prev = lastCheckIn.get(ci.clientId) ?? 0;
+      if (t > prev) lastCheckIn.set(ci.clientId, t);
+    }
+    const week = 7 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const quietLeads: Array<{ clientId: string; name: string }> = [];
+    for (const c of orgClients) {
+      if (c.status !== "lead") continue;
+      if (quietLeads.length >= 10) break;
+      const last = lastCheckIn.get(c.id);
+      if (!last || now - last >= week) {
+        quietLeads.push({
+          clientId: c.id,
+          name: `${c.firstName} ${c.lastName || ""}`.trim(),
+        });
+      }
+    }
+
+    const openTaskRows = await db
+      .select({
+        id: clientTasks.id,
+        clientId: clientTasks.clientId,
+        title: clientTasks.title,
+        dueAt: clientTasks.dueAt,
+      })
+      .from(clientTasks)
+      .where(
+        and(
+          eq(clientTasks.organizationId, orgId),
+          eq(clientTasks.status, "open")
+        )
       )
-    )
-    .orderBy(asc(clientTasks.dueAt))
-    .limit(40);
+      .orderBy(asc(clientTasks.dueAt))
+      .limit(40);
 
-  const weekAhead = now + week;
-  const openTasks: Array<{
-    taskId: string;
-    clientId: string;
-    name: string;
-    title: string;
-    dueAt: Date | null;
-  }> = [];
-  for (const t of openTaskRows) {
-    if (openTasks.length >= 15) break;
-    const c = clientById.get(t.clientId);
-    if (
-      !c ||
-      c.status === "inactive" ||
-      c.status === "draft" ||
-      c.status === "paused"
-    ) {
-      continue;
+    const weekAhead = now + week;
+    const openTasks: Array<{
+      taskId: string;
+      clientId: string;
+      name: string;
+      title: string;
+      dueAt: Date | null;
+    }> = [];
+    for (const t of openTaskRows) {
+      if (openTasks.length >= 15) break;
+      const c = clientById.get(t.clientId);
+      if (
+        !c ||
+        c.status === "inactive" ||
+        c.status === "draft" ||
+        c.status === "paused"
+      ) {
+        continue;
+      }
+      if (t.dueAt) {
+        const dueMs = new Date(t.dueAt).getTime();
+        if (dueMs > weekAhead) continue;
+      }
+      openTasks.push({
+        taskId: t.id,
+        clientId: t.clientId,
+        name: `${c.firstName} ${c.lastName || ""}`.trim(),
+        title: t.title,
+        dueAt: t.dueAt ? (t.dueAt as Date) : null,
+      });
     }
-    if (t.dueAt) {
-      const dueMs = new Date(t.dueAt).getTime();
-      if (dueMs > weekAhead) continue;
+
+    const unpaidInvoices: Array<{
+      invoiceId: string;
+      clientId: string;
+      name: string;
+      title: string;
+      amountCents: number;
+      currency: string;
+    }> = [];
+    for (const inv of unpaidInvRows) {
+      if (unpaidInvoices.length >= 15) break;
+      const c = clientById.get(inv.clientId);
+      if (
+        !c ||
+        c.status === "inactive" ||
+        c.status === "draft" ||
+        c.status === "paused"
+      ) {
+        continue;
+      }
+      unpaidInvoices.push({
+        invoiceId: inv.id,
+        clientId: inv.clientId,
+        name: `${c.firstName} ${c.lastName || ""}`.trim(),
+        title: inv.title,
+        amountCents: inv.amountCents,
+        currency: inv.currency,
+      });
     }
-    openTasks.push({
-      taskId: t.id,
-      clientId: t.clientId,
-      name: `${c.firstName} ${c.lastName || ""}`.trim(),
-      title: t.title,
-      dueAt: t.dueAt ? (t.dueAt as Date) : null,
-    });
+
+    return {
+      lowPackages,
+      upcomingAppts,
+      quietLeads,
+      openTasks,
+      unpaidInvoices,
+    };
+  } catch (e) {
+    console.error("[listOrgCrmSignalsAction]", e);
+    return {
+      lowPackages: [],
+      upcomingAppts: [],
+      quietLeads: [],
+      openTasks: [],
+      unpaidInvoices: [],
+    };
   }
-
-  const unpaidInvoices: Array<{
-    invoiceId: string;
-    clientId: string;
-    name: string;
-    title: string;
-    amountCents: number;
-    currency: string;
-  }> = [];
-  for (const inv of unpaidInvRows) {
-    if (unpaidInvoices.length >= 15) break;
-    const c = clientById.get(inv.clientId);
-    if (
-      !c ||
-      c.status === "inactive" ||
-      c.status === "draft" ||
-      c.status === "paused"
-    ) {
-      continue;
-    }
-    unpaidInvoices.push({
-      invoiceId: inv.id,
-      clientId: inv.clientId,
-      name: `${c.firstName} ${c.lastName || ""}`.trim(),
-      title: inv.title,
-      amountCents: inv.amountCents,
-      currency: inv.currency,
-    });
-  }
-
-  return {
-    lowPackages,
-    upcomingAppts,
-    quietLeads,
-    openTasks,
-    unpaidInvoices,
-  };
 }
