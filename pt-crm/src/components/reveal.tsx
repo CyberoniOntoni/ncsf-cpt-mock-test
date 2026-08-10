@@ -63,7 +63,7 @@ export function Reveal({
     }
 
     // Arm animation classes on next frame so first paint isn't stuck hidden
-    let raf = requestAnimationFrame(() => setReady(true));
+    const raf = requestAnimationFrame(() => setReady(true));
     let failSafe = 0;
 
     const reveal = () => {

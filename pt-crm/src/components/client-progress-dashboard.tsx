@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import type { ClientProgressData } from "@/app/actions/progress";
 import { getFieldDef } from "@/lib/measurements";
-import { cn } from "@/lib/utils";
+// cn removed — not used in this component
 import { ProgressShareButton } from "./progress-share-button";
 import { Badge, Card, EmptyState, SectionLabel } from "./ui";
 import { BarChart, Sparkline } from "./sparkline";
@@ -159,8 +159,8 @@ export function ClientProgressDashboard({
     data;
 
   const weight = metrics.find((m) => m.key === "weightKg");
-  const bodyFat = metrics.find((m) => m.key === "bodyFatPct");
-  const waist = metrics.find((m) => m.key === "waistCm");
+  const _bodyFat = metrics.find((m) => m.key === "bodyFatPct");
+  const _waist = metrics.find((m) => m.key === "waistCm");
 
   const weekValues = weeklyVolume.map((w) => w.volumeKg);
   const weekLabels = weeklyVolume.map((w) => w.label);
