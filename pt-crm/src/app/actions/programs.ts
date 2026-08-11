@@ -973,7 +973,7 @@ export async function swapProgramExerciseAction(
 }
 
 /** Re-sequence a day's exercises with science order (bench before OHP, etc.). */
-async function reorderProgramDayExercises(
+async function _reorderProgramDayExercises(
   programDayId: string,
   ctx: { focus?: string | null; goal?: string | null; splitType?: string | null }
 ) {
@@ -1142,12 +1142,6 @@ export async function addProgramExerciseAction(input: {
     })
     .where(eq(programs.id, dayRow.program.id));
 
-  await reorderProgramDayExercises(input.programDayId, {
-    focus: dayRow.day.focus,
-    goal: dayRow.program.goal,
-    splitType: dayRow.program.splitType,
-  });
-
   revalidatePath(`/programs/${dayRow.program.id}`);
   revalidatePath("/programs");
   if (dayRow.program.clientId) {
@@ -1161,6 +1155,55 @@ export async function addProgramExerciseAction(input: {
     name: pick.name,
     dayName: dayRow.day.name,
   };
+}
+
+/** Reorder exercises within a program day. */
+export async function reorderProgramExercisesAction(input: {
+  programDayId: string;
+  orderedExerciseIds: string[];
+}) {
+  const session = await requireSession();
+  const db = await getDb();
+
+  const [dayRow] = await db
+    .select({
+      day: programDays,
+      program: programs,
+    })
+    .from(programDays)
+    .innerJoin(programs, eq(programDays.programId, programs.id))
+    .where(eq(programDays.id, input.programDayId))
+    .limit(1);
+
+  if (!dayRow || dayRow.program.organizationId !== session.organizationId) {
+    throw new Error("Not found");
+  }
+
+  const { programDayId, orderedExerciseIds } = input;
+
+  if (orderedExerciseIds.length > 0) {
+    const caseCases = orderedExerciseIds.map(
+      (exerciseId, index) =>
+        sql`WHEN ${programExercises.id} = ${exerciseId} THEN ${index}::integer`
+    );
+    await db
+      .update(programExercises)
+      .set({ sortOrder: sql`CASE ${sql.join(caseCases, sql` `)} END` })
+      .where(
+        and(
+          eq(programExercises.programDayId, programDayId),
+          inArray(programExercises.id, orderedExerciseIds)
+        )
+      );
+  }
+
+  revalidatePath(`/programs/${dayRow.program.id}`);
+  revalidatePath("/programs");
+  if (dayRow.program.clientId) {
+    revalidatePath(`/clients/${dayRow.program.clientId}`);
+  }
+
+  return { ok: true as const };
 }
 
 export async function deleteProgramExerciseAction(exerciseRowId: string) {

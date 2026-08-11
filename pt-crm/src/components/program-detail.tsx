@@ -16,6 +16,7 @@ import {
   insertCorrectivesAction,
   regenerateProgramDayAction,
   regenerateProgramInPlaceAction,
+  reorderProgramExercisesAction,
   setMesocycleAutoAdvanceAction,
   suggestProgramMesocycleWeekAction,
   suggestSubstitutionsAction,
@@ -67,7 +68,7 @@ import {
 import { PageShell } from "./page-shell";
 import { StartSessionButton } from "./start-session-button";
 import { ExerciseBankPicker } from "./exercise-bank-picker";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 
 type SubSuggestion = {
   id: string;
@@ -202,6 +203,64 @@ export function ProgramDetail({
     }>;
   } | null>(null);
   const [volumeLoading, setVolumeLoading] = useState(false);
+  const [daysState, setDaysState] = useState<Day[]>(days);
+  const [dragInfo, setDragInfo] = useState<{
+    dayId: string;
+    exerciseId: string;
+  } | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDaysState(days);
+  }, [days]);
+
+  function reorderExercisesInDay(
+    dayId: string,
+    sourceId: string,
+    targetId: string
+  ) {
+    const targetDay = daysState.find((d) => d.id === dayId);
+    if (!targetDay) return;
+
+    const currentExercises = [...targetDay.exercises];
+    const sourceIndex = currentExercises.findIndex((e) => e.id === sourceId);
+    const targetIndex = currentExercises.findIndex((e) => e.id === targetId);
+
+    if (
+      sourceIndex === -1 ||
+      targetIndex === -1 ||
+      sourceIndex === targetIndex
+    ) {
+      return;
+    }
+
+    const [moved] = currentExercises.splice(sourceIndex, 1);
+    currentExercises.splice(targetIndex, 0, moved!);
+
+    const updatedExercises = currentExercises.map((ex, idx) => ({
+      ...ex,
+      sortOrder: idx,
+    }));
+
+    const nextDays = daysState.map((d) =>
+      d.id === dayId ? { ...d, exercises: updatedExercises } : d
+    );
+
+    setDaysState(nextDays);
+
+    startTransition(async () => {
+      try {
+        await reorderProgramExercisesAction({
+          programDayId: dayId,
+          orderedExerciseIds: updatedExercises.map((e) => e.id),
+        });
+        router.refresh();
+      } catch (e) {
+        setMsg(e instanceof Error ? e.message : "Reorder failed");
+        setDaysState(days);
+      }
+    });
+  }
 
   const hasClient = !!(clientId || program.clientId || client);
   const constraintSummary =
@@ -215,8 +274,8 @@ export function ProgramDetail({
     program.generationMeta?.source === "scratch" ||
     program.generationMeta?.manual === true;
   const buildProgress = useMemo(
-    () => scratchBuildProgress(days),
-    [days]
+    () => scratchBuildProgress(daysState),
+    [daysState]
   );
   const needsBuildHelp =
     isScratch ||
@@ -226,7 +285,7 @@ export function ProgramDetail({
   // After create-from-scratch: open first empty day picker once
   useEffect(() => {
     if (!startInBuildMode) return;
-    const firstEmpty = days.find((d) => d.exercises.length === 0);
+    const firstEmpty = daysState.find((d) => d.exercises.length === 0);
     if (firstEmpty) {
       setAddDayId(firstEmpty.id);
       setMsg(
@@ -319,7 +378,7 @@ export function ProgramDetail({
     if (!editId) return;
     startTransition(async () => {
       try {
-        const current = days
+        const current = daysState
           .flatMap((d) => d.exercises)
           .find((e) => e.id === editId);
         const schemeChanged =
@@ -391,7 +450,7 @@ export function ProgramDetail({
         // Keep bank open so you can stack several exercises on a day
         setAddPreferPattern(null);
         setMsg(
-          `Added ${res.name} to ${res.dayName} (science order) — pick another or Cancel`
+          `Added ${res.name} to ${res.dayName} — pick another or Cancel`
         );
         router.refresh();
       } catch (e) {
@@ -1330,7 +1389,7 @@ export function ProgramDetail({
             each day.
           </p>
         )}
-        {days.map((day) => (
+        {daysState.map((day) => (
           <Card
             key={day.id}
             padding="sm"
@@ -1598,10 +1657,57 @@ export function ProgramDetail({
                       : nested
                         ? "border-zinc-800/80 bg-zinc-950/60"
                         : "border-zinc-800 bg-zinc-950/40";
+                const isDragging = dragInfo?.exerciseId === ex.id;
+                const isDragOver = dragOverId === ex.id;
+
                 return (
                 <li
                   key={ex.id}
-                  className={`list-none rounded-lg border px-3 py-2.5 ${phaseBorder}`}
+                  draggable={!pending && editId !== ex.id && swapId !== ex.id}
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData(
+                      "text/plain",
+                      JSON.stringify({ dayId: day.id, exerciseId: ex.id })
+                    );
+                    setDragInfo({ dayId: day.id, exerciseId: ex.id });
+                  }}
+                  onDragOver={(e) => {
+                    if (dragInfo && dragInfo.dayId === day.id) {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (dragOverId !== ex.id) {
+                        setDragOverId(ex.id);
+                      }
+                    }
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverId === ex.id) {
+                      setDragOverId(null);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOverId(null);
+                    if (!dragInfo) return;
+                    if (
+                      dragInfo.dayId === day.id &&
+                      dragInfo.exerciseId !== ex.id
+                    ) {
+                      reorderExercisesInDay(day.id, dragInfo.exerciseId, ex.id);
+                    }
+                    setDragInfo(null);
+                  }}
+                  onDragEnd={() => {
+                    setDragInfo(null);
+                    setDragOverId(null);
+                  }}
+                  className={cn(
+                    "list-none rounded-lg border px-3 py-2.5 transition-colors",
+                    phaseBorder,
+                    isDragOver && "ring-2 ring-emerald-500/70 bg-emerald-950/30",
+                    isDragging && "opacity-40"
+                  )}
                 >
                   {swapId === ex.id ? (
                     <div className="space-y-3">
@@ -1893,8 +1999,17 @@ export function ProgramDetail({
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
+                      <div className="min-w-0 flex-1 flex items-start gap-2">
+                        {editId !== ex.id && swapId !== ex.id && (
+                          <div
+                            className="flex items-center text-zinc-500 hover:text-zinc-300 cursor-grab active:cursor-grabbing pt-0.5 shrink-0"
+                            title="Drag to reorder"
+                          >
+                            <GripVertical className="h-4 w-4" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
                           {nested && (
                             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-950/50 text-[11px] font-semibold text-amber-200 ring-1 ring-amber-800/40">
                               {formatGroupBadge(
@@ -2009,7 +2124,8 @@ export function ProgramDetail({
                           </div>
                         )}
                       </div>
-                      <div className="flex shrink-0 flex-wrap gap-0.5">
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-0.5">
                         <Button
                           type="button"
                           variant="ghost"
