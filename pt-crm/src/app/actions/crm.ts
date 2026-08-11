@@ -13,6 +13,7 @@ import {
   trainingSessions,
 } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
+import type { SessionPayload } from "@/lib/session";
 import {
   CHECK_IN_CHANNELS,
   CLIENT_STAGES,
@@ -140,9 +141,12 @@ export async function updateClientStageAction(
  * First real engagement (package / client-linked program / floor session):
  * lead → active. No-op for other stages. Never throws — callers must not fail.
  */
-export async function promoteLeadToActiveIfNeeded(clientId: string) {
+export async function promoteLeadToActiveIfNeeded(
+  clientId: string,
+  optSession?: SessionPayload
+) {
   try {
-    const session = await requireSession();
+    const session = optSession || (await requireSession());
     await assertClientInOrg(clientId, session.organizationId);
     const db = await getDb();
     // Conditional update: only promote leads (case handled via lower-match)
@@ -209,7 +213,7 @@ export async function createClientPackageAction(input: {
     .set({ updatedAt: new Date() })
     .where(eq(clients.id, input.clientId));
   revalidateClient(input.clientId);
-  await promoteLeadToActiveIfNeeded(input.clientId);
+  await promoteLeadToActiveIfNeeded(input.clientId, session);
   return { id: pkgId };
 }
 
@@ -279,9 +283,10 @@ function packIsBurnable(
  */
 export async function tryConsumePackageSessionAction(
   clientId: string,
-  sessionId?: string
+  sessionId?: string,
+  optSession?: SessionPayload
 ) {
-  const session = await requireSession();
+  const session = optSession || (await requireSession());
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
   const now = new Date();
@@ -298,13 +303,15 @@ export async function tryConsumePackageSessionAction(
     .orderBy(asc(clientPackages.purchasedAt));
 
   // Heal active-but-full or expired rows so they don't block older-first selection forever
-  for (const row of activeRows) {
-    if (row.usedSessions >= row.totalSessions) {
-      await db
-        .update(clientPackages)
-        .set({ status: "exhausted" })
-        .where(eq(clientPackages.id, row.id));
-    }
+  const exhaustedIds = activeRows
+    .filter((row) => row.usedSessions >= row.totalSessions)
+    .map((row) => row.id);
+
+  if (exhaustedIds.length > 0) {
+    await db
+      .update(clientPackages)
+      .set({ status: "exhausted" })
+      .where(inArray(clientPackages.id, exhaustedIds));
   }
 
   const pkg = activeRows.find((p) => packIsBurnable(p, now));
@@ -325,13 +332,26 @@ export async function tryConsumePackageSessionAction(
     return { consumed: false as const, reason: "no_pack" as const };
   }
 
-  // Re-read for atomic-style burn
-  const [fresh] = await db
-    .select()
-    .from(clientPackages)
-    .where(eq(clientPackages.id, pkg.id))
-    .limit(1);
-  if (!fresh || !packIsBurnable(fresh, now)) {
+  const expectedUsed = pkg.usedSessions;
+  const used = expectedUsed + 1;
+  const remaining = pkg.totalSessions - used;
+  const status = remaining <= 0 ? "exhausted" : "active";
+
+  // Conditional update with returning(): only if still at expected used + active
+  const updatedRows = await db
+    .update(clientPackages)
+    .set({ usedSessions: used, status })
+    .where(
+      and(
+        eq(clientPackages.id, pkg.id),
+        eq(clientPackages.usedSessions, expectedUsed),
+        eq(clientPackages.status, "active")
+      )
+    )
+    .returning();
+
+  const after = updatedRows[0];
+  if (!after || after.usedSessions !== used) {
     return {
       consumed: false as const,
       reason: "race" as const,
@@ -340,46 +360,14 @@ export async function tryConsumePackageSessionAction(
     };
   }
 
-  const expectedUsed = fresh.usedSessions;
-  const used = expectedUsed + 1;
-  const remaining = fresh.totalSessions - used;
-  const status = remaining <= 0 ? "exhausted" : "active";
-
-  // Conditional update: only if still at expected used + active
-  await db
-    .update(clientPackages)
-    .set({ usedSessions: used, status })
-    .where(
-      and(
-        eq(clientPackages.id, fresh.id),
-        eq(clientPackages.usedSessions, expectedUsed),
-        eq(clientPackages.status, "active")
-      )
-    );
-
-  const [after] = await db
-    .select()
-    .from(clientPackages)
-    .where(eq(clientPackages.id, fresh.id))
-    .limit(1);
-  if (!after || after.usedSessions !== used) {
-    return {
-      consumed: false as const,
-      reason: "race" as const,
-      packageId: fresh.id,
-      packageName: fresh.name,
-    };
-  }
-
   if (sessionId) {
     await db
       .update(trainingSessions)
-      .set({ packageId: fresh.id, updatedAt: new Date() })
+      .set({ packageId: pkg.id, updatedAt: new Date() })
       .where(
         and(
           eq(trainingSessions.id, sessionId),
-          eq(trainingSessions.organizationId, session.organizationId),
-          eq(trainingSessions.clientId, clientId)
+          eq(trainingSessions.organizationId, session.organizationId)
         )
       );
   }
@@ -392,8 +380,8 @@ export async function tryConsumePackageSessionAction(
   return {
     consumed: true as const,
     reason: "ok" as const,
-    packageId: fresh.id,
-    packageName: fresh.name,
+    packageId: pkg.id,
+    packageName: pkg.name,
     remaining,
     status,
   };
@@ -709,43 +697,47 @@ export async function createBookingWithBillingAction(input: {
   const notes = [packNote, invoiceNote].filter(Boolean).join(" · ") || null;
 
   const apptId = id("apt");
-  await db.insert(clientAppointments).values({
-    id: apptId,
-    clientId: input.clientId,
-    title,
-    startsAt: starts,
-    endsAt: ends,
-    status: "scheduled",
-    notes,
-    location: null,
-  });
+  const capturedInvoiceId = mode === "invoice" && amountCents != null ? id("inv") : null;
+  invoiceId = capturedInvoiceId;
 
-  if (mode === "invoice" && amountCents != null) {
-    invoiceId = id("inv");
-    const whenLabel = starts.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    await db.insert(clientInvoices).values({
-      id: invoiceId,
-      organizationId: session.organizationId,
+  await db.transaction(async (tx) => {
+    await tx.insert(clientAppointments).values({
+      id: apptId,
       clientId: input.clientId,
-      title: `${title} · ${whenLabel}`.slice(0, 120),
-      amountCents,
-      currency,
-      status: input.markPaid ? "paid" : "unpaid",
-      notes: `Booked with session on ${whenLabel}`,
-      packageId: packageId || null,
-      issuedAt: new Date(),
-      paidAt: input.markPaid ? new Date() : null,
+      title,
+      startsAt: starts,
+      endsAt: ends,
+      status: "scheduled",
+      notes,
+      location: null,
     });
-  }
 
-  await db
-    .update(clients)
-    .set({ updatedAt: new Date() })
-    .where(eq(clients.id, input.clientId));
+    if (mode === "invoice" && amountCents != null && capturedInvoiceId) {
+      const whenLabel = starts.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      await tx.insert(clientInvoices).values({
+        id: capturedInvoiceId,
+        organizationId: session.organizationId,
+        clientId: input.clientId,
+        title: `${title} · ${whenLabel}`.slice(0, 120),
+        amountCents,
+        currency,
+        status: input.markPaid ? "paid" : "unpaid",
+        notes: `Booked with session on ${whenLabel}`,
+        packageId: packageId || null,
+        issuedAt: new Date(),
+        paidAt: input.markPaid ? new Date() : null,
+      });
+    }
+
+    await tx
+      .update(clients)
+      .set({ updatedAt: new Date() })
+      .where(eq(clients.id, input.clientId));
+  });
   revalidateClient(input.clientId);
   return {
     appointmentId: apptId,
@@ -797,7 +789,8 @@ export async function updateAppointmentStatusAction(
     try {
       await tryConsumePackageSessionAction(
         clientId,
-        existing.sessionId || appointmentId
+        existing.sessionId || appointmentId,
+        session
       );
     } catch {
       // pack consume optional — do not block appointment status update
@@ -1136,22 +1129,33 @@ export async function getClientCrmSnapshotAction(clientId: string) {
 }
 
 /** Org-wide CRM signals for home needs-you (packages low, appts due, leads). */
-export async function listOrgCrmSignalsAction() {
+export async function listOrgCrmSignalsAction(
+  optSession?: SessionPayload,
+  preFetchedClients?: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    status: string;
+    updatedAt?: Date | string | null;
+  }>
+) {
   try {
-    const session = await requireSession();
+    const session = optSession || (await requireSession());
     const db = await getDb();
     const orgId = session.organizationId;
 
-    const orgClients = await db
-      .select({
-        id: clients.id,
-        firstName: clients.firstName,
-        lastName: clients.lastName,
-        status: clients.status,
-        updatedAt: clients.updatedAt,
-      })
-      .from(clients)
-      .where(eq(clients.organizationId, orgId));
+    const orgClients =
+      preFetchedClients ||
+      (await db
+        .select({
+          id: clients.id,
+          firstName: clients.firstName,
+          lastName: clients.lastName,
+          status: clients.status,
+          updatedAt: clients.updatedAt,
+        })
+        .from(clients)
+        .where(eq(clients.organizationId, orgId)));
 
     if (!orgClients.length) {
       return {

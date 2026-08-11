@@ -48,7 +48,10 @@ export const memberships = pgTable(
     role: text("role").notNull().default("owner"), // owner | trainer | admin | front_desk
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("memberships_user_org_uidx").on(t.userId, t.organizationId)]
+  (t) => [
+    uniqueIndex("memberships_user_org_uidx").on(t.userId, t.organizationId),
+    index("memberships_org_idx").on(t.organizationId),
+  ]
 );
 
 /**
@@ -110,6 +113,7 @@ export const clients = pgTable(
   (t) => [
     index("clients_org_idx").on(t.organizationId),
     index("clients_name_idx").on(t.organizationId, t.firstName, t.lastName),
+    index("clients_org_status_idx").on(t.organizationId, t.status),
   ]
 );
 
@@ -130,26 +134,36 @@ export const clientMeasurements = pgTable(
     notes: text("notes"),
     metrics: jsonb("metrics").$type<Record<string, number | string>>(),
   },
-  (t) => [index("measurements_client_idx").on(t.clientId)]
+  (t) => [
+    index("measurements_client_idx").on(t.clientId),
+    index("measurements_client_taken_idx").on(t.clientId, t.takenAt),
+  ]
 );
 
-export const assessmentTemplates = pgTable("assessment_templates", {
-  id: text("id").primaryKey(),
-  organizationId: text("organization_id"), // null = global
-  slug: text("slug").notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  /** Coach-facing “why this screen” — shown in UI above how-to */
-  purpose: text("purpose"),
-  instructions: text("instructions"),
-  category: text("category").notNull().default("movement"),
-  laterality: boolean("laterality").notNull().default(false),
-  scoringType: text("scoring_type").notNull().default("pass_fail"), // pass_fail | score | free_text | multi
-  fields: jsonb("fields").$type<AssessmentField[]>().notNull().default([]),
-  playbookTags: text("playbook_tags"),
-  sortOrder: integer("sort_order").notNull().default(0),
-  active: boolean("active").notNull().default(true),
-});
+export const assessmentTemplates = pgTable(
+  "assessment_templates",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id"), // null = global
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    /** Coach-facing “why this screen” — shown in UI above how-to */
+    purpose: text("purpose"),
+    instructions: text("instructions"),
+    category: text("category").notNull().default("movement"),
+    laterality: boolean("laterality").notNull().default(false),
+    scoringType: text("scoring_type").notNull().default("pass_fail"), // pass_fail | score | free_text | multi
+    fields: jsonb("fields").$type<AssessmentField[]>().notNull().default([]),
+    playbookTags: text("playbook_tags"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+  },
+  (t) => [
+    index("assessment_templates_org_idx").on(t.organizationId),
+    index("assessment_templates_slug_idx").on(t.slug),
+  ]
+);
 
 export type AssessmentField = {
   key: string;
@@ -177,7 +191,11 @@ export const clientAssessments = pgTable(
     notes: text("notes"),
     summary: text("summary"),
   },
-  (t) => [index("assessments_client_idx").on(t.clientId)]
+  (t) => [
+    index("assessments_client_idx").on(t.clientId),
+    index("assessments_template_idx").on(t.templateId),
+    index("assessments_client_taken_idx").on(t.clientId, t.takenAt),
+  ]
 );
 
 export const clientNotes = pgTable(
@@ -195,7 +213,12 @@ export const clientNotes = pgTable(
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("notes_client_idx").on(t.clientId)]
+  (t) => [
+    index("notes_client_idx").on(t.clientId),
+    index("notes_author_idx").on(t.authorUserId),
+    index("notes_conversation_idx").on(t.conversationId),
+    index("notes_client_created_idx").on(t.clientId, t.createdAt),
+  ]
 );
 
 /** Session packages — remaining = totalSessions - usedSessions */
@@ -218,7 +241,10 @@ export const clientPackages = pgTable(
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("packages_client_idx").on(t.clientId)]
+  (t) => [
+    index("packages_client_idx").on(t.clientId),
+    index("packages_client_status_idx").on(t.clientId, t.status),
+  ]
 );
 
 /** Booked appointments (next session on calendar) */
@@ -244,6 +270,8 @@ export const clientAppointments = pgTable(
     index("appointments_client_idx").on(t.clientId),
     index("appointments_starts_idx").on(t.startsAt),
     index("appointments_session_idx").on(t.sessionId),
+    index("appointments_status_idx").on(t.status),
+    index("appointments_client_status_idx").on(t.clientId, t.status),
   ]
 );
 
@@ -279,6 +307,8 @@ export const clientInvoices = pgTable(
     index("invoices_org_idx").on(t.organizationId),
     index("invoices_client_idx").on(t.clientId),
     index("invoices_status_idx").on(t.status),
+    index("invoices_package_idx").on(t.packageId),
+    index("invoices_org_status_idx").on(t.organizationId, t.status),
   ]
 );
 
@@ -296,7 +326,11 @@ export const clientCheckIns = pgTable(
     body: text("body").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("checkins_client_idx").on(t.clientId)]
+  (t) => [
+    index("checkins_client_idx").on(t.clientId),
+    index("checkins_author_idx").on(t.authorUserId),
+    index("checkins_client_created_idx").on(t.clientId, t.createdAt),
+  ]
 );
 
 /** Trainer follow-ups / admin tasks on a client (Phase B) */
@@ -321,6 +355,7 @@ export const clientTasks = pgTable(
     index("tasks_org_idx").on(t.organizationId),
     index("tasks_client_idx").on(t.clientId),
     index("tasks_due_idx").on(t.dueAt),
+    index("tasks_org_status_due_idx").on(t.organizationId, t.status, t.dueAt),
   ]
 );
 
@@ -339,7 +374,12 @@ export const conversations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("conversations_org_idx").on(t.organizationId)]
+  (t) => [
+    index("conversations_org_idx").on(t.organizationId),
+    index("conversations_user_idx").on(t.userId),
+    index("conversations_client_idx").on(t.clientId),
+    index("conversations_org_updated_idx").on(t.organizationId, t.updatedAt),
+  ]
 );
 
 export const messages = pgTable(
@@ -354,7 +394,10 @@ export const messages = pgTable(
     structured: jsonb("structured").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("messages_conversation_idx").on(t.conversationId)]
+  (t) => [
+    index("messages_conversation_idx").on(t.conversationId),
+    index("messages_conv_created_idx").on(t.conversationId, t.createdAt),
+  ]
 );
 
 export const playbooks = pgTable(
@@ -378,7 +421,10 @@ export const playbooks = pgTable(
     active: boolean("active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("playbooks_slug_idx").on(t.slug)]
+  (t) => [
+    index("playbooks_slug_idx").on(t.slug),
+    index("playbooks_org_idx").on(t.organizationId),
+  ]
 );
 
 export const playbookChunks = pgTable(
@@ -422,6 +468,7 @@ export const orgEquipment = pgTable(
   (t) => [
     uniqueIndex("org_equipment_uidx").on(t.organizationId, t.equipmentId),
     index("org_equipment_org_idx").on(t.organizationId),
+    index("org_equipment_equipment_idx").on(t.equipmentId),
   ]
 );
 
@@ -448,7 +495,10 @@ export const exercises = pgTable(
     active: boolean("active").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
   },
-  (t) => [index("exercises_pattern_idx").on(t.movementPattern)]
+  (t) => [
+    index("exercises_pattern_idx").on(t.movementPattern),
+    index("exercises_org_idx").on(t.organizationId),
+  ]
 );
 
 /** Training programs assigned to clients (or unassigned drafts) */
@@ -478,6 +528,8 @@ export const programs = pgTable(
   (t) => [
     index("programs_org_idx").on(t.organizationId),
     index("programs_client_idx").on(t.clientId),
+    index("programs_created_by_idx").on(t.createdByUserId),
+    index("programs_client_status_idx").on(t.clientId, t.status),
   ]
 );
 
@@ -492,7 +544,10 @@ export const programDays = pgTable(
     name: text("name").notNull(),
     focus: text("focus"),
   },
-  (t) => [index("program_days_program_idx").on(t.programId)]
+  (t) => [
+    index("program_days_program_idx").on(t.programId),
+    index("program_days_program_day_idx").on(t.programId, t.dayIndex),
+  ]
 );
 
 export type SetSchemeMetaJson = {
@@ -560,7 +615,11 @@ export const programExercises = pgTable(
     /** Role inside group: heavy, explosive, A, B, complex-1… */
     groupRole: text("group_role"),
   },
-  (t) => [index("program_exercises_day_idx").on(t.programDayId)]
+  (t) => [
+    index("program_exercises_day_idx").on(t.programDayId),
+    index("program_exercises_exercise_idx").on(t.exerciseId),
+    index("program_exercises_day_sort_idx").on(t.programDayId, t.sortOrder),
+  ]
 );
 
 /** Logged training sessions (from a program day or ad-hoc later) */
@@ -598,6 +657,11 @@ export const trainingSessions = pgTable(
     index("sessions_client_idx").on(t.clientId),
     index("sessions_program_idx").on(t.programId),
     index("sessions_appointment_idx").on(t.appointmentId),
+    index("sessions_program_day_idx").on(t.programDayId),
+    index("sessions_created_by_idx").on(t.createdByUserId),
+    index("sessions_package_idx").on(t.packageId),
+    index("sessions_org_status_idx").on(t.organizationId, t.status),
+    index("sessions_client_status_performed_idx").on(t.clientId, t.status, t.performedAt),
   ]
 );
 
@@ -651,7 +715,12 @@ export const sessionExerciseLogs = pgTable(
     restBetweenRoundsSec: integer("rest_between_rounds_sec"),
     groupRole: text("group_role"),
   },
-  (t) => [index("session_logs_session_idx").on(t.sessionId)]
+  (t) => [
+    index("session_logs_session_idx").on(t.sessionId),
+    index("session_logs_exercise_idx").on(t.exerciseId),
+    index("session_logs_program_exercise_idx").on(t.programExerciseId),
+    index("session_logs_session_sort_idx").on(t.sessionId, t.sortOrder),
+  ]
 );
 
 export const organizationsRelations = relations(organizations, ({ many }) => ({

@@ -573,34 +573,35 @@ async function buildSessionForUserInOrg(
   organizationId: string
 ): Promise<SessionPayload | null> {
   const db = await getDb();
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user) return null;
-  const [membership] = await db
-    .select()
-    .from(memberships)
-    .where(
+  const [row] = await db
+    .select({
+      user: users,
+      membership: memberships,
+      org: organizations,
+    })
+    .from(users)
+    .innerJoin(
+      memberships,
       and(
-        eq(memberships.userId, userId),
+        eq(memberships.userId, users.id),
         eq(memberships.organizationId, organizationId)
       )
     )
+    .innerJoin(organizations, eq(organizations.id, memberships.organizationId))
+    .where(eq(users.id, userId))
     .limit(1);
-  if (!membership) return null;
-  const [org] = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.id, organizationId))
-    .limit(1);
-  if (!org) return null;
+
+  if (!row) return null;
+
   return {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    title: user.title ?? null,
-    organizationId: org.id,
-    organizationName: org.name,
-    role: membership.role,
-    isPlatformAdmin: user.isPlatformAdmin,
+    userId: row.user.id,
+    email: row.user.email,
+    name: row.user.name,
+    title: row.user.title ?? null,
+    organizationId: row.org.id,
+    organizationName: row.org.name,
+    role: row.membership.role,
+    isPlatformAdmin: row.user.isPlatformAdmin,
   };
 }
 
@@ -758,32 +759,29 @@ export async function getUserProfile() {
 
 async function buildSessionForUser(userId: string): Promise<SessionPayload | null> {
   const db = await getDb();
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user) return null;
-
-  const [membership] = await db
-    .select()
-    .from(memberships)
-    .where(eq(memberships.userId, user.id))
+  const [row] = await db
+    .select({
+      user: users,
+      membership: memberships,
+      org: organizations,
+    })
+    .from(users)
+    .innerJoin(memberships, eq(memberships.userId, users.id))
+    .innerJoin(organizations, eq(organizations.id, memberships.organizationId))
+    .where(eq(users.id, userId))
     .limit(1);
-  if (!membership) return null;
 
-  const [org] = await db
-    .select()
-    .from(organizations)
-    .where(eq(organizations.id, membership.organizationId))
-    .limit(1);
-  if (!org) return null;
+  if (!row) return null;
 
   return {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    title: user.title ?? null,
-    organizationId: org.id,
-    organizationName: org.name,
-    role: membership.role,
-    isPlatformAdmin: user.isPlatformAdmin,
+    userId: row.user.id,
+    email: row.user.email,
+    name: row.user.name,
+    title: row.user.title ?? null,
+    organizationId: row.org.id,
+    organizationName: row.org.name,
+    role: row.membership.role,
+    isPlatformAdmin: row.user.isPlatformAdmin,
   };
 }
 
@@ -795,48 +793,46 @@ async function resolveLiveSession(
   cookie: SessionPayload
 ): Promise<SessionPayload | null> {
   const db = await getDb();
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, cookie.userId))
-    .limit(1);
-  if (!user) return null;
 
   // Prefer membership matching cookie org if still valid
   if (cookie.organizationId) {
-    const [m] = await db
-      .select()
-      .from(memberships)
-      .where(
+    const [row] = await db
+      .select({
+        user: users,
+        membership: memberships,
+        org: organizations,
+      })
+      .from(users)
+      .innerJoin(
+        memberships,
         and(
-          eq(memberships.userId, user.id),
+          eq(memberships.userId, users.id),
           eq(memberships.organizationId, cookie.organizationId)
         )
       )
+      .innerJoin(
+        organizations,
+        eq(organizations.id, memberships.organizationId)
+      )
+      .where(eq(users.id, cookie.userId))
       .limit(1);
-    if (m) {
-      const [org] = await db
-        .select()
-        .from(organizations)
-        .where(eq(organizations.id, m.organizationId))
-        .limit(1);
-      if (org) {
-        return {
-          userId: user.id,
-          email: user.email,
-          name: user.name,
-          title: user.title ?? null,
-          organizationId: org.id,
-          organizationName: org.name,
-          role: m.role,
-          isPlatformAdmin: user.isPlatformAdmin,
-        };
-      }
+
+    if (row) {
+      return {
+        userId: row.user.id,
+        email: row.user.email,
+        name: row.user.name,
+        title: row.user.title ?? null,
+        organizationId: row.org.id,
+        organizationName: row.org.name,
+        role: row.membership.role,
+        isPlatformAdmin: row.user.isPlatformAdmin,
+      };
     }
   }
 
   // Fall back to any membership (new DB after wipe)
-  return buildSessionForUser(user.id);
+  return buildSessionForUser(cookie.userId);
 }
 
 export async function logout() {

@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import {
@@ -16,6 +16,7 @@ import {
   type SessionSetLog,
 } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
+import type { SessionPayload } from "@/lib/session";
 import { defaultExerciseCues } from "@/lib/exercise-meta";
 import { aggregateFromSetLogs, ensureSetLogs } from "@/lib/session-sets";
 import {
@@ -31,8 +32,11 @@ import {
 import { assertClientInOrg, getClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
 
-export async function findInProgressSessionForDayAction(programDayId: string) {
-  const session = await requireSession();
+export async function findInProgressSessionForDayAction(
+  programDayId: string,
+  optSession?: SessionPayload
+) {
+  const session = optSession || (await requireSession());
   const db = await getDb();
   const [row] = await db
     .select()
@@ -225,9 +229,11 @@ export async function startSessionFromAppointmentAction(
       };
     }
 
-    const res = await startSessionFromProgramDayAction(day.id, {
-      appointmentId: row.id,
-    });
+    const res = await startSessionFromProgramDayAction(
+      day.id,
+      { appointmentId: row.id },
+      session
+    );
     if (!res.ok) return res;
 
     revalidatePath("/calendar");
@@ -258,15 +264,16 @@ export async function startSessionFromAppointmentAction(
  */
 export async function startSessionFromProgramDayAction(
   programDayId: string,
-  opts?: { forceNew?: boolean; appointmentId?: string | null }
+  opts?: { forceNew?: boolean; appointmentId?: string | null },
+  optSession?: SessionPayload
 ): Promise<StartSessionResult> {
   try {
-    const session = await requireSession();
+    const session = optSession || (await requireSession());
     const db = await getDb();
     const appointmentId = opts?.appointmentId?.trim() || null;
 
     if (!opts?.forceNew) {
-      const existing = await findInProgressSessionForDayAction(programDayId);
+      const existing = await findInProgressSessionForDayAction(programDayId, session);
       if (existing) {
         if (appointmentId && !existing.appointmentId) {
           await linkSessionAndAppointment(
@@ -332,28 +339,6 @@ export async function startSessionFromProgramDayAction(
     const sessionId = id("ses");
     const title = `${day.name} · ${program.title}`;
 
-    await db.insert(trainingSessions).values({
-      id: sessionId,
-      organizationId: session.organizationId,
-      clientId: program.clientId,
-      programId: program.id,
-      programDayId: day.id,
-      createdByUserId: session.userId,
-      title,
-      status: "in_progress",
-      performedAt: new Date(),
-      appointmentId: appointmentId,
-    });
-
-    if (appointmentId) {
-      await linkSessionAndAppointment(
-        sessionId,
-        appointmentId,
-        program.clientId,
-        session.organizationId
-      );
-    }
-
     const { initSetLogsFromScheme } = await import("@/lib/set-schemes");
 
     const exerciseIds = [
@@ -375,7 +360,7 @@ export async function startSessionFromProgramDayAction(
       }
     }
 
-    for (const ex of dayExercises) {
+    const logsToInsert = dayExercises.map((ex) => {
       const key = exerciseKey(ex.exerciseId, ex.exerciseName);
       const prevSets = lastByKey.get(key) || null;
       const scheme = ex.setScheme || "straight";
@@ -394,7 +379,7 @@ export async function startSessionFromProgramDayAction(
         bankCue: ex.exerciseId ? bankCueById.get(ex.exerciseId) : null,
       });
 
-      await db.insert(sessionExerciseLogs).values({
+      return {
         id: id("sel"),
         sessionId,
         programExerciseId: ex.id,
@@ -421,7 +406,35 @@ export async function startSessionFromProgramDayAction(
         restAfterSec: ex.restAfterSec ?? null,
         restBetweenRoundsSec: ex.restBetweenRoundsSec ?? null,
         groupRole: ex.groupRole || null,
+      };
+    });
+
+    await db.transaction(async (tx) => {
+      await tx.insert(trainingSessions).values({
+        id: sessionId,
+        organizationId: session.organizationId,
+        clientId: program.clientId,
+        programId: program.id,
+        programDayId: day.id,
+        createdByUserId: session.userId,
+        title,
+        status: "in_progress",
+        performedAt: new Date(),
+        appointmentId: appointmentId,
       });
+
+      if (logsToInsert.length > 0) {
+        await tx.insert(sessionExerciseLogs).values(logsToInsert);
+      }
+    });
+
+    if (appointmentId) {
+      await linkSessionAndAppointment(
+        sessionId,
+        appointmentId,
+        program.clientId,
+        session.organizationId
+      );
     }
 
     revalidatePath(`/programs/${program.id}`);
@@ -939,9 +952,10 @@ export async function saveSessionProgressAction(
     notes?: string | null;
     performedAt?: string | null;
     exercises: SessionExerciseUpdate[];
-  }
+  },
+  optSession?: SessionPayload
 ) {
-  const session = await requireSession();
+  const session = optSession || (await requireSession());
   const db = await getDb();
   const [row] = await db
     .select()
@@ -974,6 +988,8 @@ export async function saveSessionProgressAction(
       updatedAt: new Date(),
     })
     .where(eq(trainingSessions.id, sessionId));
+
+  const exerciseUpdates: Array<{ id: string; patch: Record<string, unknown> }> = [];
 
   for (const ex of data.exercises) {
     const patch: Record<string, unknown> = {};
@@ -1011,12 +1027,120 @@ export async function saveSessionProgressAction(
     if (ex.notes !== undefined) patch.notes = ex.notes;
 
     if (Object.keys(patch).length) {
+      exerciseUpdates.push({ id: ex.id, patch });
+    }
+  }
+
+  if (exerciseUpdates.length === 1) {
+    await db
+      .update(sessionExerciseLogs)
+      .set(exerciseUpdates[0].patch)
+      .where(
+        and(
+          eq(sessionExerciseLogs.id, exerciseUpdates[0].id),
+          eq(sessionExerciseLogs.sessionId, sessionId)
+        )
+      );
+  } else if (exerciseUpdates.length > 1) {
+    const updateIds = exerciseUpdates.map((u) => u.id);
+    const fieldsToUpdate = new Set<string>();
+    for (const u of exerciseUpdates) {
+      for (const k of Object.keys(u.patch)) fieldsToUpdate.add(k);
+    }
+
+    const setObj: Record<string, ReturnType<typeof sql>> = {};
+
+    if (fieldsToUpdate.has("setLogs")) {
+      const cases = exerciseUpdates
+        .filter((u) => u.patch.setLogs !== undefined)
+        .map(
+          (u) =>
+            sql`WHEN ${sessionExerciseLogs.id} = ${u.id} THEN ${JSON.stringify(u.patch.setLogs)}::jsonb`
+        );
+      if (cases.length > 0) {
+        setObj.setLogs = sql`CASE ${sql.join(cases, sql` `)} ELSE ${sessionExerciseLogs.setLogs} END`;
+      }
+    }
+
+    if (fieldsToUpdate.has("actualSets")) {
+      const cases = exerciseUpdates
+        .filter((u) => u.patch.actualSets !== undefined)
+        .map(
+          (u) =>
+            sql`WHEN ${sessionExerciseLogs.id} = ${u.id} THEN ${u.patch.actualSets}::integer`
+        );
+      if (cases.length > 0) {
+        setObj.actualSets = sql`CASE ${sql.join(cases, sql` `)} ELSE ${sessionExerciseLogs.actualSets} END`;
+      }
+    }
+
+    if (fieldsToUpdate.has("actualReps")) {
+      const cases = exerciseUpdates
+        .filter((u) => u.patch.actualReps !== undefined)
+        .map(
+          (u) =>
+            sql`WHEN ${sessionExerciseLogs.id} = ${u.id} THEN ${u.patch.actualReps}::text`
+        );
+      if (cases.length > 0) {
+        setObj.actualReps = sql`CASE ${sql.join(cases, sql` `)} ELSE ${sessionExerciseLogs.actualReps} END`;
+      }
+    }
+
+    if (fieldsToUpdate.has("weightKg")) {
+      const cases = exerciseUpdates
+        .filter((u) => u.patch.weightKg !== undefined)
+        .map(
+          (u) =>
+            sql`WHEN ${sessionExerciseLogs.id} = ${u.id} THEN ${u.patch.weightKg}::numeric`
+        );
+      if (cases.length > 0) {
+        setObj.weightKg = sql`CASE ${sql.join(cases, sql` `)} ELSE ${sessionExerciseLogs.weightKg} END`;
+      }
+    }
+
+    if (fieldsToUpdate.has("rpe")) {
+      const cases = exerciseUpdates
+        .filter((u) => u.patch.rpe !== undefined)
+        .map(
+          (u) =>
+            sql`WHEN ${sessionExerciseLogs.id} = ${u.id} THEN ${u.patch.rpe}::text`
+        );
+      if (cases.length > 0) {
+        setObj.rpe = sql`CASE ${sql.join(cases, sql` `)} ELSE ${sessionExerciseLogs.rpe} END`;
+      }
+    }
+
+    if (fieldsToUpdate.has("completed")) {
+      const cases = exerciseUpdates
+        .filter((u) => u.patch.completed !== undefined)
+        .map(
+          (u) =>
+            sql`WHEN ${sessionExerciseLogs.id} = ${u.id} THEN ${u.patch.completed}::boolean`
+        );
+      if (cases.length > 0) {
+        setObj.completed = sql`CASE ${sql.join(cases, sql` `)} ELSE ${sessionExerciseLogs.completed} END`;
+      }
+    }
+
+    if (fieldsToUpdate.has("notes")) {
+      const cases = exerciseUpdates
+        .filter((u) => u.patch.notes !== undefined)
+        .map(
+          (u) =>
+            sql`WHEN ${sessionExerciseLogs.id} = ${u.id} THEN ${u.patch.notes}::text`
+        );
+      if (cases.length > 0) {
+        setObj.notes = sql`CASE ${sql.join(cases, sql` `)} ELSE ${sessionExerciseLogs.notes} END`;
+      }
+    }
+
+    if (Object.keys(setObj).length > 0) {
       await db
         .update(sessionExerciseLogs)
-        .set(patch)
+        .set(setObj)
         .where(
           and(
-            eq(sessionExerciseLogs.id, ex.id),
+            inArray(sessionExerciseLogs.id, updateIds),
             eq(sessionExerciseLogs.sessionId, sessionId)
           )
         );
@@ -1035,14 +1159,15 @@ export async function completeSessionAction(
     overallRpe?: string | null;
     painNotes?: string | null;
     notes?: string | null;
+    performedAt?: string | null;
     exercises: SessionExerciseUpdate[];
   }
 ) {
+  const session = await requireSession();
   // Persist user state as-is — do NOT auto-complete every planned set
   // (planned reps alone must not count as completed)
-  await saveSessionProgressAction(sessionId, data);
+  await saveSessionProgressAction(sessionId, data, session);
 
-  const session = await requireSession();
   const db = await getDb();
   const [row] = await db
     .select()
@@ -1062,31 +1187,52 @@ export async function completeSessionAction(
     .from(sessionExerciseLogs)
     .where(eq(sessionExerciseLogs.sessionId, sessionId));
 
+  const logsToMarkDone: string[] = [];
+  const logsToMarkNotDone: string[] = [];
+
   for (const l of logs) {
     const sets = ensureSetLogs(l);
-    const allDone =
-      sets.length > 0 && sets.every((s) => s.completed);
+    const allDone = sets.length > 0 && sets.every((s) => s.completed);
     if (allDone !== l.completed) {
-      await db
-        .update(sessionExerciseLogs)
-        .set({ completed: allDone })
-        .where(eq(sessionExerciseLogs.id, l.id));
+      if (allDone) {
+        logsToMarkDone.push(l.id);
+      } else {
+        logsToMarkNotDone.push(l.id);
+      }
     }
   }
 
-  const updatedSessions = await db
-    .update(trainingSessions)
-    .set({ status: "completed", updatedAt: new Date() })
-    .where(
-      and(
-        eq(trainingSessions.id, sessionId),
-        eq(trainingSessions.organizationId, session.organizationId),
-        eq(trainingSessions.status, "in_progress")
-      )
-    )
-    .returning();
+  let wasInProgress = false;
 
-  const wasInProgress = updatedSessions.length > 0;
+  await db.transaction(async (tx) => {
+    if (logsToMarkDone.length > 0) {
+      await tx
+        .update(sessionExerciseLogs)
+        .set({ completed: true })
+        .where(inArray(sessionExerciseLogs.id, logsToMarkDone));
+    }
+
+    if (logsToMarkNotDone.length > 0) {
+      await tx
+        .update(sessionExerciseLogs)
+        .set({ completed: false })
+        .where(inArray(sessionExerciseLogs.id, logsToMarkNotDone));
+    }
+
+    const updatedSessions = await tx
+      .update(trainingSessions)
+      .set({ status: "completed", updatedAt: new Date() })
+      .where(
+        and(
+          eq(trainingSessions.id, sessionId),
+          eq(trainingSessions.organizationId, session.organizationId),
+          eq(trainingSessions.status, "in_progress")
+        )
+      )
+      .returning();
+
+    wasInProgress = updatedSessions.length > 0;
+  });
 
   /** Pack burn result for floor flash + close-loop (null = no client / not first complete). */
   let packBurn: {
@@ -1106,7 +1252,8 @@ export async function completeSessionAction(
       } = await import("@/app/actions/crm");
       const burn = await tryConsumePackageSessionAction(
         row.clientId,
-        sessionId
+        sessionId,
+        session
       );
       if (burn.consumed) {
         packBurn = {
@@ -1130,7 +1277,7 @@ export async function completeSessionAction(
           status: "status" in burn ? burn.status : undefined,
         };
       }
-      await promoteLeadToActiveIfNeeded(row.clientId);
+      await promoteLeadToActiveIfNeeded(row.clientId, session);
     } catch {
       // pack/promote optional — never block session complete
       packBurn = { consumed: false, reason: "error" };

@@ -234,7 +234,7 @@ export async function getHomeDashboardAction() {
   }
 
   // CRM signals: low packages, upcoming appts (48h), quiet leads, open tasks
-  const signals = await listOrgCrmSignalsAction();
+  const signals = await listOrgCrmSignalsAction(session, clientList);
   const fourHours = 4 * 60 * 60 * 1000;
 
   // Today agenda = upcoming appointments (first-class Home surface)

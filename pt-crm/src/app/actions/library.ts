@@ -78,10 +78,35 @@ export async function setAllEquipmentAction(available: boolean) {
   try {
     const session = await requireSession();
     const rows = await listEquipmentCatalogWithOrg(session.organizationId);
-
-    for (const r of rows) {
-      await upsertOrgEquipment(session.organizationId, r.id, available);
+    if (!rows.length) {
+      return { ok: true, success: true };
     }
+
+    const client = await getPGlite();
+    const safe = (s: string) => s.replace(/'/g, "''");
+
+    const org = await client.query(
+      `SELECT id FROM organizations WHERE id = '${safe(session.organizationId)}' LIMIT 1`
+    );
+    if (!org.rows?.length) {
+      throw new Error("Organization not found — please sign out and sign in again.");
+    }
+
+    const values = rows
+      .map(
+        (r) =>
+          `('${safe(id("oe"))}', '${safe(session.organizationId)}', '${safe(r.id)}', ${
+            available ? "TRUE" : "FALSE"
+          }, NULL)`
+      )
+      .join(", ");
+
+    await client.exec(`
+      INSERT INTO org_equipment (id, organization_id, equipment_id, available, notes)
+      VALUES ${values}
+      ON CONFLICT (organization_id, equipment_id)
+      DO UPDATE SET available = EXCLUDED.available
+    `);
 
     revalidatePath("/library");
     revalidatePath("/library/equipment");
@@ -105,10 +130,38 @@ export async function setEquipmentBulkAction(
     if (!Array.isArray(updates) || !updates.length) {
       return { ok: false, success: false, error: "No equipment updates" };
     }
-    for (const u of updates) {
-      if (!u.equipmentId) continue;
-      await upsertOrgEquipment(session.organizationId, u.equipmentId, !!u.available);
+
+    const valid = updates.filter((u) => u && u.equipmentId);
+    if (!valid.length) {
+      return { ok: true, success: true };
     }
+
+    const client = await getPGlite();
+    const safe = (s: string) => s.replace(/'/g, "''");
+
+    const org = await client.query(
+      `SELECT id FROM organizations WHERE id = '${safe(session.organizationId)}' LIMIT 1`
+    );
+    if (!org.rows?.length) {
+      throw new Error("Organization not found — please sign out and sign in again.");
+    }
+
+    const values = valid
+      .map(
+        (u) =>
+          `('${safe(id("oe"))}', '${safe(session.organizationId)}', '${safe(u.equipmentId)}', ${
+            u.available ? "TRUE" : "FALSE"
+          }, NULL)`
+      )
+      .join(", ");
+
+    await client.exec(`
+      INSERT INTO org_equipment (id, organization_id, equipment_id, available, notes)
+      VALUES ${values}
+      ON CONFLICT (organization_id, equipment_id)
+      DO UPDATE SET available = EXCLUDED.available
+    `);
+
     revalidatePath("/library");
     revalidatePath("/library/equipment");
     return { ok: true, success: true };

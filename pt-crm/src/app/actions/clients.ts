@@ -273,22 +273,24 @@ export async function addClientMeasurementAction(clientId: string, m: IntakeMeas
   ].some((v) => v !== undefined && v !== null && v !== "");
   if (!hasAny) throw new Error("Enter at least one measurement");
 
-  await db.insert(clientMeasurements).values({
-    id: id("msr"),
-    clientId,
-    heightCm: m.heightCm ?? null,
-    weightKg: m.weightKg ?? null,
-    bodyFatPct: m.bodyFatPct ?? null,
-    chestCm: m.chestCm ?? null,
-    waistCm: m.waistCm ?? null,
-    hipsCm: m.hipsCm ?? null,
-    notes: m.notes || null,
-    metrics,
+  await db.transaction(async (tx) => {
+    await tx.insert(clientMeasurements).values({
+      id: id("msr"),
+      clientId,
+      heightCm: m.heightCm ?? null,
+      weightKg: m.weightKg ?? null,
+      bodyFatPct: m.bodyFatPct ?? null,
+      chestCm: m.chestCm ?? null,
+      waistCm: m.waistCm ?? null,
+      hipsCm: m.hipsCm ?? null,
+      notes: m.notes || null,
+      metrics,
+    });
+    await tx
+      .update(clients)
+      .set({ updatedAt: new Date() })
+      .where(eq(clients.id, clientId));
   });
-  await db
-    .update(clients)
-    .set({ updatedAt: new Date() })
-    .where(eq(clients.id, clientId));
 
   revalidatePath(`/clients/${clientId}`);
   revalidatePath("/");
@@ -372,19 +374,21 @@ export async function saveClientAssessmentAction(
       : null);
 
   const assessmentId = id("cas");
-  await db.insert(clientAssessments).values({
-    id: assessmentId,
-    clientId,
-    templateId,
-    results,
-    notes: notes || null,
-    summary: autoSummary || null,
-  });
+  await db.transaction(async (tx) => {
+    await tx.insert(clientAssessments).values({
+      id: assessmentId,
+      clientId,
+      templateId,
+      results,
+      notes: notes || null,
+      summary: autoSummary || null,
+    });
 
-  await db
-    .update(clients)
-    .set({ updatedAt: new Date() })
-    .where(eq(clients.id, clientId));
+    await tx
+      .update(clients)
+      .set({ updatedAt: new Date() })
+      .where(eq(clients.id, clientId));
+  });
 
   revalidatePath(`/clients/${clientId}`);
   revalidatePath(`/clients/${clientId}/assessments`);

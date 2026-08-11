@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 16; // 16 = training_sessions.package_id
+const SCHEMA_VERSION = 17; // 17 = missing single & composite query indexes
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -493,6 +493,46 @@ async function ensureSchema() {
     );
     CREATE INDEX IF NOT EXISTS org_invites_org_idx ON org_invites(organization_id);
     CREATE INDEX IF NOT EXISTS org_invites_email_idx ON org_invites(email);
+
+    -- Missing query indexes (SCHEMA 17)
+    CREATE INDEX IF NOT EXISTS memberships_org_idx ON memberships(organization_id);
+    CREATE INDEX IF NOT EXISTS assessment_templates_org_idx ON assessment_templates(organization_id);
+    CREATE INDEX IF NOT EXISTS assessment_templates_slug_idx ON assessment_templates(slug);
+    CREATE INDEX IF NOT EXISTS assessments_template_idx ON client_assessments(template_id);
+    CREATE INDEX IF NOT EXISTS assessments_client_taken_idx ON client_assessments(client_id, taken_at);
+    CREATE INDEX IF NOT EXISTS notes_author_idx ON client_notes(author_user_id);
+    CREATE INDEX IF NOT EXISTS notes_conversation_idx ON client_notes(conversation_id);
+    CREATE INDEX IF NOT EXISTS notes_client_created_idx ON client_notes(client_id, created_at);
+    CREATE INDEX IF NOT EXISTS measurements_client_taken_idx ON client_measurements(client_id, taken_at);
+    CREATE INDEX IF NOT EXISTS packages_client_status_idx ON client_packages(client_id, status);
+    CREATE INDEX IF NOT EXISTS appointments_status_idx ON client_appointments(status);
+    CREATE INDEX IF NOT EXISTS appointments_client_status_idx ON client_appointments(client_id, status);
+    CREATE INDEX IF NOT EXISTS invoices_package_idx ON client_invoices(package_id);
+    CREATE INDEX IF NOT EXISTS invoices_org_status_idx ON client_invoices(organization_id, status);
+    CREATE INDEX IF NOT EXISTS checkins_author_idx ON client_check_ins(author_user_id);
+    CREATE INDEX IF NOT EXISTS checkins_client_created_idx ON client_check_ins(client_id, created_at);
+    CREATE INDEX IF NOT EXISTS tasks_org_status_due_idx ON client_tasks(organization_id, status, due_at);
+    CREATE INDEX IF NOT EXISTS conversations_user_idx ON conversations(user_id);
+    CREATE INDEX IF NOT EXISTS conversations_client_idx ON conversations(client_id);
+    CREATE INDEX IF NOT EXISTS conversations_org_updated_idx ON conversations(organization_id, updated_at);
+    CREATE INDEX IF NOT EXISTS messages_conv_created_idx ON messages(conversation_id, created_at);
+    CREATE INDEX IF NOT EXISTS playbooks_org_idx ON playbooks(organization_id);
+    CREATE INDEX IF NOT EXISTS org_equipment_equipment_idx ON org_equipment(equipment_id);
+    CREATE INDEX IF NOT EXISTS exercises_org_idx ON exercises(organization_id);
+    CREATE INDEX IF NOT EXISTS clients_org_status_idx ON clients(organization_id, status);
+    CREATE INDEX IF NOT EXISTS programs_created_by_idx ON programs(created_by_user_id);
+    CREATE INDEX IF NOT EXISTS programs_client_status_idx ON programs(client_id, status);
+    CREATE INDEX IF NOT EXISTS program_days_program_day_idx ON program_days(program_id, day_index);
+    CREATE INDEX IF NOT EXISTS program_exercises_exercise_idx ON program_exercises(exercise_id);
+    CREATE INDEX IF NOT EXISTS program_exercises_day_sort_idx ON program_exercises(program_day_id, sort_order);
+    CREATE INDEX IF NOT EXISTS sessions_program_day_idx ON training_sessions(program_day_id);
+    CREATE INDEX IF NOT EXISTS sessions_created_by_idx ON training_sessions(created_by_user_id);
+    CREATE INDEX IF NOT EXISTS sessions_package_idx ON training_sessions(package_id);
+    CREATE INDEX IF NOT EXISTS sessions_org_status_idx ON training_sessions(organization_id, status);
+    CREATE INDEX IF NOT EXISTS sessions_client_status_performed_idx ON training_sessions(client_id, status, performed_at);
+    CREATE INDEX IF NOT EXISTS session_logs_exercise_idx ON session_exercise_logs(exercise_id);
+    CREATE INDEX IF NOT EXISTS session_logs_program_exercise_idx ON session_exercise_logs(program_exercise_id);
+    CREATE INDEX IF NOT EXISTS session_logs_session_sort_idx ON session_exercise_logs(session_id, sort_order);
   `);
 }
 

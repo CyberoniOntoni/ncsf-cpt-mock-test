@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import {
@@ -296,56 +296,64 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
   const draft = await buildProgramDraft(builderInput);
   const programId = id("prg");
 
-  await db.insert(programs).values({
-    id: programId,
-    organizationId: session.organizationId,
-    clientId: input.clientId || null,
-    createdByUserId: session.userId,
-    title: draft.title,
-    goal: draft.goal,
-    daysPerWeek: draft.daysPerWeek,
-    sessionMinutes: draft.sessionMinutes,
-    splitType: draft.splitType,
-    experienceLevel: draft.experienceLevel,
-    status: input.activate ? "active" : "draft",
-    notes: draft.notes,
-    generationMeta: draft.meta,
-  });
+  const daysToInsert = draft.days.map((day) => ({
+    id: day.id,
+    programId,
+    dayIndex: day.dayIndex,
+    name: day.name,
+    focus: day.focus,
+  }));
 
-  for (const day of draft.days) {
-    await db.insert(programDays).values({
-      id: day.id,
-      programId,
-      dayIndex: day.dayIndex,
-      name: day.name,
-      focus: day.focus,
+  const exercisesToInsert = draft.days.flatMap((day) =>
+    day.exercises.map((ex) => ({
+      id: ex.id,
+      programDayId: day.id,
+      exerciseId: ex.exerciseId,
+      exerciseName: ex.exerciseName,
+      movementPattern: ex.movementPattern,
+      sets: ex.sets,
+      reps: ex.reps,
+      rpe: ex.rpe,
+      restSec: ex.restSec,
+      notes: ex.notes,
+      sortOrder: ex.sortOrder,
+      isWarmup: ex.isWarmup,
+      setScheme: ex.setScheme || "straight",
+      setSchemeMeta: ex.setSchemeMeta || null,
+      groupId: ex.groupId || null,
+      groupKind: ex.groupKind || null,
+      groupLabel: ex.groupLabel || null,
+      groupOrder: ex.groupOrder ?? null,
+      restAfterSec: ex.restAfterSec ?? null,
+      restBetweenRoundsSec: ex.restBetweenRoundsSec ?? null,
+      groupRole: ex.groupRole || null,
+    }))
+  );
+
+  await db.transaction(async (tx) => {
+    await tx.insert(programs).values({
+      id: programId,
+      organizationId: session.organizationId,
+      clientId: input.clientId || null,
+      createdByUserId: session.userId,
+      title: draft.title,
+      goal: draft.goal,
+      daysPerWeek: draft.daysPerWeek,
+      sessionMinutes: draft.sessionMinutes,
+      splitType: draft.splitType,
+      experienceLevel: draft.experienceLevel,
+      status: input.activate ? "active" : "draft",
+      notes: draft.notes,
+      generationMeta: draft.meta,
     });
-    for (const ex of day.exercises) {
-      await db.insert(programExercises).values({
-        id: ex.id,
-        programDayId: day.id,
-        exerciseId: ex.exerciseId,
-        exerciseName: ex.exerciseName,
-        movementPattern: ex.movementPattern,
-        sets: ex.sets,
-        reps: ex.reps,
-        rpe: ex.rpe,
-        restSec: ex.restSec,
-        notes: ex.notes,
-        sortOrder: ex.sortOrder,
-        isWarmup: ex.isWarmup,
-        setScheme: ex.setScheme || "straight",
-        setSchemeMeta: ex.setSchemeMeta || null,
-        groupId: ex.groupId || null,
-        groupKind: ex.groupKind || null,
-        groupLabel: ex.groupLabel || null,
-        groupOrder: ex.groupOrder ?? null,
-        restAfterSec: ex.restAfterSec ?? null,
-        restBetweenRoundsSec: ex.restBetweenRoundsSec ?? null,
-        groupRole: ex.groupRole || null,
-      });
+
+    if (daysToInsert.length > 0) {
+      await tx.insert(programDays).values(daysToInsert);
     }
-  }
+    if (exercisesToInsert.length > 0) {
+      await tx.insert(programExercises).values(exercisesToInsert);
+    }
+  });
 
   revalidatePath("/programs");
   if (input.clientId) {
@@ -999,13 +1007,20 @@ async function reorderProgramDayExercises(
     }
   );
 
-  for (const row of ordered) {
-    const id = (row as { id?: string }).id;
-    if (!id || row.sortOrder == null) continue;
+  const validRows = ordered.filter(
+    (r): r is typeof r & { id: string; sortOrder: number } =>
+      Boolean((r as { id?: string }).id) && r.sortOrder != null
+  );
+
+  if (validRows.length > 0) {
+    const ids = validRows.map((r) => r.id);
+    const caseCases = validRows.map(
+      (r) => sql`WHEN ${programExercises.id} = ${r.id} THEN ${r.sortOrder}::integer`
+    );
     await db
       .update(programExercises)
-      .set({ sortOrder: row.sortOrder })
-      .where(eq(programExercises.id, id));
+      .set({ sortOrder: sql`CASE ${sql.join(caseCases, sql` `)} END` })
+      .where(inArray(programExercises.id, ids));
   }
 }
 
@@ -1417,30 +1432,46 @@ export async function applyMesocycleToProgramAction(
     }
   }
 
-  for (const pe of allExercises) {
-    const base = baselines[pe.id] || {
-      sets: pe.sets,
-      reps: pe.reps,
-      rpe: pe.rpe,
-      restSec: pe.restSec,
-    };
-    const scaled = applyMesocycleToPrescription(base, plan);
+  if (allExercises.length > 0) {
+    const ids = allExercises.map((pe) => pe.id);
 
-    let notes = stripMesocycleNotes(pe.notes);
-    if (scaled.note) {
-      notes = [notes, scaled.note].filter(Boolean).join(" · ");
+    const setsCases: ReturnType<typeof sql>[] = [];
+    const repsCases: ReturnType<typeof sql>[] = [];
+    const rpeCases: ReturnType<typeof sql>[] = [];
+    const restCases: ReturnType<typeof sql>[] = [];
+    const notesCases: ReturnType<typeof sql>[] = [];
+
+    for (const pe of allExercises) {
+      const base = baselines[pe.id] || {
+        sets: pe.sets,
+        reps: pe.reps,
+        rpe: pe.rpe,
+        restSec: pe.restSec,
+      };
+      const scaled = applyMesocycleToPrescription(base, plan);
+
+      let notes = stripMesocycleNotes(pe.notes);
+      if (scaled.note) {
+        notes = [notes, scaled.note].filter(Boolean).join(" · ");
+      }
+
+      setsCases.push(sql`WHEN ${programExercises.id} = ${pe.id} THEN ${scaled.sets}::integer`);
+      repsCases.push(sql`WHEN ${programExercises.id} = ${pe.id} THEN ${scaled.reps}::text`);
+      rpeCases.push(sql`WHEN ${programExercises.id} = ${pe.id} THEN ${scaled.rpe}::text`);
+      restCases.push(sql`WHEN ${programExercises.id} = ${pe.id} THEN ${scaled.restSec}::integer`);
+      notesCases.push(sql`WHEN ${programExercises.id} = ${pe.id} THEN ${notes}::text`);
     }
 
     await db
       .update(programExercises)
       .set({
-        sets: scaled.sets,
-        reps: scaled.reps,
-        rpe: scaled.rpe,
-        restSec: scaled.restSec,
-        notes,
+        sets: sql`CASE ${sql.join(setsCases, sql` `)} END`,
+        reps: sql`CASE ${sql.join(repsCases, sql` `)} END`,
+        rpe: sql`CASE ${sql.join(rpeCases, sql` `)} END`,
+        restSec: sql`CASE ${sql.join(restCases, sql` `)} END`,
+        notes: sql`CASE ${sql.join(notesCases, sql` `)} END`,
       })
-      .where(eq(programExercises.id, pe.id));
+      .where(inArray(programExercises.id, ids));
   }
 
   await db
@@ -1566,52 +1597,39 @@ export async function regenerateProgramInPlaceAction(
     variationSeed,
   });
 
-  // Delete existing days (cascade exercises if FK set — delete exercises then days)
-  const oldDays = await db
-    .select()
-    .from(programDays)
-    .where(eq(programDays.programId, programId));
-  for (const d of oldDays) {
-    await db
-      .delete(programExercises)
-      .where(eq(programExercises.programDayId, d.id));
-    await db.delete(programDays).where(eq(programDays.id, d.id));
-  }
+  const daysToInsert = draft.days.map((day) => ({
+    id: day.id,
+    programId,
+    dayIndex: day.dayIndex,
+    name: day.name,
+    focus: day.focus,
+  }));
 
-  for (const day of draft.days) {
-    await db.insert(programDays).values({
-      id: day.id,
-      programId,
-      dayIndex: day.dayIndex,
-      name: day.name,
-      focus: day.focus,
-    });
-    for (const ex of day.exercises) {
-      await db.insert(programExercises).values({
-        id: ex.id,
-        programDayId: day.id,
-        exerciseId: ex.exerciseId,
-        exerciseName: ex.exerciseName,
-        movementPattern: ex.movementPattern,
-        sets: ex.sets,
-        reps: ex.reps,
-        rpe: ex.rpe,
-        restSec: ex.restSec,
-        notes: ex.notes,
-        sortOrder: ex.sortOrder,
-        isWarmup: ex.isWarmup,
-        setScheme: ex.setScheme || "straight",
-        setSchemeMeta: ex.setSchemeMeta || null,
-        groupId: ex.groupId || null,
-        groupKind: ex.groupKind || null,
-        groupLabel: ex.groupLabel || null,
-        groupOrder: ex.groupOrder ?? null,
-        restAfterSec: ex.restAfterSec ?? null,
-        restBetweenRoundsSec: ex.restBetweenRoundsSec ?? null,
-        groupRole: ex.groupRole || null,
-      });
-    }
-  }
+  const exercisesToInsert = draft.days.flatMap((day) =>
+    day.exercises.map((ex) => ({
+      id: ex.id,
+      programDayId: day.id,
+      exerciseId: ex.exerciseId,
+      exerciseName: ex.exerciseName,
+      movementPattern: ex.movementPattern,
+      sets: ex.sets,
+      reps: ex.reps,
+      rpe: ex.rpe,
+      restSec: ex.restSec,
+      notes: ex.notes,
+      sortOrder: ex.sortOrder,
+      isWarmup: ex.isWarmup,
+      setScheme: ex.setScheme || "straight",
+      setSchemeMeta: ex.setSchemeMeta || null,
+      groupId: ex.groupId || null,
+      groupKind: ex.groupKind || null,
+      groupLabel: ex.groupLabel || null,
+      groupOrder: ex.groupOrder ?? null,
+      restAfterSec: ex.restAfterSec ?? null,
+      restBetweenRoundsSec: ex.restBetweenRoundsSec ?? null,
+      groupRole: ex.groupRole || null,
+    }))
+  );
 
   // Fresh baselines after regen
   const baselines: Record<string, BaselineRx> = {};
@@ -1626,25 +1644,49 @@ export async function regenerateProgramInPlaceAction(
     }
   }
 
-  await db
-    .update(programs)
-    .set({
-      title: draft.title,
-      goal: draft.goal,
-      daysPerWeek: draft.daysPerWeek,
-      sessionMinutes: draft.sessionMinutes,
-      splitType: draft.splitType,
-      experienceLevel: draft.experienceLevel,
-      notes: draft.notes,
-      generationMeta: {
-        ...draft.meta,
-        baselinePrescriptions: baselines,
-        regeneratedAt: new Date().toISOString(),
-        previousVariationSeed: prevMeta.variationSeed ?? null,
-      },
-      updatedAt: new Date(),
-    })
-    .where(eq(programs.id, programId));
+  await db.transaction(async (tx) => {
+    const oldDays = await tx
+      .select({ id: programDays.id })
+      .from(programDays)
+      .where(eq(programDays.programId, programId));
+
+    if (oldDays.length > 0) {
+      const oldDayIds = oldDays.map((d) => d.id);
+      await tx
+        .delete(programExercises)
+        .where(inArray(programExercises.programDayId, oldDayIds));
+      await tx
+        .delete(programDays)
+        .where(eq(programDays.programId, programId));
+    }
+
+    if (daysToInsert.length > 0) {
+      await tx.insert(programDays).values(daysToInsert);
+    }
+    if (exercisesToInsert.length > 0) {
+      await tx.insert(programExercises).values(exercisesToInsert);
+    }
+
+    await tx
+      .update(programs)
+      .set({
+        title: draft.title,
+        goal: draft.goal,
+        daysPerWeek: draft.daysPerWeek,
+        sessionMinutes: draft.sessionMinutes,
+        splitType: draft.splitType,
+        experienceLevel: draft.experienceLevel,
+        notes: draft.notes,
+        generationMeta: {
+          ...draft.meta,
+          baselinePrescriptions: baselines,
+          regeneratedAt: new Date().toISOString(),
+          previousVariationSeed: prevMeta.variationSeed ?? null,
+        },
+        updatedAt: new Date(),
+      })
+      .where(eq(programs.id, programId));
+  });
 
   revalidatePath(`/programs/${programId}`);
   revalidatePath("/programs");
@@ -1880,11 +1922,13 @@ export async function getProgramVolumeReportAction(
     .orderBy(desc(trainingSessions.performedAt));
 
   const volumeInputs: Parameters<typeof accumulateVolumeByPattern>[0] = [];
-  for (const s of sessions) {
+  if (sessions.length > 0) {
+    const sessionIds = sessions.map((s) => s.id);
     const logs = await db
       .select()
       .from(sessionExerciseLogs)
-      .where(eq(sessionExerciseLogs.sessionId, s.id));
+      .where(inArray(sessionExerciseLogs.sessionId, sessionIds));
+
     for (const l of logs) {
       volumeInputs.push({
         movementPattern: l.movementPattern,
@@ -2198,6 +2242,8 @@ export async function insertCorrectivesAction(programId: string) {
     .orderBy(asc(programDays.dayIndex));
 
   let inserted = 0;
+  const sortOrderUpdates: { id: string; newSortOrder: number }[] = [];
+  const correctivesToInsert: (typeof programExercises.$inferInsert)[] = [];
 
   for (const day of days) {
     const existing = await db
@@ -2247,15 +2293,12 @@ export async function insertCorrectivesAction(programId: string) {
     // Shift existing sort orders so warmups sit at the front
     const shift = toInsert.length;
     for (const pe of existing) {
-      await db
-        .update(programExercises)
-        .set({ sortOrder: pe.sortOrder + shift })
-        .where(eq(programExercises.id, pe.id));
+      sortOrderUpdates.push({ id: pe.id, newSortOrder: pe.sortOrder + shift });
     }
 
     for (let i = 0; i < toInsert.length; i++) {
       const ex = toInsert[i];
-      await db.insert(programExercises).values({
+      correctivesToInsert.push({
         id: id("pe"),
         programDayId: day.id,
         exerciseId: ex.exerciseId,
@@ -2285,6 +2328,21 @@ export async function insertCorrectivesAction(programId: string) {
       presentIds.add(ex.exerciseId);
       presentNames.add(ex.exerciseName.trim().toLowerCase());
     }
+  }
+
+  if (sortOrderUpdates.length > 0) {
+    const ids = sortOrderUpdates.map((u) => u.id);
+    const caseCases = sortOrderUpdates.map(
+      (u) => sql`WHEN ${programExercises.id} = ${u.id} THEN ${u.newSortOrder}::integer`
+    );
+    await db
+      .update(programExercises)
+      .set({ sortOrder: sql`CASE ${sql.join(caseCases, sql` `)} END` })
+      .where(inArray(programExercises.id, ids));
+  }
+
+  if (correctivesToInsert.length > 0) {
+    await db.insert(programExercises).values(correctivesToInsert);
   }
 
   const prevMeta =

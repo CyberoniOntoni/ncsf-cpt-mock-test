@@ -71,13 +71,14 @@ export async function sendCoachMessageAction(input: {
   }
 
   let conversationId = input.conversationId || null;
+  let activeClientId = input.clientId || null;
   if (!conversationId) {
     conversationId = id("conv");
     await db.insert(conversations).values({
       id: conversationId,
       organizationId: session.organizationId,
       userId: session.userId,
-      clientId: input.clientId || null,
+      clientId: activeClientId,
       title: text.slice(0, 80),
     });
   } else {
@@ -93,6 +94,9 @@ export async function sendCoachMessageAction(input: {
       )
       .limit(1);
     if (!conv) throw new Error("Conversation not found");
+    if (!activeClientId && conv.clientId) {
+      activeClientId = conv.clientId;
+    }
     if (input.clientId && !conv.clientId) {
       await db
         .update(conversations)
@@ -124,15 +128,9 @@ export async function sendCoachMessageAction(input: {
 
   const historyForModel = history.slice(0, -1);
 
-  const [conv] = await db
-    .select()
-    .from(conversations)
-    .where(eq(conversations.id, conversationId))
-    .limit(1);
-
   const response = await runCoachTurn({
     organizationId: session.organizationId,
-    clientId: input.clientId || conv?.clientId,
+    clientId: activeClientId,
     userMessage: text,
     history: historyForModel,
   });
