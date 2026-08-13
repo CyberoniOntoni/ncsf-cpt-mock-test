@@ -41,7 +41,7 @@ export function AuthShell({
           </p>
         ) : null}
       </div>
-      <PublicSiteFooter />
+      <PublicSiteFooter variant="auth" />
     </div>
   );
 }

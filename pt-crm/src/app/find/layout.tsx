@@ -17,7 +17,7 @@ export default async function FindLayout({
     <div className="mkt-root mkt-grain min-h-dvh bg-[#12100e] text-stone-100">
       <FindChrome />
       <div className="mx-auto max-w-3xl px-4 py-8">{children}</div>
-      <PublicSiteFooter />
+      <PublicSiteFooter variant="find" />
     </div>
   );
 }

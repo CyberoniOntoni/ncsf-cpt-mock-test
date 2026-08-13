@@ -52,7 +52,7 @@ export default async function PortalLoginPage({
           </a>
         </p>
       </div>
-      <PublicSiteFooter />
+      <PublicSiteFooter variant="portal" />
     </div>
   );
 }

@@ -3,7 +3,9 @@ import {
   AUDIENCE_DOORS,
   DAY_STEPS,
   FEATURE_PILLARS,
+  PORTAL_FOOTER_NOTE,
   PUBLIC_NAV,
+  SEEKER_AUTH,
   SITE_COPY,
   SITE_DISCLAIMERS,
   START_STEPS,
@@ -89,5 +91,10 @@ assert.notEqual(SITE_COPY.primaryCta.href, "/find/register");
 
 assert.match(SITE_COPY.oneLiner, /programs/i);
 assert.match(SITE_COPY.oneLiner, /session/i);
+
+assert.equal(SEEKER_AUTH.register.href, "/find/register");
+assert.notEqual(SEEKER_AUTH.register.href, SITE_COPY.primaryCta.href);
+assert.match(PORTAL_FOOTER_NOTE, /one-time code/i);
+assert.doesNotMatch(PORTAL_FOOTER_NOTE, /introduces you/i);
 
 console.log("site-copy ok");

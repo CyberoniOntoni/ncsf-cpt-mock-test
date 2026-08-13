@@ -108,3 +108,11 @@ export const SITE_DISCLAIMERS = {
   findIntro:
     "FloorScribe introduces you. Training and session payments are between you and the trainer.",
 } as const;
+
+export const SEEKER_AUTH = {
+  signIn: { href: "/find/login", label: "Log in" },
+  register: { href: "/find/register", label: "Create seeker account" },
+} as const;
+
+export const PORTAL_FOOTER_NOTE =
+  "Assigned clients sign in with a one-time code. This is not Find a trainer.";
