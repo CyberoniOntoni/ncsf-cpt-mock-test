@@ -182,7 +182,7 @@ Four primary areas (`src/lib/nav.ts`):
 
 | Capability | Status | Notes |
 |------------|--------|--------|
-| Public marketing site | **Done** | Dual solo/studio path, calm brand |
+| Public marketing site | **Done (overhauled 2026-08-13)** | six pillars, audience doors, shared public chrome |
 | Create account CTAs | **Done** | |
 | Self-host copy stripped from public footer | **Done** | No public GitHub / IP leak |
 
@@ -326,6 +326,7 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 
 | Date | Note |
 |------|------|
+| 2026-08-13 | Public website overhaul: marketing + find + auth + portal share one chrome; copy covers programs, portal, and Find. |
 | 2026-08-08 | Initial audit after programs science polish + LXC deploy (`a977bbb` / local `4d4fa35`) |
 | 2026-08-08 | Build from scratch + save-for-later drafts (unassigned templates) |
 | 2026-08-10 | Pre-pilot review (7 high fixes), SCHEMA 17 indexes, CI, DnD reorder |
