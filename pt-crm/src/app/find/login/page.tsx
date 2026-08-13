@@ -11,7 +11,7 @@ export default function FindLoginPage() {
   const [pending, setPending] = useState(false);
 
   return (
-    <main className="mx-auto max-w-md space-y-4 px-4 py-10 text-zinc-100">
+    <main className="mx-auto max-w-md space-y-4">
       <p className="text-xs uppercase tracking-wide text-zinc-500">
         Client account
       </p>
@@ -32,20 +32,26 @@ export default function FindLoginPage() {
           else router.push("/find/account");
         }}
       >
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="Email"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
-        <input
-          name="password"
-          type="password"
-          required
-          placeholder="Password"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
+        <label className="block text-sm text-zinc-500">
+          Email
+          <input
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
+        <label className="block text-sm text-zinc-500">
+          Password
+          <input
+            name="password"
+            type="password"
+            required
+            autoComplete="current-password"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
         <button
           type="submit"
           disabled={pending}

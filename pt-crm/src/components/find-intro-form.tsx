@@ -34,45 +34,57 @@ export function FindIntroForm(props: {
       }}
     >
       <h2 className="font-medium">Request an intro</h2>
-      <input
-        name="seekerName"
-        required
-        defaultValue={props.defaultName || ""}
-        placeholder="Your name"
-        className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-      />
-      <input
-        name="seekerEmail"
-        type="email"
-        required
-        defaultValue={props.defaultEmail || ""}
-        placeholder="Email"
-        className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-      />
-      <input
-        name="seekerPhone"
-        placeholder="Phone (optional)"
-        className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-      />
+      <label className="block text-sm text-zinc-500">
+        Your name
+        <input
+          name="seekerName"
+          required
+          defaultValue={props.defaultName || ""}
+          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+        />
+      </label>
+      <label className="block text-sm text-zinc-500">
+        Email
+        <input
+          name="seekerEmail"
+          type="email"
+          required
+          defaultValue={props.defaultEmail || ""}
+          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+        />
+      </label>
+      <label className="block text-sm text-zinc-500">
+        Phone (optional)
+        <input
+          name="seekerPhone"
+          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+        />
+      </label>
       {props.facilities.length > 0 ? (
-        <select
-          name="facilityId"
-          defaultValue={props.defaultFacilityId || ""}
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        >
-          <option value="">No specific gym</option>
-          {props.facilities.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.name}
-            </option>
-          ))}
-        </select>
+        <label className="block text-sm text-zinc-500">
+          Preferred gym
+          <select
+            name="facilityId"
+            defaultValue={props.defaultFacilityId || ""}
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          >
+            <option value="">No specific gym</option>
+            {props.facilities.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+        </label>
       ) : null}
-      <textarea
-        name="message"
-        placeholder="When and where you want to train"
-        className="min-h-24 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-      />
+      <label className="block text-sm text-zinc-500">
+        Message
+        <textarea
+          name="message"
+          placeholder="When and where you want to train"
+          className="mt-1 min-h-24 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100"
+        />
+      </label>
       <button
         type="submit"
         disabled={pending}

@@ -11,7 +11,7 @@ export default function FindRegisterPage() {
   const [pending, setPending] = useState(false);
 
   return (
-    <main className="mx-auto max-w-md space-y-4 px-4 py-10 text-zinc-100">
+    <main className="mx-auto max-w-md space-y-4">
       <p className="text-xs uppercase tracking-wide text-zinc-500">
         Client account
       </p>
@@ -37,32 +37,44 @@ export default function FindRegisterPage() {
           else router.push("/find/account");
         }}
       >
-        <input
-          name="firstName"
-          required
-          placeholder="First name"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
-        <input
-          name="lastName"
-          placeholder="Last name"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="Email"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          placeholder="Password (8+ characters)"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
+        <label className="block text-sm text-zinc-500">
+          First name
+          <input
+            name="firstName"
+            required
+            autoComplete="given-name"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
+        <label className="block text-sm text-zinc-500">
+          Last name
+          <input
+            name="lastName"
+            autoComplete="family-name"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
+        <label className="block text-sm text-zinc-500">
+          Email
+          <input
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
+        <label className="block text-sm text-zinc-500">
+          Password (8+ characters)
+          <input
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
         <button
           type="submit"
           disabled={pending}

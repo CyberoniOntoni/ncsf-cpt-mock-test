@@ -4,21 +4,22 @@
 
 This document defines the production implementation plan for the **FloorScribe Client Portal**, incorporating all architectural, security, legal compliance, and data-modeling requirements identified in the full code review (`docs/CLIENT_PORTAL_PLAN_REVIEW.md`).
 
-**Product stance:** FloorScribe remains **Floor OS for trainers** first. The portal is a **sidecar** so assigned clients can see their plan, progress, invoices, and sign waivers. It is **not** the trainer CRM, and it is **not** a consumer marketplace in v1.
+**Product stance:** FloorScribe remains **Floor OS for trainers** first. The portal is a **sidecar** so assigned clients can see their plan, progress, invoices, and sign waivers. It is **not** the trainer CRM. A separate **Find a trainer** sidecar (`/find`, SCHEMA 22–25) shipped after this portal milestone.
 
 **Marketplace-ready without building the marketplace yet:** a person (email) can already belong to **multiple studios** (`clients` is per-org). OTP login lists those studios. That identity split is the foundation for later matchmaking (client finds a PT, platform takes a fee). Do **not** merge clients into the trainer `users` table. Do **not** add marketplace listings, intro requests, or platform checkout in this milestone.
 
 ### Marketplace (SCHEMA 22)
 
-Shipped in `docs/superpowers/plans/2026-08-13-client-pt-matchmaking.md`:
+Shipped in `docs/superpowers/plans/2026-08-13-client-pt-matchmaking.md` and follow-ups:
 
-| Concept | Status |
-|---------|--------|
-| `marketplace_profiles` + `gym_facilities` | Public `/find` (opt-in) |
-| `intro_requests` | Accept → `clients` lead |
-| `platform_charges` + Stripe Checkout | Intro fee after 3 free; featured $29/mo |
-| Stripe Connect take-rate on packs | Still later |
-| Global `people` identity | Still later |
+| Schema | Status |
+|--------|--------|
+| 22 `marketplace_profiles` + gyms + intros + platform Checkout | `/find`, intro → CRM lead, 3 free then USD 19, featured USD 29 |
+| 23 `seeker_profiles` + measurements | `/find/register` + `/find/login` (password; not trainer `users`) |
+| 24 named areas | Bedok / Tampines / Orchard catalog; no client lat/lng |
+| 25 trainer card | Credentials, area, specialties, hourly + session rates |
+| Stripe Connect take-rate / reviews / gym-operator | Still later |
+| Global `people` identity | Still later — seekers stay off `users` |
 
 v1 rule: **one portal session = one org + one client row**. Switching studio re-issues a session. Email is the person key.
 

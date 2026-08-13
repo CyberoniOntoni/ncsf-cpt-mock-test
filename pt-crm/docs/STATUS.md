@@ -9,7 +9,7 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 | **Product** | FloorScribe (repo folder `pt-crm/`) |
 | **GitHub** | [CyberoniOntoni/floorscribe](https://github.com/CyberoniOntoni/floorscribe) `main` |
 | **Live** | https://floorscribe.com (self-host LXC + Docker; private IP not for public docs) |
-| **Schema** | `SCHEMA_VERSION` **21** (partial unique client email + portal 20 + smarter gen + pack debit) |
+| **Schema** | `SCHEMA_VERSION` **25** (18 pack debit · 19 smarter gen · 20–21 portal · 22–25 find/seeker/areas/trainer card) |
 | **Stack** | Next.js 16 App Router · TypeScript · Tailwind · PGlite + Drizzle · multi-tenant org |
 | **Demo** | `pt@demo.local` / `trainer123` |
 
@@ -28,7 +28,7 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 
 ## 1. Product identity (north star)
 
-**Floor OS for freelance / studio personal trainers** — not a client portal, not a pure program studio, not AI-chat-first.
+**Floor OS for freelance / studio personal trainers** — floor-first, not portal-first or marketplace-first.
 
 | Priority | Layer |
 |----------|--------|
@@ -36,8 +36,8 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 | 2 | **Plans** — editable programs + progression, enough to run next session |
 | 3 | **CRM spine** — stage, pack, book, task, invoice, check-in |
 | Sidecar | Coach + knowledge (assist, never the home hero) |
-| Sidecar | **Client portal** (`/portal`) — assigned clients only |
-| Sidecar | **Find a trainer** (`/find`) — opt-in listings, gym/geo intros → CRM leads |
+| Sidecar | **Client portal** (`/portal`) — assigned clients, OTP |
+| Sidecar | **Find a trainer** (`/find`) — seeker accounts, named areas, trainer cards, intros → CRM leads |
 
 **North-star metric:** sessions logged per trainer per week.
 
@@ -50,7 +50,7 @@ Four primary areas (`src/lib/nav.ts`):
 | Area | Route | What’s under it |
 |------|--------|-----------------|
 | **Today** | `/` | Day board: sticky client, resume, Needs you, Agenda, Coach (collapsed), pilot onboarding |
-| **People** | `/clients` | Clients list + pipeline; **Calendar** `/calendar` |
+| **People** | `/clients` | Clients list + pipeline; **Calendar** `/calendar`; **Intros** `/intros` |
 | **Plans** | `/programs` | Programs + design wizard; **Sessions** list `/sessions` |
 | **Studio** | `/studio` | Hub → Library, Knowledge, Coach history, Settings |
 
@@ -62,7 +62,11 @@ Four primary areas (`src/lib/nav.ts`):
 | `/clients/[id]` | Client desk (CRM + progress + timeline) |
 | `/login`, `/register/*`, `/invite/[token]` | Auth |
 | `/marketing`, `/` (logged out) | Marketing site |
+| `/portal/*` | Assigned-client OTP sidecar |
+| `/find`, `/find/register`, `/find/login`, `/find/account`, `/find/[id]` | Public find + seeker account |
+| `/intros` | Trainer intro inbox |
 | `/api/health` | Health check |
+| `/api/stripe/platform-webhook` | Platform Checkout paid |
 
 ---
 
@@ -114,7 +118,7 @@ Four primary areas (`src/lib/nav.ts`):
 | **Plan balance** (weekly sets, push:pull, time est.) | **Done** | `program-science.ts` |
 | **Fill next** pattern chips | **Done** | MEV / antagonist gaps |
 | Goal+pattern append defaults + science rest | **Done** | |
-| Drag reorder exercises | **Not done** | Explicit non-goal of Phase C |
+| Drag reorder exercises | **Done** | Desk day list; mid-day insert still later |
 | Multi-exercise invent from desk append | **Not done** | Append = straight only |
 | Progression write-back into program targets | **Not done** | Floor tips only |
 | Google Calendar / external sync | **Not done** | Deferred |
@@ -136,9 +140,23 @@ Four primary areas (`src/lib/nav.ts`):
 | Desk IA polish (bookings→pack→invoices…) | **Done** | HIG density pass |
 | Real WhatsApp/SMS/email send | **Not done** | Vision CRM Phase C |
 | Communication log table product UI | **Not done** | Schema may have notes/check-ins only |
-| Card payments / Stripe | **Not done** | Deferred |
+| Card payments / Stripe | **Partial** | Platform Checkout for intro/featured fees. Trainer pack cards not done |
 | Tax / receipts | **Not done** | Deferred |
-| Client portal / companion app | **Done** | `/portal` OTP sidecar; marketplace matchmaking later |
+| Client portal / companion app | **Done** | `/portal` OTP sidecar (SCHEMA 20–21) |
+
+### 3.9 Marketplace / Find a trainer
+
+| Capability | Status | Notes |
+|------------|--------|--------|
+| Public `/find` search | **Done** | Named area + gym + network (SCHEMA 22–24) |
+| Seeker register / login | **Done** | Password account, not trainer `users` (23) |
+| Named areas | **Done** | Bedok, Tampines, Orchard, … — no client lat/lng (24) |
+| Self measurements + progress | **Done** | Account + trainer-logged if email matches |
+| Intro → CRM lead | **Done** | People → Intros; 3 free then USD 19 |
+| Trainer card | **Done** | Credentials, area, gyms, specialties, hourly + session (25) |
+| Featured listing | **Done** | USD 29 / 30 days, platform Stripe |
+| Stripe Connect take-rate | **Not done** | Follow-up |
+| Reviews / gym-operator claims | **Not done** | Follow-up |
 
 ### 3.5 Library, assessments, progress
 
@@ -208,7 +226,7 @@ Org → Equipment, Exercises (bank), Playbooks
 | **Programs Phase C** | Smarter programs (append, coach append) | **Shipped** |
 | **Programs polish** | Plan balance, science rest, fill chips, DP tips | **Shipped** (2026-08-08) |
 | **CRM Phase C** | Comms log, real send, consent productization | **Not started** |
-| **Marketplace** | Find a trainer, intros, platform fees | **Shipped** (SCHEMA 22; Connect take-rate later) |
+| **Marketplace** | Find, seeker accounts, named areas, trainer card | **Shipped** (SCHEMA 22–25; Connect take-rate later) |
 | **Vision later** | Stripe Connect session take-rate, reviews, gym-operator claims | **Deferred** |
 
 ---
@@ -267,7 +285,8 @@ Typical candidates (pick from pain, don’t pre-build all):
 - [ ] Program drag-reorder / mid-day insert  
 - [ ] Progression write-back into program targets  
 - [ ] Deeper multi-trainer RBAC  
-- [ ] Payments / client portal — **only after** floor habit sticks  
+- [ ] Stripe Connect take-rate on first pack for marketplace-sourced clients  
+- [ ] Reviews / gym-operator claimed facilities  
 
 ---
 
@@ -277,7 +296,7 @@ Typical candidates (pick from pain, don’t pre-build all):
 |------|--------|
 | **Push** | `git subtree push --prefix=pt-crm floorscribe main` from monorepo root (or push from floorscribe clone) |
 | **Deploy** | Env-only `FLOORSCRIBE_DEPLOY_*` + `python scripts/deploy_lxc.py` |
-| **Verify** | `npm run typecheck` · `npm run smoke:programming` · `smoke:portal` · `smoke:pilot` · `/api/health` |
+| **Verify** | `npm run typecheck` · `smoke:programming` · `smoke:portal` · `smoke:marketplace` · `smoke:pilot` · `/api/health` |
 | **Schema** | Bump `SCHEMA_VERSION` in `src/db/index.ts` when migrations change; restart app |
 | **Secrets** | Never commit passwords, `AUTH_SECRET`, or private LXC IPs into the public repo |
 | **Scope** | Session/plan/CRM first; knowledge & analytics stay secondary |
@@ -293,6 +312,7 @@ npm run smoke
 npm run smoke:pilot
 npm run smoke:programming
 npm run smoke:portal
+npm run smoke:marketplace
 npm run smoke:floor
 npm run smoke:library
 curl -s https://floorscribe.com/api/health
@@ -310,6 +330,9 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 | 2026-08-08 | Build from scratch + save-for-later drafts (unassigned templates) |
 | 2026-08-10 | Pre-pilot review (7 high fixes), SCHEMA 17 indexes, CI, DnD reorder |
 | 2026-08-13 | Portal polish: HMAC OTP, case-insensitive email, onboarding finish, program cache read, next-session window, smoke exit 0 (SCHEMA 21) |
+| 2026-08-13 | Trainer card: credentials, named area, specialties, hourly + session rates (SCHEMA 25) |
+| 2026-08-13 | Named areas (Bedok/Tampines/Orchard catalog); no client lat/lng (SCHEMA 24) |
+| 2026-08-13 | Seeker register/login, measurements, gym/network prefs (SCHEMA 23) |
 | 2026-08-13 | Find a trainer (`/find`) + intros → CRM leads + platform Checkout fees; SCHEMA 22 |
 | 2026-08-13 | Client portal v1 (`/portal`) OTP login, onboarding signatures, read-only program/progress/billing; SCHEMA 20. |
 | 2026-08-13 | Smarter generator (SCHEMA 19): deficiency rules from real assessment keys + measurements, Meso 1 phase, rotated safety-gated correctives |
@@ -319,6 +342,22 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 
 ---
 
-## 11. One-line summary
+## 11. Progress log (this build arc)
 
-**FloorScribe is pilot-ready for a single trainer:** floor log + packages/bookings/invoices/tasks + editable programs with exercise-science balance. **Next is not more features by default — a real pilot week, then fix what hurts, then CRM Comms.**
+What landed in-repo (not all pushed to GitHub):
+
+1. **Pack debit (SCHEMA 18)** — floor + calendar share a debit key; same-day unlinked pair; cancel/reopen restore; React #441 start-session result.
+2. **Smarter Auto-design (19)** — real assessment keys, equipment Home/Combined, primary-lift swaps, NSCA/ACSM rest, novice schemes, Schoenfeld frequency, same-day squat+hinge volume.
+3. **Client portal (20–21)** — `/portal` OTP (HMAC), onboarding signatures, read-only program/progress/billing; isolated `client_session`; partial unique org+email.
+4. **Find a trainer (22)** — public `/find`, gyms, intros → CRM leads, platform Checkout (3 free intros then USD 19; featured USD 29).
+5. **Seeker accounts (23)** — `/find/register` + `/find/login`, persistent profile, optional measurements, gym/network prefs.
+6. **Named areas (24)** — Bedok, Tampines, Orchard, and catalog; clients never type coordinates.
+7. **Trainer card (25)** — Settings: credentials, area, gyms, specialties, hourly + session rates; public cards show the same.
+
+**Not shipped:** Stripe Connect take-rate, reviews, gym-operator claims, live SES, trainer pack card payments.
+
+---
+
+## 12. One-line summary
+
+**FloorScribe is pilot-ready for a single trainer** (floor + packs + programs + science Auto-design) **and** has a shipped sidecar marketplace (`/find` + seeker accounts + trainer cards + intros). **Next: a real trainer week (and one seeker→intro→lead loop), then fix what hurts. Connect take-rate stays later.**

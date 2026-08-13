@@ -35,15 +35,15 @@ Cold path — no sticky client, no open session:
 
 **Deactivate** when they leave the roster (keeps history; **Reactivate** anytime). Inactive clients are hidden from the floor picker and Needs you.
 
-After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **23**).
+After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **25**).
 
 ---
 
 ## 2b. Find a trainer (marketplace)
 
-1. Client: **`/find/register`** → on **`/find/account`** pick an **area** (Tampines, Bedok, Orchard, …), gym, and/or network. Optional measurements.
-2. **`/find`** lists PTs for that named area (no coordinates to enter), gym, and network.
-3. Trainer: **Settings** → publish a listing and pick gyms.
+1. Client: **`/find/register`** or **`/find/login`** → **`/find/account`**: named **area** (Tampines, Bedok, Orchard — no coordinates), gym, and/or network. Optional measurements.
+2. **`/find`** lists PTs for that area / gym / network. Cards show credentials, specialties, hourly and session rates.
+3. Trainer: **Settings → trainer card** — credentials, primary area, gyms, specialties, hourly + session rates, publish.
 4. Client sends intro. Trainer: **People → Intros** → Accept → CRM **lead**.
 5. Client progress: self-logged measurements on Account, plus trainer-logged metrics when they share an org email.
 
@@ -135,6 +135,8 @@ npx tsx scripts/smoke-library.ts
 npx tsx scripts/smoke-programming.ts   # constraints, meso, append helpers
 npx tsx scripts/smoke-floor.ts
 npx tsx scripts/smoke-floor-a.ts
+npm run smoke:portal
+npm run smoke:marketplace
 npx tsc --noEmit
 ```
 
@@ -151,7 +153,11 @@ Browser checklist:
 - [ ] Mid-session **Add exercise** → after Complete **Add to plan** keeps it on the day  
 - [ ] Book appointment appears on Home Agenda (~48h); Needs you only if ≤4h
 - [ ] Calendar month grid loads; book day prefill works; booking appears on grid  
-- [ ] **Start session** from booking (client Next up or calendar day) opens floor log; complete marks booking done  
+- [ ] **Start session** from booking (client Next up or calendar day) opens floor log; complete marks booking done
+- [ ] `/find/register` → account saves named area (not lat/lng), gym, network, a measurement
+- [ ] `/find` lists published PTs with credentials / area / specialties / rates
+- [ ] Intro → **People → Intros** → Accept creates a CRM **lead**
+- [ ] Settings trainer card: credentials, area, specialties, both rates, publish  
 - [ ] Client portal: `/portal/login` as `jane@example.com` (dev: OTP is logged with `MOCK_EMAIL`) → sign waiver → see Home / Program tabs
 - [ ] Floor: Focus current / Prep open sets; after Complete, close-loop Share + Book next
 - [ ] Follow-up task appears on Needs you; #crm-tasks deep link works

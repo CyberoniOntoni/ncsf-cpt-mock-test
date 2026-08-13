@@ -3,7 +3,7 @@
 Goal: run your real training day on local FloorScribe without relying on GitHub publish.
 
 **Demo login:** `pt@demo.local` / `trainer123` · or **`/register`** for a real studio  
-**SCHEMA_VERSION:** 21 (portal + smarter generator + pack debit)
+**SCHEMA_VERSION:** 25 (portal + marketplace seeker accounts + named areas + trainer card)
 
 ---
 
@@ -24,6 +24,7 @@ npm run smoke:floor
 npm run smoke:floor-a
 npm run smoke:programming
 npm run smoke:portal
+npm run smoke:marketplace
 ```
 
 Health: http://localhost:3000/api/health → `"status":"healthy"`
@@ -78,7 +79,8 @@ Restore = stop app, replace `data/pglite` from unzip, restart. Keep offline copi
 
 **Out (defer)**
 
-- Multi-trainer marketplace, card payments, tax (client portal sidecar exists at `/portal`)
+- Stripe Connect take-rate, tax, gym-operator claims, reviews  
+- `/portal` and `/find` are **shipped sidecars** (optional for a floor-only week)
 - Real SMS/WhatsApp send, Google Calendar sync
 - Public multi-tenant deploy / trademark push
 

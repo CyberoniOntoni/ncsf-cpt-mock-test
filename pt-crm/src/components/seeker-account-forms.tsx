@@ -79,12 +79,17 @@ export function SeekerAccountForms(props: {
             ))}
           </select>
         </label>
-        <input
-          name="radiusKm"
-          type="number"
-          defaultValue={s.radiusKm}
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
+        <label className="block text-sm text-zinc-500">
+          Search radius (km)
+          <input
+            name="radiusKm"
+            type="number"
+            min={5}
+            max={80}
+            defaultValue={s.radiusKm}
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
         <button
           type="submit"
           className="min-h-11 rounded-lg bg-emerald-800 px-4 text-sm font-semibold text-stone-50"
@@ -116,27 +121,35 @@ export function SeekerAccountForms(props: {
         <h2 className="font-medium">Add a measurement</h2>
         <p className="text-xs text-zinc-500">Optional. You control what you log.</p>
         <div className="grid grid-cols-3 gap-2">
-          <input
-            name="weightKg"
-            placeholder="Weight kg"
-            className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-          />
-          <input
-            name="waistCm"
-            placeholder="Waist cm"
-            className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-          />
-          <input
-            name="heightCm"
-            placeholder="Height cm"
-            className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-          />
+          <label className="text-sm text-zinc-500">
+            Weight (kg)
+            <input
+              name="weightKg"
+              className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+            />
+          </label>
+          <label className="text-sm text-zinc-500">
+            Waist (cm)
+            <input
+              name="waistCm"
+              className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+            />
+          </label>
+          <label className="text-sm text-zinc-500">
+            Height (cm)
+            <input
+              name="heightCm"
+              className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+            />
+          </label>
         </div>
-        <input
-          name="notes"
-          placeholder="Note (optional)"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
+        <label className="block text-sm text-zinc-500">
+          Note (optional)
+          <input
+            name="notes"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
         <button
           type="submit"
           className="min-h-11 rounded-lg border border-zinc-700 px-4 text-sm"

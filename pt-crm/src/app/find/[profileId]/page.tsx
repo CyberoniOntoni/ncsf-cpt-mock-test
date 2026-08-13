@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-import { FindChrome } from "@/components/find-chrome";
 import { FindIntroForm } from "@/components/find-intro-form";
+import { FindTrainerMeta } from "@/components/find-trainer-meta";
 import { getPublicProfile, listPublicGyms } from "@/db/queries/marketplace";
-import { specialtyLabel } from "@/lib/marketplace/specialties";
 import { getSeekerById, optionalSeekerSession } from "@/lib/seeker-auth";
 
 export const dynamic = "force-dynamic";
@@ -23,42 +22,25 @@ export default async function FindProfilePage({
   const seeker = session ? await getSeekerById(session.seekerId) : null;
 
   return (
-    <main className="mx-auto max-w-xl space-y-4 px-4 py-8 text-zinc-100">
-      <FindChrome />
+    <main className="mx-auto max-w-xl space-y-4">
       <p className="text-xs uppercase tracking-wide text-zinc-500">
         Find a trainer
       </p>
       <h1 className="text-2xl font-semibold">{profile.displayName}</h1>
-      {profile.credentials || profile.title ? (
-        <p className="text-sm text-zinc-400">
-          {profile.credentials || profile.title}
-        </p>
-      ) : null}
       <p className="text-lg">{profile.headline}</p>
       <p className="whitespace-pre-wrap text-sm text-zinc-300">{profile.bio}</p>
-      {(profile.region || profile.facilityNames.length) ? (
-        <p className="text-sm text-zinc-400">
-          Trains in {[profile.region, ...profile.facilityNames].filter(Boolean).join(" · ")}
-        </p>
-      ) : null}
-      {profile.specialties.length ? (
-        <p className="text-sm text-zinc-400">
-          {profile.specialties.map(specialtyLabel).join(" · ")}
-        </p>
-      ) : null}
-      {profile.hourlyRateCents != null || profile.sessionRateCents != null ? (
-        <p className="text-sm">
-          {profile.hourlyRateCents != null
-            ? `${profile.hourlyRateCents / 100} ${profile.currency}/hr`
-            : ""}
-          {profile.hourlyRateCents != null && profile.sessionRateCents != null
-            ? " · "
-            : ""}
-          {profile.sessionRateCents != null
-            ? `${profile.sessionRateCents / 100} ${profile.currency}/session`
-            : ""}
-        </p>
-      ) : null}
+      <FindTrainerMeta
+        credentials={profile.credentials}
+        title={profile.title}
+        region={profile.region}
+        city={profile.city}
+        facilityNames={profile.facilityNames}
+        specialties={profile.specialties}
+        serviceModes={profile.serviceModes}
+        hourlyRateCents={profile.hourlyRateCents}
+        sessionRateCents={profile.sessionRateCents}
+        currency={profile.currency}
+      />
       <p className="text-xs text-zinc-500">
         FloorScribe introduces you. Training and session payments are between
         you and the trainer.

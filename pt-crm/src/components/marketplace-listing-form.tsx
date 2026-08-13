@@ -129,6 +129,9 @@ export function MarketplaceListingForm(props: {
         </label>
         <div className="space-y-1 text-sm">
           <p className="text-zinc-500">Gyms</p>
+          {props.gyms.length === 0 ? (
+            <p className="text-zinc-500">No gyms in the directory yet.</p>
+          ) : null}
           {props.gyms.map((g) => (
             <label key={g.id} className="flex min-h-11 items-center gap-2">
               <input
@@ -260,7 +263,7 @@ export function MarketplaceListingForm(props: {
             else setMsg(r.error);
           }}
         >
-          Feature for $29/mo
+          Feature for USD 29/mo
         </button>
       </div>
       {msg ? <p className="text-sm text-zinc-400">{msg}</p> : null}

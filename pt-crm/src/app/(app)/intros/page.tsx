@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   acceptIntroAction,
   declineIntroAction,
@@ -6,11 +7,16 @@ import {
 import { AreaEyebrow } from "@/components/area-eyebrow";
 import { PageShell } from "@/components/page-shell";
 import { Card, PageHeader } from "@/components/ui";
+import { listPublicGyms } from "@/db/queries/marketplace";
 
 export const dynamic = "force-dynamic";
 
 export default async function IntrosPage() {
-  const intros = await listOrgIntrosAction();
+  const [intros, gyms] = await Promise.all([
+    listOrgIntrosAction(),
+    listPublicGyms(),
+  ]);
+  const gymName = new Map(gyms.map((g) => [g.id, g.name]));
   return (
     <PageShell className="space-y-4">
       <PageHeader
@@ -20,7 +26,13 @@ export default async function IntrosPage() {
       />
       {intros.length === 0 ? (
         <Card>
-          <p className="text-sm text-zinc-500">No intro requests yet.</p>
+          <p className="text-sm text-zinc-500">
+            No intro requests yet. Publish your trainer card in{" "}
+            <Link href="/settings" className="text-emerald-400">
+              Settings
+            </Link>{" "}
+            — clients send intros from /find.
+          </p>
         </Card>
       ) : (
         <ul className="space-y-3">
@@ -34,6 +46,15 @@ export default async function IntrosPage() {
                   </span>
                 </div>
                 <p className="text-sm text-zinc-400">{row.seekerEmail}</p>
+                <p className="text-xs text-zinc-500">
+                  {row.createdAt
+                    ? new Date(row.createdAt).toLocaleString()
+                    : ""}
+                  {row.seekerPhone ? ` · ${row.seekerPhone}` : ""}
+                  {row.facilityId && gymName.get(row.facilityId)
+                    ? ` · ${gymName.get(row.facilityId)}`
+                    : ""}
+                </p>
                 {row.message ? (
                   <p className="text-sm">{row.message}</p>
                 ) : null}

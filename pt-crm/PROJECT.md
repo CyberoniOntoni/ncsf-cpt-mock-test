@@ -1,3 +1,7 @@
+> **Scope:** 2026-08-10 PGlite/index performance pass (SCHEMA 16→17).  
+> **Current product status:** `docs/STATUS.md` (live `SCHEMA_VERSION` is **25**).  
+> **Do not** treat this file as the marketplace or portal source of truth.
+
 # Project: FloorScribe Database & PGlite Performance Optimization
 
 ## Architecture

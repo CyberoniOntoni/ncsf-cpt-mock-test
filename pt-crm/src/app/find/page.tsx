@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { FindChrome } from "@/components/find-chrome";
 import { FindSearch } from "@/components/find-search";
+import { FindTrainerMeta } from "@/components/find-trainer-meta";
 import {
   listPublicBrands,
   listPublicGyms,
@@ -55,8 +55,7 @@ export default async function FindPage({
   });
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-zinc-100">
-      <FindChrome />
+    <main className="space-y-6">
       <div>
         <p className="text-xs uppercase tracking-wide text-zinc-500">
           Find a trainer
@@ -94,20 +93,18 @@ export default async function FindPage({
                   ) : null}
                 </div>
                 <p className="text-sm text-zinc-400">{c.headline}</p>
-                {c.credentials || c.title ? (
-                  <p className="mt-1 text-xs text-zinc-400">
-                    {c.credentials || c.title}
-                  </p>
-                ) : null}
-                <p className="mt-1 text-xs text-zinc-500">
-                  {[c.region, c.city].filter(Boolean).join(" · ")}
-                  {c.facilityNames.length
-                    ? ` · ${c.facilityNames.join(", ")}`
-                    : ""}
-                  {c.hourlyRateCents != null
-                    ? ` · ${c.hourlyRateCents / 100} ${c.currency}/hr`
-                    : ""}
-                </p>
+                <FindTrainerMeta
+                  credentials={c.credentials}
+                  title={c.title}
+                  region={c.region}
+                  city={c.city}
+                  facilityNames={c.facilityNames}
+                  specialties={c.specialties}
+                  serviceModes={c.serviceModes}
+                  hourlyRateCents={c.hourlyRateCents}
+                  sessionRateCents={c.sessionRateCents}
+                  currency={c.currency}
+                />
               </Link>
             </li>
           ))}

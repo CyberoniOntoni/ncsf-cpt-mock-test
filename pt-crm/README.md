@@ -10,6 +10,8 @@
 - **Programs / Sessions** — design plan, log sets, complete (burns pack session)  
 - **Knowledge** — curated playbooks (incl. NCSF-informed), optional LLM via xAI  
 - **Team** — solo PT or multi-trainer studio with invite links  
+- **Find a trainer** — `/find` public search; clients register, pick an area (Tampines, Bedok, …), send intros  
+- **Client portal** — `/portal` OTP for assigned clients (plan, progress, billing)  
 
 Self-host first via **Docker Compose** (Proxmox LXC friendly) using embedded **PGlite** — single-volume backup, no separate DB for MVP.
 
@@ -29,6 +31,7 @@ Open [http://127.0.0.1:4000](http://127.0.0.1:4000) — logged out shows the **p
 | **Marketing** | [/marketing](http://127.0.0.1:4000/marketing) (also `/` when logged out) |
 | **Demo login** | `pt@demo.local` / `trainer123` |
 | **Create account** | [/register](http://127.0.0.1:4000/register) — solo PT or studio |
+| **Find a trainer** | [/find](http://127.0.0.1:4000/find) · client register [/find/register](http://127.0.0.1:4000/find/register) |
 
 Set in `.env` for real sessions and correct invite links:
 

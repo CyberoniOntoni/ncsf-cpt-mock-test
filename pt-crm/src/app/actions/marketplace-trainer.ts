@@ -212,6 +212,8 @@ export async function listOrgIntros(organizationId: string) {
     status: r.status,
     seekerName: r.seekerName,
     seekerEmail: r.seekerEmail,
+    seekerPhone: r.seekerPhone,
+    facilityId: r.facilityId,
     message: r.message,
     createdAt: r.createdAt,
     acceptedClientId: r.acceptedClientId,

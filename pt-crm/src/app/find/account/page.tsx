@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FindChrome } from "@/components/find-chrome";
+import { FindTrainerMeta } from "@/components/find-trainer-meta";
 import { SeekerAccountForms } from "@/components/seeker-account-forms";
 import {
   listPublicBrands,
@@ -36,8 +36,7 @@ export default async function FindAccountPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 px-4 py-8 text-zinc-100">
-      <FindChrome />
+    <main className="space-y-8">
       <div>
         <p className="text-xs uppercase tracking-wide text-zinc-500">
           Your profile
@@ -56,7 +55,7 @@ export default async function FindAccountPage() {
         </h2>
         {selfMeas.length === 0 ? (
           <p className="mt-2 text-sm text-zinc-500">
-            Nothing logged yet. Add a check-in above when you want.
+            Nothing logged yet. Add a measurement above when you want.
           </p>
         ) : (
           <ul className="mt-2 space-y-2">
@@ -70,8 +69,8 @@ export default async function FindAccountPage() {
                 </span>
                 <span className="tabular-nums">
                   {m.weightKg != null ? `${m.weightKg} kg` : "—"}
-                  {m.waistCm != null ? ` · waist ${m.waistCm}` : ""}
-                  {m.heightCm != null ? ` · ht ${m.heightCm}` : ""}
+                  {m.waistCm != null ? ` · waist ${m.waistCm} cm` : ""}
+                  {m.heightCm != null ? ` · ht ${m.heightCm} cm` : ""}
                 </span>
               </li>
             ))}
@@ -130,9 +129,17 @@ export default async function FindAccountPage() {
                 >
                   <p className="font-medium">{c.displayName}</p>
                   <p className="text-sm text-zinc-400">{c.headline}</p>
-                  <p className="text-xs text-zinc-500">
-                    {c.facilityNames.join(", ") || c.city}
-                  </p>
+                  <FindTrainerMeta
+                    credentials={c.credentials}
+                    title={c.title}
+                    region={c.region}
+                    city={c.city}
+                    facilityNames={c.facilityNames}
+                    specialties={c.specialties}
+                    hourlyRateCents={c.hourlyRateCents}
+                    sessionRateCents={c.sessionRateCents}
+                    currency={c.currency}
+                  />
                 </Link>
               </li>
             ))}

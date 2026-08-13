@@ -28,7 +28,12 @@ function authSecretStatus() {
   return { ok: true, label: "Configured" };
 }
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ paid?: string }>;
+}) {
+  const paid = (await searchParams).paid;
   const { session, user } = await getUserProfile();
   const db = await getDb();
   const [org] = await db
@@ -72,6 +77,14 @@ export default async function SettingsPage() {
         eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
         description="Your profile, trainer card, practice, team, deploy, and AI"
       />
+      {paid === "1" ? (
+        <p className="text-sm text-emerald-400">
+          Featured / fee marked. Refresh if the badge is not updated yet.
+        </p>
+      ) : null}
+      {paid === "0" ? (
+        <p className="text-sm text-zinc-400">Checkout canceled.</p>
+      ) : null}
 
       {listing ? (
         <Card>

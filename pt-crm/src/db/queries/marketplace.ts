@@ -22,6 +22,7 @@ export type PublicProfileCard = {
   sessionRateCents: number | null;
   currency: string;
   serviceModes: string[];
+  specialties: string[];
   facilityNames: string[];
   featured: boolean;
   lat: number | null;
@@ -106,6 +107,7 @@ export async function searchPublicProfiles(input: {
       sessionRateCents: marketplaceProfiles.sessionRateCents,
       currency: marketplaceProfiles.currency,
       serviceModes: marketplaceProfiles.serviceModes,
+      specialties: marketplaceProfiles.specialties,
       lat: marketplaceProfiles.lat,
       lng: marketplaceProfiles.lng,
       featuredUntil: marketplaceProfiles.featuredUntil,
@@ -204,6 +206,7 @@ export async function searchPublicProfiles(input: {
       sessionRateCents: p.sessionRateCents,
       currency: p.currency,
       serviceModes: splitCsv(p.serviceModes),
+      specialties: splitCsv(p.specialties),
       facilityNames: fids
         .map((id) => gymById.get(id)?.name)
         .filter((n): n is string => !!n),
