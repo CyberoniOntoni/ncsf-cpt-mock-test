@@ -1,7 +1,15 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { getDb, getPGlite } from "./index";
-import { clients, memberships, organizations, users } from "./schema";
+import {
+  clients,
+  gymFacilities,
+  marketplaceProfileFacilities,
+  marketplaceProfiles,
+  memberships,
+  organizations,
+  users,
+} from "./schema";
 import { id } from "@/lib/utils";
 import { seedLibraryIfNeeded } from "./seed-library";
 import { seedPlaybooksIfNeeded } from "./seed-playbooks";
@@ -21,6 +29,7 @@ export async function seedIfNeeded() {
   await ensureDemoClients();
   await seedLibraryIfNeeded();
   await seedPlaybooksIfNeeded();
+  await seedMarketplaceIfNeeded();
 }
 
 async function markSeeded(client: Awaited<ReturnType<typeof getPGlite>>) {
@@ -164,6 +173,70 @@ async function ensureDemoClients(forceOrgId?: string) {
       tags: d.tags,
     });
   }
+}
+
+export async function seedMarketplaceIfNeeded() {
+  const db = await getDb();
+  const existing = await db.select().from(gymFacilities).limit(1);
+  if (existing.length > 0) return;
+
+  const [demoUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, "pt@demo.local"))
+    .limit(1);
+  const [demoOrg] = await db.select().from(organizations).limit(1);
+  if (!demoUser || !demoOrg) return;
+
+  await db.insert(gymFacilities).values([
+    {
+      id: "gym_demo_tampines",
+      name: "Anytime Fitness Tampines",
+      slug: "anytime-tampines",
+      brand: "Anytime Fitness",
+      city: "Singapore",
+      region: "Tampines",
+      country: "SG",
+      lat: 1.3496,
+      lng: 103.9568,
+    },
+    {
+      id: "gym_demo_orchard",
+      name: "Anytime Fitness Orchard",
+      slug: "anytime-orchard",
+      brand: "Anytime Fitness",
+      city: "Singapore",
+      region: "Orchard",
+      country: "SG",
+      lat: 1.3048,
+      lng: 103.8318,
+    },
+  ]);
+
+  await db.insert(marketplaceProfiles).values({
+    id: "mp_demo_alex",
+    organizationId: demoOrg.id,
+    userId: demoUser.id,
+    headline: "Strength and fat-loss coaching",
+    bio: "NCSF-minded programming. Floor sessions at Tampines or your gym.",
+    specialties: "strength,fat_loss,beginner",
+    hourlyRateCents: 12000,
+    currency: "SGD",
+    serviceModes: "studio,at_gym",
+    city: "Singapore",
+    region: "Tampines",
+    country: "SG",
+    lat: 1.3496,
+    lng: 103.9568,
+    radiusKm: 15,
+    published: true,
+  });
+
+  await db.insert(marketplaceProfileFacilities).values({
+    id: "mpf_demo_alex_tampines",
+    profileId: "mp_demo_alex",
+    facilityId: "gym_demo_tampines",
+  });
 }
 
 export async function ensureSeededUser() {

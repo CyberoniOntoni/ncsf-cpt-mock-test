@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 21; // 21 = partial unique clients(org, email)
+const SCHEMA_VERSION = 22; // 22 = marketplace matchmaking
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -713,6 +713,90 @@ async function ensureSchema() {
     );
     CREATE INDEX IF NOT EXISTS client_documents_client_status_idx ON client_documents(client_id, status);
     CREATE INDEX IF NOT EXISTS client_documents_org_client_idx ON client_documents(organization_id, client_id);
+
+    CREATE TABLE IF NOT EXISTS gym_facilities (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      brand TEXT,
+      city TEXT NOT NULL,
+      region TEXT,
+      country TEXT NOT NULL DEFAULT 'SG',
+      lat REAL NOT NULL,
+      lng REAL NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS gym_facilities_city_idx ON gym_facilities(city);
+
+    CREATE TABLE IF NOT EXISTS marketplace_profiles (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      headline TEXT NOT NULL DEFAULT '',
+      bio TEXT NOT NULL DEFAULT '',
+      specialties TEXT NOT NULL DEFAULT '',
+      hourly_rate_cents INTEGER,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      service_modes TEXT NOT NULL DEFAULT 'studio,at_gym',
+      city TEXT NOT NULL DEFAULT '',
+      region TEXT,
+      country TEXT NOT NULL DEFAULT 'SG',
+      lat REAL,
+      lng REAL,
+      radius_km INTEGER NOT NULL DEFAULT 15,
+      published BOOLEAN NOT NULL DEFAULT FALSE,
+      featured_until TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(user_id, organization_id)
+    );
+    CREATE INDEX IF NOT EXISTS marketplace_profiles_published_idx ON marketplace_profiles(published);
+
+    CREATE TABLE IF NOT EXISTS marketplace_profile_facilities (
+      id TEXT PRIMARY KEY,
+      profile_id TEXT NOT NULL REFERENCES marketplace_profiles(id) ON DELETE CASCADE,
+      facility_id TEXT NOT NULL REFERENCES gym_facilities(id) ON DELETE CASCADE,
+      UNIQUE(profile_id, facility_id)
+    );
+    CREATE INDEX IF NOT EXISTS mpf_facility_idx ON marketplace_profile_facilities(facility_id);
+
+    CREATE TABLE IF NOT EXISTS intro_requests (
+      id TEXT PRIMARY KEY,
+      profile_id TEXT NOT NULL REFERENCES marketplace_profiles(id) ON DELETE CASCADE,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      seeker_email TEXT NOT NULL,
+      seeker_name TEXT NOT NULL,
+      seeker_phone TEXT,
+      city TEXT,
+      lat REAL,
+      lng REAL,
+      facility_id TEXT REFERENCES gym_facilities(id) ON DELETE SET NULL,
+      message TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      accepted_client_id TEXT REFERENCES clients(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      responded_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS intro_requests_org_status_idx ON intro_requests(organization_id, status);
+    CREATE INDEX IF NOT EXISTS intro_requests_email_created_idx ON intro_requests(seeker_email, created_at);
+
+    CREATE TABLE IF NOT EXISTS platform_charges (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      intro_request_id TEXT REFERENCES intro_requests(id) ON DELETE SET NULL,
+      profile_id TEXT REFERENCES marketplace_profiles(id) ON DELETE SET NULL,
+      amount_cents INTEGER NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      status TEXT NOT NULL DEFAULT 'due',
+      stripe_checkout_session_id TEXT,
+      payment_url TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      paid_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS platform_charges_org_status_idx ON platform_charges(organization_id, status);
+    ALTER TABLE platform_charges ADD COLUMN IF NOT EXISTS profile_id TEXT REFERENCES marketplace_profiles(id) ON DELETE SET NULL;
   `);
 }
 

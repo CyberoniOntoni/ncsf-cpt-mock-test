@@ -47,6 +47,12 @@ jobs:
       - name: Smoke · library (pure logic)
         run: npm run smoke:library
 
+      - name: Smoke · marketplace (geo, intros, fees)
+        run: npm run smoke:marketplace
+        env:
+          MOCK_EMAIL: "true"
+          MOCK_STRIPE: "true"
+
       # ── Production build ──────────────────────────────────────────────────────
       - name: Build (next build)
         run: npm run build

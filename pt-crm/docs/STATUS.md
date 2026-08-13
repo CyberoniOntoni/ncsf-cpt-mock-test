@@ -36,7 +36,8 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 | 2 | **Plans** — editable programs + progression, enough to run next session |
 | 3 | **CRM spine** — stage, pack, book, task, invoice, check-in |
 | Sidecar | Coach + knowledge (assist, never the home hero) |
-| Sidecar | **Client portal** (`/portal`) — assigned clients only; marketplace matchmaking later |
+| Sidecar | **Client portal** (`/portal`) — assigned clients only |
+| Sidecar | **Find a trainer** (`/find`) — opt-in listings, gym/geo intros → CRM leads |
 
 **North-star metric:** sessions logged per trainer per week.
 
@@ -207,7 +208,8 @@ Org → Equipment, Exercises (bank), Playbooks
 | **Programs Phase C** | Smarter programs (append, coach append) | **Shipped** |
 | **Programs polish** | Plan balance, science rest, fill chips, DP tips | **Shipped** (2026-08-08) |
 | **CRM Phase C** | Comms log, real send, consent productization | **Not started** |
-| **Vision later** | Marketplace matchmaking, cards, tax, multi-trainer polish | **Deferred** |
+| **Marketplace** | Find a trainer, intros, platform fees | **Shipped** (SCHEMA 22; Connect take-rate later) |
+| **Vision later** | Stripe Connect session take-rate, reviews, gym-operator claims | **Deferred** |
 
 ---
 
@@ -308,7 +310,8 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 | 2026-08-08 | Build from scratch + save-for-later drafts (unassigned templates) |
 | 2026-08-10 | Pre-pilot review (7 high fixes), SCHEMA 17 indexes, CI, DnD reorder |
 | 2026-08-13 | Portal polish: HMAC OTP, case-insensitive email, onboarding finish, program cache read, next-session window, smoke exit 0 (SCHEMA 21) |
-| 2026-08-13 | Client portal v1 (`/portal`) OTP login, onboarding signatures, read-only program/progress/billing; SCHEMA 20. Marketplace matchmaking deferred. |
+| 2026-08-13 | Find a trainer (`/find`) + intros → CRM leads + platform Checkout fees; SCHEMA 22 |
+| 2026-08-13 | Client portal v1 (`/portal`) OTP login, onboarding signatures, read-only program/progress/billing; SCHEMA 20. |
 | 2026-08-13 | Smarter generator (SCHEMA 19): deficiency rules from real assessment keys + measurements, Meso 1 phase, rotated safety-gated correctives |
 | 2026-08-13 | Same-day unique unlinked pair shares debit; Reopen completed booking restores pack; consume race retry |
 | 2026-08-11 | Shared pack debit (floor+calendar, linked no double burn); FINDING-08/09/10/13 pilot closes |

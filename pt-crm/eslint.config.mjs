@@ -38,7 +38,11 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["src/app/portal/**/*.{ts,tsx}", "src/app/actions/portal/**/*.{ts,tsx}"],
+    files: [
+      "src/app/portal/**/*.{ts,tsx}",
+      "src/app/actions/portal/**/*.{ts,tsx}",
+      "src/app/find/**/*.{ts,tsx}",
+    ],
     rules: {
       "no-restricted-imports": [
         "error",

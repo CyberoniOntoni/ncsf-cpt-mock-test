@@ -8,16 +8,17 @@ This document defines the production implementation plan for the **FloorScribe C
 
 **Marketplace-ready without building the marketplace yet:** a person (email) can already belong to **multiple studios** (`clients` is per-org). OTP login lists those studios. That identity split is the foundation for later matchmaking (client finds a PT, platform takes a fee). Do **not** merge clients into the trainer `users` table. Do **not** add marketplace listings, intro requests, or platform checkout in this milestone.
 
-### Deferred marketplace (v2+)
+### Marketplace (SCHEMA 22)
 
-Keep these as a later schema slice (not SCHEMA 20):
+Shipped in `docs/superpowers/plans/2026-08-13-client-pt-matchmaking.md`:
 
-| Concept | Why later |
-|---------|-----------|
-| `marketplace_profiles` (PT public card, rates, specialties) | Trainers opt in; Floor OS stays private until they do |
-| `intro_requests` (client → PT, status, fee) | Money + messaging + refunds |
-| `platform_invoices` / take-rate on `payment_url` | Needs Stripe Connect or similar |
-| Global `people` identity above org `clients` | Only if one inbox/session across studios becomes painful |
+| Concept | Status |
+|---------|--------|
+| `marketplace_profiles` + `gym_facilities` | Public `/find` (opt-in) |
+| `intro_requests` | Accept → `clients` lead |
+| `platform_charges` + Stripe Checkout | Intro fee after 3 free; featured $29/mo |
+| Stripe Connect take-rate on packs | Still later |
+| Global `people` identity | Still later |
 
 v1 rule: **one portal session = one org + one client row**. Switching studio re-issues a session. Email is the person key.
 

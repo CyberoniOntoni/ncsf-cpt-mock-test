@@ -57,8 +57,10 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/register") ||
     pathname.startsWith("/invite") ||
     pathname.startsWith("/portal") ||
+    pathname.startsWith("/find") ||
     pathname.startsWith("/api/health") ||
     pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/stripe/") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon");
 

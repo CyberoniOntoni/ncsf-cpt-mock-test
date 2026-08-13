@@ -73,6 +73,15 @@ export function MarketingHeader() {
             size="md"
             className="text-emerald-600"
           />
+          <Link
+            href="/find"
+            className={cn(
+              "hidden text-sm font-medium text-stone-400 hover:text-stone-200 sm:inline",
+              linkFocus
+            )}
+          >
+            Find a trainer
+          </Link>
           <span
             className="hidden h-4 w-px bg-stone-800/90 sm:block"
             aria-hidden

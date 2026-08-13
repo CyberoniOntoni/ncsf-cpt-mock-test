@@ -13,6 +13,8 @@ import { PageShell } from "@/components/page-shell";
 import { SettingsOrgForm } from "@/components/settings-org-form";
 import { SettingsProfileForm } from "@/components/settings-profile-form";
 import { SettingsTeamPanel } from "@/components/settings-team-panel";
+import { MarketplaceListingForm } from "@/components/marketplace-listing-form";
+import { getMyMarketplaceListingAction } from "@/app/actions/marketplace-trainer";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +58,12 @@ export default async function SettingsPage() {
     : [];
   const appOrigin =
     (process.env.APP_URL || "").replace(/\/$/, "") || "http://127.0.0.1:3000";
+  const listing =
+    session.role === "owner" ||
+    session.role === "admin" ||
+    session.role === "trainer"
+      ? await getMyMarketplaceListingAction()
+      : null;
 
   return (
     <PageShell className="space-y-4">
@@ -64,6 +72,15 @@ export default async function SettingsPage() {
         eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
         description="Your profile, practice, team, deploy, and AI"
       />
+
+      {listing ? (
+        <Card>
+          <MarketplaceListingForm
+            profile={listing.profile}
+            gyms={listing.gyms}
+          />
+        </Card>
+      ) : null}
 
       <Card>
         <h2 className="font-medium">Account</h2>

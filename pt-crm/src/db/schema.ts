@@ -751,6 +751,137 @@ export const sessionExerciseLogs = pgTable(
   ]
 );
 
+export const gymFacilities = pgTable(
+  "gym_facilities",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    brand: text("brand"),
+    city: text("city").notNull(),
+    region: text("region"),
+    country: text("country").notNull().default("SG"),
+    lat: real("lat").notNull(),
+    lng: real("lng").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("gym_facilities_slug_uidx").on(t.slug),
+    index("gym_facilities_city_idx").on(t.city),
+  ]
+);
+
+export const marketplaceProfiles = pgTable(
+  "marketplace_profiles",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    headline: text("headline").notNull().default(""),
+    bio: text("bio").notNull().default(""),
+    specialties: text("specialties").notNull().default(""),
+    hourlyRateCents: integer("hourly_rate_cents"),
+    currency: text("currency").notNull().default("USD"),
+    serviceModes: text("service_modes").notNull().default("studio,at_gym"),
+    city: text("city").notNull().default(""),
+    region: text("region"),
+    country: text("country").notNull().default("SG"),
+    lat: real("lat"),
+    lng: real("lng"),
+    radiusKm: integer("radius_km").notNull().default(15),
+    published: boolean("published").notNull().default(false),
+    featuredUntil: timestamp("featured_until", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("marketplace_profiles_user_org_uidx").on(t.userId, t.organizationId),
+    index("marketplace_profiles_published_idx").on(t.published),
+  ]
+);
+
+export const marketplaceProfileFacilities = pgTable(
+  "marketplace_profile_facilities",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => marketplaceProfiles.id, { onDelete: "cascade" }),
+    facilityId: text("facility_id")
+      .notNull()
+      .references(() => gymFacilities.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    uniqueIndex("mpf_profile_facility_uidx").on(t.profileId, t.facilityId),
+    index("mpf_facility_idx").on(t.facilityId),
+  ]
+);
+
+export const introRequests = pgTable(
+  "intro_requests",
+  {
+    id: text("id").primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => marketplaceProfiles.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    seekerEmail: text("seeker_email").notNull(),
+    seekerName: text("seeker_name").notNull(),
+    seekerPhone: text("seeker_phone"),
+    city: text("city"),
+    lat: real("lat"),
+    lng: real("lng"),
+    facilityId: text("facility_id").references(() => gymFacilities.id, {
+      onDelete: "set null",
+    }),
+    message: text("message"),
+    status: text("status").notNull().default("pending"),
+    acceptedClientId: text("accepted_client_id").references(() => clients.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("intro_requests_org_status_idx").on(t.organizationId, t.status),
+    index("intro_requests_email_created_idx").on(t.seekerEmail, t.createdAt),
+  ]
+);
+
+export const platformCharges = pgTable(
+  "platform_charges",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    introRequestId: text("intro_request_id").references(() => introRequests.id, {
+      onDelete: "set null",
+    }),
+    profileId: text("profile_id").references(() => marketplaceProfiles.id, {
+      onDelete: "set null",
+    }),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull().default("USD"),
+    status: text("status").notNull().default("due"),
+    stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+    paymentUrl: text("payment_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+  },
+  (t) => [index("platform_charges_org_status_idx").on(t.organizationId, t.status)]
+);
+
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   memberships: many(memberships),
   clients: many(clients),

@@ -35,7 +35,16 @@ Cold path — no sticky client, no open session:
 
 **Deactivate** when they leave the roster (keeps history; **Reactivate** anytime). Inactive clients are hidden from the floor picker and Needs you.
 
-After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **21**).
+After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **22**).
+
+---
+
+## 2b. Find a trainer (marketplace)
+
+1. Trainer: **Settings** → publish a listing and pick gyms.
+2. Seeker: **`/find`** (or marketing **Find a trainer**) → gym and/or location → open a card.
+3. Send intro (name + email). Trainer: **People → Intros** → Accept.
+4. Client appears as a **lead** on the roster. Session payments stay with the trainer.
 
 ---
 
