@@ -39,6 +39,24 @@ async function main() {
   assert(jane, "demo client jane exists");
   assert(jane.status === "active", "jane is active");
 
+  const unknown = await requestClientOtp({
+    email: `nobody-${Date.now()}@example.com`,
+  });
+  assert("ok" in unknown && unknown.ok === true, "unknown email still ok:true");
+  if ("sent" in unknown) {
+    assert(unknown.sent === true, "unknown email claims sent");
+  }
+
+  const listed = await listPortalStudiosForEmail(jane.email || "");
+  assert(
+    listed.every((s) => !("clientId" in s) || s.clientId == null),
+    "pre-auth studio list has no clientId"
+  );
+  assert(
+    listed.every((s) => !("firstName" in s)),
+    "pre-auth studio list has no firstName"
+  );
+
   const studios = await listPortalStudiosForEmail("jane@example.com");
   assert(studios.length >= 1, "jane has a studio");
 
@@ -116,7 +134,9 @@ async function main() {
   const blocked = await requestClientOtp({
     email: "pt@demo.local",
   });
-  assert(!blocked.ok, "trainer email is not a client portal login");
+  assert(blocked.ok && "sent" in blocked && blocked.sent, "trainer email looks like unknown");
+  assert(!("organizationId" in blocked && blocked.organizationId), "trainer email has no org");
+  assert(!peekLastEmailTo("pt@demo.local"), "trainer email is not mailed a code");
 
   console.log("\nPortal smoke: ALL PASS");
 }

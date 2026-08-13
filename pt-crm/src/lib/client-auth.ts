@@ -38,8 +38,6 @@ export type ClientSessionPayload = {
 export type PortalStudioChoice = {
   organizationId: string;
   organizationName: string;
-  clientId: string;
-  firstName: string;
 };
 
 function clientSecret(): Uint8Array {
@@ -91,8 +89,6 @@ export async function listPortalStudiosForEmail(
   return rows.map((r) => ({
     organizationId: r.organizationId,
     organizationName: r.organizationName,
-    clientId: r.clientId,
-    firstName: r.firstName,
   }));
 }
 
@@ -102,7 +98,7 @@ export async function requestClientOtp(opts: {
   ipAddress?: string | null;
   userAgent?: string | null;
 }): Promise<
-  | { ok: true; sent: true; organizationId: string; devCode?: string }
+  | { ok: true; sent: true; organizationId?: string; devCode?: string }
   | { ok: true; needsOrg: true; studios: PortalStudioChoice[] }
   | { ok: false; error: string }
 > {
@@ -111,11 +107,7 @@ export async function requestClientOtp(opts: {
 
   const eligible = await findEligibleClients(email);
   if (!eligible.length) {
-    return {
-      ok: false,
-      error:
-        "If this email is on a client profile, we sent a code. Check your inbox or ask your trainer.",
-    };
+    return { ok: true, sent: true };
   }
 
   if (!opts.organizationId && eligible.length > 1) {
@@ -125,8 +117,6 @@ export async function requestClientOtp(opts: {
       studios: eligible.map((r) => ({
         organizationId: r.organizationId,
         organizationName: r.organizationName,
-        clientId: r.clientId,
-        firstName: r.firstName,
       })),
     };
   }
@@ -152,6 +142,17 @@ export async function requestClientOtp(opts: {
   if (recent.length >= OTP_RATE_MAX) {
     return { ok: false, error: "Too many codes. Try again in a few minutes." };
   }
+
+  await db
+    .update(clientOtps)
+    .set({ usedAt: new Date() })
+    .where(
+      and(
+        eq(clientOtps.email, email),
+        eq(clientOtps.organizationId, match.organizationId),
+        isNull(clientOtps.usedAt)
+      )
+    );
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   await db.insert(clientOtps).values({

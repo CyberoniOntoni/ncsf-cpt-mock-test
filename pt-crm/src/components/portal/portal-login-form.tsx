@@ -14,13 +14,15 @@ export function PortalLoginForm({
   const [email, setEmail] = useState("");
   const [organizationId, setOrganizationId] = useState("");
   const [studios, setStudios] = useState<
-    Array<{ organizationId: string; organizationName: string; firstName: string }>
+    Array<{ organizationId: string; organizationName: string }>
   >([]);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   function submit() {
     setError(null);
+    setNotice(null);
     start(async () => {
       const res = await requestPortalOtpAction({
         email,
@@ -34,16 +36,20 @@ export function PortalLoginForm({
         setStudios(res.studios);
         return;
       }
-      if (!("organizationId" in res)) {
-        setError("Could not send a code");
+      if ("sent" in res && res.sent) {
+        if (res.organizationId) {
+          const q = new URLSearchParams({
+            email,
+            org: res.organizationId,
+          });
+          if (redirectTo) q.set("redirectTo", redirectTo);
+          router.push(`/portal/login/verify?${q.toString()}`);
+          return;
+        }
+        setNotice("If this email is on file, we sent a code.");
         return;
       }
-      const q = new URLSearchParams({
-        email,
-        org: res.organizationId,
-      });
-      if (redirectTo) q.set("redirectTo", redirectTo);
-      router.push(`/portal/login/verify?${q.toString()}`);
+      setError("Could not send a code");
     });
   }
 
@@ -90,6 +96,7 @@ export function PortalLoginForm({
           </p>
         </div>
       )}
+      {notice && <p className="text-sm text-emerald-300">{notice}</p>}
       {error && (
         <p className="text-sm text-red-300" role="alert">
           {error}

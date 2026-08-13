@@ -4,7 +4,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { seedIfNeeded } from "@/db/seed";
 import {
-  listPortalStudiosForEmail,
   logoutClientPortal,
   requestClientOtp,
   verifyClientOtp,
@@ -16,11 +15,6 @@ async function requestMeta() {
     ipAddress: h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip"),
     userAgent: h.get("user-agent"),
   };
-}
-
-export async function lookupPortalStudiosAction(email: string) {
-  await seedIfNeeded();
-  return listPortalStudiosForEmail(email);
 }
 
 export async function requestPortalOtpAction(input: {
