@@ -13,6 +13,7 @@ import {
   ClientDetailStickyBar,
 } from "@/components/client-detail-sticky-bar";
 import { ClientCrmPanel } from "@/components/client-crm-panel";
+import { ClientEquipmentPicker } from "@/components/client-equipment-picker";
 import { ClientProgressDashboard } from "@/components/client-progress-dashboard";
 import { ClientStickySync } from "@/components/client-sticky-sync";
 import { ClientTimeline } from "@/components/client-timeline";
@@ -976,6 +977,12 @@ export default async function ClientDetailPage({
                 <Field key={f.label} label={f.label} value={f.value} />
               ))}
             </dl>
+            <div className="mt-4">
+              <ClientEquipmentPicker
+                clientId={client.id}
+                clientName={`${client.firstName} ${client.lastName}`.trim()}
+              />
+            </div>
           </Card>
         </div>
 

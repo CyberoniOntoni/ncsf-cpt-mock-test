@@ -4,6 +4,25 @@
 
 This document defines the production implementation plan for the **FloorScribe Client Portal**, incorporating all architectural, security, legal compliance, and data-modeling requirements identified in the full code review (`docs/CLIENT_PORTAL_PLAN_REVIEW.md`).
 
+**Product stance:** FloorScribe remains **Floor OS for trainers** first. The portal is a **sidecar** so assigned clients can see their plan, progress, invoices, and sign waivers. It is **not** the trainer CRM, and it is **not** a consumer marketplace in v1.
+
+**Marketplace-ready without building the marketplace yet:** a person (email) can already belong to **multiple studios** (`clients` is per-org). OTP login lists those studios. That identity split is the foundation for later matchmaking (client finds a PT, platform takes a fee). Do **not** merge clients into the trainer `users` table. Do **not** add marketplace listings, intro requests, or platform checkout in this milestone.
+
+### Deferred marketplace (v2+)
+
+Keep these as a later schema slice (not SCHEMA 20):
+
+| Concept | Why later |
+|---------|-----------|
+| `marketplace_profiles` (PT public card, rates, specialties) | Trainers opt in; Floor OS stays private until they do |
+| `intro_requests` (client → PT, status, fee) | Money + messaging + refunds |
+| `platform_invoices` / take-rate on `payment_url` | Needs Stripe Connect or similar |
+| Global `people` identity above org `clients` | Only if one inbox/session across studios becomes painful |
+
+v1 rule: **one portal session = one org + one client row**. Switching studio re-issues a session. Email is the person key.
+
+**SCHEMA_VERSION:** portal tables ship as **20** (18 = pack debit, 19 = smarter generator). Plan text that said “v18” is stale.
+
 ---
 
 ## 1. Architecture & Component Impact
@@ -18,9 +37,9 @@ To maintain a strict security boundary between the Trainer CRM (write-heavy staf
 
 ### 1.2 Database Schema Changes (`src/db/schema.ts`)
 *   **Table `clients`**: 
-    *   Retain `email` as nullable `text("email")` for CRM draft leads.
+    *   Retain `email` as nullable `text("email")` for CRM draft leads. Reuse existing `phone` (do not add a second `phone_number`).
     *   Add composite unique index `uniqueIndex("clients_org_email_uidx").on(t.organizationId, t.email)`.
-    *   Add profile fields: `phone_number`, `avatar_url`, `notification_preferences` (jsonb), `onboarding_completed_at` (timestamp with timezone).
+    *   Add profile fields: `avatar_url`, `notification_preferences` (jsonb), `onboarding_completed_at` (timestamp with timezone).
 *   **New Table `client_sessions`**:
     *   `id` (PK), `organizationId` (FK cascade), `clientId` (FK cascade), `token` (unique), `userAgent`, `ipAddress`, `expiresAt`, `createdAt`.
 *   **New Table `client_otps`**:

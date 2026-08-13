@@ -76,9 +76,15 @@ function isExerciseAvailable(
   return { available: missing.length === 0, missing };
 }
 
-export async function listExercisesForOrg(organizationId: string): Promise<ExerciseWithAvailability[]> {
+export async function listExercisesForOrg(
+  organizationId: string,
+  opts?: { equipmentIds?: string[] }
+): Promise<ExerciseWithAvailability[]> {
   const db = await getDb();
-  const availableIds = await getAvailableEquipmentIds(organizationId);
+  const availableIds =
+    opts?.equipmentIds && opts.equipmentIds.length > 0
+      ? new Set(opts.equipmentIds)
+      : await getAvailableEquipmentIds(organizationId);
   const catalog = await db.select().from(equipmentItems);
   const nameById = new Map(catalog.map((c) => [c.id, c.name]));
 

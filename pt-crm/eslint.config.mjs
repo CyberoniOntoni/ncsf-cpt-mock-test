@@ -37,6 +37,33 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: ["src/app/portal/**/*.{ts,tsx}", "src/app/actions/portal/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/app/actions/crm", "@/app/actions/crm/*"],
+              message: "Portal must not import trainer CRM actions.",
+            },
+            {
+              group: [
+                "@/app/actions/clients",
+                "@/app/actions/sessions",
+                "@/app/actions/programs",
+                "@/app/actions/library",
+                "@/app/actions/coach",
+                "@/app/actions/home",
+              ],
+              message: "Portal must use @/app/actions/portal and @/db/queries/portal.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

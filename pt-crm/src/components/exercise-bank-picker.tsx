@@ -36,6 +36,7 @@ export function ExerciseBankPicker({
   goal,
   title = "Pick from exercise bank",
   disabled = false,
+  blockedIds,
 }: {
   onPick: (ex: BankExercisePick) => void;
   onCancel: () => void;
@@ -47,6 +48,8 @@ export function ExerciseBankPicker({
   title?: string;
   /** Disable pick/close while a parent mutation is pending */
   disabled?: boolean;
+  /** Hard-gated exercise ids (contraindicated for this client). */
+  blockedIds?: string[] | null;
 }) {
   const primaryPrefer =
     preferPattern ||
@@ -83,6 +86,8 @@ export function ExerciseBankPicker({
     ];
     return new Set(list.filter(Boolean));
   }, [preferPattern, preferPatterns]);
+
+  const blocked = useMemo(() => new Set(blockedIds || []), [blockedIds]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -273,9 +278,12 @@ export function ExerciseBankPicker({
           <li key={ex.id} role="option">
             <button
               type="button"
-              disabled={disabled}
+              disabled={disabled || blocked.has(ex.id)}
               className="flex min-h-11 w-full items-start justify-between gap-3 border-b border-zinc-800/90 px-3 py-2.5 text-left transition last:border-0 hover:bg-zinc-800/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500/50 active:bg-zinc-800 disabled:opacity-50"
-              onClick={() => onPick(ex)}
+              onClick={() => {
+                if (blocked.has(ex.id)) return;
+                onPick(ex);
+              }}
             >
               <div className="min-w-0">
                 <div className="text-sm font-medium text-zinc-100">
@@ -299,6 +307,9 @@ export function ExerciseBankPicker({
                   {ex.difficulty}
                 </Badge>
                 {!ex.available && <Badge tone="amber">Missing gear</Badge>}
+                {blocked.has(ex.id) && (
+                  <Badge tone="red">Contraindicated</Badge>
+                )}
               </div>
             </button>
           </li>

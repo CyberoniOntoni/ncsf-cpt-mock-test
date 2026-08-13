@@ -15,6 +15,11 @@ import { requireSession } from "@/lib/auth";
 import { CLIENT_LIST_STAGES } from "@/lib/crm-constants";
 import { clientSearchHaystack, fullName, id } from "@/lib/utils";
 
+function normalizeClientEmail(raw?: string | null) {
+  const e = (raw || "").trim().toLowerCase();
+  return e || null;
+}
+
 export async function searchClientsAction(query: string) {
   try {
     const session = await requireSession();
@@ -198,7 +203,7 @@ export async function createDraftClientAction(basics: IntakeBasics) {
     status: "draft",
     firstName,
     lastName: (basics.lastName || "").trim(),
-    email: basics.email || null,
+    email: normalizeClientEmail(basics.email),
     phone: basics.phone || null,
     dateOfBirth: basics.dateOfBirth || null,
     sex: basics.sex || null,
@@ -218,7 +223,7 @@ export async function updateClientBasicsAction(clientId: string, basics: IntakeB
     .set({
       firstName,
       lastName: (basics.lastName || "").trim(),
-      email: basics.email || null,
+      email: normalizeClientEmail(basics.email),
       phone: basics.phone || null,
       dateOfBirth: basics.dateOfBirth || null,
       sex: basics.sex || null,
@@ -433,7 +438,7 @@ export async function quickAddClientAction(input: {
     firstName,
     lastName: (input.lastName || "").trim(),
     phone: input.phone?.trim() || null,
-    email: input.email?.trim() || null,
+    email: normalizeClientEmail(input.email),
   });
   revalidatePath("/");
   revalidatePath("/clients");
@@ -443,7 +448,7 @@ export async function quickAddClientAction(input: {
     firstName,
     lastName: (input.lastName || "").trim(),
     phone: input.phone?.trim() || null,
-    email: input.email?.trim() || null,
+    email: normalizeClientEmail(input.email),
     status: "lead" as const,
     goals: null as string | null,
     ok: true,

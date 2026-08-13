@@ -12,9 +12,11 @@ All **7 Critical and High severity findings** identified during the audit were d
 |---|---|---|---|
 | **Critical** | 0 | 0 | 0 |
 | **High** | 7 | 7 | 0 |
-| **Medium** | 5 | 0 | 5 |
-| **Low** | 2 | 0 | 2 |
-| **TOTAL** | **14** | **7** | **7** |
+| **Medium** | 5 | 4 (08–10, 11*) | 1 (12) |
+| **Low** | 2 | 1 (13) | 1 (14) |
+| **TOTAL** | **14** | **12** | **2** |
+
+\*FINDING-11 fixed in SCHEMA 17 perf pass (2026-08-10). FINDING-08/09/10/13 closed 2026-08-11.
 
 ### Modified Files Inventory
 During the fix phase, 15 files across `src/` and `scripts/` were modified to resolve all High-severity findings and expand verification test suites:
@@ -108,17 +110,14 @@ The R2 audit focused on server action exception safety, unhandled UI promises, q
 ### FINDING-02: Calendar Appointment Complete Skips Pack Debit
 - **ID & Title**: FINDING-02 — Calendar Appointment Complete Skips Pack Debit
 - **Severity**: `high`
-- **Status**: `Fixed`
-- **Affected File(s) & Line Number(s)**: `src/app/actions/crm.ts` (lines 762–800)
+- **Status**: `Fixed` (product decision: **both** floor complete and calendar complete debit)
+- **Affected File(s) & Line Number(s)**: `src/app/actions/crm.ts` (`updateAppointmentStatusAction`, `tryConsumePackageSessionAction`), `src/db/schema.ts` (`client_appointments.package_id`), SCHEMA 18
 - **Description & Exact Code Path / Logic Trigger**:
-  `updateAppointmentStatusAction` updated an appointment's status to `"completed"` in `clientAppointments` without attempting to debit a session from the client's active session package. When a trainer marked an appointment as completed directly on the calendar interface without launching a floor logger session, no session credit was deducted from the client's package.
-- **Reproduction Steps**:
-  1. Book a client appointment on the CRM calendar.
-  2. Confirm client has an active package with 5 sessions remaining.
-  3. Open the calendar appointment modal and select status "Completed".
-  4. Inspect client's active package balance. Observe session count remains 5 instead of 4.
+  `updateAppointmentStatusAction` updated an appointment's status to `"completed"` without debiting a pack. Product decision (2026-08-11): calendar complete **does** debit, same as floor complete.
+- **Double-burn risk (addressed 2026-08-11)**:
+  Without a shared debit key, calendar complete then floor complete (or reverse) could debit twice. Fixed by stamping `packageId` on **both** `training_sessions` and `client_appointments`; `tryConsumePackageSessionAction` returns `already_debited` when either side already has a stamp and only repairs the peer stamp.
 - **Applied Fix Details & Rationale**:
-  Updated `updateAppointmentStatusAction` in `src/app/actions/crm.ts` to fetch the current appointment record (`existing`) prior to executing the status update. Added a condition checking `if (status === "completed" && existing.status !== "completed")` to invoke `tryConsumePackageSessionAction(clientId, existing.sessionId || appointmentId)` in a fail-soft try/catch block. If an appointment was already completed (e.g., via floor session logger completion), `existing.status === "completed"` prevents double debiting.
+  Calendar complete calls `tryConsumePackageSessionAction(clientId, sessionId?, session, appointmentId)`. Floor complete passes both sessionId and appointmentId. Idempotent consume + SCHEMA 18 `appointments.package_id`.
 
 ---
 
@@ -205,63 +204,48 @@ The R2 audit focused on server action exception safety, unhandled UI promises, q
 ### FINDING-08: Session Cancel Does Not Restore Burned Pack
 - **ID & Title**: FINDING-08 — Session Cancel Does Not Restore Burned Pack
 - **Severity**: `medium`
-- **Status**: `Deferred (Report Only)`
-- **Affected File(s) & Line Number(s)**: `src/app/actions/sessions.ts` (lines 1390–1427)
+- **Status**: `Fixed` (2026-08-11)
+- **Affected File(s) & Line Number(s)**: `src/app/actions/sessions.ts` (`cancelSessionAction`)
 - **Description & Exact Code Path / Logic Trigger**:
-  `cancelSessionAction` sets session status to `"cancelled"` but does not check if a session package credit was debited when the session was completed or in-progress, and does not invoke `tryRestorePackageSessionAction`. `tryRestorePackageSessionAction` is currently only invoked in `deleteSessionAction` (lines 1486–1496).
-- **Reproduction Steps**:
-  1. Complete a training session (`completeSessionAction`), debiting 1 package credit.
-  2. Invoke `cancelSessionAction(sessionId)`.
-  3. Inspect client package balance. Observe session count was not restored to the package.
+  `cancelSessionAction` set status to cancelled without restoring a pack debit from a previously completed session.
 - **Applied Fix Details & Rationale**:
-  Deferred for post-pilot refinement. Post-pilot recommendation: inspect if session had `packSessionId` associated prior to cancellation and call `tryRestorePackageSessionAction` if present.
+  When cancelling a **completed** session that has `packageId`, call `tryRestorePackageSessionAction` (clears session + appointment debit stamps).
 
 ---
 
 ### FINDING-09: Session Start Allowed on Completed/No-Show Booking
 - **ID & Title**: FINDING-09 — Session Start Allowed on Completed/No-Show Booking
 - **Severity**: `medium`
-- **Status**: `Deferred (Report Only)`
-- **Affected File(s) & Line Number(s)**: `src/app/actions/sessions.ts` (lines 140–148)
+- **Status**: `Fixed` (2026-08-11)
+- **Affected File(s) & Line Number(s)**: `src/app/actions/sessions.ts` (`startSessionFromAppointmentAction`)
 - **Description & Exact Code Path / Logic Trigger**:
-  `startSessionFromAppointmentAction` checks `if (row.status === "cancelled")`, but does not guard against starting a session from an appointment with status `"completed"` or `"no_show"`, allowing redundant floor session creation from completed bookings.
-- **Reproduction Steps**:
-  1. Set an appointment status to `"completed"` or `"no_show"`.
-  2. Call `startSessionFromAppointmentAction(appointmentId)`.
-  3. Observe a new `trainingSessions` record is created without returning an error.
+  Start-from-booking only blocked `"cancelled"`, not `"completed"` / `"no_show"`.
 - **Applied Fix Details & Rationale**:
-  Deferred for post-pilot refinement. Post-pilot recommendation: update guard condition to `if (row.status !== "scheduled") return { ok: false, error: "Booking is not scheduled" }`.
+  Guard `no_show` and `completed` (without linked session) with structured `{ ok: false }` errors. Linked completed session still opens the log (`alreadyCompleted`).
 
 ---
 
 ### FINDING-10: Uncaught SyntaxError on Malformed AI JSON
 - **ID & Title**: FINDING-10 — Uncaught SyntaxError on Malformed AI JSON
 - **Severity**: `medium`
-- **Status**: `Deferred (Report Only)`
-- **Affected File(s) & Line Number(s)**: `src/lib/ai/coach.ts` (line 493)
+- **Status**: `Fixed` (2026-08-11)
+- **Affected File(s) & Line Number(s)**: `src/lib/ai/coach.ts` (LLM JSON parse path)
 - **Description & Exact Code Path / Logic Trigger**:
-  In `sendCoachMessageAction`, parsing the LLM response `JSON.parse(raw.slice(jsonStart, jsonEnd + 1))` occurs outside a `try/catch` block. If the AI model returns malformed JSON or incomplete markdown blocks, a raw `SyntaxError` exception is thrown.
-- **Reproduction Steps**:
-  1. Mock coach AI response returning truncated JSON `{"reply": "hello"`.
-  2. Call `sendCoachMessageAction`.
-  3. Observe uncaught `SyntaxError: Unexpected end of JSON input`.
+  `JSON.parse` on model output could throw on truncated JSON.
 - **Applied Fix Details & Rationale**:
-  Deferred for post-pilot refinement. Post-pilot recommendation: wrap `JSON.parse` call in a `try/catch` block and fall back to plain text reply parsing on error.
+  Explicit try/catch around `JSON.parse`; returns null and falls through to non-JSON path.
 
 ---
 
 ### FINDING-11: Missing Composite Database Indexes
 - **ID & Title**: FINDING-11 — Missing Composite Database Indexes
 - **Severity**: `medium`
-- **Status**: `Deferred (Report Only)`
-- **Affected File(s) & Line Number(s)**: `src/db/schema.ts` (lines 110–113, 596–601)
+- **Status**: `Fixed / superseded` (2026-08-10, SCHEMA **17** — see `PERF_REVIEW.md`)
+- **Affected File(s) & Line Number(s)**: `src/db/schema.ts`, `src/db/index.ts`
 - **Description & Exact Code Path / Logic Trigger**:
-  `clients` table index is defined on `(organizationId)` without `status`, and `trainingSessions` lacks composite indexes on `(organizationId, status, performedAt)` or `(organizationId, clientId, status)`. Under high volume, queries filtering active clients or session ranges require full index scans.
-- **Reproduction Steps**:
-  1. Query `trainingSessions` filtered by `organizationId`, `clientId`, and `status`.
-  2. Run `EXPLAIN ANALYZE`. Observe single column index scan followed by filter step.
+  Hot multi-tenant filters lacked composite indexes.
 - **Applied Fix Details & Rationale**:
-  Deferred for post-pilot refinement. Database performance with current volume is well within embedded PGlite latency limits (<5ms). Composite indexes will be added prior to multi-gym scaling.
+  SCHEMA_VERSION 17 added ~38 indexes (Drizzle + PGlite DDL), including `clients(organization_id, status)`, session/client/status composites, appointment/package paths, etc.
 
 ---
 
@@ -284,16 +268,12 @@ The R2 audit focused on server action exception safety, unhandled UI promises, q
 ### FINDING-13: Session Cancel Unlinks Appointment Instead of Status Update
 - **ID & Title**: FINDING-13 — Session Cancel Unlinks Appointment Instead of Status Update
 - **Severity**: `low`
-- **Status**: `Deferred (Report Only)`
-- **Affected File(s) & Line Number(s)**: `src/app/actions/sessions.ts` (lines 1410–1420)
+- **Status**: `Fixed` (2026-08-11)
+- **Affected File(s) & Line Number(s)**: `src/app/actions/sessions.ts` (`cancelSessionAction`)
 - **Description & Exact Code Path / Logic Trigger**:
-  When cancelling a session linked to an appointment, `cancelSessionAction` unlinks the appointment (`sessionId = null`) without updating `clientAppointments.status = "cancelled"`, leaving the calendar appointment scheduled.
-- **Reproduction Steps**:
-  1. Start a session from a calendar appointment (`sessionId` linked).
-  2. Cancel the session via `cancelSessionAction`.
-  3. Inspect calendar view. Observe appointment status remains `"scheduled"`.
+  Cancel only cleared `sessionId` on the booking, leaving confusing calendar state.
 - **Applied Fix Details & Rationale**:
-  Deferred for post-pilot refinement. Low-impact cosmetic inconsistency between calendar and session views.
+  In-progress cancel → booking back to **scheduled** + clear session link. Completed cancel (after pack restore) → booking **cancelled** + clear packageId stamp.
 
 ---
 

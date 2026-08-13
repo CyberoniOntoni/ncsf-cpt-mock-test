@@ -3,7 +3,7 @@
 Goal: run your real training day on local FloorScribe without relying on GitHub publish.
 
 **Demo login:** `pt@demo.local` / `trainer123` · or **`/register`** for a real studio  
-**SCHEMA_VERSION:** 14 (user profile fields + invoices)
+**SCHEMA_VERSION:** 21 (portal + smarter generator + pack debit)
 
 ---
 
@@ -23,6 +23,7 @@ npm run smoke:pilot
 npm run smoke:floor
 npm run smoke:floor-a
 npm run smoke:programming
+npm run smoke:portal
 ```
 
 Health: http://localhost:3000/api/health → `"status":"healthy"`
@@ -77,7 +78,7 @@ Restore = stop app, replace `data/pglite` from unzip, restart. Keep offline copi
 
 **Out (defer)**
 
-- Multi-trainer roles, client portal, card payments, tax
+- Multi-trainer marketplace, card payments, tax (client portal sidecar exists at `/portal`)
 - Real SMS/WhatsApp send, Google Calendar sync
 - Public multi-tenant deploy / trademark push
 
@@ -87,7 +88,11 @@ Restore = stop app, replace `data/pglite` from unzip, restart. Keep offline copi
 
 - **Needs you** caps work and prefers one primary row per client (plus ≤4h bookings).
 - Completing a floor session burns **one** pack credit only when an **active** pack exists.
-- Closing a **booking** as done does **not** burn a pack — floor **Complete** does.
+- Marking a **booking completed** on the calendar also burns **one** pack credit when an active pack exists. Floor + calendar for the **same visit** share a debit key (`packageId` on session and/or appointment) so you never double-charge **when the booking and floor log are linked**.
+- **Dual-path hygiene:** for booked visits use **Start from booking** so session and appointment share a debit key. An unlinked Home start + Close booking on the **same org-local day** is also treated as one visit when there is only one matching floor log / completed booking. Two bookings (or two floor logs) the same day still debit separately.
+- **No-show** does not burn a pack. **Start from booking** is blocked for no-show / completed-without-log.
+- **Cancel/delete a completed floor session** restores a burned pack when a debit stamp exists (`session.packageId` and/or appointment `packageId`).
+- **Reopen** a completed booking (or move it to cancelled / no-show) restores a stamped pack credit. Cancelling or no-showing a booking that was **never completed** does not restore (nothing was burned).
 - Unpaid invoices use deep link `#crm-invoices` (Mark paid is one tap).
 - After schema changes: restart dev; if UI looks stale, hard-refresh the browser.
 

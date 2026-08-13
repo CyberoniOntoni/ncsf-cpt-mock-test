@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, ChevronRight } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Pin } from "lucide-react";
 import {
   createProgramFromWizardAction,
   previewProgramAction,
@@ -41,6 +41,13 @@ import {
   SectionLabel,
   Textarea,
 } from "./ui";
+import {
+  InsufficientSafeExercisesModal,
+  parseInsufficientSafeMessage,
+} from "./insufficient-safe-exercises-modal";
+import { ClientEquipmentPicker } from "./client-equipment-picker";
+import { ClientDeficiencySelector } from "./client-deficiency-selector";
+import type { FacilityEquipmentMode } from "@/lib/client-equipment";
 
 type ClientOpt = {
   id: string;
@@ -169,6 +176,10 @@ export function ProgramWizard({
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [preview, setPreview] = useState<BuiltProgram | null>(null);
+  const [insufficient, setInsufficient] = useState<{
+    pattern: string;
+    secondary: string[];
+  } | null>(null);
   const [variationSeed, setVariationSeed] = useState(0);
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
   const errorRef = useRef<HTMLDivElement>(null);
@@ -184,6 +195,9 @@ export function ProgramWizard({
     preferMobility: !!initialPreferMobility,
     activate: true,
     mesocycleWeek: 1,
+    facilityEquipmentMode: "org",
+    pinnedExerciseIds: [],
+    suppressedDeficiencySlugs: [],
   });
 
   useEffect(() => {
@@ -217,15 +231,35 @@ export function ProgramWizard({
   }, [error]);
 
   const selectedClient = clients.find((c) => c.id === form.clientId);
+  const pinned = new Set(form.pinnedExerciseIds || []);
+
+  function togglePin(exerciseId: string | null) {
+    if (!exerciseId) return;
+    setForm((f) => {
+      const next = new Set(f.pinnedExerciseIds || []);
+      if (next.has(exerciseId)) next.delete(exerciseId);
+      else next.add(exerciseId);
+      return { ...f, pinnedExerciseIds: Array.from(next) };
+    });
+  }
+
+  function toggleSuppress(slug: string) {
+    setForm((f) => {
+      const next = new Set(f.suppressedDeficiencySlugs || []);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return { ...f, suppressedDeficiencySlugs: Array.from(next) };
+    });
+  }
 
   const subtitle = useMemo(() => {
     if (selectedClient) {
       return `Building for ${fullName(
         selectedClient.firstName,
         selectedClient.lastName
-      )} — split, schemes, and load from their profile and your floor gear.`;
+      )} — split, schemes, and load from their screens, injuries, and chosen gear.`;
     }
-    return "Three steps: goal & days → constraints → preview. Link a client anytime for goals and injuries.";
+    return "Three steps: goal & days → constraints → preview. Link a client so screens and measurements can steer the plan.";
   }, [selectedClient]);
 
   function initExpandedDays(draft: BuiltProgram) {
@@ -256,10 +290,22 @@ export function ProgramWizard({
         initExpandedDays(draft);
         setStep(2);
         if (opts?.regenerate) {
-          setMsg("New variation ready — skim schemes under each exercise.");
+          const pins = (form.pinnedExerciseIds || []).length;
+          setMsg(
+            pins
+              ? `New variation ready — ${pins} pinned exercise${pins === 1 ? "" : "s"} kept if still safe.`
+              : "New variation ready — skim schemes under each exercise."
+          );
         }
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Preview failed");
+        const raw = e instanceof Error ? e.message : "Preview failed";
+        const parsed = parseInsufficientSafeMessage(raw);
+        if (parsed) {
+          setInsufficient(parsed);
+          setError(null);
+        } else {
+          setError(raw);
+        }
       }
     });
   }
@@ -650,6 +696,29 @@ export function ProgramWizard({
               </div>
             )}
 
+          {selectedClient && (
+            <div className="space-y-3">
+              <ClientDeficiencySelector
+                clientId={selectedClient.id}
+                goal={form.goal}
+                suppressedSlugs={form.suppressedDeficiencySlugs}
+                onToggleSuppress={toggleSuppress}
+              />
+              <ClientEquipmentPicker
+                clientId={selectedClient.id}
+                clientName={fullName(
+                  selectedClient.firstName,
+                  selectedClient.lastName
+                )}
+                mode={(form.facilityEquipmentMode || "org") as FacilityEquipmentMode}
+                onModeChange={(mode) =>
+                  setForm((f) => ({ ...f, facilityEquipmentMode: mode }))
+                }
+                compact
+              />
+            </div>
+          )}
+
           <button
             type="button"
             role="switch"
@@ -946,6 +1015,33 @@ export function ProgramWizard({
                     {constraintSummary}
                   </p>
                 )}
+                {Array.isArray(preview.meta.detectedDeficiencies) &&
+                  (preview.meta.detectedDeficiencies as { slug: string; name?: string; severity?: string }[])
+                    .length > 0 && (
+                    <div className="flex flex-wrap gap-1 border-t border-emerald-900/25 pt-2">
+                      {(
+                        preview.meta.detectedDeficiencies as {
+                          slug: string;
+                          name?: string;
+                          severity?: string;
+                        }[]
+                      ).map((d) => (
+                        <Badge key={d.slug} tone="amber">
+                          {(d.name || d.slug).replace(/_/g, " ")}
+                          {d.severity ? ` · ${d.severity}` : ""}
+                        </Badge>
+                      ))}
+                      {typeof preview.meta.mesocyclePhase === "string" && (
+                        <Badge tone="green">
+                          Meso 1 ·{" "}
+                          {String(preview.meta.mesocyclePhase).replace(
+                            /_/g,
+                            " "
+                          )}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
               </div>
               {(() => {
                 const meso = preview.meta.mesocycle as
@@ -974,6 +1070,14 @@ export function ProgramWizard({
                         </span>{" "}
                         corrective
                         {correctiveIds.length === 1 ? "" : "s"}
+                      </Badge>
+                    ) : null}
+                    {(form.pinnedExerciseIds || []).length > 0 ? (
+                      <Badge tone="amber">
+                        <span className="tabular-nums">
+                          {(form.pinnedExerciseIds || []).length}
+                        </span>{" "}
+                        pinned
                       </Badge>
                     ) : null}
                     {meso?.notes ? (
@@ -1158,7 +1262,35 @@ export function ProgramWizard({
                                   </span>
                                 )}
                               {ex.exerciseName}
+                              {ex.exerciseId && pinned.has(ex.exerciseId) && (
+                                <span className="ml-1.5 text-[10px] font-semibold uppercase text-amber-300">
+                                  Pinned
+                                </span>
+                              )}
                             </div>
+                            {ex.exerciseId && (
+                              <button
+                                type="button"
+                                aria-pressed={pinned.has(ex.exerciseId)}
+                                title={
+                                  pinned.has(ex.exerciseId)
+                                    ? "Unpin — can change on rebuild"
+                                    : "Pin — keep this exercise on rebuild"
+                                }
+                                onClick={() => togglePin(ex.exerciseId)}
+                                className={cn(
+                                  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border text-xs font-medium transition",
+                                  pinned.has(ex.exerciseId)
+                                    ? "border-amber-800/70 bg-amber-950/40 text-amber-200"
+                                    : "border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
+                                )}
+                              >
+                                <Pin className="h-3.5 w-3.5" />
+                                <span className="sr-only">
+                                  {pinned.has(ex.exerciseId) ? "Unpin" : "Pin"}
+                                </span>
+                              </button>
+                            )}
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
                             <Badge
@@ -1233,6 +1365,12 @@ export function ProgramWizard({
           </div>
         </div>
       )}
+      <InsufficientSafeExercisesModal
+        open={!!insufficient}
+        pattern={insufficient?.pattern || ""}
+        secondary={insufficient?.secondary || []}
+        onClose={() => setInsufficient(null)}
+      />
     </FocusShell>
   );
 }

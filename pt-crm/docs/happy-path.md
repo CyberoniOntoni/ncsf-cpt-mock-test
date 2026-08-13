@@ -35,7 +35,7 @@ Cold path — no sticky client, no open session:
 
 **Deactivate** when they leave the roster (keeps history; **Reactivate** anytime). Inactive clients are hidden from the floor picker and Needs you.
 
-After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **13** = simple invoices + appointment ↔ session link).
+After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_VERSION` (currently **21**).
 
 ---
 
@@ -49,7 +49,7 @@ After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_V
 3. **Apply** on a tip (or keyboard **A**) fills open sets with suggested kg / target reps.
 4. Floor shortcuts (**?** for help): Space set · A apply · N/P exercise · +/− load · S save · U undo · R rest · Esc dismiss.
 5. **Complete session**:
-   - Burns **one pack session** when a pack is **active** (oldest pack first). Closing a calendar booking does **not** burn a pack.
+   - Burns **one pack session** when a pack is **active** (oldest pack first). **Calendar complete** also debits. Same visit does **not** double-charge when booking and floor log are **linked**, or when they are the **only** unlinked floor log + completed booking for that client on that org-local day. Prefer **Start from booking**. Two separate visits the same day still debit twice. **Reopen** a completed booking restores a stamped pack credit.
    - Flash + close-loop show pack left / empty / no pack. Empty → **Renew pack** deep-link.
    - Home (**/**) revalidates so open sessions drop off and **Needs you** can show low/empty pack.
    - Full set log stays on the **session** (and under **Sessions**).
@@ -133,6 +133,8 @@ Browser checklist:
 - [ ] Login works  
 - [ ] Client open → Start session → log → Complete  
 - [ ] Pack remaining drops by 1 after complete  
+- [ ] Calendar **Close booking** drops pack by 1; linked (or unique same-day) floor complete does not drop a second credit  
+- [ ] **Reopen** a completed booking restores the stamped pack credit 
 - [ ] Sessions list shows the session; Notes does **not** show full set dump  
 - [ ] Program day **Add exercise** appends from bank  
 - [ ] Coach “add … to program” → Apply mutates plan
@@ -140,6 +142,7 @@ Browser checklist:
 - [ ] Book appointment appears on Home Agenda (~48h); Needs you only if ≤4h
 - [ ] Calendar month grid loads; book day prefill works; booking appears on grid  
 - [ ] **Start session** from booking (client Next up or calendar day) opens floor log; complete marks booking done  
+- [ ] Client portal: `/portal/login` as `jane@example.com` (dev: OTP is logged with `MOCK_EMAIL`) → sign waiver → see Home / Program tabs
 - [ ] Floor: Focus current / Prep open sets; after Complete, close-loop Share + Book next
 - [ ] Follow-up task appears on Needs you; #crm-tasks deep link works
 - [ ] Home Agenda / Needs you refresh when returning to the tab  

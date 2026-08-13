@@ -106,6 +106,15 @@ export function MarketingHeader() {
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link
+            href="/portal/login"
+            className={cn(
+              "inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-medium text-stone-500 transition hover:text-stone-200",
+              linkFocus
+            )}
+          >
+            Client
+          </Link>
+          <Link
             href="/login"
             className={cn(
               "inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-medium text-stone-400 transition hover:bg-stone-900/50 hover:text-stone-100 sm:px-3",

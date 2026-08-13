@@ -45,3 +45,6 @@ next-env.d.ts
 # Local pilot backups
 backups/
 
+# Local agent scratch
+.agents/
+

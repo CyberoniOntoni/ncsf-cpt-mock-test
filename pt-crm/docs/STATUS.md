@@ -5,11 +5,11 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 
 | | |
 |--|--|
-| **Last audited** | 2026-08-08 |
+| **Last audited** | 2026-08-13 |
 | **Product** | FloorScribe (repo folder `pt-crm/`) |
 | **GitHub** | [CyberoniOntoni/floorscribe](https://github.com/CyberoniOntoni/floorscribe) `main` |
 | **Live** | https://floorscribe.com (self-host LXC + Docker; private IP not for public docs) |
-| **Schema** | `SCHEMA_VERSION` **16** (`training_sessions.package_id`) |
+| **Schema** | `SCHEMA_VERSION` **21** (partial unique client email + portal 20 + smarter gen + pack debit) |
 | **Stack** | Next.js 16 App Router · TypeScript · Tailwind · PGlite + Drizzle · multi-tenant org |
 | **Demo** | `pt@demo.local` / `trainer123` |
 
@@ -36,6 +36,7 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 | 2 | **Plans** — editable programs + progression, enough to run next session |
 | 3 | **CRM spine** — stage, pack, book, task, invoice, check-in |
 | Sidecar | Coach + knowledge (assist, never the home hero) |
+| Sidecar | **Client portal** (`/portal`) — assigned clients only; marketplace matchmaking later |
 
 **North-star metric:** sessions logged per trainer per week.
 
@@ -124,7 +125,7 @@ Four primary areas (`src/lib/nav.ts`):
 | Client stage (lead/active/paused + deactivate) | **Done** | Vision Phase A |
 | Sticky client chip | **Done** | Cross-page |
 | Packages (enroll, remaining, renew, cancel) | **Done** | Vision Phase B |
-| Pack debit on **session complete** | **Done** | Not on calendar close |
+| Pack debit on **floor complete** and **calendar complete** | **Done** | Shared debit when linked, or unique same-day unlinked pair; Reopen completed booking restores stamp |
 | Appointments (book, no-show, cancel, complete) | **Done** | Calendar + client desk |
 | Calendar month + in-calendar book + billing | **Done** | Pack / invoice / none |
 | Tasks / follow-ups → Needs you | **Done** | Vision Phase A |
@@ -136,7 +137,7 @@ Four primary areas (`src/lib/nav.ts`):
 | Communication log table product UI | **Not done** | Schema may have notes/check-ins only |
 | Card payments / Stripe | **Not done** | Deferred |
 | Tax / receipts | **Not done** | Deferred |
-| Client portal / companion app | **Not done** | Out of scope |
+| Client portal / companion app | **Done** | `/portal` OTP sidecar; marketplace matchmaking later |
 
 ### 3.5 Library, assessments, progress
 
@@ -206,7 +207,7 @@ Org → Equipment, Exercises (bank), Playbooks
 | **Programs Phase C** | Smarter programs (append, coach append) | **Shipped** |
 | **Programs polish** | Plan balance, science rest, fill chips, DP tips | **Shipped** (2026-08-08) |
 | **CRM Phase C** | Comms log, real send, consent productization | **Not started** |
-| **Vision later** | Client portal, cards, tax, multi-trainer polish | **Deferred** |
+| **Vision later** | Marketplace matchmaking, cards, tax, multi-trainer polish | **Deferred** |
 
 ---
 
@@ -274,7 +275,7 @@ Typical candidates (pick from pain, don’t pre-build all):
 |------|--------|
 | **Push** | `git subtree push --prefix=pt-crm floorscribe main` from monorepo root (or push from floorscribe clone) |
 | **Deploy** | Env-only `FLOORSCRIBE_DEPLOY_*` + `python scripts/deploy_lxc.py` |
-| **Verify** | `npm run typecheck` · `npm run smoke:programming` · `smoke:pilot` · `/api/health` |
+| **Verify** | `npm run typecheck` · `npm run smoke:programming` · `smoke:portal` · `smoke:pilot` · `/api/health` |
 | **Schema** | Bump `SCHEMA_VERSION` in `src/db/index.ts` when migrations change; restart app |
 | **Secrets** | Never commit passwords, `AUTH_SECRET`, or private LXC IPs into the public repo |
 | **Scope** | Session/plan/CRM first; knowledge & analytics stay secondary |
@@ -289,6 +290,7 @@ npm run typecheck
 npm run smoke
 npm run smoke:pilot
 npm run smoke:programming
+npm run smoke:portal
 npm run smoke:floor
 npm run smoke:library
 curl -s https://floorscribe.com/api/health
@@ -304,6 +306,12 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 |------|------|
 | 2026-08-08 | Initial audit after programs science polish + LXC deploy (`a977bbb` / local `4d4fa35`) |
 | 2026-08-08 | Build from scratch + save-for-later drafts (unassigned templates) |
+| 2026-08-10 | Pre-pilot review (7 high fixes), SCHEMA 17 indexes, CI, DnD reorder |
+| 2026-08-13 | Portal polish: HMAC OTP, case-insensitive email, onboarding finish, program cache read, next-session window, smoke exit 0 (SCHEMA 21) |
+| 2026-08-13 | Client portal v1 (`/portal`) OTP login, onboarding signatures, read-only program/progress/billing; SCHEMA 20. Marketplace matchmaking deferred. |
+| 2026-08-13 | Smarter generator (SCHEMA 19): deficiency rules from real assessment keys + measurements, Meso 1 phase, rotated safety-gated correctives |
+| 2026-08-13 | Same-day unique unlinked pair shares debit; Reopen completed booking restores pack; consume race retry |
+| 2026-08-11 | Shared pack debit (floor+calendar, linked no double burn); FINDING-08/09/10/13 pilot closes |
 | 2026-08-08 | Programs list polish: Saved for later section, empty-state entry CTAs, happy-path order/prep note |
 
 ---

@@ -797,9 +797,18 @@ export function ClientCrmPanel({
 
   function onApptStatus(
     appointmentId: string,
-    status: "completed" | "cancelled" | "no_show",
+    status: "scheduled" | "completed" | "cancelled" | "no_show",
     title: string
   ) {
+    if (status === "scheduled") {
+      if (
+        !window.confirm(
+          `Reopen booking “${title}” as scheduled?\n\nIf this visit burned a pack, that credit is restored.`
+        )
+      ) {
+        return;
+      }
+    }
     if (status === "cancelled") {
       if (!window.confirm(`Cancel “${title}”?`)) return;
     }
@@ -809,7 +818,7 @@ export function ClientCrmPanel({
     if (status === "completed") {
       if (
         !window.confirm(
-          `Close booking “${title}”?\n\nCloses the calendar slot only — does not burn a pack session.`
+          `Close booking “${title}”?\n\nUses 1 pack session when an active pack exists (same visit won’t double-charge if the floor log already burned).`
         )
       ) {
         return;
@@ -1056,8 +1065,9 @@ export function ClientCrmPanel({
               })()}
             </p>
             <p className="mt-1 text-[10px] leading-snug text-zinc-600">
-              Start logs the floor session (can burn a pack). Close booking only
-              ends the calendar slot.
+              Start logs the floor session. Close booking also uses 1 pack when
+              active (no double charge when the floor log is linked to this
+              booking — prefer Start from booking).
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {nextAppointment.status === "scheduled" && (
@@ -1083,7 +1093,7 @@ export function ClientCrmPanel({
                   variant="secondary"
                   disabled={pending}
                   className="min-h-11"
-                  title="Closes the booking only — does not burn a pack"
+                  title="Closes booking and uses 1 pack session if one remains"
                   onClick={() =>
                     onApptStatus(
                       nextAppointment.id,
@@ -1093,6 +1103,25 @@ export function ClientCrmPanel({
                   }
                 >
                   Close booking
+                </Button>
+              )}
+              {nextAppointment.status === "completed" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={pending}
+                  className="min-h-11"
+                  title="Reopen as scheduled and restore a burned pack credit if this visit was stamped"
+                  onClick={() =>
+                    onApptStatus(
+                      nextAppointment.id,
+                      "scheduled",
+                      nextAppointment.title
+                    )
+                  }
+                >
+                  Reopen
                 </Button>
               )}
               {nextAppointment.status === "scheduled" && (
@@ -1372,7 +1401,7 @@ export function ClientCrmPanel({
                             variant="secondary"
                             disabled={pending}
                             className="min-h-11"
-                            title="Closes the booking only — does not burn a pack"
+                            title="Closes booking and uses 1 pack session if one remains"
                             onClick={() =>
                               onApptStatus(a.id, "completed", a.title)
                             }
@@ -1407,13 +1436,32 @@ export function ClientCrmPanel({
                       )}
                     </div>
                   )}
-                  {a.status !== "scheduled" && a.sessionId && (
-                    <Link
-                      href={`/sessions/${a.sessionId}`}
-                      className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400 hover:underline"
-                    >
-                      Open log →
-                    </Link>
+                  {a.status !== "scheduled" && (
+                    <div className="flex flex-wrap items-center gap-1">
+                      {a.sessionId && (
+                        <Link
+                          href={`/sessions/${a.sessionId}`}
+                          className="inline-flex min-h-11 items-center text-xs font-medium text-emerald-400 hover:underline"
+                        >
+                          Open log →
+                        </Link>
+                      )}
+                      {a.status === "completed" && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          disabled={pending}
+                          className="min-h-11"
+                          title="Reopen as scheduled and restore a burned pack credit if this visit was stamped"
+                          onClick={() =>
+                            onApptStatus(a.id, "scheduled", a.title)
+                          }
+                        >
+                          Reopen
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </li>
               );

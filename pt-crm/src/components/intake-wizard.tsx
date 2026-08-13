@@ -31,6 +31,7 @@ import {
   AssessmentFormFields,
   AssessmentHowTo,
 } from "./assessment-form-fields";
+import { ClientEquipmentPicker } from "./client-equipment-picker";
 
 type Template = {
   id: string;
@@ -414,6 +415,13 @@ export function IntakeWizard() {
             <p className="text-xs text-zinc-600">
               Medical fields are coaching context only — not clinical records.
             </p>
+            {clientId && (
+              <ClientEquipmentPicker
+                clientId={clientId}
+                clientName={basics.firstName}
+                compact
+              />
+            )}
             <div className="flex justify-between pt-2">
               <Button type="button" variant="ghost" onClick={() => setStep(0)}>
                 Back

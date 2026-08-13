@@ -142,11 +142,27 @@ export async function startSessionFromAppointmentAction(
       return { ok: false, error: "Appointment not found", code: "not_found" };
     }
     const row = appt.appt;
+    // FINDING-09: only scheduled bookings start a new floor session
     if (row.status === "cancelled") {
       return {
         ok: false,
         error: "This booking was cancelled",
         code: "cancelled",
+      };
+    }
+    if (row.status === "no_show") {
+      return {
+        ok: false,
+        error: "This booking is marked no-show — re-schedule it first.",
+        code: "no_show",
+      };
+    }
+    if (row.status === "completed" && !row.sessionId) {
+      return {
+        ok: false,
+        error:
+          "This booking is already completed. Open the client timeline or start from a program day.",
+        code: "completed",
       };
     }
 
@@ -1253,11 +1269,21 @@ export async function completeSessionAction(
       const burn = await tryConsumePackageSessionAction(
         row.clientId,
         sessionId,
-        session
+        session,
+        row.appointmentId
       );
       if (burn.consumed) {
         packBurn = {
           consumed: true,
+          reason: "ok",
+          remaining: burn.remaining,
+          packageName: burn.packageName,
+          status: burn.status,
+        };
+      } else if (burn.reason === "already_debited") {
+        // Calendar (or prior) already stamped this visit — show remaining, not a failure
+        packBurn = {
+          consumed: false,
           reason: "ok",
           remaining: burn.remaining,
           packageName: burn.packageName,
@@ -1610,18 +1636,85 @@ export async function cancelSessionAction(sessionId: string) {
     .limit(1);
   if (!row) throw new Error("Session not found");
 
+  const wasCompleted = row.status === "completed";
+
+  // Load linked booking once for debit stamp + calendar hygiene (C1–C3)
+  let apptPackageId: string | null = null;
+  let apptStatus: string | null = null;
+  if (row.appointmentId) {
+    try {
+      const [appt] = await db
+        .select({
+          packageId: clientAppointments.packageId,
+          status: clientAppointments.status,
+        })
+        .from(clientAppointments)
+        .where(eq(clientAppointments.id, row.appointmentId))
+        .limit(1);
+      if (appt) {
+        apptPackageId = appt.packageId ?? null;
+        apptStatus = appt.status ?? null;
+      }
+    } catch {
+      // optional
+    }
+  }
+
+  const hasDebitStamp = !!(row.packageId || apptPackageId);
+
+  // FINDING-08: restore only when this visit actually stamped a debit
+  // (session.packageId and/or appointment.packageId — not appointmentId alone)
+  let packRestored = false;
+  if (wasCompleted && row.clientId && hasDebitStamp) {
+    try {
+      const { tryRestorePackageSessionAction } = await import(
+        "@/app/actions/crm"
+      );
+      const res = await tryRestorePackageSessionAction(
+        row.clientId,
+        sessionId,
+        row.appointmentId
+      );
+      packRestored = !!res.restored;
+    } catch {
+      // pack optional
+    }
+  }
+
   await db
     .update(trainingSessions)
     .set({ status: "cancelled", updatedAt: new Date() })
     .where(eq(trainingSessions.id, sessionId));
 
-  // Unlink booking so CRM doesn't show Resume on a dead log
+  // FINDING-13: keep calendar honest
+  // - completed cancel → mark booking cancelled; clear packageId only if restore ran
+  // - in-progress cancel → re-open as scheduled only when booking was still open
+  //   and unstamped; if calendar already completed/debited, leave that state
+  //   (clear session link only — do not force scheduled over a paid visit)
   if (row.appointmentId) {
     try {
-      await db
-        .update(clientAppointments)
-        .set({ sessionId: null })
-        .where(eq(clientAppointments.id, row.appointmentId));
+      if (wasCompleted) {
+        await db
+          .update(clientAppointments)
+          .set({
+            sessionId: null,
+            status: "cancelled",
+            // Clear stamp only after a successful restore (tryRestore also clears).
+            // On failure keep packageId so the debit key remains recoverable.
+            ...(packRestored ? { packageId: null } : {}),
+          })
+          .where(eq(clientAppointments.id, row.appointmentId));
+      } else if (apptStatus === "completed" || apptPackageId) {
+        await db
+          .update(clientAppointments)
+          .set({ sessionId: null })
+          .where(eq(clientAppointments.id, row.appointmentId));
+      } else {
+        await db
+          .update(clientAppointments)
+          .set({ sessionId: null, status: "scheduled" })
+          .where(eq(clientAppointments.id, row.appointmentId));
+      }
     } catch {
       // optional
     }
@@ -1631,7 +1724,7 @@ export async function cancelSessionAction(sessionId: string) {
   revalidatePath("/sessions");
   revalidatePath("/calendar");
   if (row.clientId) revalidatePath(`/clients/${row.clientId}`);
-  return { ok: true };
+  return { ok: true as const, packRestored };
 }
 
 /**
@@ -1689,14 +1782,20 @@ export async function deleteSessionAction(sessionId: string) {
     }
   }
 
-  // Restore pack before delete so we can read packageId from the session row
+  // Restore pack before delete when a debit stamp exists (stamp-only; no heuristic)
   let packRestored = false;
-  if (wasCompleted && clientId) {
+  if (wasCompleted && clientId && (row.packageId || row.appointmentId)) {
     try {
+      // When only appointmentId is set, tryRestore loads appointment.packageId;
+      // without a stamp it returns no_stamp (does not invent a refund).
       const { tryRestorePackageSessionAction } = await import(
         "@/app/actions/crm"
       );
-      const res = await tryRestorePackageSessionAction(clientId, sessionId);
+      const res = await tryRestorePackageSessionAction(
+        clientId,
+        sessionId,
+        row.appointmentId
+      );
       packRestored = !!res.restored;
     } catch {
       // pack optional

@@ -23,6 +23,7 @@ import {
   Spinner,
   Textarea,
 } from "./ui";
+import { ClientDeficiencySelector } from "./client-deficiency-selector";
 import {
   AssessmentFormFields,
   AssessmentHowTo,
@@ -232,6 +233,9 @@ export function ClientAssessmentsPanel({
           <p className="text-xs text-zinc-500">
             Expand a screen for how-to · re-test anytime · compare to baseline
           </p>
+          <div className="mt-3">
+            <ClientDeficiencySelector clientId={clientId} />
+          </div>
         </div>
         <Link
           href={`/?client=${clientId}`}

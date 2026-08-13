@@ -760,8 +760,19 @@ export function assignSetScheme(opts: {
       pattern
     );
   const accessory = /core|carry|mobility|cardio/.test(pattern);
+  const beginner = /beginner/i.test(opts.experience || "");
   const advanced = /advanced/i.test(opts.experience || "");
   const n = opts.sortOrder;
+
+  // NSCA novice: skill + consistency. No intensity techniques.
+  if (beginner) {
+    if (pattern === "mobility" || goal === "mobility" || accessory) {
+      return n % 2 === 0 ? "tempo" : "straight";
+    }
+    if (n === 0) return "straight";
+    if (n === 1) return "pyramid";
+    return n % 2 === 0 ? "tempo" : "straight";
+  }
 
   if (pattern === "mobility" || goal === "mobility") {
     return n % 2 === 0 ? "tempo" : "straight";

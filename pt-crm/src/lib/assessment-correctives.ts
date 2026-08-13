@@ -287,6 +287,15 @@ export function correctivesFromAssessmentResults(opts: {
     if (isFail(results.valgus)) {
       push(OHS_VALGUS());
     }
+    if (isFail(results.lumbar_arch) || isFail(results.excessive_lean)) {
+      push({
+        ...POSTURE_PELVIS(),
+        reason: isFail(results.lumbar_arch)
+          ? "Overhead squat excessive lumbar arch — hip flexor + anti-extension work"
+          : "Overhead squat excessive forward lean — hip/ankle + trunk control",
+        priority: 72,
+      });
+    }
   }
 
   // --- Posture snapshot ---

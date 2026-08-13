@@ -64,6 +64,7 @@ import {
   scoreExerciseOrder,
 } from "../src/lib/exercise-order";
 import { detectIntent } from "../src/lib/ai/intents";
+import { assignSetScheme, type SetSchemeId } from "../src/lib/set-schemes";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT: ${msg}`);
@@ -739,6 +740,67 @@ function main() {
     );
   }
   console.log("ok session-draft clock-skew tolerance");
+
+  // assignSetScheme: novices stay on NSCA-safe schemes; work-slot 0 is a main lift
+  {
+    const noviceBanned = new Set<SetSchemeId>([
+      "drop",
+      "myo_reps",
+      "rest_pause",
+      "cluster",
+      "wave",
+      "complex",
+      "emom",
+      "contrast",
+      "superset",
+      "reverse_pyramid",
+      "amrap",
+    ]);
+    const noviceOk = new Set<SetSchemeId>(["straight", "pyramid", "tempo"]);
+    for (const goal of ["strength", "hypertrophy", "fat_loss", "general"] as const) {
+      for (const pattern of [
+        "squat",
+        "hinge",
+        "horizontal_push",
+        "core",
+        "carry",
+      ]) {
+        for (let n = 0; n < 8; n++) {
+          const id = assignSetScheme({
+            goal,
+            pattern,
+            isWarmup: false,
+            sortOrder: n,
+            experience: "beginner",
+          });
+          assert(noviceOk.has(id), `beginner ${goal}/${pattern}#${n} → ${id}`);
+          assert(!noviceBanned.has(id), `beginner banned ${id}`);
+        }
+      }
+    }
+
+    const firstStrength = assignSetScheme({
+      goal: "strength",
+      pattern: "squat",
+      isWarmup: false,
+      sortOrder: 0,
+      experience: "intermediate",
+    });
+    assert(
+      firstStrength === "reverse_pyramid",
+      "work-slot 0 strength compound uses reverse pyramid, not leftover RAMP sort"
+    );
+
+    const warmupScheme = assignSetScheme({
+      goal: "hypertrophy",
+      pattern: "mobility",
+      isWarmup: true,
+      sortOrder: 0,
+      experience: "advanced",
+    });
+    assert(warmupScheme === "straight", "warmup stays straight");
+  }
+  console.log("ok assignSetScheme novice + work-slot index");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

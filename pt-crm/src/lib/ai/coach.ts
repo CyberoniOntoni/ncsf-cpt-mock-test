@@ -490,13 +490,26 @@ Rules:
     const jsonStart = raw.indexOf("{");
     const jsonEnd = raw.lastIndexOf("}");
     if (jsonStart < 0 || jsonEnd < 0) return null;
-    const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1));
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1)) as Record<
+        string,
+        unknown
+      >;
+    } catch {
+      // FINDING-10: malformed / truncated model JSON — fall back to plain text
+      return null;
+    }
     if (parsed.type === "follow_up" && Array.isArray(parsed.questions)) {
       return {
         type: "follow_up",
         intro: parsed.intro ? stripMarkdown(String(parsed.intro)) : undefined,
-        questions: parsed.questions.map((q: string) => stripMarkdown(String(q))),
-        playbookIds: parsed.playbookIds || playbooks.map((p) => p.id),
+        questions: (parsed.questions as unknown[]).map((q) =>
+          stripMarkdown(String(q))
+        ),
+        playbookIds: Array.isArray(parsed.playbookIds)
+          ? (parsed.playbookIds as string[])
+          : playbooks.map((p) => p.id),
         actions: Array.isArray(parsed.actions) ? parsed.actions : [],
       };
     }
@@ -507,16 +520,17 @@ Rules:
         exerciseHits.map((e) => [e.name.toLowerCase(), e])
       );
       let exerciseSuggestions = Array.isArray(parsed.exerciseSuggestions)
-        ? parsed.exerciseSuggestions
-            .map(
-              (s: {
-                id?: string;
-                name?: string;
-                movementPattern?: string;
-                equipment?: string[];
-                reason?: string;
-                cues?: string;
-              }) => {
+        ? (
+            parsed.exerciseSuggestions as Array<{
+              id?: string;
+              name?: string;
+              movementPattern?: string;
+              equipment?: string[];
+              reason?: string;
+              cues?: string;
+            }>
+          )
+            .map((s) => {
                 const byId = s.id && allowedIds.has(s.id)
                   ? exerciseHits.find((e) => e.id === s.id)
                   : null;
@@ -558,10 +572,14 @@ Rules:
           ? stripMarkdown(String(parsed.disclaimer))
           : undefined,
         exerciseSuggestions,
-        playbookIds: parsed.playbookIds || playbooks.map((p) => p.id),
+        playbookIds: Array.isArray(parsed.playbookIds)
+          ? (parsed.playbookIds as string[])
+          : playbooks.map((p) => p.id),
         playbookTitles: (
-          parsed.playbookTitles || playbooks.map((p) => p.title)
-        ).map((t: string) => stripMarkdown(t)),
+          Array.isArray(parsed.playbookTitles)
+            ? (parsed.playbookTitles as unknown[])
+            : playbooks.map((p) => p.title)
+        ).map((t) => stripMarkdown(String(t))),
       });
       return { type: "solution", ...solution };
     }

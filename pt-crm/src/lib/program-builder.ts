@@ -39,7 +39,20 @@ import {
   type PrepSlot,
 } from "@/lib/session-prep";
 import { sortExercisesForSession } from "@/lib/exercise-order";
+import { isCompoundPattern, recommendedRestSec } from "@/lib/program-science";
 import { id } from "@/lib/utils";
+import {
+  enforceHardSafetyGates,
+  evaluateClientRules,
+  filterExercisesByEquipment,
+  InsufficientSafeExercisesError,
+  prioritizeAndRotateCorrectives,
+  scoreExerciseForPrimarySwaps,
+  secondaryPatternsFor,
+  type ClientEvaluationContext,
+  type PrescribedCorrective,
+  type RuleEngineEvaluationResult,
+} from "@/lib/smarter-rule-engine";
 
 export type ProgramGoal =
   | "strength"
@@ -73,6 +86,14 @@ export type ProgramBuilderInput = {
   assessmentHints?: AssessmentHint[];
   /** Change this to get a different exercise variation (Regenerate) */
   variationSeed?: number;
+  /** Optional smarter-engine context (measurements, medical history, equipment). */
+  evaluationContext?: ClientEvaluationContext | null;
+  facilityEquipmentMode?: "org" | "client" | "combined";
+  facilityEquipmentIds?: string[];
+  /** Exercise bank ids the trainer pinned — keep these in the plan if possible */
+  pinnedExerciseIds?: string[];
+  /** Deficiency slugs the trainer dismissed (do not inject correctives for these) */
+  suppressedDeficiencySlugs?: string[];
 };
 
 export type BuiltExercise = {
@@ -129,6 +150,8 @@ type SessionKind =
   | "legs"
   | "mobility";
 
+type SlotIntensity = "strength" | "hypertrophy" | "technique";
+
 type Slot = {
   patterns: string[];
   warmup?: boolean;
@@ -136,6 +159,8 @@ type Slot = {
   label?: string;
   preferTags?: string[];
   prepRole?: string;
+  /** Work-slot intensity. Same-day second squat/hinge is volume, not a second heavy primary. */
+  tag?: SlotIntensity;
 };
 
 type Density = "short" | "standard" | "long";
@@ -169,67 +194,88 @@ function truncateNote(s: string, max = 120): string {
 }
 
 /**
- * Base sets/reps/RPE/rest by goal, pattern, and experience.
- * Advanced strength gets more sets; beginners keep slightly lower RPE.
+ * Base sets/reps/RPE/rest by goal, pattern, experience, and slot intensity.
+ * Rest comes from recommendedRestSec (NSCA / ACSM compound vs accessory).
+ * Same-day second squat/hinge uses volume (hypertrophy) loading, not a second heavy primary.
  */
-function prescription(goal: ProgramGoal, pattern: string, experience: string) {
+function prescription(
+  goal: ProgramGoal,
+  pattern: string,
+  experience: string,
+  intensity?: SlotIntensity
+) {
   const beginner = /beginner/i.test(experience);
   const advanced = /advanced|elite/i.test(experience);
+  const volumeBias = intensity === "hypertrophy" || intensity === "technique";
+  const effectiveGoal: ProgramGoal =
+    volumeBias && goal === "strength" ? "hypertrophy" : goal;
+  const compound = isCompoundPattern(pattern);
+
+  let sets: number;
+  let reps: string;
+  let rpe: string;
 
   if (pattern === "mobility" || pattern === "cardio") {
-    return {
-      sets: 2,
-      reps: pattern === "cardio" ? "8-12 min" : "8-10/side",
-      rpe: beginner ? "4-5" : "5-6",
-      restSec: 45,
-    };
-  }
-  if (pattern === "core" || pattern === "carry") {
-    return {
-      sets: beginner ? 2 : advanced ? 3 : 3,
-      reps: pattern === "carry" ? "30-40m" : "8-12",
-      rpe: beginner ? "5-6" : "6-7",
-      restSec: 60,
-    };
+    sets = 2;
+    reps = pattern === "cardio" ? "8-12 min" : "8-10/side";
+    rpe = beginner ? "4-5" : "5-6";
+  } else if (pattern === "core" || pattern === "carry") {
+    sets = beginner ? 2 : 3;
+    reps = pattern === "carry" ? "30-40m" : "8-12";
+    rpe = beginner ? "5-6" : "6-7";
+  } else {
+    switch (effectiveGoal) {
+      case "strength":
+        sets = beginner ? 3 : advanced ? (compound ? 5 : 4) : compound ? 4 : 3;
+        reps = beginner
+          ? compound
+            ? "5-6"
+            : "6-8"
+          : advanced
+            ? compound
+              ? "2-5"
+              : "5-8"
+            : compound
+              ? "3-5"
+              : "5-8";
+        rpe = beginner ? "6-7" : advanced ? "8-9" : "7-8";
+        break;
+      case "hypertrophy":
+        sets = beginner ? 3 : advanced ? 4 : 3;
+        reps = compound ? "6-10" : "8-12";
+        rpe =
+          intensity === "technique"
+            ? beginner
+              ? "5-6"
+              : "6-7"
+            : beginner
+              ? "6-7"
+              : "7-8";
+        break;
+      case "fat_loss":
+        sets = beginner ? 2 : 3;
+        reps = "10-15";
+        rpe = beginner ? "5-6" : "6-7";
+        break;
+      case "mobility":
+        sets = 2;
+        reps = "8-12";
+        rpe = beginner ? "4-5" : "5-6";
+        break;
+      default:
+        sets = beginner ? 2 : advanced ? 4 : 3;
+        reps = "8-10";
+        rpe = beginner ? "6-7" : "7";
+    }
   }
 
-  switch (goal) {
-    case "strength":
-      return {
-        sets: beginner ? 3 : advanced ? 5 : 4,
-        reps: beginner ? "5-6" : advanced ? "2-5" : "3-5",
-        rpe: beginner ? "6-7" : advanced ? "8-9" : "7-8",
-        restSec: advanced ? 180 : 150,
-      };
-    case "hypertrophy":
-      return {
-        sets: beginner ? 3 : advanced ? 4 : 3,
-        reps: beginner ? "8-12" : "8-12",
-        rpe: beginner ? "6-7" : "7-8",
-        restSec: 90,
-      };
-    case "fat_loss":
-      return {
-        sets: beginner ? 2 : 3,
-        reps: "10-15",
-        rpe: beginner ? "5-6" : "6-7",
-        restSec: 45,
-      };
-    case "mobility":
-      return {
-        sets: 2,
-        reps: "8-12",
-        rpe: beginner ? "4-5" : "5-6",
-        restSec: 45,
-      };
-    default:
-      return {
-        sets: beginner ? 2 : advanced ? 4 : 3,
-        reps: "8-10",
-        rpe: beginner ? "6-7" : "7",
-        restSec: 90,
-      };
-  }
+  const restSec = recommendedRestSec({
+    goal: effectiveGoal,
+    pattern,
+    reps,
+  }).restSec;
+
+  return { sets, reps, rpe, restSec };
 }
 
 function goalLabel(goal: ProgramGoal): string {
@@ -411,16 +457,42 @@ function prepSlotToBuilderSlot(p: PrepSlot): Slot {
 }
 
 /**
+ * When squat and hinge share a day, only the first stays a heavy primary.
+ * Later lower-body slots become volume / technique (NSCA same-session recovery).
+ */
+function tagSameDaySquatHinge(slots: Slot[]): Slot[] {
+  let sawHeavyLower = false;
+  return slots.map((slot) => {
+    if (slot.warmup || slot.cooldown) return slot;
+    const primary = slot.patterns[0];
+    if (primary !== "squat" && primary !== "hinge") return slot;
+    if (!sawHeavyLower) {
+      sawHeavyLower = true;
+      return slot;
+    }
+    return { ...slot, tag: slot.tag ?? "hypertrophy" };
+  });
+}
+
+/**
  * Work slots only (no warm-up/cool-down). Prep is layered in buildProgramDraft.
  * short (<40): lean main lifts
  * standard (40–54): main lifts + core when sensible
  * long (≥55): +1 accessory/unilateral or second push/pull, capped
+ *
+ * extraLowerVolume (hypertrophy, ≤2 days/wk): add the missing squat or hinge
+ * so both patterns reach ≥2 weekly exposures (Schoenfeld frequency).
  */
-function workSlotsForKind(kind: SessionKind, minutes: number): Slot[] {
+function workSlotsForKind(
+  kind: SessionKind,
+  minutes: number,
+  opts?: { extraLowerVolume?: boolean }
+): Slot[] {
   const density = densityForMinutes(minutes);
   const short = density === "short";
   const long = density === "long";
   const maxWork = short ? 4 : long ? 6 : 5;
+  const extraLower = !!opts?.extraLowerVolume;
 
   const cap = (slots: Slot[]) => slots.slice(0, maxWork);
 
@@ -438,7 +510,12 @@ function workSlotsForKind(kind: SessionKind, minutes: number): Slot[] {
         { patterns: ["horizontal_push"] },
         { patterns: ["horizontal_pull"] },
         ...(short ? [] : [{ patterns: ["core", "carry"] }]),
-        ...(long ? [{ patterns: ["hinge", "squat"] }] : []), // unilateral / secondary lower
+        // long already includes a secondary lower; 2-day hypertrophy adds hinge on shorter days
+        ...(long
+          ? [{ patterns: ["hinge", "squat"], tag: "hypertrophy" as const }]
+          : extraLower
+            ? [{ patterns: ["hinge"], tag: "hypertrophy" as const }]
+            : []),
       ]);
     case "full_b":
       return cap([
@@ -447,6 +524,9 @@ function workSlotsForKind(kind: SessionKind, minutes: number): Slot[] {
         { patterns: ["vertical_pull", "horizontal_pull"] },
         ...(short ? [] : [{ patterns: ["core"] }]),
         ...(long ? [{ patterns: ["horizontal_pull", "horizontal_push"] }] : []),
+        ...(extraLower
+          ? [{ patterns: ["squat"], tag: "hypertrophy" as const }]
+          : []),
       ]);
     case "full_c":
       return cap([
@@ -515,6 +595,34 @@ function toConstraintExercise(e: ExerciseWithAvailability) {
   };
 }
 
+function uniqueIds(ids?: string[] | null): string[] {
+  if (!ids?.length) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of ids) {
+    const id = typeof raw === "string" ? raw.trim() : "";
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
+function pickPinnedFromCandidates(
+  candidates: ExerciseWithAvailability[],
+  pinnedExerciseIds: string[] | undefined,
+  usedIds: Set<string>
+): ExerciseWithAvailability | null {
+  if (!pinnedExerciseIds?.length || !candidates.length) return null;
+  const byId = new Map(candidates.map((c) => [c.id, c]));
+  for (const pid of pinnedExerciseIds) {
+    if (usedIds.has(pid)) continue;
+    const hit = byId.get(pid);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 function pickExercise(
   pool: ExerciseWithAvailability[],
   patterns: string[],
@@ -524,7 +632,10 @@ function pickExercise(
   slotSalt = 0,
   profile?: ClientConstraintProfile | null,
   /** Soft-penalize patterns already used that day (avoid stacking violated-ish work). */
-  dayPatternCounts?: Map<string, number>
+  dayPatternCounts?: Map<string, number>,
+  evalCtx?: ClientEvaluationContext | null,
+  requireSafe = false,
+  pinnedExerciseIds?: string[]
 ): ExerciseWithAvailability | null {
   let candidates = pool.filter(
     (e) => e.available && patterns.includes(e.movementPattern) && !usedIds.has(e.id)
@@ -538,7 +649,52 @@ function pickExercise(
     if (safe.length) candidates = safe;
   }
 
+  if (evalCtx) {
+    candidates = enforceHardSafetyGates(
+      candidates.map((e) => ({
+        id: e.id,
+        name: e.name,
+        movementPattern: e.movementPattern,
+        tags: e.tags,
+        contraindications: (e as { contraindications?: string[] }).contraindications,
+        equipmentIds: e.equipmentIds,
+        equipmentAny: e.equipmentAny,
+        available: e.available,
+      })),
+      evalCtx
+    )
+      .map((g) => candidates.find((c) => c.id === g.id))
+      .filter((x): x is ExerciseWithAvailability => !!x);
+  }
+
+  const pinnedHit = pickPinnedFromCandidates(
+    candidates,
+    pinnedExerciseIds,
+    usedIds
+  );
+  if (pinnedHit) return pinnedHit;
+
   if (!candidates.length) {
+    const secondary = patterns.flatMap((p) => secondaryPatternsFor(p));
+    if (secondary.length) {
+      const alt = pickExercise(
+        pool,
+        secondary,
+        usedIds,
+        preferTags,
+        variationSeed,
+        slotSalt + 17,
+        profile,
+        dayPatternCounts,
+        evalCtx,
+        false,
+        pinnedExerciseIds
+      );
+      if (alt) return alt;
+      if (requireSafe && pool.some((e) => e.available)) {
+        throw new InsufficientSafeExercisesError(patterns[0] || "unknown", secondary);
+      }
+    }
     // fallback any unused available in pattern family
     let soft = pool.filter((e) => e.available && !usedIds.has(e.id));
     if (profile && soft.length) {
@@ -547,7 +703,26 @@ function pickExercise(
       );
       if (safeSoft.length) soft = safeSoft;
     }
-    if (!soft.length) return null;
+    if (evalCtx && soft.length) {
+      const gated = enforceHardSafetyGates(
+        soft.map((e) => ({
+          id: e.id,
+          name: e.name,
+          tags: e.tags,
+          contraindications: (e as { contraindications?: string[] })
+            .contraindications,
+        })),
+        evalCtx
+      );
+      const allowed = new Set(gated.map((g) => g.id));
+      soft = soft.filter((e) => allowed.has(e.id));
+    }
+    if (!soft.length) {
+      if (requireSafe && pool.some((e) => e.available)) {
+        throw new InsufficientSafeExercisesError(patterns[0] || "unknown", secondary);
+      }
+      return null;
+    }
     if (variationSeed) {
       // Mix id hash so regenerate is less sticky on the same index
       const salt =
@@ -565,6 +740,12 @@ function pickExercise(
     if (e.difficulty === "beginner") s += 1;
     // Prefer simpler names for full body
     if (/goblet|push-up|row|rdl|dead bug|plank|wall/i.test(e.name)) s += 1;
+    if (evalCtx?.detectedDeficiencies?.length) {
+      s += scoreExerciseForPrimarySwaps(
+        e,
+        evalCtx.detectedDeficiencies.map((d) => d.slug)
+      );
+    }
     if (profile) {
       s += scoreExerciseForConstraints(toConstraintExercise(e), profile);
       // Extra soft penalty if this pattern was already used and still risky
@@ -727,6 +908,127 @@ function buildCorrectiveWarmups(opts: {
   return out;
 }
 
+function leftoverPinnedRow(
+  ex: ExerciseWithAvailability,
+  goal: ProgramGoal,
+  experience: string,
+  mesoPlan: MesocyclePlan,
+  sort: number,
+  intensity?: SlotIntensity,
+  schemeIndex = 0
+): BuiltExercise {
+  const rx = prescription(goal, ex.movementPattern, experience, intensity);
+  const schemeId = assignSetScheme({
+    goal,
+    pattern: ex.movementPattern,
+    isWarmup: false,
+    sortOrder: schemeIndex,
+    experience,
+  });
+  const planned = buildSchemePlan(schemeId, rx, {
+    pattern: ex.movementPattern,
+    isWarmup: false,
+  });
+  const mesoRx = applyMeso(
+    {
+      sets: planned.sets,
+      reps: planned.reps,
+      rpe: planned.rpe,
+      restSec: planned.restSec,
+    },
+    mesoPlan
+  );
+  return {
+    id: id("pe"),
+    exerciseId: ex.id,
+    exerciseName: ex.name,
+    movementPattern: ex.movementPattern,
+    sets: mesoRx.sets,
+    reps: mesoRx.reps,
+    rpe: mesoRx.rpe,
+    restSec: mesoRx.restSec,
+    notes: composeExerciseNotes([ex.cues, "Trainer pin — kept on rebuild"]),
+    sortOrder: sort,
+    isWarmup: false,
+    setScheme: planned.setScheme,
+    setSchemeMeta: {
+      ...planned.setSchemeMeta,
+      summary: planned.setSchemeMeta?.summary,
+    },
+    groupId: null,
+    groupKind: null,
+    groupLabel: null,
+    groupOrder: null,
+    restAfterSec: null,
+    restBetweenRoundsSec: null,
+    groupRole: null,
+  };
+}
+
+function leftoverPinnedAvailable(
+  pinnedExerciseIds: string[],
+  usedIds: Set<string>,
+  pool: ExerciseWithAvailability[],
+  evalCtx?: ClientEvaluationContext | null
+): ExerciseWithAvailability[] {
+  const leftover: ExerciseWithAvailability[] = [];
+  const byId = new Map(pool.map((e) => [e.id, e]));
+  for (const pid of pinnedExerciseIds) {
+    if (usedIds.has(pid)) continue;
+    const ex = byId.get(pid);
+    if (!ex || !ex.available) continue;
+    leftover.push(ex);
+  }
+  if (!leftover.length || !evalCtx) return leftover;
+  const allowed = new Set(
+    enforceHardSafetyGates(
+      leftover.map((e) => ({
+        id: e.id,
+        name: e.name,
+        movementPattern: e.movementPattern,
+        tags: e.tags,
+        contraindications: (e as { contraindications?: string[] }).contraindications,
+        equipmentIds: e.equipmentIds,
+        equipmentAny: e.equipmentAny,
+        available: e.available,
+      })),
+      evalCtx
+    ).map((g) => g.id)
+  );
+  return leftover.filter((e) => allowed.has(e.id));
+}
+
+function prescribedToWarmups(
+  items: PrescribedCorrective[],
+  limit: number
+): BuiltExercise[] {
+  return items.slice(0, limit).map((p) => ({
+    id: id("pe"),
+    exerciseId: p.exerciseId,
+    exerciseName: p.exerciseName,
+    movementPattern: p.movementPattern || "mobility",
+    sets: p.sets,
+    reps: p.reps,
+    rpe: p.rpe,
+    restSec: p.restSec,
+    notes: composeExerciseNotes([p.rationale, "Corrective first — quality before load."]),
+    sortOrder: 0,
+    isWarmup: true,
+    setScheme: "straight" as SetSchemeId,
+    setSchemeMeta: {
+      summary: `Warm-up · Corrective · ${p.deficiencySlug.replace(/_/g, " ")}`,
+      howTo: p.rationale,
+    },
+    groupId: null,
+    groupKind: null,
+    groupLabel: null,
+    groupOrder: null,
+    restAfterSec: null,
+    restBetweenRoundsSec: null,
+    groupRole: null,
+  }));
+}
+
 export async function buildProgramDraft(
   input: ProgramBuilderInput
 ): Promise<BuiltProgram> {
@@ -764,8 +1066,104 @@ export async function buildProgramDraft(
   ]);
   const correctiveIds = correctives.map((c) => c.id);
 
-  const pool = await listExercisesForOrg(input.organizationId);
-  const available = pool.filter((e) => e.available);
+  const evalCtx: ClientEvaluationContext | null = input.evaluationContext
+    ? {
+        ...input.evaluationContext,
+        assessments:
+          input.evaluationContext.assessments?.length
+            ? input.evaluationContext.assessments
+            : assessmentHints.map((h) => ({
+                templateSlug: h.templateSlug,
+                results: h.results || {},
+                summary: h.summary,
+              })),
+      }
+    : assessmentHints.length || input.clientInjuries
+      ? {
+          client: {
+            injuriesText: input.clientInjuries || "",
+            contraindicationsText: input.contraindications || "",
+            medicalHistoryText: "",
+            goalsText: input.clientGoals || "",
+            experienceLevel: experience,
+          },
+          measurements: null,
+          assessments: assessmentHints.map((h) => ({
+            templateSlug: h.templateSlug,
+            results: h.results || {},
+            summary: h.summary,
+          })),
+        }
+      : null;
+
+  const smarterEval: RuleEngineEvaluationResult | null = evalCtx
+    ? evaluateClientRules(evalCtx, goal)
+    : null;
+
+  const pinnedExerciseIds = uniqueIds(input.pinnedExerciseIds);
+  const suppressedDeficiencySlugs = uniqueIds(input.suppressedDeficiencySlugs);
+  const suppressed = new Set(suppressedDeficiencySlugs);
+  if (smarterEval && suppressed.size) {
+    smarterEval.deficiencies = smarterEval.deficiencies.filter(
+      (d) => !suppressed.has(d.slug)
+    );
+  }
+
+  const mode = input.facilityEquipmentMode ?? "org";
+  const resolved = input.facilityEquipmentIds;
+  let pool: ExerciseWithAvailability[];
+  let available: ExerciseWithAvailability[];
+  if ((mode === "client" || mode === "combined") && resolved?.length) {
+    pool = await listExercisesForOrg(input.organizationId, { equipmentIds: resolved });
+    available = pool.filter((e) => e.available);
+  } else {
+    pool = await listExercisesForOrg(input.organizationId);
+    const availableBase = pool.filter((e) => e.available);
+    available = evalCtx
+      ? filterExercisesByEquipment(
+          availableBase,
+          input.facilityEquipmentIds ?? evalCtx.availableEquipmentIds
+        )
+      : availableBase;
+  }
+
+  const gatedCtx: ClientEvaluationContext | null =
+    evalCtx && smarterEval
+      ? {
+          ...evalCtx,
+          detectedDeficiencies: smarterEval.deficiencies.map((d) => ({
+            slug: d.slug,
+            name: d.name,
+            severity: d.severity,
+          })),
+        }
+      : evalCtx;
+
+  const rotatedCorrectives =
+    gatedCtx && smarterEval && smarterEval.deficiencies.length > 0
+      ? prioritizeAndRotateCorrectives(
+          smarterEval.deficiencies,
+          daysPerWeek,
+          gatedCtx,
+          available.map((e) => ({
+            id: e.id,
+            name: e.name,
+            movementPattern: e.movementPattern,
+            tags: e.tags,
+            equipmentIds: e.equipmentIds,
+            equipmentAny: e.equipmentAny,
+            available: e.available,
+          }))
+        )
+      : null;
+
+  if (rotatedCorrectives && suppressed.size) {
+    for (const [dayNum, items] of rotatedCorrectives) {
+      const kept = items.filter((p) => !suppressed.has(p.deficiencySlug));
+      if (kept.length) rotatedCorrectives.set(dayNum, kept);
+      else rotatedCorrectives.delete(dayNum);
+    }
+  }
 
   const split = splitForDays(daysPerWeek, goal);
   const splitType =
@@ -792,7 +1190,11 @@ export async function buildProgramDraft(
     const session = split[i];
     const prepDensity = densityFromMinutes(sessionMinutes);
     const kind = session.kind as PrepSessionKind;
-    const workSlots = workSlotsForKind(session.kind, sessionMinutes);
+    const workSlots = tagSameDaySquatHinge(
+      workSlotsForKind(session.kind, sessionMinutes, {
+        extraLowerVolume: goal === "hypertrophy" && daysPerWeek <= 2,
+      })
+    );
     const warmupSlots = warmupSlotsForSession(kind, prepDensity, {
       preferMobility,
     }).map(prepSlotToBuilderSlot);
@@ -805,14 +1207,20 @@ export async function buildProgramDraft(
     const dayPatternCounts = new Map<string, number>();
     const exercises: BuiltExercise[] = [];
     let sort = 0;
+    let workSlotIndex = 0;
 
     // Prepend up to 2 assessment/history corrective mobility warm-ups per day
-    const correctiveWarmups = buildCorrectiveWarmups({
-      correctives,
-      pool: available,
-      usedIds: new Set([...dayUsed, ...usedGlobal]),
-      limit: densityForMinutes(sessionMinutes) === "short" ? 1 : 2,
-    });
+    const dayLimit = densityForMinutes(sessionMinutes) === "short" ? 1 : 2;
+    const rotated = rotatedCorrectives?.get(i + 1) ?? [];
+    const correctiveWarmups =
+      rotated.length > 0
+        ? prescribedToWarmups(rotated, dayLimit)
+        : buildCorrectiveWarmups({
+            correctives,
+            pool: available,
+            usedIds: new Set([...dayUsed, ...usedGlobal]),
+            limit: dayLimit,
+          });
     for (const wu of correctiveWarmups) {
       if (wu.exerciseId) {
         dayUsed.add(wu.exerciseId);
@@ -836,7 +1244,8 @@ export async function buildProgramDraft(
         goal,
         pattern: primaryPattern,
         isWarmup: isPrep,
-        sortOrder: sort,
+        // Scheme rotation uses work-slot index, not global sort after RAMP/correctives
+        sortOrder: isPrep ? 0 : workSlotIndex,
         experience,
       });
 
@@ -883,6 +1292,7 @@ export async function buildProgramDraft(
                 : undefined,
           };
 
+          let groupAdded = 0;
           groupSpec.members.forEach((member, mi) => {
             slotSalt += 1;
             let ex = pickExercise(
@@ -893,7 +1303,10 @@ export async function buildProgramDraft(
               variationSeed,
               slotSalt,
               constraintProfile,
-              dayPatternCounts
+              dayPatternCounts,
+              gatedCtx,
+              !!gatedCtx,
+              pinnedExerciseIds
             );
             if (!ex) {
               ex = pickExercise(
@@ -904,7 +1317,10 @@ export async function buildProgramDraft(
                 variationSeed,
                 slotSalt + 50,
                 constraintProfile,
-                dayPatternCounts
+                dayPatternCounts,
+                gatedCtx,
+                false,
+                pinnedExerciseIds
               );
             }
             if (!ex) {
@@ -917,10 +1333,14 @@ export async function buildProgramDraft(
                 variationSeed,
                 slotSalt + 77,
                 constraintProfile,
-                dayPatternCounts
+                dayPatternCounts,
+                gatedCtx,
+                false,
+                pinnedExerciseIds
               );
             }
             if (!ex) return;
+            groupAdded += 1;
 
             dayUsed.add(ex.id);
             usedGlobal.add(ex.id);
@@ -1016,6 +1436,7 @@ export async function buildProgramDraft(
               groupRole: member.role,
             });
           });
+          if (!isPrep && groupAdded > 0) workSlotIndex += 1;
           continue;
         }
       }
@@ -1035,7 +1456,10 @@ export async function buildProgramDraft(
         variationSeed,
         slotSalt,
         constraintProfile,
-        isPrep ? undefined : dayPatternCounts
+        isPrep ? undefined : dayPatternCounts,
+        gatedCtx,
+        !isPrep && !!gatedCtx,
+        pinnedExerciseIds
       );
       if (!ex) {
         ex = pickExercise(
@@ -1046,7 +1470,10 @@ export async function buildProgramDraft(
           variationSeed,
           slotSalt + 99,
           constraintProfile,
-          isPrep ? undefined : dayPatternCounts
+          isPrep ? undefined : dayPatternCounts,
+          gatedCtx,
+          false,
+          pinnedExerciseIds
         );
       }
       if (!ex) continue;
@@ -1068,7 +1495,9 @@ export async function buildProgramDraft(
         isPrep && role
           ? prepPrescription(role as import("@/lib/session-prep").PrepRole)
           : null;
-      const rx = prepRx || prescription(goal, ex.movementPattern, experience);
+      const rx =
+        prepRx ||
+        prescription(goal, ex.movementPattern, experience, slot.tag);
       const planned = buildSchemePlan(
         schemeId,
         {
@@ -1175,6 +1604,7 @@ export async function buildProgramDraft(
         restBetweenRoundsSec: null,
         groupRole: null,
       });
+      if (!isPrep) workSlotIndex += 1;
     }
 
     // Science order: warm-up → power → primary compounds (bench before OHP) →
@@ -1192,6 +1622,50 @@ export async function buildProgramDraft(
       focus: session.focus,
       exercises: ordered,
     });
+  }
+
+  if (pinnedExerciseIds.length && days.length) {
+    const leftover = leftoverPinnedAvailable(
+      pinnedExerciseIds,
+      usedGlobal,
+      available,
+      gatedCtx
+    ).slice(0, 4);
+    if (leftover.length) {
+      const day0 = days[0];
+      let sort = day0.exercises.length;
+      let leftoverWorkIndex = 0;
+      const dayHasPattern = (pattern: string) =>
+        day0.exercises.some(
+          (row) => !row.isWarmup && row.movementPattern === pattern
+        );
+      for (const ex of leftover) {
+        usedGlobal.add(ex.id);
+        const pat = ex.movementPattern;
+        const secondLower =
+          (pat === "squat" || pat === "hinge") && dayHasPattern(pat);
+        day0.exercises.push(
+          leftoverPinnedRow(
+            ex,
+            goal,
+            experience,
+            mesoPlan,
+            sort++,
+            secondLower ? "hypertrophy" : undefined,
+            leftoverWorkIndex++
+          )
+        );
+      }
+      const session0 = split[0];
+      day0.exercises = sortExercisesForSession(day0.exercises, {
+        sessionKind: session0.kind,
+        focus: session0.focus,
+        goal,
+      });
+      day0.exercises.forEach((row, idx) => {
+        row.sortOrder = idx;
+      });
+    }
   }
 
   const gLabel = goalLabel(goal);
@@ -1213,43 +1687,42 @@ export async function buildProgramDraft(
     : sessionMinutes;
 
   const generationNotes: string[] = [];
-  generationNotes.push(
-    `Equipment-aware: ${available.length} available exercises in the org library.`
-  );
-  generationNotes.push(
-    `Mesocycle week ${mesoWeek}${mesoPlan.isDeload ? " (deload)" : ""}: ${mesoPlan.notes || "standard loading"}.`
-  );
-  // preferMobility already includes goal === "mobility"
-  generationNotes.push(
-    "Prep: corrective (if any) → raise/activate/mobilize warm-up (RAMP) → main work → cool-down downshift + lengthen."
-  );
-  generationNotes.push(
-    "Exercise order: power → primary compounds (e.g. bench before overhead press) → secondary → isolation → core/carry."
-  );
-  if (preferMobility) {
+  if (goal === "mobility") {
     generationNotes.push(
-      "Mobility emphasis: extra mobilize/activate work in the warm-up."
-    );
-  } else if (density === "long") {
-    generationNotes.push(
-      `Long sessions (~${sessionMinutes} min): fuller warm-up + cool-down; extra accessory where the split allows.`
-    );
-  } else if (density === "short") {
-    generationNotes.push(
-      `Short sessions (~${sessionMinutes} min): lean main lifts; warm-up trimmed to activation (+ mobilize if mobility emphasis); brief cool-down still included.`
+      "Mobility sessions keep volume low and rest short so range-of-motion work stays quality, not fatigue."
     );
   } else {
     generationNotes.push(
-      `Standard session length (~${sessionMinutes} min): structured warm-up and cool-down around main lifts.`
+      "Frequency: squat, hinge, push, and pull hit ≥2×/week when the split allows (Schoenfeld hypertrophic frequency)."
     );
   }
-  if (correctiveIds.length) {
+  generationNotes.push(
+    "Rest: compounds ~3 min on strength / ~2 min hypertrophy; accessories 45–90s (NSCA / ACSM rest intervals)."
+  );
+  if (/beginner/i.test(experience)) {
     generationNotes.push(
-      `Corrective warm-ups: ${correctiveIds.length} prescription(s) from history/assessments (up to 2/day; 1 if short session).`
+      "Novice (NSCA): straight sets, pyramid, or tempo only — no drop sets, myo-reps, or rest-pause."
     );
-  } else if (constraintProfile.injuryFlags.length) {
+  } else {
     generationNotes.push(
-      `Constraint flags active: ${constraintProfile.injuryFlags.join(", ")}.`
+      "Order: power → primary compounds (bench before overhead) → accessories → core/carry."
+    );
+  }
+  if (split.some((s) => s.kind === "full_c" || s.kind === "lower" || s.kind === "legs")) {
+    generationNotes.push(
+      "Same-day squat + hinge: the second lower pattern is volume/technique, not a second heavy primary."
+    );
+  } else if (goal === "hypertrophy" && daysPerWeek <= 2) {
+    generationNotes.push(
+      "2-day hypertrophy: extra squat and hinge volume slots so both patterns get a second weekly exposure."
+    );
+  } else if (smarterEval?.deficiencies.length) {
+    generationNotes.push(
+      `Smarter engine: ${smarterEval.deficiencies.length} deficienc${smarterEval.deficiencies.length === 1 ? "y" : "ies"} → Mesocycle 1 ${smarterEval.mesocyclePhase}.`
+    );
+  } else if (correctiveIds.length || rotatedCorrectives?.size) {
+    generationNotes.push(
+      `Corrective warm-ups: rotated per day (cap ${densityForMinutes(sessionMinutes) === "short" ? 1 : 2}/day), safety-gated.`
     );
   }
 
@@ -1284,6 +1757,9 @@ export async function buildProgramDraft(
       constraintSummary,
       mesocycle: mesoPlan,
       mesocycleWeek: mesoWeek,
+      mesocyclePhase: smarterEval?.mesocyclePhase ?? null,
+      rulesFired: smarterEval?.rulesFired ?? [],
+      detectedDeficiencies: smarterEval?.deficiencies ?? [],
       correctiveIds,
       // UI-facing enrichment
       splitRationale,
@@ -1292,6 +1768,9 @@ export async function buildProgramDraft(
       estimatedMinutesByDay: estimatedMinutesPerDay,
       sessionDensity: density,
       generationNotes: generationNotes.slice(0, 4),
+      pinnedExerciseIds,
+      suppressedDeficiencySlugs,
+      facilityEquipmentMode: input.facilityEquipmentMode ?? "org",
     },
   };
 }

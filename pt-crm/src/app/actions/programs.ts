@@ -6,7 +6,11 @@ import { getDb } from "@/db";
 import {
   assessmentTemplates,
   clientAssessments,
+  clientDeficiencies,
+  clientMeasurements,
   clients,
+  mesocycles,
+  programCorrectivePrescriptions,
   programDays,
   programExercises,
   programs,
@@ -51,8 +55,15 @@ import {
   nextProgramExerciseSortOrder,
 } from "@/lib/program-exercise-add";
 import { ensureSetLogs } from "@/lib/session-sets";
+import { resolveFacilityEquipmentIdsAction } from "@/app/actions/client-equipment";
 import { getClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
+import {
+  evaluateClientRules,
+  isInsufficientSafeExercisesError,
+  measurementsFromRow,
+  type ClientEvaluationContext,
+} from "@/lib/smarter-rule-engine";
 
 type BaselineRx = {
   sets: number;
@@ -75,7 +86,66 @@ export type CreateProgramInput = {
   mesocycleWeek?: number;
   /** Passed on Regenerate so exercise picks diversify */
   variationSeed?: number;
+  facilityEquipmentMode?: "org" | "client" | "combined";
+  facilityEquipmentIds?: string[];
+  pinnedExerciseIds?: string[];
+  suppressedDeficiencySlugs?: string[];
 };
+
+type FacilityEquipmentMode = NonNullable<CreateProgramInput["facilityEquipmentMode"]>;
+
+function asStringList(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const out = value.filter((x): x is string => typeof x === "string" && x.length > 0);
+  return out.length ? out : undefined;
+}
+
+function asFacilityEquipmentMode(value: unknown): FacilityEquipmentMode | undefined {
+  return value === "org" || value === "client" || value === "combined"
+    ? value
+    : undefined;
+}
+
+function builderPinFields(source: {
+  facilityEquipmentMode?: FacilityEquipmentMode;
+  facilityEquipmentIds?: string[];
+  pinnedExerciseIds?: string[];
+  suppressedDeficiencySlugs?: string[];
+}): Pick<
+  ProgramBuilderInput,
+  | "facilityEquipmentMode"
+  | "facilityEquipmentIds"
+  | "pinnedExerciseIds"
+  | "suppressedDeficiencySlugs"
+> {
+  return {
+    facilityEquipmentMode: source.facilityEquipmentMode,
+    facilityEquipmentIds: source.facilityEquipmentIds,
+    pinnedExerciseIds: source.pinnedExerciseIds,
+    suppressedDeficiencySlugs: source.suppressedDeficiencySlugs,
+  };
+}
+
+function builderPinFieldsFromMeta(meta: Record<string, unknown>) {
+  return builderPinFields({
+    facilityEquipmentMode: asFacilityEquipmentMode(meta.facilityEquipmentMode),
+    facilityEquipmentIds: asStringList(meta.facilityEquipmentIds),
+    pinnedExerciseIds: asStringList(meta.pinnedExerciseIds),
+    suppressedDeficiencySlugs: asStringList(meta.suppressedDeficiencySlugs),
+  });
+}
+
+async function withResolvedFacilityIds(
+  clientId: string | null | undefined,
+  fields: ReturnType<typeof builderPinFields>
+): Promise<ReturnType<typeof builderPinFields>> {
+  const mode = fields.facilityEquipmentMode ?? "org";
+  if (!clientId || fields.facilityEquipmentIds?.length || mode === "org") {
+    return fields;
+  }
+  const ids = await resolveFacilityEquipmentIdsAction(clientId, mode);
+  return { ...fields, facilityEquipmentIds: ids.length ? ids : undefined };
+}
 
 /** Latest assessment per template for a client (org-scoped via client load). */
 async function loadAssessmentHintsForClient(
@@ -107,6 +177,114 @@ async function loadAssessmentHintsForClient(
     });
   }
   return Array.from(bySlug.values());
+}
+
+async function loadEvaluationContextForClient(
+  client: {
+    id: string;
+    sex?: string | null;
+    injuries?: string | null;
+    contraindications?: string | null;
+    medicalHistory?: string | null;
+    goals?: string | null;
+    experienceLevel?: string | null;
+  },
+  hints: AssessmentHint[]
+): Promise<ClientEvaluationContext> {
+  const db = await getDb();
+  const [meas] = await db
+    .select()
+    .from(clientMeasurements)
+    .where(eq(clientMeasurements.clientId, client.id))
+    .orderBy(desc(clientMeasurements.takenAt))
+    .limit(1);
+
+  return {
+    client: {
+      id: client.id,
+      sex: client.sex,
+      injuriesText: client.injuries || "",
+      contraindicationsText: client.contraindications || "",
+      medicalHistoryText: client.medicalHistory || "",
+      goalsText: client.goals || "",
+      experienceLevel: client.experienceLevel || undefined,
+    },
+    measurements: meas ? measurementsFromRow(meas) : null,
+    assessments: hints.map((h) => ({
+      templateSlug: h.templateSlug,
+      results: h.results || {},
+      summary: h.summary,
+    })),
+  };
+}
+
+async function persistSmarterArtifacts(opts: {
+  // drizzle transaction — keep duck-typed to avoid leaking PGlite tx generics
+  tx: {
+    insert: (table: unknown) => { values: (v: unknown) => unknown };
+    update: (table: unknown) => {
+      set: (v: unknown) => { where: (c: unknown) => unknown };
+    };
+  };
+  organizationId: string;
+  clientId: string | null | undefined;
+  programId: string;
+  draftMeta: Record<string, unknown> | null | undefined;
+}) {
+  const defs = (opts.draftMeta?.detectedDeficiencies || []) as Array<{
+    slug: string;
+    name?: string;
+    severity?: string;
+    source?: string;
+    triggerDescription?: string;
+    affectedSide?: string;
+  }>;
+  const phase = String(opts.draftMeta?.mesocyclePhase || "general_prep");
+  const mesoId = id("meso");
+  await opts.tx.insert(mesocycles).values({
+    id: mesoId,
+    programId: opts.programId,
+    mesocycleNumber: 1,
+    phase,
+    name:
+      phase === "corrective_prep"
+        ? "Mesocycle 1 — Corrective prep"
+        : `Mesocycle 1 — ${phase.replace(/_/g, " ")}`,
+    durationWeeks: 4,
+    status: "active",
+    targetDeficiencies: defs.map((d) => d.slug),
+  });
+  await opts.tx
+    .update(programs)
+    .set({ currentMesocycleId: mesoId })
+    .where(eq(programs.id, opts.programId));
+
+  if (!opts.clientId || !defs.length) return;
+
+  for (const d of defs) {
+    const defId = id("cdef");
+    await opts.tx.insert(clientDeficiencies).values({
+      id: defId,
+      organizationId: opts.organizationId,
+      clientId: opts.clientId,
+      deficiencySlug: d.slug,
+      source: d.source || "assessment",
+      severity: d.severity || "moderate",
+      status: "active",
+      affectedSide: d.affectedSide || "bilateral",
+      notes: d.triggerDescription || null,
+    });
+    await opts.tx.insert(programCorrectivePrescriptions).values({
+      id: id("pcp"),
+      programId: opts.programId,
+      mesocycleId: mesoId,
+      clientDeficiencyId: defId,
+      deficiencySlug: d.slug,
+      prescribedExerciseName: d.name || d.slug,
+      placement: "warmup",
+      rationale: d.triggerDescription || null,
+    });
+  }
 }
 
 function toExerciseLike(
@@ -264,6 +442,7 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
   let clientGoals: string | null = null;
   let contraindications: string | null = null;
   let assessmentHints: AssessmentHint[] = [];
+  let evaluationContext: ClientEvaluationContext | null = null;
   let experience = input.experienceLevel;
 
   if (input.clientId) {
@@ -274,6 +453,7 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
     contraindications = c.contraindications ?? null;
     experience = experience || c.experienceLevel || undefined;
     assessmentHints = await loadAssessmentHintsForClient(c.id);
+    evaluationContext = await loadEvaluationContextForClient(c, assessmentHints);
   }
 
   const builderInput: ProgramBuilderInput = {
@@ -291,6 +471,8 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
     mesocycleWeek: input.mesocycleWeek,
     assessmentHints,
     variationSeed: input.variationSeed,
+    evaluationContext,
+    ...(await withResolvedFacilityIds(input.clientId, builderPinFields(input))),
   };
 
   const draft = await buildProgramDraft(builderInput);
@@ -345,6 +527,7 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
       status: input.activate ? "active" : "draft",
       notes: draft.notes,
       generationMeta: draft.meta,
+      facilityEquipmentMode: asFacilityEquipmentMode(input.facilityEquipmentMode) ?? "org",
     });
 
     if (daysToInsert.length > 0) {
@@ -353,6 +536,13 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
     if (exercisesToInsert.length > 0) {
       await tx.insert(programExercises).values(exercisesToInsert);
     }
+    await persistSmarterArtifacts({
+      tx: tx as never,
+      organizationId: session.organizationId,
+      clientId: input.clientId,
+      programId,
+      draftMeta: draft.meta as Record<string, unknown>,
+    });
   });
 
   revalidatePath("/programs");
@@ -1279,6 +1469,7 @@ export async function previewProgramAction(input: CreateProgramInput) {
   let clientGoals: string | null = null;
   let contraindications: string | null = null;
   let assessmentHints: AssessmentHint[] = [];
+  let evaluationContext: ClientEvaluationContext | null = null;
   let experience = input.experienceLevel;
 
   if (input.clientId) {
@@ -1289,25 +1480,59 @@ export async function previewProgramAction(input: CreateProgramInput) {
       contraindications = c.contraindications ?? null;
       experience = experience || c.experienceLevel || undefined;
       assessmentHints = await loadAssessmentHintsForClient(c.id);
+      evaluationContext = await loadEvaluationContextForClient(c, assessmentHints);
     }
   }
 
-  return buildProgramDraft({
-    organizationId: session.organizationId,
-    title: input.title,
-    goal: input.goal,
-    daysPerWeek: input.daysPerWeek,
-    sessionMinutes: input.sessionMinutes,
-    experienceLevel: experience,
-    notes: input.notes,
-    clientInjuries,
-    clientGoals,
-    contraindications,
-    preferMobility: input.preferMobility,
-    mesocycleWeek: input.mesocycleWeek,
-    assessmentHints,
-    variationSeed: input.variationSeed,
-  });
+  try {
+    return await buildProgramDraft({
+      organizationId: session.organizationId,
+      title: input.title,
+      goal: input.goal,
+      daysPerWeek: input.daysPerWeek,
+      sessionMinutes: input.sessionMinutes,
+      experienceLevel: experience,
+      notes: input.notes,
+      clientInjuries,
+      clientGoals,
+      contraindications,
+      preferMobility: input.preferMobility,
+      mesocycleWeek: input.mesocycleWeek,
+      assessmentHints,
+      variationSeed: input.variationSeed,
+      evaluationContext,
+      ...(await withResolvedFacilityIds(input.clientId, builderPinFields(input))),
+    });
+  } catch (err) {
+    if (isInsufficientSafeExercisesError(err)) {
+      throw new Error(
+        `INSUFFICIENT_SAFE_EXERCISES:${err.pattern}:${err.secondaryTried.join(",")}`
+      );
+    }
+    throw err;
+  }
+}
+
+export async function evaluateClientRulesAction(clientId: string, goal = "general") {
+  const session = await requireSession();
+  const c = await getClientInOrg(clientId, session.organizationId);
+  if (!c) throw new Error("Client not found");
+  const hints = await loadAssessmentHintsForClient(c.id);
+  const ctx = await loadEvaluationContextForClient(c, hints);
+  return evaluateClientRules(ctx, goal);
+}
+
+/** Plan alias — same create path, smarter persist already wired. */
+export async function createSmarterProgramAction(input: CreateProgramInput) {
+  return createProgramFromWizardAction(input);
+}
+
+export async function previewSmarterProgramAction(input: CreateProgramInput) {
+  return previewProgramAction(input);
+}
+
+export async function applySmarterCorrectivesAction(programId: string) {
+  return insertCorrectivesAction(programId);
 }
 
 /** Rank substitute bank exercises for a program exercise row. */
@@ -1592,6 +1817,7 @@ export async function regenerateProgramInPlaceAction(
   let contraindications: string | null = null;
   let experience = program.experienceLevel || undefined;
   let assessmentHints: AssessmentHint[] = [];
+  let evaluationContext: ClientEvaluationContext | null = null;
 
   if (program.clientId) {
     const c = await getClientInOrg(program.clientId, session.organizationId);
@@ -1601,6 +1827,7 @@ export async function regenerateProgramInPlaceAction(
       contraindications = c.contraindications ?? null;
       experience = experience || c.experienceLevel || undefined;
       assessmentHints = await loadAssessmentHintsForClient(c.id);
+      evaluationContext = await loadEvaluationContextForClient(c, assessmentHints);
     }
   }
 
@@ -1638,6 +1865,11 @@ export async function regenerateProgramInPlaceAction(
     mesocycleWeek: week,
     assessmentHints,
     variationSeed,
+    evaluationContext,
+    ...(await withResolvedFacilityIds(
+      program.clientId,
+      builderPinFieldsFromMeta(prevMeta)
+    )),
   });
 
   const daysToInsert = draft.days.map((day) => ({
@@ -1775,6 +2007,7 @@ export async function regenerateProgramDayAction(
   let contraindications: string | null = null;
   let experience = program.experienceLevel || undefined;
   let assessmentHints: AssessmentHint[] = [];
+  let evaluationContext: ClientEvaluationContext | null = null;
 
   if (program.clientId) {
     const c = await getClientInOrg(program.clientId, session.organizationId);
@@ -1784,6 +2017,7 @@ export async function regenerateProgramDayAction(
       contraindications = c.contraindications ?? null;
       experience = experience || c.experienceLevel || undefined;
       assessmentHints = await loadAssessmentHintsForClient(c.id);
+      evaluationContext = await loadEvaluationContextForClient(c, assessmentHints);
     }
   }
 
@@ -1823,6 +2057,11 @@ export async function regenerateProgramDayAction(
     mesocycleWeek: week,
     assessmentHints,
     variationSeed,
+    evaluationContext,
+    ...(await withResolvedFacilityIds(
+      program.clientId,
+      builderPinFieldsFromMeta(prevMeta)
+    )),
   });
 
   const builtDay =

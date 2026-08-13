@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 17; // 17 = missing single & composite query indexes
+const SCHEMA_VERSION = 21; // 21 = partial unique clients(org, email)
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -471,8 +471,10 @@ async function ensureSchema() {
     ALTER TABLE client_appointments ADD COLUMN IF NOT EXISTS session_id TEXT;
     ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS appointment_id TEXT;
     ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS package_id TEXT;
+    ALTER TABLE client_appointments ADD COLUMN IF NOT EXISTS package_id TEXT;
     CREATE INDEX IF NOT EXISTS appointments_session_idx ON client_appointments(session_id);
     CREATE INDEX IF NOT EXISTS sessions_appointment_idx ON training_sessions(appointment_id);
+    CREATE INDEX IF NOT EXISTS appointments_package_idx ON client_appointments(package_id);
     -- User profile (SCHEMA 14)
     ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS title TEXT;
@@ -515,6 +517,113 @@ async function ensureSchema() {
     CREATE INDEX IF NOT EXISTS conversations_user_idx ON conversations(user_id);
     CREATE INDEX IF NOT EXISTS conversations_client_idx ON conversations(client_id);
     CREATE INDEX IF NOT EXISTS conversations_org_updated_idx ON conversations(organization_id, updated_at);
+
+    -- Smarter generator (SCHEMA 19)
+    ALTER TABLE exercises ADD COLUMN IF NOT EXISTS exercise_category TEXT NOT NULL DEFAULT 'primary';
+    ALTER TABLE exercises ADD COLUMN IF NOT EXISTS contraindications JSONB NOT NULL DEFAULT '[]';
+    ALTER TABLE programs ADD COLUMN IF NOT EXISTS current_mesocycle_id TEXT;
+    ALTER TABLE programs ADD COLUMN IF NOT EXISTS facility_equipment_mode TEXT NOT NULL DEFAULT 'org';
+
+    CREATE TABLE IF NOT EXISTS deficiency_catalog (
+      id TEXT PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'postural',
+      description TEXT,
+      assessment_criteria JSONB,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    INSERT INTO deficiency_catalog (id, slug, name, category, description)
+    VALUES
+      ('def_ucs', 'upper_cross_syndrome', 'Upper Cross Syndrome', 'postural', 'Tight pecs/upper traps with weak deep neck flexors and lower traps.'),
+      ('def_lcs', 'lower_cross_syndrome', 'Lower Cross Syndrome', 'postural', 'Anterior pelvic tilt: tight hip flexors/erectors, weak glutes/abdominals.'),
+      ('def_ankle_df', 'ankle_mobility_restriction', 'Ankle Dorsiflexion Restriction', 'mobility', 'Limited talocrural DF that limits squat depth and landing.'),
+      ('def_knee_valgus', 'knee_valgus_collapse', 'Knee Valgus Collapse', 'motor_control', 'Medial knee collapse under load — hip abductor/rotator control.'),
+      ('def_forward_head', 'forward_head_posture', 'Forward Head Posture', 'postural', 'Anterior head carriage / cervical extension bias.'),
+      ('def_high_bmi', 'high_bmi_joint_stress', 'High BMI & Joint Loading Risk', 'joint_stress', 'Elevated BMI or WHR — scale axial load and impact.'),
+      ('def_ab_adiposity', 'abdominal_adiposity_core_restriction', 'Abdominal Adiposity & Core Restriction', 'mobility', 'High waist/WHR — prefer anti-rotation over deep spinal flexion.')
+    ON CONFLICT (slug) DO NOTHING;
+
+    CREATE TABLE IF NOT EXISTS client_deficiencies (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      deficiency_slug TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'assessment',
+      assessment_id TEXT REFERENCES client_assessments(id) ON DELETE SET NULL,
+      severity TEXT NOT NULL DEFAULT 'moderate',
+      status TEXT NOT NULL DEFAULT 'active',
+      affected_side TEXT DEFAULT 'bilateral',
+      notes TEXT,
+      identified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      resolved_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS client_deficiencies_org_client_status_idx ON client_deficiencies(organization_id, client_id, status);
+    CREATE INDEX IF NOT EXISTS client_deficiencies_client_slug_idx ON client_deficiencies(client_id, deficiency_slug);
+
+    CREATE TABLE IF NOT EXISTS client_equipment (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      equipment_id TEXT NOT NULL REFERENCES equipment_items(id) ON DELETE CASCADE,
+      available BOOLEAN NOT NULL DEFAULT TRUE,
+      location_label TEXT DEFAULT 'home_gym'
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS client_equipment_uidx ON client_equipment(client_id, equipment_id, location_label);
+    CREATE INDEX IF NOT EXISTS client_equipment_client_idx ON client_equipment(client_id);
+
+    CREATE TABLE IF NOT EXISTS exercise_deficiency_mappings (
+      id TEXT PRIMARY KEY,
+      exercise_id TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+      deficiency_slug TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'corrective',
+      effectiveness_rank INTEGER NOT NULL DEFAULT 1,
+      notes TEXT
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS ex_def_mapping_uidx ON exercise_deficiency_mappings(exercise_id, deficiency_slug);
+    CREATE INDEX IF NOT EXISTS ex_def_mapping_slug_idx ON exercise_deficiency_mappings(deficiency_slug);
+
+    CREATE TABLE IF NOT EXISTS exercise_equipment (
+      id TEXT PRIMARY KEY,
+      exercise_id TEXT NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+      equipment_id TEXT NOT NULL REFERENCES equipment_items(id) ON DELETE CASCADE,
+      is_required BOOLEAN NOT NULL DEFAULT TRUE
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS ex_eq_uidx ON exercise_equipment(exercise_id, equipment_id);
+    CREATE INDEX IF NOT EXISTS ex_eq_equipment_idx ON exercise_equipment(equipment_id);
+
+    CREATE TABLE IF NOT EXISTS mesocycles (
+      id TEXT PRIMARY KEY,
+      program_id TEXT NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+      mesocycle_number INTEGER NOT NULL DEFAULT 1,
+      phase TEXT NOT NULL DEFAULT 'corrective_prep',
+      name TEXT NOT NULL,
+      duration_weeks INTEGER NOT NULL DEFAULT 4,
+      status TEXT NOT NULL DEFAULT 'active',
+      target_deficiencies JSONB NOT NULL DEFAULT '[]',
+      starts_at TIMESTAMPTZ,
+      ends_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS mesocycles_program_number_uidx ON mesocycles(program_id, mesocycle_number);
+    CREATE INDEX IF NOT EXISTS mesocycles_program_status_idx ON mesocycles(program_id, status);
+
+    CREATE TABLE IF NOT EXISTS program_corrective_prescriptions (
+      id TEXT PRIMARY KEY,
+      program_id TEXT NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+      mesocycle_id TEXT REFERENCES mesocycles(id) ON DELETE SET NULL,
+      client_deficiency_id TEXT REFERENCES client_deficiencies(id) ON DELETE SET NULL,
+      deficiency_slug TEXT NOT NULL,
+      exercise_id TEXT REFERENCES exercises(id) ON DELETE SET NULL,
+      prescribed_exercise_name TEXT NOT NULL,
+      placement TEXT NOT NULL DEFAULT 'warmup',
+      prescribed_sets INTEGER NOT NULL DEFAULT 2,
+      prescribed_reps TEXT NOT NULL DEFAULT '10-12',
+      status TEXT NOT NULL DEFAULT 'prescribed',
+      rationale TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS prog_corr_program_idx ON program_corrective_prescriptions(program_id);
+    CREATE INDEX IF NOT EXISTS prog_corr_deficiency_idx ON program_corrective_prescriptions(client_deficiency_id);
     CREATE INDEX IF NOT EXISTS messages_conv_created_idx ON messages(conversation_id, created_at);
     CREATE INDEX IF NOT EXISTS playbooks_org_idx ON playbooks(organization_id);
     CREATE INDEX IF NOT EXISTS org_equipment_equipment_idx ON org_equipment(equipment_id);
@@ -533,6 +642,77 @@ async function ensureSchema() {
     CREATE INDEX IF NOT EXISTS session_logs_exercise_idx ON session_exercise_logs(exercise_id);
     CREATE INDEX IF NOT EXISTS session_logs_program_exercise_idx ON session_exercise_logs(program_exercise_id);
     CREATE INDEX IF NOT EXISTS session_logs_session_sort_idx ON session_exercise_logs(session_id, sort_order);
+
+    -- Client portal (SCHEMA 20)
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS notification_preferences JSONB;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ;
+    DROP INDEX IF EXISTS clients_org_email_uidx;
+    CREATE UNIQUE INDEX IF NOT EXISTS clients_org_email_uidx
+      ON clients(organization_id, email)
+      WHERE email IS NOT NULL AND btrim(email) <> '';
+    ALTER TABLE client_invoices ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ;
+    ALTER TABLE client_invoices ADD COLUMN IF NOT EXISTS payment_url TEXT;
+
+    CREATE TABLE IF NOT EXISTS client_sessions (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      ip_address TEXT,
+      user_agent TEXT,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS client_sessions_org_client_idx ON client_sessions(organization_id, client_id);
+    CREATE INDEX IF NOT EXISTS client_sessions_expires_idx ON client_sessions(expires_at);
+
+    CREATE TABLE IF NOT EXISTS client_otps (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      code_hash TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      ip_address TEXT,
+      user_agent TEXT,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS client_otps_email_org_idx ON client_otps(email, organization_id);
+    CREATE INDEX IF NOT EXISTS client_otps_client_idx ON client_otps(client_id);
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT,
+      read_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS notifications_client_read_idx ON notifications(client_id, read_at);
+    CREATE INDEX IF NOT EXISTS notifications_org_client_idx ON notifications(organization_id, client_id);
+
+    CREATE TABLE IF NOT EXISTS client_documents (
+      id TEXT PRIMARY KEY,
+      organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      document_version TEXT NOT NULL DEFAULT '1',
+      document_hash TEXT,
+      signature_data TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      signed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS client_documents_client_status_idx ON client_documents(client_id, status);
+    CREATE INDEX IF NOT EXISTS client_documents_org_client_idx ON client_documents(organization_id, client_id);
   `);
 }
 

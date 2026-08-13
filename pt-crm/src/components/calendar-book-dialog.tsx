@@ -583,8 +583,9 @@ export function CalendarBookDialog({
                 Pricing
               </p>
               <p className="mb-2 text-[11px] leading-snug text-zinc-600">
-                Pack credit burns when you complete the floor session — not when
-                you book.
+                Pack credit burns when you complete the floor session or close
+                the booking — not when you book. Linked booking + floor log
+                share one debit (no double charge when linked).
               </p>
               <div className="space-y-2">
                 {billOption(
@@ -661,17 +662,17 @@ export function CalendarBookDialog({
                     Mark paid now
                   </label>
                   <p className="text-[11px] leading-snug text-zinc-600">
-                    Unpaid invoices show on Needs you. Pack burn still happens
-                    only when you complete the floor session (if they have a
-                    pack).
+                    Unpaid invoices show on Needs you. Pack still burns on floor
+                    complete or Close booking when they have an active pack
+                    (shared debit when booking and floor log are linked).
                   </p>
                 </div>
               )}
 
               {billingMode === "pack" && hasPackCredit && (
                 <p className="mt-2 text-[11px] leading-snug text-zinc-600">
-                  No invoice created. Completing the session on the floor burns
-                  one pack credit.
+                  No invoice created. Floor complete or Close booking burns one
+                  pack credit (not at book time; linked paths share one debit).
                 </p>
               )}
             </div>

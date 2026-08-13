@@ -60,7 +60,13 @@ export function AssessmentFormFields({
                 inputMode="decimal"
                 value={values[f.key] || ""}
                 onChange={(e) => onChange(f.key, e.target.value)}
-                placeholder="0"
+                placeholder={
+                  /sec|hold/i.test(f.key)
+                    ? "sec"
+                    : /cm|gap|over/i.test(f.key)
+                      ? "cm"
+                      : ""
+                }
               />
             ) : isNotes ? (
               <Input

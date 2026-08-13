@@ -54,12 +54,16 @@ export function ProgramNewChooser({
               Auto-design
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">
-              Wizard fills split, schemes, and bank exercises from floor gear.
-              Preview balance, then save — a full week in minutes.
+              Fills a week from the exercise bank using the client&apos;s
+              screens, measurements, injuries, and chosen gear (floor, home, or
+              both). Preview, pin lifts, then save.
             </p>
             <ul className="mt-3 space-y-1 text-[11px] text-zinc-600">
-              <li>· Constraints & correctives when a client is set</li>
-              <li>· Mesocycle + set schemes included</li>
+              <li>
+                · Screens + measurements → corrective warm-ups and safer
+                main-lift swaps
+              </li>
+              <li>· Floor / home / combined gear; pin exercises you want to keep</li>
             </ul>
             <p className="mt-3 text-xs font-medium text-emerald-400 group-hover:underline">
               Open wizard →

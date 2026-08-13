@@ -107,6 +107,15 @@ export const clients = pgTable(
     medications: text("medications"),
     contraindications: text("contraindications"),
     tags: text("tags"),
+    avatarUrl: text("avatar_url"),
+    notificationPreferences: jsonb("notification_preferences").$type<{
+      sessionReminders?: boolean;
+      invoiceAlerts?: boolean;
+      programUpdates?: boolean;
+    } | null>(),
+    onboardingCompletedAt: timestamp("onboarding_completed_at", {
+      withTimezone: true,
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -114,6 +123,7 @@ export const clients = pgTable(
     index("clients_org_idx").on(t.organizationId),
     index("clients_name_idx").on(t.organizationId, t.firstName, t.lastName),
     index("clients_org_status_idx").on(t.organizationId, t.status),
+    // Unique (org, email) when email is non-empty is applied in ensureSchema (partial index).
   ]
 );
 
@@ -264,6 +274,13 @@ export const clientAppointments = pgTable(
     location: text("location"),
     /** Linked floor session when started from this booking */
     sessionId: text("session_id"),
+    /**
+     * Pack that was debited for this appointment (shared debit key with floor).
+     * Set when calendar complete or floor complete burns a credit — prevents double burn.
+     */
+    packageId: text("package_id").references(() => clientPackages.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -272,6 +289,7 @@ export const clientAppointments = pgTable(
     index("appointments_session_idx").on(t.sessionId),
     index("appointments_status_idx").on(t.status),
     index("appointments_client_status_idx").on(t.clientId, t.status),
+    index("appointments_package_idx").on(t.packageId),
   ]
 );
 
@@ -301,6 +319,8 @@ export const clientInvoices = pgTable(
     }),
     issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    paymentUrl: text("payment_url"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -492,6 +512,10 @@ export const exercises = pgTable(
     equipmentIds: jsonb("equipment_ids").$type<string[]>().notNull().default([]),
     /** true if any ONE of the listed equipment is enough (e.g. DB or KB); false = needs all */
     equipmentAny: boolean("equipment_any").notNull().default(false),
+    /** primary | secondary | corrective | warmup | cooldown | accessory */
+    exerciseCategory: text("exercise_category").notNull().default("primary"),
+    /** Injury / deficiency slugs that strictly forbid this exercise */
+    contraindications: jsonb("contraindications").$type<string[]>().notNull().default([]),
     active: boolean("active").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
   },
@@ -522,6 +546,10 @@ export const programs = pgTable(
     status: text("status").notNull().default("draft"), // draft | active | archived
     notes: text("notes"),
     generationMeta: jsonb("generation_meta").$type<Record<string, unknown>>(),
+    /** Active mesocycle row (no FK — circular with mesocycles.program_id) */
+    currentMesocycleId: text("current_mesocycle_id"),
+    /** org | client | combined */
+    facilityEquipmentMode: text("facility_equipment_mode").notNull().default("org"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -748,4 +776,389 @@ export const clientsRelations = relations(clients, ({ one, many }) => ({
   measurements: many(clientMeasurements),
   assessments: many(clientAssessments),
   notes: many(clientNotes),
+  deficiencies: many(clientDeficiencies),
+  equipment: many(clientEquipment),
 }));
+
+export const clientAssessmentsRelations = relations(
+  clientAssessments,
+  ({ one, many }) => ({
+    client: one(clients, {
+      fields: [clientAssessments.clientId],
+      references: [clients.id],
+    }),
+    deficiencies: many(clientDeficiencies),
+  })
+);
+
+/** Master library of movement syndromes used by the smarter generator */
+export const deficiencyCatalog = pgTable("deficiency_catalog", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  category: text("category").notNull().default("postural"),
+  description: text("description"),
+  assessmentCriteria: jsonb("assessment_criteria").$type<Record<string, unknown>>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const clientDeficiencies = pgTable(
+  "client_deficiencies",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    deficiencySlug: text("deficiency_slug").notNull(),
+    source: text("source").notNull().default("assessment"),
+    assessmentId: text("assessment_id").references(() => clientAssessments.id, {
+      onDelete: "set null",
+    }),
+    severity: text("severity").notNull().default("moderate"),
+    status: text("status").notNull().default("active"),
+    affectedSide: text("affected_side").default("bilateral"),
+    notes: text("notes"),
+    identifiedAt: timestamp("identified_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("client_deficiencies_org_client_status_idx").on(
+      t.organizationId,
+      t.clientId,
+      t.status
+    ),
+    index("client_deficiencies_client_slug_idx").on(t.clientId, t.deficiencySlug),
+  ]
+);
+
+export const clientEquipment = pgTable(
+  "client_equipment",
+  {
+    id: text("id").primaryKey(),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    equipmentId: text("equipment_id")
+      .notNull()
+      .references(() => equipmentItems.id, { onDelete: "cascade" }),
+    available: boolean("available").notNull().default(true),
+    locationLabel: text("location_label").default("home_gym"),
+  },
+  (t) => [
+    uniqueIndex("client_equipment_uidx").on(
+      t.clientId,
+      t.equipmentId,
+      t.locationLabel
+    ),
+    index("client_equipment_client_idx").on(t.clientId),
+  ]
+);
+
+export const exerciseDeficiencyMappings = pgTable(
+  "exercise_deficiency_mappings",
+  {
+    id: text("id").primaryKey(),
+    exerciseId: text("exercise_id")
+      .notNull()
+      .references(() => exercises.id, { onDelete: "cascade" }),
+    deficiencySlug: text("deficiency_slug").notNull(),
+    role: text("role").notNull().default("corrective"),
+    effectivenessRank: integer("effectiveness_rank").notNull().default(1),
+    notes: text("notes"),
+  },
+  (t) => [
+    uniqueIndex("ex_def_mapping_uidx").on(t.exerciseId, t.deficiencySlug),
+    index("ex_def_mapping_slug_idx").on(t.deficiencySlug),
+  ]
+);
+
+export const exerciseEquipment = pgTable(
+  "exercise_equipment",
+  {
+    id: text("id").primaryKey(),
+    exerciseId: text("exercise_id")
+      .notNull()
+      .references(() => exercises.id, { onDelete: "cascade" }),
+    equipmentId: text("equipment_id")
+      .notNull()
+      .references(() => equipmentItems.id, { onDelete: "cascade" }),
+    isRequired: boolean("is_required").notNull().default(true),
+  },
+  (t) => [
+    uniqueIndex("ex_eq_uidx").on(t.exerciseId, t.equipmentId),
+    index("ex_eq_equipment_idx").on(t.equipmentId),
+  ]
+);
+
+export const mesocycles = pgTable(
+  "mesocycles",
+  {
+    id: text("id").primaryKey(),
+    programId: text("program_id")
+      .notNull()
+      .references(() => programs.id, { onDelete: "cascade" }),
+    mesocycleNumber: integer("mesocycle_number").notNull().default(1),
+    phase: text("phase").notNull().default("corrective_prep"),
+    name: text("name").notNull(),
+    durationWeeks: integer("duration_weeks").notNull().default(4),
+    status: text("status").notNull().default("active"),
+    targetDeficiencies: jsonb("target_deficiencies").$type<string[]>().notNull().default([]),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("mesocycles_program_number_uidx").on(t.programId, t.mesocycleNumber),
+    index("mesocycles_program_status_idx").on(t.programId, t.status),
+  ]
+);
+
+export const programCorrectivePrescriptions = pgTable(
+  "program_corrective_prescriptions",
+  {
+    id: text("id").primaryKey(),
+    programId: text("program_id")
+      .notNull()
+      .references(() => programs.id, { onDelete: "cascade" }),
+    mesocycleId: text("mesocycle_id").references(() => mesocycles.id, {
+      onDelete: "set null",
+    }),
+    clientDeficiencyId: text("client_deficiency_id").references(
+      () => clientDeficiencies.id,
+      { onDelete: "set null" }
+    ),
+    deficiencySlug: text("deficiency_slug").notNull(),
+    exerciseId: text("exercise_id").references(() => exercises.id, {
+      onDelete: "set null",
+    }),
+    prescribedExerciseName: text("prescribed_exercise_name").notNull(),
+    placement: text("placement").notNull().default("warmup"),
+    prescribedSets: integer("prescribed_sets").notNull().default(2),
+    prescribedReps: text("prescribed_reps").notNull().default("10-12"),
+    status: text("status").notNull().default("prescribed"),
+    rationale: text("rationale"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("prog_corr_program_idx").on(t.programId),
+    index("prog_corr_deficiency_idx").on(t.clientDeficiencyId),
+  ]
+);
+
+export const deficiencyCatalogRelations = relations(
+  deficiencyCatalog,
+  ({ many }) => ({
+    mappings: many(exerciseDeficiencyMappings),
+  })
+);
+
+export const clientDeficienciesRelations = relations(
+  clientDeficiencies,
+  ({ one, many }) => ({
+    organization: one(organizations, {
+      fields: [clientDeficiencies.organizationId],
+      references: [organizations.id],
+    }),
+    client: one(clients, {
+      fields: [clientDeficiencies.clientId],
+      references: [clients.id],
+    }),
+    assessment: one(clientAssessments, {
+      fields: [clientDeficiencies.assessmentId],
+      references: [clientAssessments.id],
+    }),
+    prescriptions: many(programCorrectivePrescriptions),
+  })
+);
+
+export const clientEquipmentRelations = relations(clientEquipment, ({ one }) => ({
+  client: one(clients, {
+    fields: [clientEquipment.clientId],
+    references: [clients.id],
+  }),
+  equipment: one(equipmentItems, {
+    fields: [clientEquipment.equipmentId],
+    references: [equipmentItems.id],
+  }),
+}));
+
+export const exerciseDeficiencyMappingsRelations = relations(
+  exerciseDeficiencyMappings,
+  ({ one }) => ({
+    exercise: one(exercises, {
+      fields: [exerciseDeficiencyMappings.exerciseId],
+      references: [exercises.id],
+    }),
+  })
+);
+
+export const exerciseEquipmentRelations = relations(
+  exerciseEquipment,
+  ({ one }) => ({
+    exercise: one(exercises, {
+      fields: [exerciseEquipment.exerciseId],
+      references: [exercises.id],
+    }),
+    equipment: one(equipmentItems, {
+      fields: [exerciseEquipment.equipmentId],
+      references: [equipmentItems.id],
+    }),
+  })
+);
+
+export const mesocyclesRelations = relations(mesocycles, ({ one, many }) => ({
+  program: one(programs, {
+    fields: [mesocycles.programId],
+    references: [programs.id],
+  }),
+  prescriptions: many(programCorrectivePrescriptions),
+}));
+
+export const programCorrectivePrescriptionsRelations = relations(
+  programCorrectivePrescriptions,
+  ({ one }) => ({
+    program: one(programs, {
+      fields: [programCorrectivePrescriptions.programId],
+      references: [programs.id],
+    }),
+    mesocycle: one(mesocycles, {
+      fields: [programCorrectivePrescriptions.mesocycleId],
+      references: [mesocycles.id],
+    }),
+    clientDeficiency: one(clientDeficiencies, {
+      fields: [programCorrectivePrescriptions.clientDeficiencyId],
+      references: [clientDeficiencies.id],
+    }),
+    exercise: one(exercises, {
+      fields: [programCorrectivePrescriptions.exerciseId],
+      references: [exercises.id],
+    }),
+  })
+);
+
+export const exercisesRelations = relations(exercises, ({ many }) => ({
+  deficiencyMappings: many(exerciseDeficiencyMappings),
+  requiredEquipment: many(exerciseEquipment),
+  prescriptions: many(programCorrectivePrescriptions),
+}));
+
+export const programsRelations = relations(programs, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [programs.organizationId],
+    references: [organizations.id],
+  }),
+  client: one(clients, {
+    fields: [programs.clientId],
+    references: [clients.id],
+  }),
+  mesocycles: many(mesocycles),
+  correctivePrescriptions: many(programCorrectivePrescriptions),
+}));
+
+export const equipmentItemsRelations = relations(equipmentItems, ({ many }) => ({
+  clientEquipment: many(clientEquipment),
+  exerciseEquipment: many(exerciseEquipment),
+}));
+
+/** Isolated client-portal sessions (never reuse trainer JWT). */
+export const clientSessions = pgTable(
+  "client_sessions",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    token: text("token").notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("client_sessions_token_uidx").on(t.token),
+    index("client_sessions_org_client_idx").on(t.organizationId, t.clientId),
+    index("client_sessions_expires_idx").on(t.expiresAt),
+  ]
+);
+
+export const clientOtps = pgTable(
+  "client_otps",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    codeHash: text("code_hash").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("client_otps_email_org_idx").on(t.email, t.organizationId),
+    index("client_otps_client_idx").on(t.clientId),
+  ]
+);
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    body: text("body"),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("notifications_client_read_idx").on(t.clientId, t.readAt),
+    index("notifications_org_client_idx").on(t.organizationId, t.clientId),
+  ]
+);
+
+export const clientDocuments = pgTable(
+  "client_documents",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    clientId: text("client_id")
+      .notNull()
+      .references(() => clients.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    status: text("status").notNull().default("pending"),
+    documentVersion: text("document_version").notNull().default("1"),
+    documentHash: text("document_hash"),
+    signatureData: text("signature_data"),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    signedAt: timestamp("signed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("client_documents_client_status_idx").on(t.clientId, t.status),
+    index("client_documents_org_client_idx").on(t.organizationId, t.clientId),
+  ]
+);

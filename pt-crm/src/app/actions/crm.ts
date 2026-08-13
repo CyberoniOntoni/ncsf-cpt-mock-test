@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, gte, inArray, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import {
@@ -10,6 +10,7 @@ import {
   clientPackages,
   clientTasks,
   clients,
+  organizations,
   trainingSessions,
 } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
@@ -275,167 +276,479 @@ function packIsBurnable(
   return true;
 }
 
+function ymdInTimeZone(date: Date, timeZone: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date);
+  } catch {
+    return date.toISOString().slice(0, 10);
+  }
+}
+
 /**
  * Consume one session from the oldest burnable pack (active, not expired, used < total).
- * Used when a floor session is completed (not calendar “close booking”).
- * Safe no-op when no pack / already empty. Race-safe: re-read + conditional update.
- * When sessionId is provided and burn succeeds, stores packageId on the training session.
+ * Used on **floor complete** and **calendar complete** (product: both debit).
+ *
+ * **Shared debit key** — pass sessionId and/or appointmentId. If either already has
+ * `packageId` set (or the linked peer does), returns `already_debited` without a second burn.
+ * Unlinked same-client same-day visits are treated as one visit when there is a
+ * unique in-progress/completed floor log or completed booking to pair with.
+ * On success, stamps packageId on both the training session and linked appointment when known.
+ *
+ * Race-safe: conditional usedSessions update + returning(); one retry re-checks stamps.
  */
 export async function tryConsumePackageSessionAction(
   clientId: string,
   sessionId?: string,
-  optSession?: SessionPayload
+  optSession?: SessionPayload,
+  appointmentId?: string | null
 ) {
   const session = optSession || (await requireSession());
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
   const now = new Date();
+  const apptId = appointmentId?.trim() || null;
 
-  const activeRows = await db
-    .select()
-    .from(clientPackages)
-    .where(
-      and(
-        eq(clientPackages.clientId, clientId),
-        eq(clientPackages.status, "active")
-      )
-    )
-    .orderBy(asc(clientPackages.purchasedAt));
+  type ConsumeResult =
+    | {
+        consumed: true;
+        reason: "ok";
+        packageId: string;
+        packageName: string;
+        remaining: number;
+        status: string;
+      }
+    | {
+        consumed: false;
+        reason: "already_debited";
+        packageId: string;
+        packageName?: string;
+        remaining?: number;
+        status?: string;
+      }
+    | {
+        consumed: false;
+        reason: "empty";
+        packageId?: string;
+        packageName?: string;
+        remaining: 0;
+        status: "exhausted";
+      }
+    | { consumed: false; reason: "no_pack" }
+    | {
+        consumed: false;
+        reason: "race";
+        packageId: string;
+        packageName: string;
+      };
 
-  // Heal active-but-full or expired rows so they don't block older-first selection forever
-  const exhaustedIds = activeRows
-    .filter((row) => row.usedSessions >= row.totalSessions)
-    .map((row) => row.id);
+  const MAX_ATTEMPTS = 2;
+  let lastRace: Extract<ConsumeResult, { reason: "race" }> | null = null;
 
-  if (exhaustedIds.length > 0) {
-    await db
-      .update(clientPackages)
-      .set({ status: "exhausted" })
-      .where(inArray(clientPackages.id, exhaustedIds));
-  }
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    let existingPackageId: string | null = null;
+    let linkedAppointmentId: string | null = apptId;
+    let linkedSessionId: string | null = sessionId?.trim() || null;
+    let anchorAt: Date | null = null;
 
-  const pkg = activeRows.find((p) => packIsBurnable(p, now));
-  if (!pkg) {
-    // Distinguish empty-but-present vs no usable pack
-    const hadActive = activeRows.some((p) => p.usedSessions >= p.totalSessions);
-    if (hadActive) {
-      const empty = activeRows.find((p) => p.usedSessions >= p.totalSessions);
+    if (linkedSessionId) {
+      const [ts] = await db
+        .select({
+          packageId: trainingSessions.packageId,
+          appointmentId: trainingSessions.appointmentId,
+          clientId: trainingSessions.clientId,
+          performedAt: trainingSessions.performedAt,
+        })
+        .from(trainingSessions)
+        .where(
+          and(
+            eq(trainingSessions.id, linkedSessionId),
+            eq(trainingSessions.organizationId, session.organizationId)
+          )
+        )
+        .limit(1);
+      if (ts && (!ts.clientId || ts.clientId === clientId)) {
+        if (ts.packageId) existingPackageId = ts.packageId;
+        if (!linkedAppointmentId && ts.appointmentId) {
+          linkedAppointmentId = ts.appointmentId;
+        }
+        if (ts.performedAt) anchorAt = new Date(ts.performedAt);
+      }
+    }
+
+    if (linkedAppointmentId) {
+      const [appt] = await db
+        .select({
+          packageId: clientAppointments.packageId,
+          sessionId: clientAppointments.sessionId,
+          clientId: clientAppointments.clientId,
+          startsAt: clientAppointments.startsAt,
+        })
+        .from(clientAppointments)
+        .where(eq(clientAppointments.id, linkedAppointmentId))
+        .limit(1);
+      if (appt && appt.clientId === clientId) {
+        if (appt.packageId) existingPackageId = existingPackageId || appt.packageId;
+        if (!linkedSessionId && appt.sessionId) linkedSessionId = appt.sessionId;
+        if (appt.startsAt) anchorAt = new Date(appt.startsAt);
+      }
+    }
+
+    if (!existingPackageId && linkedSessionId && linkedSessionId !== sessionId) {
+      const [ts2] = await db
+        .select({
+          packageId: trainingSessions.packageId,
+          performedAt: trainingSessions.performedAt,
+        })
+        .from(trainingSessions)
+        .where(
+          and(
+            eq(trainingSessions.id, linkedSessionId),
+            eq(trainingSessions.organizationId, session.organizationId)
+          )
+        )
+        .limit(1);
+      if (ts2?.packageId) existingPackageId = ts2.packageId;
+      if (!anchorAt && ts2?.performedAt) anchorAt = new Date(ts2.performedAt);
+    }
+
+    // Same-day unique unlinked peer (Home start + Close booking without Start from booking)
+    if (!existingPackageId && anchorAt) {
+      const [org] = await db
+        .select({ timezone: organizations.timezone })
+        .from(organizations)
+        .where(eq(organizations.id, session.organizationId))
+        .limit(1);
+      const tz = org?.timezone || "UTC";
+      const ymd = ymdInTimeZone(anchorAt, tz);
+      const windowStart = new Date(anchorAt.getTime() - 36 * 60 * 60 * 1000);
+      const windowEnd = new Date(anchorAt.getTime() + 36 * 60 * 60 * 1000);
+
+      if (linkedAppointmentId && !linkedSessionId) {
+        const candidates = await db
+          .select({
+            id: trainingSessions.id,
+            packageId: trainingSessions.packageId,
+            appointmentId: trainingSessions.appointmentId,
+            performedAt: trainingSessions.performedAt,
+          })
+          .from(trainingSessions)
+          .where(
+            and(
+              eq(trainingSessions.clientId, clientId),
+              eq(trainingSessions.organizationId, session.organizationId),
+              or(
+                eq(trainingSessions.status, "completed"),
+                eq(trainingSessions.status, "in_progress")
+              ),
+              gte(trainingSessions.performedAt, windowStart),
+              lte(trainingSessions.performedAt, windowEnd)
+            )
+          );
+        const peers = candidates.filter(
+          (r) =>
+            ymdInTimeZone(new Date(r.performedAt), tz) === ymd &&
+            (!r.appointmentId || r.appointmentId === linkedAppointmentId)
+        );
+        if (peers.length === 1) {
+          linkedSessionId = peers[0].id;
+          if (peers[0].packageId) existingPackageId = peers[0].packageId;
+        }
+      } else if (linkedSessionId && !linkedAppointmentId) {
+        const candidates = await db
+          .select({
+            id: clientAppointments.id,
+            packageId: clientAppointments.packageId,
+            sessionId: clientAppointments.sessionId,
+            startsAt: clientAppointments.startsAt,
+          })
+          .from(clientAppointments)
+          .where(
+            and(
+              eq(clientAppointments.clientId, clientId),
+              eq(clientAppointments.status, "completed"),
+              gte(clientAppointments.startsAt, windowStart),
+              lte(clientAppointments.startsAt, windowEnd)
+            )
+          );
+        const peers = candidates.filter(
+          (r) =>
+            ymdInTimeZone(new Date(r.startsAt), tz) === ymd &&
+            (!r.sessionId || r.sessionId === linkedSessionId)
+        );
+        if (peers.length === 1) {
+          linkedAppointmentId = peers[0].id;
+          if (peers[0].packageId) existingPackageId = peers[0].packageId;
+        }
+      }
+    }
+
+    async function persistSoftLink() {
+      if (!linkedSessionId || !linkedAppointmentId) return;
+      await db
+        .update(trainingSessions)
+        .set({ appointmentId: linkedAppointmentId, updatedAt: new Date() })
+        .where(
+          and(
+            eq(trainingSessions.id, linkedSessionId),
+            eq(trainingSessions.organizationId, session.organizationId),
+            or(
+              isNull(trainingSessions.appointmentId),
+              eq(trainingSessions.appointmentId, linkedAppointmentId)
+            )
+          )
+        );
+      await db
+        .update(clientAppointments)
+        .set({ sessionId: linkedSessionId })
+        .where(
+          and(
+            eq(clientAppointments.id, linkedAppointmentId),
+            eq(clientAppointments.clientId, clientId),
+            or(
+              isNull(clientAppointments.sessionId),
+              eq(clientAppointments.sessionId, linkedSessionId)
+            )
+          )
+        );
+    }
+
+    async function stampDebit(packageId: string) {
+      await persistSoftLink();
+      if (linkedSessionId) {
+        await db
+          .update(trainingSessions)
+          .set({ packageId, updatedAt: new Date() })
+          .where(
+            and(
+              eq(trainingSessions.id, linkedSessionId),
+              eq(trainingSessions.organizationId, session.organizationId)
+            )
+          );
+      }
+      if (linkedAppointmentId) {
+        await db
+          .update(clientAppointments)
+          .set({ packageId })
+          .where(
+            and(
+              eq(clientAppointments.id, linkedAppointmentId),
+              eq(clientAppointments.clientId, clientId)
+            )
+          );
+      }
+    }
+
+    if (existingPackageId) {
+      await stampDebit(existingPackageId);
+      const [pkgRow] = await db
+        .select()
+        .from(clientPackages)
+        .where(eq(clientPackages.id, existingPackageId))
+        .limit(1);
+      const remaining = pkgRow
+        ? Math.max(0, pkgRow.totalSessions - pkgRow.usedSessions)
+        : undefined;
       return {
         consumed: false as const,
-        reason: "empty" as const,
-        packageId: empty?.id,
-        packageName: empty?.name,
-        remaining: 0,
-        status: "exhausted" as const,
+        reason: "already_debited" as const,
+        packageId: existingPackageId,
+        packageName: pkgRow?.name,
+        remaining,
+        status: pkgRow?.status,
       };
     }
-    return { consumed: false as const, reason: "no_pack" as const };
-  }
 
-  const expectedUsed = pkg.usedSessions;
-  const used = expectedUsed + 1;
-  const remaining = pkg.totalSessions - used;
-  const status = remaining <= 0 ? "exhausted" : "active";
+    // Unique same-day pair with no stamp yet — persist link so the other path shares this debit
+    await persistSoftLink();
 
-  // Conditional update with returning(): only if still at expected used + active
-  const updatedRows = await db
-    .update(clientPackages)
-    .set({ usedSessions: used, status })
-    .where(
-      and(
-        eq(clientPackages.id, pkg.id),
-        eq(clientPackages.usedSessions, expectedUsed),
-        eq(clientPackages.status, "active")
+    const activeRows = await db
+      .select()
+      .from(clientPackages)
+      .where(
+        and(
+          eq(clientPackages.clientId, clientId),
+          eq(clientPackages.status, "active")
+        )
       )
-    )
-    .returning();
+      .orderBy(asc(clientPackages.purchasedAt));
 
-  const after = updatedRows[0];
-  if (!after || after.usedSessions !== used) {
+    const exhaustedIds = activeRows
+      .filter((row) => row.usedSessions >= row.totalSessions)
+      .map((row) => row.id);
+
+    if (exhaustedIds.length > 0) {
+      await db
+        .update(clientPackages)
+        .set({ status: "exhausted" })
+        .where(inArray(clientPackages.id, exhaustedIds));
+    }
+
+    const pkg = activeRows.find((p) => packIsBurnable(p, now));
+    if (!pkg) {
+      const hadActive = activeRows.some((p) => p.usedSessions >= p.totalSessions);
+      if (hadActive) {
+        const empty = activeRows.find((p) => p.usedSessions >= p.totalSessions);
+        return {
+          consumed: false as const,
+          reason: "empty" as const,
+          packageId: empty?.id,
+          packageName: empty?.name,
+          remaining: 0 as const,
+          status: "exhausted" as const,
+        };
+      }
+      return { consumed: false as const, reason: "no_pack" as const };
+    }
+
+    const expectedUsed = pkg.usedSessions;
+    const used = expectedUsed + 1;
+    const remaining = pkg.totalSessions - used;
+    const status = remaining <= 0 ? "exhausted" : "active";
+
+    const updatedRows = await db
+      .update(clientPackages)
+      .set({ usedSessions: used, status })
+      .where(
+        and(
+          eq(clientPackages.id, pkg.id),
+          eq(clientPackages.usedSessions, expectedUsed),
+          eq(clientPackages.status, "active")
+        )
+      )
+      .returning();
+
+    const after = updatedRows[0];
+    if (!after || after.usedSessions !== used) {
+      lastRace = {
+        consumed: false as const,
+        reason: "race" as const,
+        packageId: pkg.id,
+        packageName: pkg.name,
+      };
+      continue;
+    }
+
+    await stampDebit(pkg.id);
+
+    await db
+      .update(clients)
+      .set({ updatedAt: new Date() })
+      .where(eq(clients.id, clientId));
+    revalidateClient(clientId);
     return {
-      consumed: false as const,
-      reason: "race" as const,
+      consumed: true as const,
+      reason: "ok" as const,
       packageId: pkg.id,
       packageName: pkg.name,
+      remaining,
+      status,
     };
   }
 
-  if (sessionId) {
-    await db
-      .update(trainingSessions)
-      .set({ packageId: pkg.id, updatedAt: new Date() })
-      .where(
-        and(
-          eq(trainingSessions.id, sessionId),
-          eq(trainingSessions.organizationId, session.organizationId)
-        )
-      );
-  }
-
-  await db
-    .update(clients)
-    .set({ updatedAt: new Date() })
-    .where(eq(clients.id, clientId));
-  revalidateClient(clientId);
-  return {
-    consumed: true as const,
-    reason: "ok" as const,
-    packageId: pkg.id,
-    packageName: pkg.name,
-    remaining,
-    status,
-  };
+  return lastRace ?? { consumed: false as const, reason: "no_pack" as const };
 }
 
 /**
  * Restore one used session on a pack.
- * Prefer the pack linked on the training session (packageId); else most recently
- * purchased active/exhausted pack with used > 0.
- * Used when deleting a completed floor session that may have burned a pack credit.
+ * Prefer packageId on the training session, then linked appointment.
+ * Heuristic (most recent pack with used > 0) only when neither visit key is
+ * provided — cancel/delete always pass session and/or appointment ids so they
+ * never invent a refund without a debit stamp.
+ * Clears packageId stamps on session/appointment when restored via those keys.
  */
 export async function tryRestorePackageSessionAction(
   clientId: string,
-  sessionId?: string
+  sessionId?: string,
+  appointmentId?: string | null
 ) {
   const session = await requireSession();
   await assertClientInOrg(clientId, session.organizationId);
   const db = await getDb();
 
   let pkg: typeof clientPackages.$inferSelect | undefined;
+  let clearSessionId: string | null = sessionId?.trim() || null;
+  let clearAppointmentId: string | null = appointmentId?.trim() || null;
 
-  if (sessionId) {
+  if (clearSessionId) {
     const [ts] = await db
       .select({
         packageId: trainingSessions.packageId,
+        appointmentId: trainingSessions.appointmentId,
         organizationId: trainingSessions.organizationId,
         clientId: trainingSessions.clientId,
       })
       .from(trainingSessions)
       .where(
         and(
-          eq(trainingSessions.id, sessionId),
+          eq(trainingSessions.id, clearSessionId),
           eq(trainingSessions.organizationId, session.organizationId)
         )
       )
       .limit(1);
-    if (ts?.packageId && (!ts.clientId || ts.clientId === clientId)) {
-      const [linked] = await db
-        .select()
-        .from(clientPackages)
-        .where(
-          and(
-            eq(clientPackages.id, ts.packageId),
-            eq(clientPackages.clientId, clientId)
+    if (ts && (!ts.clientId || ts.clientId === clientId)) {
+      if (!clearAppointmentId && ts.appointmentId) {
+        clearAppointmentId = ts.appointmentId;
+      }
+      if (ts.packageId) {
+        const [linked] = await db
+          .select()
+          .from(clientPackages)
+          .where(
+            and(
+              eq(clientPackages.id, ts.packageId),
+              eq(clientPackages.clientId, clientId)
+            )
           )
-        )
-        .limit(1);
-      if (linked && linked.usedSessions > 0 && linked.status !== "cancelled") {
-        pkg = linked;
+          .limit(1);
+        if (linked && linked.usedSessions > 0 && linked.status !== "cancelled") {
+          pkg = linked;
+        }
+      }
+    }
+  }
+
+  if (!pkg && clearAppointmentId) {
+    const [appt] = await db
+      .select({
+        packageId: clientAppointments.packageId,
+        sessionId: clientAppointments.sessionId,
+        clientId: clientAppointments.clientId,
+      })
+      .from(clientAppointments)
+      .where(eq(clientAppointments.id, clearAppointmentId))
+      .limit(1);
+    if (appt && appt.clientId === clientId) {
+      if (!clearSessionId && appt.sessionId) clearSessionId = appt.sessionId;
+      if (appt.packageId) {
+        const [linked] = await db
+          .select()
+          .from(clientPackages)
+          .where(
+            and(
+              eq(clientPackages.id, appt.packageId),
+              eq(clientPackages.clientId, clientId)
+            )
+          )
+          .limit(1);
+        if (linked && linked.usedSessions > 0 && linked.status !== "cancelled") {
+          pkg = linked;
+        }
       }
     }
   }
 
   if (!pkg) {
+    // When a visit key was provided, only restore from debit stamps.
+    // Heuristic "most recent pack with used > 0" must not run from cancel/delete
+    // or we invent refunds for visits that never burned.
+    if (clearSessionId || clearAppointmentId) {
+      return { restored: false as const, reason: "no_stamp" as const };
+    }
     const candidates = await db
       .select()
       .from(clientPackages)
@@ -476,6 +789,32 @@ export async function tryRestorePackageSessionAction(
     .limit(1);
   if (!after || after.usedSessions !== used) {
     return { restored: false as const, reason: "race" as const };
+  }
+
+  // Clear debit stamps so a later complete can burn again if needed
+  if (clearSessionId) {
+    await db
+      .update(trainingSessions)
+      .set({ packageId: null, updatedAt: new Date() })
+      .where(
+        and(
+          eq(trainingSessions.id, clearSessionId),
+          eq(trainingSessions.organizationId, session.organizationId),
+          eq(trainingSessions.packageId, pkg.id)
+        )
+      );
+  }
+  if (clearAppointmentId) {
+    await db
+      .update(clientAppointments)
+      .set({ packageId: null })
+      .where(
+        and(
+          eq(clientAppointments.id, clearAppointmentId),
+          eq(clientAppointments.clientId, clientId),
+          eq(clientAppointments.packageId, pkg.id)
+        )
+      );
   }
 
   await db
@@ -759,6 +1098,7 @@ export async function updateAppointmentStatusAction(
     .select({
       status: clientAppointments.status,
       sessionId: clientAppointments.sessionId,
+      packageId: clientAppointments.packageId,
     })
     .from(clientAppointments)
     .where(
@@ -785,15 +1125,27 @@ export async function updateAppointmentStatusAction(
       )
     );
 
+  // Product: calendar complete debits pack; leaving completed restores when stamped
   if (status === "completed" && !wasCompleted) {
     try {
       await tryConsumePackageSessionAction(
         clientId,
-        existing.sessionId || appointmentId,
-        session
+        existing.sessionId || undefined,
+        session,
+        appointmentId
       );
     } catch {
       // pack consume optional — do not block appointment status update
+    }
+  } else if (wasCompleted && status !== "completed") {
+    try {
+      await tryRestorePackageSessionAction(
+        clientId,
+        existing.sessionId || undefined,
+        appointmentId
+      );
+    } catch {
+      // pack restore optional — status already moved off completed
     }
   }
 
