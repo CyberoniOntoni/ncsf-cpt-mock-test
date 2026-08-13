@@ -9,6 +9,7 @@ import {
 import { resolveSearchOrigin } from "@/lib/marketplace/areas";
 import { DEFAULT_RADIUS_KM } from "@/lib/marketplace/types";
 import { getSeekerById, optionalSeekerSession } from "@/lib/seeker-auth";
+import { SITE_COPY, SITE_DISCLAIMERS } from "@/lib/site/copy";
 
 export const dynamic = "force-dynamic";
 
@@ -58,13 +59,10 @@ export default async function FindPage({
     <main className="space-y-6">
       <div>
         <p className="text-xs uppercase tracking-wide text-zinc-500">
-          Find a trainer
+          {SITE_COPY.findCta.label}
         </p>
         <h1 className="text-2xl font-semibold">Train near you or at your gym</h1>
-        <p className="mt-2 text-sm text-zinc-400">
-          FloorScribe introduces you. Training and session payments are between
-          you and the trainer.
-        </p>
+        <p className="mt-2 text-sm text-zinc-400">{SITE_DISCLAIMERS.findIntro}</p>
       </div>
       <FindSearch
         gyms={gyms}

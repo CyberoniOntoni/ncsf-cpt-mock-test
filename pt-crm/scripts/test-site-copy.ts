@@ -80,4 +80,7 @@ assert.ok(FEATURE_PILLARS.every((p) => p.body.length > 40 && p.body.length < 220
 assert.ok(AUDIENCE_DOORS.every((d) => d.cta.length > 0 && d.href.startsWith("/")));
 assert.equal(AUDIENCE_DOORS[0].href, SITE_COPY.primaryCta.href);
 
+assert.equal(SITE_COPY.findCta.href, "/find");
+assert.match(SITE_DISCLAIMERS.findIntro, /FloorScribe introduces you/);
+
 console.log("site-copy ok");

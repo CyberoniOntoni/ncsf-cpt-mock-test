@@ -1,45 +1,50 @@
 import Link from "next/link";
 import { logoutSeekerAction } from "@/app/actions/marketplace-seeker";
+import { PublicSiteHeader } from "@/components/public-site-header";
 import { optionalSeekerSession } from "@/lib/seeker-auth";
+import { SITE_COPY } from "@/lib/site/copy";
 
 export async function FindChrome() {
   const seeker = await optionalSeekerSession();
   return (
-    <header className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-4">
-      <nav className="flex flex-wrap items-center gap-3 text-sm">
-        <Link href="/find" className="font-medium text-emerald-400">
-          Find a trainer
-        </Link>
-        <Link href="/marketing" className="text-zinc-500 hover:text-zinc-300">
-          For trainers
-        </Link>
-      </nav>
-      <div className="flex items-center gap-2 text-sm">
-        {seeker ? (
-          <>
-            <Link href="/find/account" className="text-zinc-200 hover:text-white">
+    <PublicSiteHeader
+      variant="find"
+      scrolled
+      trailing={
+        seeker ? (
+          <div className="flex items-center gap-2">
+            <Link
+              href="/find/account"
+              className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm text-stone-200 hover:text-white"
+            >
               {seeker.firstName} · Account
             </Link>
             <form action={logoutSeekerAction}>
-              <button type="submit" className="text-zinc-500 hover:text-zinc-300">
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm text-stone-500 hover:text-stone-300"
+              >
                 Log out
               </button>
             </form>
-          </>
+          </div>
         ) : (
-          <>
-            <Link href="/find/login" className="text-zinc-300 hover:text-white">
+          <div className="flex items-center gap-2">
+            <Link
+              href="/find/login"
+              className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm text-stone-300 hover:text-white"
+            >
               Log in
             </Link>
             <Link
               href="/find/register"
-              className="rounded-lg bg-emerald-800 px-3 py-1.5 font-semibold text-stone-50"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-800 px-3.5 text-sm font-semibold text-stone-50"
             >
               Create account
             </Link>
-          </>
-        )}
-      </div>
-    </header>
+          </div>
+        )
+      }
+    />
   );
 }

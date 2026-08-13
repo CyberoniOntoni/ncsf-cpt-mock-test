@@ -3,6 +3,7 @@ import { FindIntroForm } from "@/components/find-intro-form";
 import { FindTrainerMeta } from "@/components/find-trainer-meta";
 import { getPublicProfile, listPublicGyms } from "@/db/queries/marketplace";
 import { getSeekerById, optionalSeekerSession } from "@/lib/seeker-auth";
+import { SITE_DISCLAIMERS } from "@/lib/site/copy";
 
 export const dynamic = "force-dynamic";
 
@@ -41,10 +42,7 @@ export default async function FindProfilePage({
         sessionRateCents={profile.sessionRateCents}
         currency={profile.currency}
       />
-      <p className="text-xs text-zinc-500">
-        FloorScribe introduces you. Training and session payments are between
-        you and the trainer.
-      </p>
+      <p className="text-xs text-zinc-500">{SITE_DISCLAIMERS.findIntro}</p>
       <FindIntroForm
         profileId={profile.id}
         facilities={facilities}
