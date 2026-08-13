@@ -15,6 +15,7 @@
     "smoke:pilot": "tsx scripts/smoke-pilot.ts",
     "smoke:portal": "tsx scripts/smoke-portal.ts",
     "smoke:marketplace": "tsx scripts/smoke-marketplace.ts",
+    "smoke:site-copy": "tsx scripts/test-site-copy.ts",
     "typecheck": "tsc --noEmit",
     "backup:host": "bash scripts/backup-host.sh",
     "backup:pglite": "powershell -ExecutionPolicy Bypass -File scripts/backup-pglite.ps1"
