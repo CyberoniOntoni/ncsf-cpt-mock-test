@@ -62,6 +62,7 @@ import {
   shouldPrecede,
   sortExercisesForSession,
   scoreExerciseOrder,
+  suggestedInsertSortOrder,
 } from "../src/lib/exercise-order";
 import { detectIntent } from "../src/lib/ai/intents";
 import { assignSetScheme, type SetSchemeId } from "../src/lib/set-schemes";
@@ -676,6 +677,33 @@ function main() {
     const pullBias = scoreExerciseOrder(row, { sessionKind: "pull" });
     const pushOnPull = scoreExerciseOrder(bench, { sessionKind: "pull" });
     assert(pullBias.rank < pushOnPull.rank, "on pull day, rows before bench");
+
+    // Desk Add inserts by science order (before cooldown)
+    const existing = [
+      {
+        exerciseName: "Goblet squat",
+        movementPattern: "squat",
+        isWarmup: false,
+        sortOrder: 0,
+      },
+      {
+        exerciseName: "Walk-out",
+        movementPattern: "mobility",
+        isWarmup: false,
+        sortOrder: 1,
+        setSchemeMeta: { phase: "cooldown" },
+      },
+    ];
+    const idx = suggestedInsertSortOrder(
+      existing,
+      {
+        exerciseName: "Cable row",
+        movementPattern: "horizontal_pull",
+        isWarmup: false,
+      },
+      { sessionKind: "full_a", goal: "hypertrophy" }
+    );
+    assert(idx === 1, `row inserts before cooldown (got ${idx})`);
   }
   // Draft clock skew & content check
   {

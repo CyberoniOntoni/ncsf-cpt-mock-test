@@ -50,10 +50,8 @@ import {
   sessionsToAdvanceMesocycle,
   shouldAutoAdvanceMesocycle,
 } from "@/lib/program-volume";
-import {
-  defaultAddExerciseRx,
-  nextProgramExerciseSortOrder,
-} from "@/lib/program-exercise-add";
+import { defaultAddExerciseRx } from "@/lib/program-exercise-add";
+import { suggestedInsertSortOrder } from "@/lib/exercise-order";
 import { ensureSetLogs } from "@/lib/session-sets";
 import { resolveFacilityEquipmentIdsAction } from "@/app/actions/client-equipment";
 import { getClientInOrg } from "@/lib/tenant";
@@ -1276,38 +1274,56 @@ export async function addProgramExerciseAction(input: {
       ? input.opts.notes
       : pick.cues || null;
 
-  // Temporary sort at end; reordered with science rules after insert
-  const existing = await db
-    .select({ sortOrder: programExercises.sortOrder })
+  const rows = await db
+    .select()
     .from(programExercises)
     .where(eq(programExercises.programDayId, input.programDayId));
-  const sortOrder = nextProgramExerciseSortOrder(
-    existing.map((e) => e.sortOrder)
-  );
-
-  const peId = id("pe");
-  await db.insert(programExercises).values({
-    id: peId,
-    programDayId: input.programDayId,
-    exerciseId: pick.id,
+  const incoming = {
     exerciseName: pick.name,
     movementPattern: pick.movementPattern,
-    sets,
-    reps,
-    rpe,
-    restSec,
-    notes,
-    sortOrder,
     isWarmup,
-    setScheme: "straight",
-    setSchemeMeta: null,
-    groupId: null,
-    groupKind: null,
-    groupLabel: null,
-    groupOrder: null,
-    restAfterSec: null,
-    restBetweenRoundsSec: null,
-    groupRole: null,
+  };
+  const insertAt = suggestedInsertSortOrder(rows, incoming, {
+    goal: dayRow.program.goal,
+  });
+
+  const peId = id("pe");
+  const toShift = rows.filter((r) => r.sortOrder >= insertAt);
+  await db.transaction(async (tx) => {
+    if (toShift.length > 0) {
+      const ids = toShift.map((r) => r.id);
+      const caseCases = toShift.map(
+        (r) =>
+          sql`WHEN ${programExercises.id} = ${r.id} THEN ${r.sortOrder + 1}::integer`
+      );
+      await tx
+        .update(programExercises)
+        .set({ sortOrder: sql`CASE ${sql.join(caseCases, sql` `)} END` })
+        .where(inArray(programExercises.id, ids));
+    }
+    await tx.insert(programExercises).values({
+      id: peId,
+      programDayId: input.programDayId,
+      exerciseId: pick.id,
+      exerciseName: pick.name,
+      movementPattern: pick.movementPattern,
+      sets,
+      reps,
+      rpe,
+      restSec,
+      notes,
+      sortOrder: insertAt,
+      isWarmup,
+      setScheme: "straight",
+      setSchemeMeta: null,
+      groupId: null,
+      groupKind: null,
+      groupLabel: null,
+      groupOrder: null,
+      restAfterSec: null,
+      restBetweenRoundsSec: null,
+      groupRole: null,
+    });
   });
 
   // Seed meso baseline only when baselines already exist (non-empty map)
