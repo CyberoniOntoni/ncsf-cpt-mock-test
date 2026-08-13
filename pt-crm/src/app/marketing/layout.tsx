@@ -1,19 +1,15 @@
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.APP_URL || "https://floorscribe.com"
-  ),
-  title: "FloorScribe - run the day, not the paperwork",
+  metadataBase: new URL(process.env.APP_URL || "https://floorscribe.com"),
+  title: "FloorScribe — run the day, not the paperwork",
   description:
-    "FloorScribe helps personal trainers keep session logs, packs, bookings, and simple invoices in one place - solo or with a small team.",
-  alternates: {
-    canonical: "https://floorscribe.com",
-  },
+    "Floor OS for personal trainers: session logs, packs, bookings, programs, a client portal, and Find a trainer. Solo or a small studio.",
+  alternates: { canonical: "https://floorscribe.com" },
   openGraph: {
-    title: "FloorScribe - run the day, not the paperwork",
+    title: "FloorScribe — run the day, not the paperwork",
     description:
-      "Session logs, packs, bookings, and invoices together - so you can stay with the client instead of juggling tabs.",
+      "The floor log, packs, programs, and follow-through in one place. Clients can open a portal. People looking for a PT can request an intro.",
     type: "website",
     url: "https://floorscribe.com",
     siteName: "FloorScribe",
@@ -21,9 +17,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FloorScribe - run the day, not the paperwork",
+    title: "FloorScribe — run the day, not the paperwork",
     description:
-      "Session logs, packs, bookings, and invoices in one place for personal trainers.",
+      "Session logs, packs, programs, client portal, and Find a trainer — for personal trainers.",
     images: ["/marketing/hero-calm.jpg"],
   },
 };

@@ -76,4 +76,8 @@ assert.equal(PUBLIC_NAV[2].label, "Client portal");
 assert.equal(SITE_COPY.primaryCta.label, "Create account");
 assert.equal(SITE_COPY.signInCta.label, "Sign in");
 
+assert.ok(FEATURE_PILLARS.every((p) => p.body.length > 40 && p.body.length < 220));
+assert.ok(AUDIENCE_DOORS.every((d) => d.cta.length > 0 && d.href.startsWith("/")));
+assert.equal(AUDIENCE_DOORS[0].href, SITE_COPY.primaryCta.href);
+
 console.log("site-copy ok");

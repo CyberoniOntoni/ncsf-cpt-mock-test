@@ -5,67 +5,34 @@ import {
   Building2,
   CalendarDays,
   Check,
+  ClipboardList,
+  KeyRound,
+  MapPin,
   Package,
   Timer,
   User,
-  Users,
 } from "lucide-react";
-import { BrandMark } from "@/components/brand-mark";
 import { MarketingHeader } from "@/components/marketing-header";
 import { MarketingScrollProgress } from "@/components/marketing-scroll-progress";
+import { PublicSiteFooter } from "@/components/public-site-footer";
 import { Reveal, RevealStagger } from "@/components/reveal";
+import {
+  AUDIENCE_DOORS,
+  DAY_STEPS,
+  FEATURE_PILLARS,
+  SITE_COPY,
+  START_STEPS,
+} from "@/lib/site/copy";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { href: "#how", label: "How it works" },
-  { href: "#included", label: "What's included" },
-  { href: "#start", label: "Get started" },
-] as const;
-
-const DAY = [
-  {
-    t: "See the day",
-    d: "Open Today and you'll know who you're training, what's booked, and anything that still needs attention.",
-  },
-  {
-    t: "Train on the floor",
-    d: "Log sets, RPE, and cues as you go. When you finish the session, the pack count updates with it.",
-  },
-  {
-    t: "Wrap the loose ends",
-    d: "Rebook, send a check-in, or mark an invoice paid - still on that client, not in another app.",
-  },
-] as const;
-
-const PROOF = [
-  {
-    icon: Timer,
-    title: "Session log",
-    body: "Built for glances between sets: weight, reps, RPE, and cues without digging through a spreadsheet.",
-  },
-  {
-    icon: Package,
-    title: "Session packs",
-    body: "See how many sessions are left on a pack, and renew when it runs out.",
-  },
-  {
-    icon: CalendarDays,
-    title: "Bookings",
-    body: "Schedule from the client profile, see the month on the calendar, and start a session from the booking.",
-  },
-  {
-    icon: Users,
-    title: "Solo or studio",
-    body: "Start on your own. When you hire, invite trainers onto the same board.",
-  },
-] as const;
-
-const START_STEPS = [
-  "Create a solo or studio account",
-  "Add a client and open Today",
-  "Log a session - packs stay in sync",
-  "Invite trainers when you need them",
-] as const;
+const PILLAR_ICONS = {
+  "Session log": Timer,
+  "Session packs": Package,
+  Bookings: CalendarDays,
+  Programs: ClipboardList,
+  "Client portal": KeyRound,
+  "Find a trainer": MapPin,
+} as const;
 
 const sectionShell = "mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16 lg:py-20";
 const sectionBorder =
@@ -223,7 +190,7 @@ export default function MarketingPage() {
                   aria-hidden
                 />
                 <span className="truncate text-[11px] font-medium text-stone-400">
-                  For personal trainers - solo or with a small team
+                  {SITE_COPY.heroEyebrow}
                 </span>
               </div>
               <h1
@@ -236,9 +203,7 @@ export default function MarketingPage() {
                 </span>
               </h1>
               <p className="mkt-hero-in mkt-hero-in-delay-3 mt-5 max-w-md text-[0.95rem] leading-relaxed text-stone-400 sm:text-lg sm:leading-relaxed">
-                FloorScribe keeps session logs, packs, bookings, and simple
-                invoices together so you can stay with the client instead of
-                juggling tabs.
+                {SITE_COPY.heroBody}
               </p>
 
               <div
@@ -246,31 +211,51 @@ export default function MarketingPage() {
                 className="mkt-hero-in mkt-hero-in-delay-4 mt-8 scroll-mt-32 grid gap-3 sm:grid-cols-2 md:scroll-mt-24"
               >
                 <PathCard
-                  href="/register/solo"
+                  href={SITE_COPY.soloCta.href}
                   icon={User}
                   title="I train on my own"
                   body="Your clients, packs, and floor log - set up for a single practice."
-                  cta="Create account"
+                  cta={SITE_COPY.soloCta.label}
                 />
                 <PathCard
-                  href="/register/studio"
+                  href={SITE_COPY.studioCta.href}
                   icon={Building2}
                   title="I run a studio"
                   body="One board for the team. Invite trainers when you're ready."
-                  cta="Create studio"
+                  cta={SITE_COPY.studioCta.label}
                 />
               </div>
 
               <p className="mkt-hero-in mkt-hero-in-delay-4 mt-4 text-xs text-stone-500">
                 Already have an account?{" "}
                 <Link
-                  href="/login"
+                  href={SITE_COPY.signInCta.href}
                   className={cn(
                     "font-medium text-stone-300 underline-offset-4 hover:text-emerald-500 hover:underline",
                     linkFocus
                   )}
                 >
                   Sign in
+                </Link>
+                {" · "}
+                <Link
+                  href={SITE_COPY.findCta.href}
+                  className={cn(
+                    "font-medium text-stone-300 underline-offset-4 hover:text-emerald-500 hover:underline",
+                    linkFocus
+                  )}
+                >
+                  Find a trainer
+                </Link>
+                {" · "}
+                <Link
+                  href={SITE_COPY.portalCta.href}
+                  className={cn(
+                    "font-medium text-stone-300 underline-offset-4 hover:text-emerald-500 hover:underline",
+                    linkFocus
+                  )}
+                >
+                  Client portal
                 </Link>
               </p>
             </div>
@@ -324,7 +309,8 @@ export default function MarketingPage() {
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-stone-500 sm:text-base">
                 Notes live in chat. Packs live in a spreadsheet. Invoices live
                 somewhere else. FloorScribe puts the day in one place so the
-                floor and the admin side stay connected.
+                floor and the admin side stay connected. Programs and invoices
+                live on the same client, not in another tab.
               </p>
             </Reveal>
 
@@ -402,7 +388,7 @@ export default function MarketingPage() {
               step={70}
               base={30}
             >
-              {DAY.map((step, i) => (
+              {DAY_STEPS.map((step, i) => (
                 <div key={step.t} className="mkt-card flex flex-col p-5">
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-900/35 bg-emerald-950/35 text-xs font-semibold tabular-nums text-emerald-500">
                     {i + 1}
@@ -440,7 +426,7 @@ export default function MarketingPage() {
           </div>
         </section>
 
-        {/* Proof */}
+        {/* What's included */}
         <section
           id="included"
           className={sectionBorder}
@@ -462,23 +448,104 @@ export default function MarketingPage() {
             </Reveal>
 
             <RevealStagger
-              className="mt-9 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:mt-10 lg:grid-cols-4"
+              className="mt-9 grid grid-cols-1 gap-3 sm:mt-10 sm:grid-cols-2 lg:grid-cols-3"
               step={55}
               base={25}
             >
-              {PROOF.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="mkt-card flex flex-col p-4 sm:p-5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-800 bg-[#141210]/60 text-emerald-600">
-                    <Icon className="h-4 w-4" aria-hidden />
+              {FEATURE_PILLARS.map((pillar) => {
+                const Icon = PILLAR_ICONS[pillar.title];
+                return (
+                  <div
+                    key={pillar.title}
+                    className="mkt-card flex flex-col p-4 sm:p-5"
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-800 bg-[#141210]/60 text-emerald-600">
+                      <Icon className="h-4 w-4" aria-hidden />
+                    </div>
+                    <h3 className="mt-3 text-sm font-semibold text-stone-100">
+                      {pillar.title}
+                    </h3>
+                    <p className="mt-1.5 flex-1 text-sm leading-relaxed text-stone-500">
+                      {pillar.body}
+                    </p>
                   </div>
-                  <h3 className="mt-3 text-sm font-semibold text-stone-100">
-                    {title}
-                  </h3>
-                  <p className="mt-1.5 flex-1 text-sm leading-relaxed text-stone-500">
-                    {body}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
+            </RevealStagger>
+          </div>
+        </section>
+
+        {/* Who it's for */}
+        <section
+          id="doors"
+          className={sectionBorder}
+          aria-labelledby="doors-heading"
+        >
+          <div className={sectionShell}>
+            <Reveal variant="up">
+              <SectionLabel>Who it&apos;s for</SectionLabel>
+              <h2
+                id="doors-heading"
+                className="mt-3 max-w-xl text-[1.75rem] font-semibold tracking-tight text-stone-50 sm:text-3xl"
+              >
+                Three ways in. One FloorScribe.
+              </h2>
+              <p className="mt-2 max-w-lg text-sm leading-relaxed text-stone-500">
+                Trainers run the floor. Assigned clients open a portal. People
+                looking for a PT can request an intro.
+              </p>
+            </Reveal>
+
+            <RevealStagger
+              className="mt-9 grid grid-cols-1 gap-3 sm:mt-10 sm:grid-cols-3"
+              step={55}
+              base={25}
+            >
+              {AUDIENCE_DOORS.map((door) => {
+                const isTrainer = door.audience === "trainer";
+                return (
+                  <Link
+                    key={door.href}
+                    href={door.href}
+                    className={cn(
+                      "group flex h-full min-h-[11.5rem] flex-col rounded-2xl p-5 transition duration-300",
+                      linkFocus,
+                      isTrainer
+                        ? "bg-emerald-800 text-stone-50 shadow-sm shadow-black/30 hover:bg-emerald-700"
+                        : "mkt-card"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "text-sm font-semibold",
+                        isTrainer ? "text-stone-50" : "text-stone-100"
+                      )}
+                    >
+                      {door.title}
+                    </span>
+                    <span
+                      className={cn(
+                        "mt-1.5 flex-1 text-sm leading-relaxed",
+                        isTrainer ? "text-emerald-50/85" : "text-stone-500"
+                      )}
+                    >
+                      {door.body}
+                    </span>
+                    <span
+                      className={cn(
+                        "mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold",
+                        isTrainer ? "text-stone-50" : "text-emerald-600"
+                      )}
+                    >
+                      {door.cta}
+                      <ArrowRight
+                        className="h-4 w-4 transition duration-300 group-hover:translate-x-0.5"
+                        aria-hidden
+                      />
+                    </span>
+                  </Link>
+                );
+              })}
             </RevealStagger>
           </div>
         </section>
@@ -515,34 +582,34 @@ export default function MarketingPage() {
                     </p>
                     <div className="mt-7 flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3">
                       <Link
-                        href="/register/solo"
+                        href={SITE_COPY.soloCta.href}
                         className={cn(
                           btnPrimaryLg,
                           "w-full sm:w-auto",
                           linkFocus
                         )}
                       >
-                        Start solo
+                        {SITE_COPY.soloCta.label}
                         <ArrowRight className="h-4 w-4" aria-hidden />
                       </Link>
                       <Link
-                        href="/register/studio"
+                        href={SITE_COPY.studioCta.href}
                         className={cn(
                           btnSecondaryLg,
                           "w-full sm:w-auto",
                           linkFocus
                         )}
                       >
-                        Start a studio
+                        {SITE_COPY.studioCta.label}
                       </Link>
                       <Link
-                        href="/login"
+                        href={SITE_COPY.signInCta.href}
                         className={cn(
                           "inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-medium text-stone-400 transition hover:text-stone-200",
                           linkFocus
                         )}
                       >
-                        Sign in
+                        {SITE_COPY.signInCta.label}
                       </Link>
                     </div>
                   </div>
@@ -570,70 +637,7 @@ export default function MarketingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-stone-800/70">
-        <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-          <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between sm:gap-10">
-            <div className="max-w-xs">
-              <BrandMark href="/marketing" className="text-emerald-600" />
-              <p className="mt-2.5 text-xs leading-relaxed text-stone-500">
-                Session logs, packs, bookings, and the client follow-through
-                that keeps a practice moving.
-              </p>
-              <a
-                href="https://floorscribe.com"
-                className={cn(
-                  "mt-3 inline-flex min-h-9 items-center text-xs font-medium text-stone-500 transition hover:text-emerald-600",
-                  linkFocus
-                )}
-              >
-                floorscribe.com
-              </a>
-            </div>
-            <nav
-              className="flex flex-wrap gap-x-0.5 gap-y-0 text-xs text-stone-500 sm:max-w-md sm:justify-end"
-              aria-label="Footer"
-            >
-              {NAV.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "inline-flex min-h-10 items-center px-2.5 hover:text-stone-300",
-                    linkFocus
-                  )}
-                >
-                  {item.label}
-                </a>
-              ))}
-              <Link
-                href="/login"
-                className={cn(
-                  "inline-flex min-h-10 items-center px-2.5 hover:text-stone-300",
-                  linkFocus
-                )}
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className={cn(
-                  "inline-flex min-h-10 items-center px-2.5 font-medium text-emerald-600 hover:text-emerald-500",
-                  linkFocus
-                )}
-              >
-                Create account
-              </Link>
-            </nav>
-          </div>
-          <div className="mt-8 border-t border-stone-900/90 pt-5">
-            <p className="text-center text-[11px] leading-relaxed text-stone-600 sm:text-left">
-              FloorScribe provides coaching support tools for qualified personal
-              trainers. It does not diagnose medical conditions. Refer red-flag
-              symptoms to appropriate clinicians.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <PublicSiteFooter />
     </div>
   );
 }
