@@ -9,7 +9,7 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 | **Product** | FloorScribe (repo folder `pt-crm/`) |
 | **GitHub** | [CyberoniOntoni/floorscribe](https://github.com/CyberoniOntoni/floorscribe) `main` |
 | **Live** | https://floorscribe.com (self-host LXC + Docker; private IP not for public docs) |
-| **Schema** | `SCHEMA_VERSION` **25** (18 pack debit · 19 smarter gen · 20–21 portal · 22–25 find/seeker/areas/trainer card) |
+| **Schema** | `SCHEMA_VERSION` **26** (18 pack debit · 19 smarter gen · 20–21 portal · 22–25 find/seeker/areas/trainer card · 26 one active deficiency per client+slug). Restart `npm run dev` after the bump. |
 | **Stack** | Next.js 16 App Router · TypeScript · Tailwind · PGlite + Drizzle · multi-tenant org |
 | **Demo** | `pt@demo.local` / `trainer123` |
 
@@ -326,6 +326,7 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 
 | Date | Note |
 |------|------|
+| 2026-08-14 | SCHEMA 26: one active `client_deficiencies` row per (client, slug); upsert on generate. Restart `npm run dev`. |
 | 2026-08-13 | Review remediation: featuredDays export gone; intro-fee Pay + mock complete; portal pre-auth no PII; hashOtp fail-closed; calendar Done does not debit packs; audience-aware public footer. `AUTH_SECRET` + `CLIENT_AUTH_SECRET` both required in production. |
 | 2026-08-13 | Public website overhaul: marketing + find + auth + portal share one chrome; copy covers programs, portal, and Find. |
 | 2026-08-08 | Initial audit after programs science polish + LXC deploy (`a977bbb` / local `4d4fa35`) |

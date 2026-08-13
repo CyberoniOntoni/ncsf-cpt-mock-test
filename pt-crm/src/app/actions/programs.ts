@@ -6,7 +6,6 @@ import { getDb } from "@/db";
 import {
   assessmentTemplates,
   clientAssessments,
-  clientDeficiencies,
   clientMeasurements,
   clients,
   mesocycles,
@@ -55,6 +54,7 @@ import { suggestedInsertSortOrder } from "@/lib/exercise-order";
 import { ensureSetLogs } from "@/lib/session-sets";
 import { resolveFacilityEquipmentIdsAction } from "@/app/actions/client-equipment";
 import { getClientInOrg } from "@/lib/tenant";
+import { upsertActiveClientDeficiency } from "@/lib/client-deficiencies";
 import { id } from "@/lib/utils";
 import {
   evaluateClientRules,
@@ -229,6 +229,13 @@ async function persistSmarterArtifacts(opts: {
   clientId: string | null | undefined;
   programId: string;
   draftMeta: Record<string, unknown> | null | undefined;
+  draftDays?: Array<{
+    exercises: Array<{
+      isWarmup?: boolean;
+      exerciseName?: string;
+      setSchemeMeta?: { summary?: string } | null;
+    }>;
+  }>;
 }) {
   const defs = (opts.draftMeta?.detectedDeficiencies || []) as Array<{
     slug: string;
@@ -260,17 +267,15 @@ async function persistSmarterArtifacts(opts: {
 
   if (!opts.clientId || !defs.length) return;
 
+  const warmupNameBySlug = warmupExerciseNameBySlug(opts.draftDays);
   for (const d of defs) {
-    const defId = id("cdef");
-    await opts.tx.insert(clientDeficiencies).values({
-      id: defId,
+    const defId = await upsertActiveClientDeficiency({
       organizationId: opts.organizationId,
       clientId: opts.clientId,
-      deficiencySlug: d.slug,
-      source: d.source || "assessment",
-      severity: d.severity || "moderate",
-      status: "active",
-      affectedSide: d.affectedSide || "bilateral",
+      slug: d.slug,
+      source: d.source,
+      severity: d.severity,
+      affectedSide: d.affectedSide,
       notes: d.triggerDescription || null,
     });
     await opts.tx.insert(programCorrectivePrescriptions).values({
@@ -279,11 +284,41 @@ async function persistSmarterArtifacts(opts: {
       mesocycleId: mesoId,
       clientDeficiencyId: defId,
       deficiencySlug: d.slug,
-      prescribedExerciseName: d.name || d.slug,
+      prescribedExerciseName: warmupNameBySlug.get(d.slug) || d.name || d.slug,
       placement: "warmup",
       rationale: d.triggerDescription || null,
     });
   }
+}
+
+function warmupExerciseNameBySlug(
+  days:
+    | Array<{
+        exercises: Array<{
+          isWarmup?: boolean;
+          exerciseName?: string;
+          setSchemeMeta?: { summary?: string } | null;
+        }>;
+      }>
+    | undefined
+): Map<string, string> {
+  const map = new Map<string, string>();
+  if (!days) return map;
+  const marker = "Warm-up · Corrective · ";
+  for (const day of days) {
+    for (const ex of day.exercises) {
+      if (!ex.isWarmup || !ex.exerciseName) continue;
+      const summary = ex.setSchemeMeta?.summary || "";
+      const i = summary.indexOf(marker);
+      if (i < 0) continue;
+      const slug = summary
+        .slice(i + marker.length)
+        .trim()
+        .replace(/ /g, "_");
+      if (slug && !map.has(slug)) map.set(slug, ex.exerciseName);
+    }
+  }
+  return map;
 }
 
 function toExerciseLike(
@@ -545,6 +580,7 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
       clientId: input.clientId,
       programId,
       draftMeta: draft.meta as Record<string, unknown>,
+      draftDays: draft.days,
     });
   });
 

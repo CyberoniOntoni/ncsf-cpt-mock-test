@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -1007,6 +1007,9 @@ export const clientDeficiencies = pgTable(
       t.status
     ),
     index("client_deficiencies_client_slug_idx").on(t.clientId, t.deficiencySlug),
+    uniqueIndex("client_deficiencies_client_slug_active_uidx")
+      .on(t.clientId, t.deficiencySlug)
+      .where(sql`status = 'active'`),
   ]
 );
 

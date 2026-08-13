@@ -75,7 +75,9 @@ import {
 } from "../src/lib/set-schemes";
 import { seedIfNeeded } from "../src/db/seed";
 import { getDb } from "../src/db";
-import { organizations } from "../src/db/schema";
+import { and, eq } from "drizzle-orm";
+import { clientDeficiencies, clients, organizations } from "../src/db/schema";
+import { upsertActiveClientDeficiency } from "../src/lib/client-deficiencies";
 import { listExercisesForOrg } from "../src/lib/exercises";
 import {
   buildProgramDraft,
@@ -1195,8 +1197,40 @@ async function main() {
   console.log("ok desk priority recency; pain prescription ranks a warmup");
 
   await smokeBuildProgramDraft();
+  await smokeActiveDeficiencyUpsert();
 
   console.log("\nLane B programming smoke: ALL PASS");
+}
+
+async function smokeActiveDeficiencyUpsert(): Promise<void> {
+  await seedIfNeeded();
+  const db = await getDb();
+  const [cli] = await db.select().from(clients).limit(1);
+  assert(cli, "seed client");
+  const slug = "upper_cross_syndrome";
+  const a = await upsertActiveClientDeficiency({
+    organizationId: cli.organizationId,
+    clientId: cli.id,
+    slug,
+  });
+  const b = await upsertActiveClientDeficiency({
+    organizationId: cli.organizationId,
+    clientId: cli.id,
+    slug,
+  });
+  assertEqual(a, b, "second persist reuses active deficiency id");
+  const rows = await db
+    .select()
+    .from(clientDeficiencies)
+    .where(
+      and(
+        eq(clientDeficiencies.clientId, cli.id),
+        eq(clientDeficiencies.deficiencySlug, slug),
+        eq(clientDeficiencies.status, "active")
+      )
+    );
+  assertEqual(rows.length, 1, "one active row per client+slug");
+  console.log("ok upsertActiveClientDeficiency reuses active id");
 }
 
 main()

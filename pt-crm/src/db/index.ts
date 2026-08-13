@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 25; // 25 = trainer card credentials, area, rates
+const SCHEMA_VERSION = 26; // 26 = one active deficiency per client+slug
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -560,6 +560,18 @@ async function ensureSchema() {
     );
     CREATE INDEX IF NOT EXISTS client_deficiencies_org_client_status_idx ON client_deficiencies(organization_id, client_id, status);
     CREATE INDEX IF NOT EXISTS client_deficiencies_client_slug_idx ON client_deficiencies(client_id, deficiency_slug);
+    DELETE FROM client_deficiencies a
+    USING client_deficiencies b
+    WHERE a.client_id = b.client_id
+      AND a.deficiency_slug = b.deficiency_slug
+      AND a.status = 'active' AND b.status = 'active'
+      AND (
+        a.identified_at < b.identified_at
+        OR (a.identified_at = b.identified_at AND a.id < b.id)
+      );
+    CREATE UNIQUE INDEX IF NOT EXISTS client_deficiencies_client_slug_active_uidx
+      ON client_deficiencies(client_id, deficiency_slug)
+      WHERE status = 'active';
 
     CREATE TABLE IF NOT EXISTS client_equipment (
       id TEXT PRIMARY KEY,
