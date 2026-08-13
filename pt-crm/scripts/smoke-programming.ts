@@ -791,6 +791,23 @@ function main() {
       "work-slot 0 strength compound uses reverse pyramid, not leftover RAMP sort"
     );
 
+    const volumeSecond: SetSchemeId = assignSetScheme({
+      goal: "strength",
+      pattern: "hinge",
+      isWarmup: false,
+      sortOrder: 2,
+      experience: "intermediate",
+      intensity: "hypertrophy",
+    });
+    assert(volumeSecond !== "wave", "tagged lower is not wave");
+    assert(volumeSecond !== "reverse_pyramid", "tagged lower is not RPT");
+    assert(
+      volumeSecond === "straight" ||
+        volumeSecond === "pyramid" ||
+        volumeSecond === "tempo",
+      `tagged second lower must not be heavy (got ${volumeSecond})`
+    );
+
     const warmupScheme = assignSetScheme({
       goal: "hypertrophy",
       pattern: "mobility",

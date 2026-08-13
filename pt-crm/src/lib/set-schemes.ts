@@ -751,8 +751,15 @@ export function assignSetScheme(opts: {
   isWarmup: boolean;
   sortOrder: number;
   experience?: string;
+  intensity?: string;
 }): SetSchemeId {
   if (opts.isWarmup) return "straight";
+  const volumeBias =
+    opts.intensity === "hypertrophy" || opts.intensity === "technique";
+  if (volumeBias) {
+    const n = opts.sortOrder;
+    return n % 2 === 0 ? "straight" : "pyramid";
+  }
   const goal = opts.goal;
   const pattern = opts.pattern || "";
   const main =

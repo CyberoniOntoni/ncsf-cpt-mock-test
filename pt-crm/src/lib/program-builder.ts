@@ -207,8 +207,8 @@ function prescription(
   const beginner = /beginner/i.test(experience);
   const advanced = /advanced|elite/i.test(experience);
   const volumeBias = intensity === "hypertrophy" || intensity === "technique";
-  const effectiveGoal: ProgramGoal =
-    volumeBias && goal === "strength" ? "hypertrophy" : goal;
+  // Volume-tagged slots remap any goal (not only strength) after mobility/cardio early path.
+  const effectiveGoal: ProgramGoal = volumeBias ? "hypertrophy" : goal;
   const compound = isCompoundPattern(pattern);
 
   let sets: number;
@@ -924,6 +924,7 @@ function leftoverPinnedRow(
     isWarmup: false,
     sortOrder: schemeIndex,
     experience,
+    intensity,
   });
   const planned = buildSchemePlan(schemeId, rx, {
     pattern: ex.movementPattern,
@@ -1247,6 +1248,7 @@ export async function buildProgramDraft(
         // Scheme rotation uses work-slot index, not global sort after RAMP/correctives
         sortOrder: isPrep ? 0 : workSlotIndex,
         experience,
+        intensity: slot.tag,
       });
 
       // ── Multi-exercise group (contrast / complex / superset) ──
