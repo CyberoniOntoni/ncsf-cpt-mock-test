@@ -1,5 +1,5 @@
 /**
- * Lane B programming brain smoke — pure libs only (no DB / Next server).
+ * Lane B programming brain smoke — unit libs plus one buildProgramDraft integration.
  * Run: npx tsx scripts/smoke-programming.ts
  */
 
@@ -70,7 +70,12 @@ import {
   initSetLogsFromScheme,
   type SetSchemeId,
 } from "../src/lib/set-schemes";
+import { seedIfNeeded } from "../src/db/seed";
+import { getDb } from "../src/db";
+import { organizations } from "../src/db/schema";
+import { listExercisesForOrg } from "../src/lib/exercises";
 import {
+  buildProgramDraft,
   composeProgramNotes,
   leftoverLowerIntensity,
 } from "../src/lib/program-builder";
@@ -99,7 +104,57 @@ function ex(
   };
 }
 
-function main() {
+async function smokeBuildProgramDraft(): Promise<void> {
+  await seedIfNeeded();
+  const db = await getDb();
+  const [org] = await db.select().from(organizations).limit(1);
+  if (!org) throw new Error("no org after seed");
+
+  const pool = await listExercisesForOrg(org.id);
+  const available = pool.filter((e) => e.available);
+  if (available.length === 0) {
+    console.log(
+      "skip buildProgramDraft: available.length === 0 (empty seed library)"
+    );
+    return;
+  }
+
+  const draft = await buildProgramDraft({
+    organizationId: org.id,
+    goal: "strength",
+    daysPerWeek: 4,
+    sessionMinutes: 45,
+    experienceLevel: "intermediate",
+    title: "Smoke lower pair",
+  });
+  const lowerDay = draft.days.find(
+    (d) =>
+      d.exercises.filter(
+        (e) =>
+          !e.isWarmup &&
+          (e.movementPattern === "squat" || e.movementPattern === "hinge")
+      ).length >= 2
+  );
+  if (lowerDay) {
+    const lowers = lowerDay.exercises.filter(
+      (e) =>
+        !e.isWarmup &&
+        (e.movementPattern === "squat" || e.movementPattern === "hinge")
+    );
+    const heavySchemes = new Set(["wave", "reverse_pyramid", "cluster"]);
+    const taggedHeavy = lowers.filter((e) =>
+      heavySchemes.has(String(e.setScheme))
+    );
+    assert(taggedHeavy.length <= 1, "at most one heavy lower scheme on a day");
+  }
+  assert(
+    !/exercises in pool/i.test(draft.notes || ""),
+    "draft notes omit library count"
+  );
+  console.log("ok buildProgramDraft same-day lower schemes + note hygiene");
+}
+
+async function main() {
   // 1) Constraint profile: "left shoulder pain" → shoulder flag
   const profile = buildConstraintProfile({
     injuries: "left shoulder pain",
@@ -966,13 +1021,14 @@ function main() {
   }
   console.log("ok composeProgramNotes no library count; regen uses coachNotes");
 
+  await smokeBuildProgramDraft();
+
   console.log("\nLane B programming smoke: ALL PASS");
 }
 
-try {
-  main();
-  process.exit(0);
-} catch (e) {
-  console.error(e);
-  process.exit(1);
-}
+main()
+  .then(() => process.exit(0))
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
