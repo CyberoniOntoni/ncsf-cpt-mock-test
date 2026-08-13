@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 23; // 23 = persistent seeker accounts
+const SCHEMA_VERSION = 24; // 24 = seeker named training areas
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -805,6 +805,7 @@ async function ensureSchema() {
       first_name TEXT NOT NULL,
       last_name TEXT NOT NULL DEFAULT '',
       city TEXT,
+      preferred_area TEXT,
       lat REAL,
       lng REAL,
       radius_km INTEGER NOT NULL DEFAULT 15,
@@ -814,6 +815,7 @@ async function ensureSchema() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS seeker_profiles_email_idx ON seeker_profiles(email);
+    ALTER TABLE seeker_profiles ADD COLUMN IF NOT EXISTS preferred_area TEXT;
 
     CREATE TABLE IF NOT EXISTS seeker_measurements (
       id TEXT PRIMARY KEY,

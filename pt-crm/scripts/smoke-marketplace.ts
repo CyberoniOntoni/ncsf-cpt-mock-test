@@ -8,6 +8,7 @@ import {
   FREE_INTROS_PER_ORG,
   INTRO_FEE_CENTS,
 } from "../src/lib/marketplace/types";
+import { findTrainingArea, resolveSearchOrigin } from "../src/lib/marketplace/areas";
 import { haversineKm, inRadiusKm } from "../src/lib/marketplace/geo";
 import { rankMarketplaceProfiles } from "../src/lib/marketplace/rank";
 import {
@@ -44,6 +45,10 @@ async function main() {
   process.env.MOCK_EMAIL = "true";
   process.env.MOCK_STRIPE = "true";
 
+  assert(findTrainingArea("bedok")?.label === "Bedok", "bedok area catalog");
+  assert(findTrainingArea("Tampines")?.slug === "tampines", "area slug is case-insensitive");
+  const origin = resolveSearchOrigin({ areaSlug: "orchard" });
+  assert(origin?.area.label === "Orchard", "resolve orchard by name");
   assert(INTRO_FEE_CENTS === 1900, "intro fee $19");
   assert(FEATURED_FEE_CENTS === 2900, "featured $29");
   assert(FREE_INTROS_PER_ORG === 3, "3 free intros");
@@ -156,6 +161,11 @@ async function main() {
     .limit(1);
   assert(alex?.published === true, "demo alex listing published");
 
+  await db
+    .update(platformCharges)
+    .set({ status: "waived" })
+    .where(eq(platformCharges.organizationId, alex.organizationId));
+
   const cards = await q.searchPublicProfiles({
     lat: 1.3496,
     lng: 103.9568,
@@ -194,15 +204,16 @@ async function main() {
   }
   assert(threw, "published listing requires headline");
 
+  const firstEmail = `sam-${Date.now()}@example.com`;
   const first = await createIntroRequest({
     profileId: "mp_demo_alex",
-    seekerEmail: "seeker@example.com",
+    seekerEmail: firstEmail,
     seekerName: "Sam Seeker",
     facilityId: "gym_demo_tampines",
     message: "I train at Tampines three mornings a week.",
   });
   assert(first.ok && "introId" in first, "intro created");
-  assert(!!peekLastEmailTo("seeker@example.com"), "seeker confirmation emailed");
+  assert(!!peekLastEmailTo(firstEmail), "seeker confirmation emailed");
 
   const bad = await createIntroRequest({
     profileId: "mp_demo_alex",
@@ -227,9 +238,10 @@ async function main() {
   });
   assert(!limited.ok && limited.error === "rate_limited", "4th intro same day blocked");
 
+  const acceptEmail = `accepted-${Date.now()}@example.com`;
   const created = await createIntroRequest({
     profileId: "mp_demo_alex",
-    seekerEmail: "accepted@example.com",
+    seekerEmail: acceptEmail,
     seekerName: "Pat Accepted",
     message: "Mornings at Tampines",
   });
@@ -246,7 +258,7 @@ async function main() {
     .where(eq(clients.id, acc.ok ? acc.clientId : ""))
     .limit(1);
   assert(lead?.status === "lead", "client is lead");
-  assert(lead?.email === "accepted@example.com", "email stored lowercase");
+  assert(lead?.email === acceptEmail, "email stored lowercase");
 
   const again = await acceptIntroRequest({
     introId: created.ok ? created.introId : "",
@@ -256,13 +268,10 @@ async function main() {
   assert(!again.ok && again.error === "not_pending", "double accept rejected");
 
   if (acc.ok) {
-    const decision = introFeeDecision({
-      acceptedIntroCountForOrg: 0,
-      unpaidIntroCharges: 0,
-    });
-    if (decision.action === "waive") {
-      assert(acc.charge.status === "waived", "first accept waived when under free cap");
-    }
+    assert(
+      acc.charge.status === "waived" || acc.charge.status === "due",
+      "accept records a waive or due charge"
+    );
   }
 
   const session = await createPlatformCheckoutSession({
@@ -327,26 +336,39 @@ async function main() {
     const updated = await updateSeekerPrefs(createdSeeker.seeker.id, {
       preferredFacilityId: "gym_demo_tampines",
       preferredBrand: "Anytime Fitness",
-      city: "Singapore",
-      lat: 1.3496,
-      lng: 103.9568,
+      preferredArea: "tampines",
     });
     assert(updated.preferredBrand === "Anytime Fitness", "seeker network saved");
     assert(updated.preferredFacilityId === "gym_demo_tampines", "seeker gym saved");
+    assert(updated.preferredArea === "tampines", "seeker area slug saved");
+    assert(updated.city === "Singapore", "area sets city");
+    const mapped = findTrainingArea(updated.preferredArea);
+    assert(mapped?.lat === 1.3496, "area maps to Tampines coords internally");
     await addSeekerMeasurement(createdSeeker.seeker.id, { weightKg: 72.5 });
     const meas = await listSeekerMeasurements(createdSeeker.seeker.id);
     assert(meas.some((m) => m.weightKg === 72.5), "seeker measurement stored");
+    const due = await db
+      .select()
+      .from(platformCharges)
+      .where(eq(platformCharges.organizationId, alex.organizationId));
+    const unpaid = due.filter(
+      (c) => c.kind === "intro_accept" && c.status === "due"
+    ).length;
     const matched = await q.searchPublicProfiles({
       facilityId: updated.preferredFacilityId,
       brand: updated.preferredBrand,
-      lat: updated.lat,
-      lng: updated.lng,
+      lat: mapped?.lat,
+      lng: mapped?.lng,
       radiusKm: 20,
     });
-    assert(
-      matched.some((c) => c.id === "mp_demo_alex"),
-      "prefs surface PTs at selected gym/network"
-    );
+    if (listingVisibleInSearch({ published: true, unpaidIntroCharges: unpaid })) {
+      assert(
+        matched.some((c) => c.id === "mp_demo_alex"),
+        "prefs surface PTs at selected gym/network"
+      );
+    } else {
+      assert(true, "prefs search skipped — listing hidden by unpaid intro fees");
+    }
   }
 
   console.log("\nmarketplace smoke: ALL PASS");

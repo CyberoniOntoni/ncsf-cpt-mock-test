@@ -6,6 +6,7 @@ import {
   listPublicGyms,
   searchPublicProfiles,
 } from "@/db/queries/marketplace";
+import { resolveSearchOrigin } from "@/lib/marketplace/areas";
 import { DEFAULT_RADIUS_KM } from "@/lib/marketplace/types";
 import { getSeekerById, optionalSeekerSession } from "@/lib/seeker-auth";
 
@@ -17,8 +18,7 @@ export default async function FindPage({
   searchParams: Promise<{
     gym?: string;
     brand?: string;
-    lat?: string;
-    lng?: string;
+    area?: string;
     radius?: string;
   }>;
 }) {
@@ -28,14 +28,20 @@ export default async function FindPage({
   const session = await optionalSeekerSession();
   const seeker = session ? await getSeekerById(session.seekerId) : null;
 
-  const gymParam = (sp.gym || seeker?.preferredFacilityId || "").trim();
-  const brandParam = (sp.brand || seeker?.preferredBrand || "").trim();
+  const gymParam = (
+    sp.gym !== undefined ? sp.gym : seeker?.preferredFacilityId || ""
+  ).trim();
+  const brandParam = (
+    sp.brand !== undefined ? sp.brand : seeker?.preferredBrand || ""
+  ).trim();
+  const areaParam = (
+    sp.area !== undefined ? sp.area : seeker?.preferredArea || ""
+  ).trim();
   const facility =
     gyms.find((g) => g.id === gymParam || g.slug === gymParam) || null;
-  const latRaw = sp.lat != null && sp.lat !== "" ? Number(sp.lat) : seeker?.lat;
-  const lngRaw = sp.lng != null && sp.lng !== "" ? Number(sp.lng) : seeker?.lng;
-  const lat = latRaw != null && Number.isFinite(latRaw) ? latRaw : null;
-  const lng = lngRaw != null && Number.isFinite(lngRaw) ? lngRaw : null;
+  const origin = resolveSearchOrigin({ areaSlug: areaParam });
+  const lat = origin?.lat ?? null;
+  const lng = origin?.lng ?? null;
   const radius =
     sp.radius != null && sp.radius !== ""
       ? Number(sp.radius)
@@ -66,8 +72,7 @@ export default async function FindPage({
         brands={brands}
         gym={facility?.id || gymParam}
         brand={brandParam}
-        lat={lat != null ? String(lat) : undefined}
-        lng={lng != null ? String(lng) : undefined}
+        area={origin?.area.slug || areaParam}
         radius={String(Number.isFinite(radius) ? radius : DEFAULT_RADIUS_KM)}
       />
       {cards.length === 0 ? (

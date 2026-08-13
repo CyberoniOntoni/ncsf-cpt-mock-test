@@ -41,8 +41,8 @@ After schema / `git pull`: **restart** `npm run dev` so PGlite applies `SCHEMA_V
 
 ## 2b. Find a trainer (marketplace)
 
-1. Client: **`/find/register`** → save gym, gym network, and optional measurements on **`/find/account`**.
-2. **`/find`** uses those prefs (area + gym + network) to list available PTs.
+1. Client: **`/find/register`** → on **`/find/account`** pick an **area** (Tampines, Bedok, Orchard, …), gym, and/or network. Optional measurements.
+2. **`/find`** lists PTs for that named area (no coordinates to enter), gym, and network.
 3. Trainer: **Settings** → publish a listing and pick gyms.
 4. Client sends intro. Trainer: **People → Intros** → Accept → CRM **lead**.
 5. Client progress: self-logged measurements on Account, plus trainer-logged metrics when they share an org email.

@@ -6,6 +6,7 @@ import {
   listPublicGyms,
   searchPublicProfiles,
 } from "@/db/queries/marketplace";
+import { resolveSearchOrigin } from "@/lib/marketplace/areas";
 import {
   getSeekerById,
   listLinkedTrainerProgress,
@@ -21,12 +22,13 @@ export default async function FindAccountPage() {
   if (!seeker) return null;
   const gyms = await listPublicGyms();
   const brands = listPublicBrands(gyms);
+  const origin = resolveSearchOrigin({ areaSlug: seeker.preferredArea });
   const [selfMeas, trainerProgress, nearby] = await Promise.all([
     listSeekerMeasurements(seeker.id),
     listLinkedTrainerProgress(seeker.email),
     searchPublicProfiles({
-      lat: seeker.lat,
-      lng: seeker.lng,
+      lat: origin?.lat ?? null,
+      lng: origin?.lng ?? null,
       facilityId: seeker.preferredFacilityId,
       brand: seeker.preferredBrand,
       radiusKm: seeker.radiusKm,

@@ -891,6 +891,7 @@ export const seekerProfiles = pgTable(
     firstName: text("first_name").notNull(),
     lastName: text("last_name").notNull().default(""),
     city: text("city"),
+    preferredArea: text("preferred_area"),
     lat: real("lat"),
     lng: real("lng"),
     radiusKm: integer("radius_km").notNull().default(15),

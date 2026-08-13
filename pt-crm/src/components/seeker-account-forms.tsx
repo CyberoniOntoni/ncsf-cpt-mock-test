@@ -5,6 +5,7 @@ import {
   addSeekerMeasurementAction,
   saveSeekerPrefsAction,
 } from "@/app/actions/marketplace-seeker";
+import { TRAINING_AREAS } from "@/lib/marketplace/areas";
 import type { SeekerPublic } from "@/lib/seeker-auth";
 
 export function SeekerAccountForms(props: {
@@ -24,9 +25,7 @@ export function SeekerAccountForms(props: {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
           const result = await saveSeekerPrefsAction({
-            city: String(fd.get("city") || "") || undefined,
-            lat: fd.get("lat") ? Number(fd.get("lat")) : null,
-            lng: fd.get("lng") ? Number(fd.get("lng")) : null,
+            preferredArea: String(fd.get("preferredArea") || ""),
             radiusKm: Number(fd.get("radiusKm") || 15),
             preferredFacilityId: String(fd.get("preferredFacilityId") || ""),
             preferredBrand: String(fd.get("preferredBrand") || ""),
@@ -35,26 +34,21 @@ export function SeekerAccountForms(props: {
         }}
       >
         <h2 className="font-medium">Where you train</h2>
-        <input
-          name="city"
-          defaultValue={s.city || ""}
-          placeholder="City / area"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            name="lat"
-            defaultValue={s.lat ?? ""}
-            placeholder="Lat (optional)"
-            className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-          />
-          <input
-            name="lng"
-            defaultValue={s.lng ?? ""}
-            placeholder="Lng (optional)"
-            className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-          />
-        </div>
+        <label className="block text-sm text-zinc-500">
+          Area
+          <select
+            name="preferredArea"
+            defaultValue={s.preferredArea || ""}
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          >
+            <option value="">No area</option>
+            {TRAINING_AREAS.map((a) => (
+              <option key={a.slug} value={a.slug}>
+                {a.label}, {a.city}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="block text-sm text-zinc-500">
           Specific gym
           <select

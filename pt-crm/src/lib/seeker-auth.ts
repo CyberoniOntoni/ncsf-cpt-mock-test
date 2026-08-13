@@ -12,6 +12,7 @@ import {
   seekerMeasurements,
   seekerProfiles,
 } from "@/db/schema";
+import { findTrainingArea } from "@/lib/marketplace/areas";
 import { DEFAULT_RADIUS_KM } from "@/lib/marketplace/types";
 import { id } from "@/lib/utils";
 
@@ -33,8 +34,7 @@ export type SeekerPublic = {
   firstName: string;
   lastName: string;
   city: string | null;
-  lat: number | null;
-  lng: number | null;
+  preferredArea: string | null;
   radiusKm: number;
   preferredFacilityId: string | null;
   preferredBrand: string | null;
@@ -64,8 +64,7 @@ function toPublic(row: typeof seekerProfiles.$inferSelect): SeekerPublic {
     firstName: row.firstName,
     lastName: row.lastName,
     city: row.city,
-    lat: row.lat,
-    lng: row.lng,
+    preferredArea: row.preferredArea,
     radiusKm: row.radiusKm,
     preferredFacilityId: row.preferredFacilityId,
     preferredBrand: row.preferredBrand,
@@ -135,6 +134,7 @@ export async function updateSeekerPrefs(
     firstName?: string;
     lastName?: string;
     city?: string | null;
+    preferredArea?: string | null;
     lat?: number | null;
     lng?: number | null;
     radiusKm?: number;
@@ -142,15 +142,25 @@ export async function updateSeekerPrefs(
     preferredBrand?: string | null;
   }
 ): Promise<SeekerPublic> {
+  const area = findTrainingArea(prefs.preferredArea);
   const db = await getDb();
   await db
     .update(seekerProfiles)
     .set({
       ...(prefs.firstName != null ? { firstName: prefs.firstName.trim() } : {}),
       ...(prefs.lastName != null ? { lastName: prefs.lastName.trim() } : {}),
-      ...(prefs.city !== undefined ? { city: prefs.city } : {}),
-      ...(prefs.lat !== undefined ? { lat: prefs.lat } : {}),
-      ...(prefs.lng !== undefined ? { lng: prefs.lng } : {}),
+      ...(prefs.preferredArea !== undefined
+        ? {
+            preferredArea: area?.slug ?? null,
+            city: area?.city ?? prefs.city ?? null,
+            lat: area?.lat ?? null,
+            lng: area?.lng ?? null,
+          }
+        : {
+            ...(prefs.city !== undefined ? { city: prefs.city } : {}),
+            ...(prefs.lat !== undefined ? { lat: prefs.lat } : {}),
+            ...(prefs.lng !== undefined ? { lng: prefs.lng } : {}),
+          }),
       ...(prefs.radiusKm != null ? { radiusKm: prefs.radiusKm } : {}),
       ...(prefs.preferredFacilityId !== undefined
         ? { preferredFacilityId: prefs.preferredFacilityId || null }

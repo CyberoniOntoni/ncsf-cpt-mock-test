@@ -41,18 +41,14 @@ export async function logoutSeekerAction() {
 }
 
 export async function saveSeekerPrefsAction(form: {
-  city?: string;
-  lat?: number | null;
-  lng?: number | null;
+  preferredArea?: string;
   radiusKm?: number;
   preferredFacilityId?: string;
   preferredBrand?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await requireSeekerSession();
   await updateSeekerPrefs(session.seekerId, {
-    city: form.city ?? null,
-    lat: form.lat ?? null,
-    lng: form.lng ?? null,
+    preferredArea: form.preferredArea || null,
     radiusKm: form.radiusKm,
     preferredFacilityId: form.preferredFacilityId || null,
     preferredBrand: form.preferredBrand || null,
