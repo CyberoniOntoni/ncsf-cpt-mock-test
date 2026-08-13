@@ -22,9 +22,7 @@ import { requireSession } from "@/lib/auth";
 import {
   correctivesFromAssessmentResults,
   correctivesFromClientHistory,
-  matchExercisesForCorrective,
   mergeCorrectives,
-  type CorrectiveExercisePoolItem,
 } from "@/lib/assessment-correctives";
 import {
   rankSubstitutions,
@@ -41,6 +39,7 @@ import {
 import { buildConstraintProfile } from "@/lib/program-constraints";
 import {
   buildProgramDraft,
+  loadMappingRanks,
   type AssessmentHint,
   type ProgramBuilderInput,
   type ProgramGoal,
@@ -60,7 +59,11 @@ import {
   evaluateClientRules,
   isInsufficientSafeExercisesError,
   measurementsFromRow,
+  prioritizeAndRotateCorrectives,
   type ClientEvaluationContext,
+  type DetectedDeficiency,
+  type DeficiencySeverity,
+  type DeficiencySource,
 } from "@/lib/smarter-rule-engine";
 
 type BaselineRx = {
@@ -2494,9 +2497,54 @@ export async function suggestProgramMesocycleWeekAction(programId: string) {
   return { week: plan.week, label: plan.label, notes: plan.notes };
 }
 
+/** Desk prescriptions → engine slugs so Insert shares Auto-design ranking. */
+const CORRECTIVE_ID_TO_SLUG: Record<string, string> = {
+  "shoulder-mobility": "upper_cross_syndrome",
+  "ohs-arms-tspine-shoulder": "upper_cross_syndrome",
+  "posture-upper-quarter": "upper_cross_syndrome",
+  "tspine-mobility-history": "upper_cross_syndrome",
+  "neck-posture-history": "forward_head_posture",
+  "posture-pelvis-core": "lower_cross_syndrome",
+  "low-back-gentle": "lower_cross_syndrome",
+  "hip-mobility-history": "lower_cross_syndrome",
+  "ankle-df-mobility": "ankle_mobility_restriction",
+  "ohs-heels-ankle": "ankle_mobility_restriction",
+  "ohs-global-mobility": "ankle_mobility_restriction",
+  "ohs-knee-valgus-control": "knee_valgus_collapse",
+  "knee-control-history": "knee_valgus_collapse",
+};
+
+function deficienciesFromCorrectives(
+  correctives: Array<{ id: string; reason: string; priority: number }>
+): DetectedDeficiency[] {
+  const defs: DetectedDeficiency[] = [];
+  const seen = new Set<string>();
+  correctives.forEach((c, i) => {
+    const slug = CORRECTIVE_ID_TO_SLUG[c.id] ?? c.id.replace(/-/g, "_");
+    if (seen.has(slug)) return;
+    seen.add(slug);
+    const severity: DeficiencySeverity =
+      c.priority >= 80 ? "severe" : c.priority >= 60 ? "moderate" : "mild";
+    const source: DeficiencySource = c.id.includes("history")
+      ? "history"
+      : "assessment";
+    defs.push({
+      slug,
+      name: c.reason,
+      category: "mobility",
+      severity,
+      affectedSide: "bilateral",
+      source,
+      triggerDescription: c.reason,
+      identifiedAt: new Date(i),
+    });
+  });
+  return defs;
+}
+
 /**
- * Insert up to 2 warmup correctives per program day from client history + assessments.
- * Skips exercises already present by exerciseId or name.
+ * Insert up to 2 rotated warmup correctives per program day from client history + assessments.
+ * Shares prioritizeAndRotateCorrectives with Auto-design. Skips ids/names already on the day.
  */
 export async function insertCorrectivesAction(programId: string) {
   const session = await requireSession();
@@ -2516,8 +2564,9 @@ export async function insertCorrectivesAction(programId: string) {
 
   let injuries: string | null = null;
   let assessmentHints: AssessmentHint[] = [];
+  let client: Awaited<ReturnType<typeof getClientInOrg>> | null = null;
   if (program.clientId) {
-    const client = await getClientInOrg(
+    client = await getClientInOrg(
       program.clientId,
       session.organizationId
     );
@@ -2543,15 +2592,33 @@ export async function insertCorrectivesAction(programId: string) {
     return { ok: true as const, inserted: 0, reason: "no_correctives" as const };
   }
 
+  const evalCtx: ClientEvaluationContext = client
+    ? await loadEvaluationContextForClient(client, assessmentHints)
+    : {
+        client: {
+          injuriesText: injuries || "",
+          contraindicationsText: "",
+          medicalHistoryText: "",
+        },
+        measurements: null,
+        assessments: [],
+      };
+
+  const defs = deficienciesFromCorrectives(correctives);
+  const mappingsBySlug = await loadMappingRanks(db);
+
   const bank = await listExercisesForOrg(session.organizationId);
-  const poolItems: CorrectiveExercisePoolItem[] = bank.map((e) => ({
-    id: e.id,
-    name: e.name,
-    tags: e.tags,
-    movementPattern: e.movementPattern,
-    available: e.available,
-    cues: e.cues,
-  }));
+  const pool = bank
+    .filter((e) => e.available)
+    .map((e) => ({
+      id: e.id,
+      name: e.name,
+      movementPattern: e.movementPattern,
+      tags: e.tags,
+      equipmentIds: e.equipmentIds,
+      equipmentAny: e.equipmentAny,
+      available: e.available,
+    }));
 
   const days = await db
     .select()
@@ -2559,11 +2626,20 @@ export async function insertCorrectivesAction(programId: string) {
     .where(eq(programDays.programId, programId))
     .orderBy(asc(programDays.dayIndex));
 
+  const byDay = prioritizeAndRotateCorrectives(
+    defs,
+    days.length,
+    evalCtx,
+    pool,
+    mappingsBySlug
+  );
+
   let inserted = 0;
   const sortOrderUpdates: { id: string; newSortOrder: number }[] = [];
   const correctivesToInsert: (typeof programExercises.$inferInsert)[] = [];
 
-  for (const day of days) {
+  for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+    const day = days[dayIndex];
     const existing = await db
       .select()
       .from(programExercises)
@@ -2585,23 +2661,18 @@ export async function insertCorrectivesAction(programId: string) {
       cues: string | null;
     }> = [];
 
-    for (const corrective of correctives) {
-      if (toInsert.length >= 2) break;
-      const matches = matchExercisesForCorrective(corrective, poolItems, 8);
-      const pick = matches.find((m) => {
-        if (!m.available) return false;
-        if (presentIds.has(m.id)) return false;
-        if (presentNames.has(m.name.trim().toLowerCase())) return false;
-        if (toInsert.some((t) => t.exerciseId === m.id)) return false;
-        return true;
-      });
-      if (!pick) continue;
-      const bankEx = bank.find((e) => e.id === pick.id);
+    for (const pick of byDay.get(dayIndex + 1) || []) {
+      if (!pick.exerciseId) continue;
+      if (presentIds.has(pick.exerciseId)) continue;
+      const nameKey = pick.exerciseName.trim().toLowerCase();
+      if (presentNames.has(nameKey)) continue;
+      if (toInsert.some((t) => t.exerciseId === pick.exerciseId)) continue;
+      const bankEx = bank.find((e) => e.id === pick.exerciseId);
       toInsert.push({
-        exerciseId: pick.id,
-        exerciseName: pick.name,
+        exerciseId: pick.exerciseId,
+        exerciseName: pick.exerciseName,
         movementPattern: pick.movementPattern || "mobility",
-        notes: corrective.reason,
+        notes: pick.rationale,
         cues: bankEx?.cues ?? null,
       });
     }
@@ -2631,9 +2702,10 @@ export async function insertCorrectivesAction(programId: string) {
         isWarmup: true,
         setScheme: "straight",
         setSchemeMeta: {
+          phase: "warmup",
           summary: `Warm-up · ${ex.notes}`,
           howTo: ex.cues || ex.notes,
-        },
+        } as { summary: string; howTo: string; phase: "warmup" },
         groupId: null,
         groupKind: null,
         groupLabel: null,

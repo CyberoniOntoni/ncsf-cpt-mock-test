@@ -1074,8 +1074,75 @@ async function main() {
       day1.every((c) => c.exerciseId),
       "no ghost primer when pool has no match"
     );
+
+    const twoDefs = [
+      {
+        slug: "upper_cross_syndrome",
+        name: "Upper Cross Syndrome",
+        category: "postural",
+        severity: "moderate" as const,
+        affectedSide: "bilateral" as const,
+        source: "assessment" as const,
+        triggerDescription: "",
+        identifiedAt: new Date(0),
+      },
+      {
+        slug: "lower_cross_syndrome",
+        name: "Lower Cross Syndrome",
+        category: "postural",
+        severity: "moderate" as const,
+        affectedSide: "bilateral" as const,
+        source: "assessment" as const,
+        triggerDescription: "",
+        identifiedAt: new Date(0),
+      },
+      {
+        slug: "ankle_mobility_restriction",
+        name: "Ankle mobility restriction",
+        category: "mobility",
+        severity: "moderate" as const,
+        affectedSide: "bilateral" as const,
+        source: "assessment" as const,
+        triggerDescription: "",
+        identifiedAt: new Date(0),
+      },
+    ];
+    const rotatePool = [
+      {
+        id: "ex_ucs",
+        name: "Face pull",
+        tags: "shoulder,scapula",
+        movementPattern: "mobility",
+      },
+      {
+        id: "ex_lcs",
+        name: "Dead bug",
+        tags: "core,anti_extension",
+        movementPattern: "core",
+      },
+      {
+        id: "ex_ank",
+        name: "Knee-to-wall ankle",
+        tags: "ankle,mobility",
+        movementPattern: "mobility",
+      },
+    ];
+    const rotatedDays = prioritizeAndRotateCorrectives(
+      twoDefs,
+      3,
+      ctx,
+      rotatePool
+    );
+    const names = [1, 2, 3].map((d) =>
+      (rotatedDays.get(d) || []).map((c) => c.exerciseId).join(",")
+    );
+    assert(
+      new Set(names).size > 1,
+      "three days do not all get the same two correctives"
+    );
   }
   console.log("ok mapping ranks beat hints; no ghost primer");
+  console.log("ok corrective rotation uniqueness across days");
 
   await smokeBuildProgramDraft();
 

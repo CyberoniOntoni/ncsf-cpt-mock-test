@@ -1068,10 +1068,9 @@ function prescribedToWarmups(
   }));
 }
 
-async function loadExerciseDeficiencyMappingsBySlug(): Promise<
-  Map<string, Map<string, number>>
-> {
-  const db = await getDb();
+export async function loadMappingRanks(
+  db: Awaited<ReturnType<typeof getDb>>
+): Promise<Map<string, Map<string, number>>> {
   const rows = await db
     .select({
       exerciseId: exerciseDeficiencyMappings.exerciseId,
@@ -1200,7 +1199,7 @@ export async function buildProgramDraft(
 
   const mappingsBySlug =
     gatedCtx && smarterEval && smarterEval.deficiencies.length > 0
-      ? await loadExerciseDeficiencyMappingsBySlug()
+      ? await loadMappingRanks(await getDb())
       : undefined;
 
   const rotatedCorrectives =
