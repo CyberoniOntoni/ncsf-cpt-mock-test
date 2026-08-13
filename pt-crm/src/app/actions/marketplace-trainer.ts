@@ -11,7 +11,9 @@ import {
   marketplaceProfileFacilities,
   marketplaceProfiles,
   platformCharges,
+  users,
 } from "@/db/schema";
+import { findTrainingArea } from "@/lib/marketplace/areas";
 import { introFeeDecision } from "@/lib/marketplace/fees";
 import {
   FEATURED_DAYS,
@@ -29,11 +31,15 @@ export async function upsertMarketplaceListing(opts: {
   userId: string;
   headline: string;
   bio: string;
+  credentials: string;
   specialties: string;
   hourlyRateCents: number | null;
-  city: string;
-  lat: number | null;
-  lng: number | null;
+  sessionRateCents: number | null;
+  currency: string;
+  preferredArea: string | null;
+  city?: string;
+  lat?: number | null;
+  lng?: number | null;
   radiusKm: number;
   published: boolean;
   facilityIds: string[];
@@ -42,6 +48,7 @@ export async function upsertMarketplaceListing(opts: {
   if (opts.published && !opts.headline.trim()) {
     throw new Error("Headline is required to publish");
   }
+  const area = findTrainingArea(opts.preferredArea);
   const db = await getDb();
   const [existing] = await db
     .select()
@@ -58,11 +65,16 @@ export async function upsertMarketplaceListing(opts: {
   const row = {
     headline: opts.headline.trim(),
     bio: opts.bio,
+    credentials: opts.credentials.trim(),
     specialties: opts.specialties,
     hourlyRateCents: opts.hourlyRateCents,
-    city: opts.city,
-    lat: opts.lat,
-    lng: opts.lng,
+    sessionRateCents: opts.sessionRateCents,
+    currency: opts.currency || "SGD",
+    preferredArea: area?.slug ?? null,
+    city: area?.city ?? opts.city ?? "",
+    region: area?.label ?? null,
+    lat: area?.lat ?? opts.lat ?? null,
+    lng: area?.lng ?? opts.lng ?? null,
     radiusKm: opts.radiusKm,
     published: opts.published,
     serviceModes: opts.serviceModes,
@@ -131,11 +143,13 @@ export async function getMyMarketplaceListingAction() {
           id: profile.id,
           headline: profile.headline,
           bio: profile.bio,
+          credentials: profile.credentials,
           specialties: profile.specialties,
           hourlyRateCents: profile.hourlyRateCents,
+          sessionRateCents: profile.sessionRateCents,
+          currency: profile.currency,
+          preferredArea: profile.preferredArea,
           city: profile.city,
-          lat: profile.lat,
-          lng: profile.lng,
           radiusKm: profile.radiusKm,
           published: profile.published,
           featuredUntil: profile.featuredUntil,
@@ -150,11 +164,12 @@ export async function getMyMarketplaceListingAction() {
 export async function saveMarketplaceListingAction(input: {
   headline: string;
   bio: string;
+  credentials: string;
   specialties: string;
   hourlyRateCents: number | null;
-  city: string;
-  lat: number | null;
-  lng: number | null;
+  sessionRateCents: number | null;
+  currency: string;
+  preferredArea: string | null;
   radiusKm: number;
   published: boolean;
   facilityIds: string[];
@@ -167,6 +182,13 @@ export async function saveMarketplaceListingAction(input: {
       userId: session.userId,
       ...input,
     });
+    if (input.credentials.trim()) {
+      const db = await getDb();
+      await db
+        .update(users)
+        .set({ title: input.credentials.trim(), updatedAt: new Date() })
+        .where(eq(users.id, session.userId));
+    }
     revalidatePath("/settings");
     revalidatePath("/find");
     return { ok: true, profileId };

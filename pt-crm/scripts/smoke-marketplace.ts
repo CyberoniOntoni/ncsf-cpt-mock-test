@@ -189,11 +189,12 @@ async function main() {
       userId: alex.userId,
       headline: "",
       bio: "",
+      credentials: "",
       specialties: "",
       hourlyRateCents: null,
-      city: "Singapore",
-      lat: 1.35,
-      lng: 103.95,
+      sessionRateCents: null,
+      currency: "SGD",
+      preferredArea: null,
       radiusKm: 10,
       published: true,
       facilityIds: [],
@@ -203,6 +204,27 @@ async function main() {
     threw = true;
   }
   assert(threw, "published listing requires headline");
+
+  await upsertMarketplaceListing({
+    organizationId: alex.organizationId,
+    userId: alex.userId,
+    headline: "Strength and fat-loss coaching",
+    bio: "NCSF-minded programming. Floor sessions at Tampines or your gym.",
+    credentials: "NCSF-CPT",
+    specialties: "strength,fat_loss,beginner",
+    hourlyRateCents: 12000,
+    sessionRateCents: 15000,
+    currency: "SGD",
+    preferredArea: "tampines",
+    radiusKm: 15,
+    published: true,
+    facilityIds: ["gym_demo_tampines"],
+    serviceModes: "studio,at_gym",
+  });
+  const alexCard = await q.getPublicProfile("mp_demo_alex");
+  assert(alexCard?.credentials === "NCSF-CPT", "public card shows credentials");
+  assert(alexCard?.hourlyRateCents === 12000, "public card shows hourly rate");
+  assert(alexCard?.region === "Tampines", "listing area is Tampines");
 
   const firstEmail = `sam-${Date.now()}@example.com`;
   const first = await createIntroRequest({

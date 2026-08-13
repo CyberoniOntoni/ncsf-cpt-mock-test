@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 24; // 24 = seeker named training areas
+const SCHEMA_VERSION = 25; // 25 = trainer card credentials, area, rates
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -734,9 +734,12 @@ async function ensureSchema() {
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       headline TEXT NOT NULL DEFAULT '',
       bio TEXT NOT NULL DEFAULT '',
+      credentials TEXT NOT NULL DEFAULT '',
       specialties TEXT NOT NULL DEFAULT '',
       hourly_rate_cents INTEGER,
-      currency TEXT NOT NULL DEFAULT 'USD',
+      session_rate_cents INTEGER,
+      currency TEXT NOT NULL DEFAULT 'SGD',
+      preferred_area TEXT,
       service_modes TEXT NOT NULL DEFAULT 'studio,at_gym',
       city TEXT NOT NULL DEFAULT '',
       region TEXT,
@@ -751,6 +754,9 @@ async function ensureSchema() {
       UNIQUE(user_id, organization_id)
     );
     CREATE INDEX IF NOT EXISTS marketplace_profiles_published_idx ON marketplace_profiles(published);
+    ALTER TABLE marketplace_profiles ADD COLUMN IF NOT EXISTS credentials TEXT NOT NULL DEFAULT '';
+    ALTER TABLE marketplace_profiles ADD COLUMN IF NOT EXISTS session_rate_cents INTEGER;
+    ALTER TABLE marketplace_profiles ADD COLUMN IF NOT EXISTS preferred_area TEXT;
 
     CREATE TABLE IF NOT EXISTS marketplace_profile_facilities (
       id TEXT PRIMARY KEY,

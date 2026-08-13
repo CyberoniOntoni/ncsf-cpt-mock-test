@@ -14,10 +14,12 @@ export type PublicProfileCard = {
   id: string;
   displayName: string;
   title: string | null;
+  credentials: string | null;
   headline: string;
   city: string;
   region: string | null;
   hourlyRateCents: number | null;
+  sessionRateCents: number | null;
   currency: string;
   serviceModes: string[];
   facilityNames: string[];
@@ -97,9 +99,11 @@ export async function searchPublicProfiles(input: {
       organizationId: marketplaceProfiles.organizationId,
       userId: marketplaceProfiles.userId,
       headline: marketplaceProfiles.headline,
+      credentials: marketplaceProfiles.credentials,
       city: marketplaceProfiles.city,
       region: marketplaceProfiles.region,
       hourlyRateCents: marketplaceProfiles.hourlyRateCents,
+      sessionRateCents: marketplaceProfiles.sessionRateCents,
       currency: marketplaceProfiles.currency,
       serviceModes: marketplaceProfiles.serviceModes,
       lat: marketplaceProfiles.lat,
@@ -192,10 +196,12 @@ export async function searchPublicProfiles(input: {
       id: p.id,
       displayName: u?.name || "Trainer",
       title: u?.title ?? null,
+      credentials: p.credentials || u?.title || null,
       headline: p.headline,
       city: p.city,
       region: p.region,
       hourlyRateCents: p.hourlyRateCents,
+      sessionRateCents: p.sessionRateCents,
       currency: p.currency,
       serviceModes: splitCsv(p.serviceModes),
       facilityNames: fids

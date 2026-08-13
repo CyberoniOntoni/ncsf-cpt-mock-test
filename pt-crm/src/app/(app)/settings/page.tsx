@@ -70,7 +70,7 @@ export default async function SettingsPage() {
       <PageHeader
         title="Settings"
         eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
-        description="Your profile, practice, team, deploy, and AI"
+        description="Your profile, trainer card, practice, team, deploy, and AI"
       />
 
       {listing ? (
@@ -78,6 +78,7 @@ export default async function SettingsPage() {
           <MarketplaceListingForm
             profile={listing.profile}
             gyms={listing.gyms}
+            defaultCredentials={user?.title || ""}
           />
         </Card>
       ) : null}

@@ -94,10 +94,18 @@ export default async function FindPage({
                   ) : null}
                 </div>
                 <p className="text-sm text-zinc-400">{c.headline}</p>
+                {c.credentials || c.title ? (
+                  <p className="mt-1 text-xs text-zinc-400">
+                    {c.credentials || c.title}
+                  </p>
+                ) : null}
                 <p className="mt-1 text-xs text-zinc-500">
-                  {[c.city, c.region].filter(Boolean).join(" · ")}
+                  {[c.region, c.city].filter(Boolean).join(" · ")}
                   {c.facilityNames.length
                     ? ` · ${c.facilityNames.join(", ")}`
+                    : ""}
+                  {c.hourlyRateCents != null
+                    ? ` · ${c.hourlyRateCents / 100} ${c.currency}/hr`
                     : ""}
                 </p>
               </Link>
