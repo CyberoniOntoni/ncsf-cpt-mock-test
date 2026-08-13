@@ -90,11 +90,9 @@ Restore = stop app, replace `data/pglite` from unzip, restart. Keep offline copi
 
 - **Needs you** caps work and prefers one primary row per client (plus ≤4h bookings).
 - Completing a floor session burns **one** pack credit only when an **active** pack exists.
-- Marking a **booking completed** on the calendar also burns **one** pack credit when an active pack exists. Floor + calendar for the **same visit** share a debit key (`packageId` on session and/or appointment) so you never double-charge **when the booking and floor log are linked**.
-- **Dual-path hygiene:** for booked visits use **Start from booking** so session and appointment share a debit key. An unlinked Home start + Close booking on the **same org-local day** is also treated as one visit when there is only one matching floor log / completed booking. Two bookings (or two floor logs) the same day still debit separately.
+- Calendar **Done** / **Close booking** do **not** burn a pack. **Reopen** does **not** restore.
 - **No-show** does not burn a pack. **Start from booking** is blocked for no-show / completed-without-log.
-- **Cancel/delete a completed floor session** restores a burned pack when a debit stamp exists (`session.packageId` and/or appointment `packageId`).
-- **Reopen** a completed booking (or move it to cancelled / no-show) restores a stamped pack credit. Cancelling or no-showing a booking that was **never completed** does not restore (nothing was burned).
+- **Cancel/delete a completed floor session** restores a burned pack when a debit stamp exists (`session.packageId`).
 - Unpaid invoices use deep link `#crm-invoices` (Mark paid is one tap).
 - After schema changes: restart dev; if UI looks stale, hard-refresh the browser.
 

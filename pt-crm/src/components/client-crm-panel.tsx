@@ -803,7 +803,7 @@ export function ClientCrmPanel({
     if (status === "scheduled") {
       if (
         !window.confirm(
-          `Reopen booking “${title}” as scheduled?\n\nIf this visit burned a pack, that credit is restored.`
+          `Reopen booking “${title}” as scheduled?\n\nDoes not restore a pack credit. Packs change only when you complete or undo a floor session.`
         )
       ) {
         return;
@@ -818,7 +818,7 @@ export function ClientCrmPanel({
     if (status === "completed") {
       if (
         !window.confirm(
-          `Close booking “${title}”?\n\nUses 1 pack session when an active pack exists (same visit won’t double-charge if the floor log already burned).`
+          `Close booking “${title}”?\n\nDoes not use a pack. Completing the floor session uses 1 pack when an active pack exists.`
         )
       ) {
         return;
@@ -1065,9 +1065,8 @@ export function ClientCrmPanel({
               })()}
             </p>
             <p className="mt-1 text-[10px] leading-snug text-zinc-600">
-              Start logs the floor session. Close booking also uses 1 pack when
-              active (no double charge when the floor log is linked to this
-              booking — prefer Start from booking).
+              Start logs the floor session. Completing that session uses 1 pack
+              when an active pack exists. Close booking does not use a pack.
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {nextAppointment.status === "scheduled" && (
@@ -1093,7 +1092,7 @@ export function ClientCrmPanel({
                   variant="secondary"
                   disabled={pending}
                   className="min-h-11"
-                  title="Closes booking and uses 1 pack session if one remains"
+                  title="Marks the booking done. Pack credit is used only when you complete the floor session."
                   onClick={() =>
                     onApptStatus(
                       nextAppointment.id,
@@ -1112,7 +1111,7 @@ export function ClientCrmPanel({
                   variant="ghost"
                   disabled={pending}
                   className="min-h-11"
-                  title="Reopen as scheduled and restore a burned pack credit if this visit was stamped"
+                  title="Reopen as scheduled. Does not restore a pack credit."
                   onClick={() =>
                     onApptStatus(
                       nextAppointment.id,
@@ -1401,7 +1400,7 @@ export function ClientCrmPanel({
                             variant="secondary"
                             disabled={pending}
                             className="min-h-11"
-                            title="Closes booking and uses 1 pack session if one remains"
+                            title="Marks the booking done. Pack credit is used only when you complete the floor session."
                             onClick={() =>
                               onApptStatus(a.id, "completed", a.title)
                             }
@@ -1453,7 +1452,7 @@ export function ClientCrmPanel({
                           variant="ghost"
                           disabled={pending}
                           className="min-h-11"
-                          title="Reopen as scheduled and restore a burned pack credit if this visit was stamped"
+                          title="Reopen as scheduled. Does not restore a pack credit."
                           onClick={() =>
                             onApptStatus(a.id, "scheduled", a.title)
                           }

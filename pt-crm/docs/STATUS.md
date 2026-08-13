@@ -130,7 +130,7 @@ Four primary areas (`src/lib/nav.ts`):
 | Client stage (lead/active/paused + deactivate) | **Done** | Vision Phase A |
 | Sticky client chip | **Done** | Cross-page |
 | Packages (enroll, remaining, renew, cancel) | **Done** | Vision Phase B |
-| Pack debit on **floor complete** and **calendar complete** | **Done** | Shared debit when linked, or unique same-day unlinked pair; Reopen completed booking restores stamp |
+| Pack debit on **session complete** only | **Done** | Calendar Done / reopen do not burn or restore |
 | Appointments (book, no-show, cancel, complete) | **Done** | Calendar + client desk |
 | Calendar month + in-calendar book + billing | **Done** | Pack / invoice / none |
 | Tasks / follow-ups → Needs you | **Done** | Vision Phase A |
