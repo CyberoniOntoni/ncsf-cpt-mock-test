@@ -37,7 +37,7 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mkt-root min-h-dvh bg-[#141210] font-sans text-stone-100 antialiased selection:bg-emerald-800/35 selection:text-stone-50">
+    <div className="mkt-root mkt-grain min-h-dvh bg-[#12100e] font-sans text-stone-100 antialiased selection:bg-emerald-800/35 selection:text-stone-50">
       {children}
     </div>
   );

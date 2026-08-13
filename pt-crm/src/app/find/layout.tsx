@@ -14,7 +14,7 @@ export default async function FindLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-[#141210] text-stone-100">
+    <div className="mkt-root mkt-grain min-h-dvh bg-[#12100e] text-stone-100">
       <FindChrome />
       <div className="mx-auto max-w-3xl px-4 py-8">{children}</div>
       <PublicSiteFooter />

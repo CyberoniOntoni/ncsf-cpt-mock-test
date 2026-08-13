@@ -23,11 +23,11 @@ export function MarketingScrollProgress() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[2px] bg-stone-900/50"
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px] bg-stone-950/40"
       aria-hidden
     >
       <div
-        className="h-full origin-left bg-emerald-800/90 motion-safe:transition-[width] motion-safe:duration-150 motion-safe:ease-out"
+        className="h-full origin-left bg-gradient-to-r from-emerald-700 to-emerald-400 motion-safe:transition-[width] motion-safe:duration-150 motion-safe:ease-out"
         style={{ width: `${p * 100}%` }}
       />
     </div>

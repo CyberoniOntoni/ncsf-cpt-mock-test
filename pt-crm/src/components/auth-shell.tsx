@@ -18,7 +18,7 @@ export function AuthShell({
   showAudienceLinks?: boolean;
 }) {
   return (
-    <div className="min-h-dvh bg-[#141210] text-stone-100">
+    <div className="mkt-root min-h-dvh bg-[#12100e] text-stone-100">
       <PublicSiteHeader variant="auth" scrolled />
       <div className="relative mx-auto flex max-w-md flex-col px-4 py-10">
         <h1 className="text-2xl font-semibold tracking-tight text-stone-50">

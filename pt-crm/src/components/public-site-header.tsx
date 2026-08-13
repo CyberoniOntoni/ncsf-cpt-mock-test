@@ -10,7 +10,7 @@ const linkFocus =
   "rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141210]";
 
 const btnPrimarySm =
-  "inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-800 px-3.5 py-2 text-sm font-semibold text-stone-50 shadow-sm shadow-black/25 transition hover:bg-emerald-700 active:bg-emerald-800";
+  "inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-800 px-3.5 py-2 text-sm font-semibold text-stone-50 shadow-[0_8px_20px_-10px_rgb(6_78_59)] transition hover:bg-emerald-700 active:bg-emerald-800 motion-reduce:transition-none motion-safe:hover:-translate-y-px";
 
 export type PublicSiteHeaderProps = {
   variant: "marketing" | "find" | "auth" | "portal";
@@ -28,8 +28,8 @@ export function PublicSiteHeader(props: PublicSiteHeaderProps) {
       className={cn(
         "sticky top-0 z-40 border-b transition-[background-color,border-color,box-shadow] duration-300 motion-reduce:transition-none",
         props.scrolled
-          ? "border-stone-800/80 bg-[#141210]/96 shadow-lg shadow-black/20 backdrop-blur-md"
-          : "border-transparent bg-[#141210]/55 backdrop-blur-md"
+          ? "border-white/[0.06] bg-[#12100e]/88 shadow-[0_12px_40px_-20px_rgb(0_0_0/0.7)] backdrop-blur-xl"
+          : "border-transparent bg-[#12100e]/40 backdrop-blur-md"
       )}
     >
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">

@@ -13,7 +13,7 @@ export default async function PortalLoginPage({
 }) {
   const { redirectTo } = await searchParams;
   return (
-    <div className="min-h-dvh bg-[#141210] text-stone-100">
+    <div className="mkt-root min-h-dvh bg-[#12100e] text-stone-100">
       <PublicSiteHeader
         variant="portal"
         scrolled

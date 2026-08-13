@@ -45,18 +45,18 @@ const btnBase =
   "inline-flex items-center justify-center font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700/55 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141210]";
 const btnPrimaryLg = cn(
   btnBase,
-  "min-h-11 gap-2 rounded-lg bg-emerald-800 px-5 py-2.5 text-sm text-stone-50 shadow-sm shadow-black/30 hover:bg-emerald-700 active:bg-emerald-800"
+  "min-h-11 gap-2 rounded-xl bg-emerald-800 px-5 py-2.5 text-sm text-stone-50 shadow-[0_10px_24px_-12px_rgb(6_78_59/0.9)] hover:bg-emerald-700 active:bg-emerald-800 motion-safe:hover:-translate-y-px"
 );
 const btnSecondaryLg = cn(
   btnBase,
-  "min-h-11 gap-2 rounded-lg border border-stone-700/90 bg-stone-900/70 px-5 py-2.5 text-sm text-stone-100 hover:border-stone-600 hover:bg-stone-800/90 active:bg-stone-900"
+  "min-h-11 gap-2 rounded-xl border border-stone-600/50 bg-stone-900/50 px-5 py-2.5 text-sm text-stone-100 backdrop-blur-md hover:border-stone-500 hover:bg-stone-800/80 active:bg-stone-900"
 );
 
 const imgCalm =
-  "object-cover [filter:saturate(0.86)_contrast(1.03)_brightness(0.97)]";
+  "object-cover [filter:saturate(0.9)_contrast(1.06)_brightness(1.02)]";
 
 const pathCard =
-  "group flex h-full min-h-[11.5rem] flex-col rounded-2xl border border-stone-700/70 bg-[#1a1816]/90 p-4 shadow-sm shadow-black/20 transition duration-300 hover:border-emerald-800/45 hover:bg-stone-900/55 hover:shadow-md hover:shadow-black/25 sm:p-5";
+  "mkt-card group flex h-full min-h-[11.5rem] flex-col p-4 sm:p-5";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -69,42 +69,42 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function FloorMock() {
   return (
     <div
-      className="overflow-hidden rounded-xl border border-stone-700/65 bg-[#1a1816]/96 shadow-2xl shadow-black/45 backdrop-blur-md"
+      className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#1c1917]/90 shadow-[0_24px_50px_-20px_rgb(0_0_0/0.7)] backdrop-blur-xl"
       aria-hidden
     >
-      <div className="flex items-center gap-1.5 border-b border-stone-800/90 px-3 py-2">
+      <div className="flex items-center gap-1.5 border-b border-white/[0.06] bg-white/[0.02] px-3 py-2">
         <span className="h-1.5 w-1.5 rounded-full bg-stone-600" />
         <span className="h-1.5 w-1.5 rounded-full bg-stone-600" />
-        <span className="h-1.5 w-1.5 rounded-full bg-stone-600" />
-        <span className="ml-1.5 text-[10px] font-medium text-stone-500">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 mkt-pulse-dot" />
+        <span className="ml-1.5 text-[10px] font-medium text-stone-400">
           Today · Floor
         </span>
       </div>
       <div className="space-y-2 p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium tracking-wide text-emerald-600/90">
+            <p className="text-[10px] font-medium tracking-wide text-emerald-500">
               Floor · Fri
             </p>
-            <p className="truncate text-sm font-semibold text-stone-100">
+            <p className="truncate text-sm font-semibold text-stone-50">
               Marcus Chen
             </p>
             <p className="mt-0.5 text-[10px] tabular-nums text-stone-500">
               10-pack · 4 left
             </p>
           </div>
-          <span className="shrink-0 rounded-lg bg-emerald-800 px-2.5 py-1.5 text-[11px] font-semibold text-stone-50 shadow-sm shadow-black/25">
+          <span className="shrink-0 rounded-lg bg-emerald-800 px-2.5 py-1.5 text-[11px] font-semibold text-stone-50 shadow-[0_8px_18px_-10px_rgb(6_95_70)]">
             Start session
           </span>
         </div>
-        <div className="rounded-lg border border-stone-800/90 bg-stone-900/55 px-2.5 py-1.5">
+        <div className="rounded-lg border border-white/[0.06] bg-stone-950/40 px-2.5 py-1.5">
           <p className="text-[10px] font-medium tracking-wide text-stone-500">
             Agenda · 48h
           </p>
           <p className="mt-0.5 text-xs text-stone-300">Training · Fri 9:00</p>
         </div>
-        <div className="rounded-lg border border-amber-900/30 bg-amber-950/20 px-2.5 py-1.5">
-          <p className="text-[10px] font-medium tracking-wide text-amber-600/85">
+        <div className="rounded-lg border border-amber-800/35 bg-amber-950/30 px-2.5 py-1.5">
+          <p className="text-[10px] font-medium tracking-wide text-amber-500">
             Needs you · 1
           </p>
           <p className="mt-0.5 text-xs text-stone-300">10-pack unpaid</p>
@@ -129,7 +129,7 @@ function PathCard({
 }) {
   return (
     <Link href={href} className={cn(pathCard, linkFocus)}>
-      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-stone-700/90 bg-stone-900/80 text-emerald-600 transition duration-300 group-hover:border-emerald-800/40 group-hover:bg-emerald-950/30">
+      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-emerald-950/30 text-emerald-500 transition duration-300 motion-reduce:transition-none group-hover:border-emerald-700/50 group-hover:bg-emerald-950/55">
         <Icon className="h-4 w-4" aria-hidden />
       </span>
       <span className="mt-3 text-sm font-semibold text-stone-50">{title}</span>
@@ -139,7 +139,7 @@ function PathCard({
       <span className="mt-3 inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-emerald-600">
         {cta}
         <ArrowRight
-          className="h-3.5 w-3.5 transition duration-300 group-hover:translate-x-0.5"
+          className="h-3.5 w-3.5 transition duration-300 motion-reduce:transition-none group-hover:translate-x-1"
           aria-hidden
         />
       </span>
@@ -175,30 +175,31 @@ export default function MarketingPage() {
               sizes="100vw"
               className={cn(
                 imgCalm,
-                "object-[72%_center] opacity-40 sm:object-[58%_center] sm:opacity-50"
+                "mkt-ken object-[72%_center] opacity-50 sm:object-[58%_center] sm:opacity-60"
               )}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#141210]/94 via-[#141210]/80 to-[#141210] sm:bg-gradient-to-r sm:from-[#141210] sm:via-[#141210]/93 sm:to-[#141210]/55" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#141210] via-transparent to-[#141210]/20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#12100e]/90 via-[#12100e]/72 to-[#12100e] sm:bg-gradient-to-r sm:from-[#12100e] sm:via-[#12100e]/88 sm:to-[#12100e]/48" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#12100e] via-transparent to-[#12100e]/15" />
+            <div className="mkt-glow absolute -left-20 top-24 h-64 w-64 rounded-full bg-emerald-800/20 blur-3xl" />
           </div>
 
           <div className="relative mx-auto grid w-full max-w-5xl flex-1 items-center gap-9 px-4 pb-10 pt-9 sm:gap-11 sm:px-6 sm:pb-14 sm:pt-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12 lg:pb-16 lg:pt-14">
             <div className="max-w-xl">
-              <div className="mkt-hero-in mkt-hero-in-delay-1 inline-flex max-w-full items-center gap-2 rounded-full border border-stone-700/55 bg-[#1a1816]/75 px-3 py-1">
+              <div className="mkt-hero-in mkt-hero-in-delay-1 mkt-glass inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1">
                 <span
-                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600"
+                  className="mkt-pulse-dot h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
                   aria-hidden
                 />
-                <span className="truncate text-[11px] font-medium text-stone-400">
+                <span className="truncate text-[11px] font-medium text-stone-300">
                   {SITE_COPY.heroEyebrow}
                 </span>
               </div>
               <h1
                 id="hero-heading"
-                className="mkt-hero-in mkt-hero-in-delay-2 mt-5 text-[2.35rem] font-semibold leading-[1.08] tracking-tight text-stone-50 sm:text-5xl sm:leading-[1.04]"
+                className="mkt-hero-in mkt-hero-in-delay-2 mt-5 text-[2.55rem] font-semibold leading-[1.04] tracking-[-0.03em] text-stone-50 sm:text-[3.35rem] sm:leading-[0.98]"
               >
                 Run the day.
-                <span className="mt-1 block text-emerald-600">
+                <span className="mt-1 block bg-gradient-to-r from-emerald-400 to-emerald-700 bg-clip-text text-transparent">
                   Not the paperwork.
                 </span>
               </h1>
@@ -262,11 +263,11 @@ export default function MarketingPage() {
 
             <div className="mkt-hero-in mkt-hero-in-delay-3 relative mx-auto w-full max-w-sm sm:max-w-md lg:mx-0 lg:max-w-none">
               <div
-                className="absolute -inset-3 rounded-[2rem] bg-emerald-900/[0.08] blur-3xl sm:-inset-5"
+                className="mkt-glow absolute -inset-4 rounded-[2rem] bg-emerald-800/20 blur-3xl sm:-inset-6"
                 aria-hidden
               />
               <div className="relative">
-                <div className="overflow-hidden rounded-2xl border border-stone-700/35 bg-stone-900 shadow-2xl shadow-black/45 ring-1 ring-stone-600/10">
+                <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-stone-900 shadow-[0_30px_60px_-24px_rgb(0_0_0/0.75)] ring-1 ring-white/[0.04]">
                   <div className="relative aspect-[16/11] sm:aspect-[4/3]">
                     <Image
                       src="/marketing/paths-calm.jpg"
@@ -274,10 +275,10 @@ export default function MarketingPage() {
                       fill
                       priority
                       sizes="(max-width: 640px) 100vw, 30rem"
-                      className={cn(imgCalm, "object-[center_42%]")}
+                      className={cn(imgCalm, "mkt-ken object-[center_42%]")}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#141210]/65 via-transparent to-[#141210]/12" />
-                    <div className="absolute inset-0 ring-1 ring-inset ring-white/[0.04]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#12100e]/55 via-transparent to-[#12100e]/10" />
+                    <div className="absolute inset-0 ring-1 ring-inset ring-white/[0.06]" />
                   </div>
                 </div>
                 <div className="relative z-10 mx-2 -mt-11 sm:mx-5 sm:-mt-14">
@@ -315,7 +316,7 @@ export default function MarketingPage() {
             </Reveal>
 
             <Reveal variant="scale" delay={40} className="mt-10 sm:mt-12">
-              <div className="relative overflow-hidden rounded-2xl border border-stone-800/90 shadow-xl shadow-black/20">
+              <div className="relative overflow-hidden rounded-2xl border border-white/[0.07] shadow-[0_24px_48px_-24px_rgb(0_0_0/0.7)]">
                 <div
                   className="pointer-events-none absolute inset-0"
                   aria-hidden
@@ -327,7 +328,7 @@ export default function MarketingPage() {
                     sizes="(max-width: 1024px) 100vw, 64rem"
                     className={cn(imgCalm, "object-[center_32%] opacity-35")}
                   />
-                  <div className="absolute inset-0 bg-[#141210]/90" />
+                  <div className="absolute inset-0 bg-[#12100e]/88" />
                 </div>
                 <div className="relative grid sm:grid-cols-2">
                   <div className="border-b border-stone-800/80 p-5 sm:border-b-0 sm:border-r sm:p-7">
@@ -459,7 +460,7 @@ export default function MarketingPage() {
                     key={pillar.title}
                     className="mkt-card flex flex-col p-4 sm:p-5"
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-800 bg-[#141210]/60 text-emerald-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-emerald-950/35 text-emerald-500">
                       <Icon className="h-4 w-4" aria-hidden />
                     </div>
                     <h3 className="mt-3 text-sm font-semibold text-stone-100">
@@ -508,10 +509,10 @@ export default function MarketingPage() {
                     key={door.href}
                     href={door.href}
                     className={cn(
-                      "group flex h-full min-h-[11.5rem] flex-col rounded-2xl p-5 transition duration-300",
+                      "group flex h-full min-h-[11.5rem] flex-col rounded-2xl p-5 transition duration-300 motion-reduce:transition-none",
                       linkFocus,
                       isTrainer
-                        ? "bg-emerald-800 text-stone-50 shadow-sm shadow-black/30 hover:bg-emerald-700"
+                        ? "bg-gradient-to-br from-emerald-700 to-emerald-900 text-stone-50 shadow-[0_18px_36px_-20px_rgb(6_78_59)] hover:from-emerald-600 hover:to-emerald-800"
                         : "mkt-card"
                     )}
                   >
@@ -558,7 +559,7 @@ export default function MarketingPage() {
         >
           <div className={sectionShell}>
             <Reveal variant="scale" duration={700}>
-              <div className="relative overflow-hidden rounded-2xl border border-emerald-900/30 bg-gradient-to-br from-emerald-950/35 via-[#1a1816] to-[#141210] p-6 shadow-xl shadow-black/25 sm:p-10">
+              <div className="relative overflow-hidden rounded-2xl border border-emerald-800/25 bg-gradient-to-br from-emerald-950/45 via-[#1a1816] to-[#12100e] p-6 shadow-[0_28px_50px_-28px_rgb(0_0_0/0.75)] sm:p-10">
                 <div
                   className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-emerald-900/15 blur-3xl"
                   aria-hidden
@@ -613,7 +614,7 @@ export default function MarketingPage() {
                       </Link>
                     </div>
                   </div>
-                  <ul className="w-full overflow-hidden rounded-xl border border-stone-800/80 bg-[#141210]/55 lg:w-auto lg:min-w-[16.5rem]">
+                  <ul className="mkt-glass w-full overflow-hidden rounded-xl lg:w-auto lg:min-w-[16.5rem]">
                     {START_STEPS.map((line, i) => (
                       <li
                         key={line}
