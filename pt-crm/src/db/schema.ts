@@ -882,6 +882,45 @@ export const platformCharges = pgTable(
   (t) => [index("platform_charges_org_status_idx").on(t.organizationId, t.status)]
 );
 
+export const seekerProfiles = pgTable(
+  "seeker_profiles",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull().default(""),
+    city: text("city"),
+    lat: real("lat"),
+    lng: real("lng"),
+    radiusKm: integer("radius_km").notNull().default(15),
+    preferredFacilityId: text("preferred_facility_id").references(
+      () => gymFacilities.id,
+      { onDelete: "set null" }
+    ),
+    preferredBrand: text("preferred_brand"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("seeker_profiles_email_uidx").on(t.email)]
+);
+
+export const seekerMeasurements = pgTable(
+  "seeker_measurements",
+  {
+    id: text("id").primaryKey(),
+    seekerId: text("seeker_id")
+      .notNull()
+      .references(() => seekerProfiles.id, { onDelete: "cascade" }),
+    takenAt: timestamp("taken_at", { withTimezone: true }).notNull().defaultNow(),
+    heightCm: real("height_cm"),
+    weightKg: real("weight_kg"),
+    waistCm: real("waist_cm"),
+    notes: text("notes"),
+  },
+  (t) => [index("seeker_measurements_seeker_idx").on(t.seekerId, t.takenAt)]
+);
+
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   memberships: many(memberships),
   clients: many(clients),

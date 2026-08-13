@@ -5,6 +5,7 @@ export type RankableProfile = {
   id: string;
   featuredUntil: Date | null;
   facilityIds: string[];
+  brands: string[];
   lat: number | null;
   lng: number | null;
 };
@@ -14,6 +15,7 @@ export type RankQuery = {
   lat?: number | null;
   lng?: number | null;
   facilityId?: string | null;
+  brand?: string | null;
   radiusKm?: number;
 };
 
@@ -27,7 +29,14 @@ export function rankMarketplaceProfiles(
       ? { lat: query.lat, lng: query.lng }
       : null;
 
+  const brand = (query.brand || "").trim().toLowerCase();
   const kept = profiles.filter((p) => {
+    if (query.facilityId && !p.facilityIds.includes(query.facilityId)) {
+      return false;
+    }
+    if (brand && !p.brands.some((b) => b.toLowerCase() === brand)) {
+      return false;
+    }
     if (!origin || p.lat == null || p.lng == null) return true;
     return haversineKm(origin, { lat: p.lat, lng: p.lng }) <= radius;
   });
@@ -41,6 +50,11 @@ export function rankMarketplaceProfiles(
       const aGym = a.facilityIds.includes(fid) ? 1 : 0;
       const bGym = b.facilityIds.includes(fid) ? 1 : 0;
       if (bGym !== aGym) return bGym - aGym;
+    }
+    if (brand) {
+      const aNet = a.brands.some((b) => b.toLowerCase() === brand) ? 1 : 0;
+      const bNet = b.brands.some((b) => b.toLowerCase() === brand) ? 1 : 0;
+      if (bNet !== aNet) return bNet - aNet;
     }
     if (origin && a.lat != null && a.lng != null && b.lat != null && b.lng != null) {
       return (

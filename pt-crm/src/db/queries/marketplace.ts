@@ -69,10 +69,23 @@ export async function listPublicGyms(): Promise<
   }));
 }
 
+export function listPublicBrands(
+  gyms: { brand: string | null }[]
+): string[] {
+  return [
+    ...new Set(
+      gyms
+        .map((g) => (g.brand || "").trim())
+        .filter(Boolean)
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+}
+
 export async function searchPublicProfiles(input: {
   lat?: number | null;
   lng?: number | null;
   facilityId?: string | null;
+  brand?: string | null;
   radiusKm?: number;
   now?: Date;
 }): Promise<PublicProfileCard[]> {
@@ -124,19 +137,41 @@ export async function searchPublicProfiles(input: {
     facilityByProfile.set(l.profileId, arr);
   }
 
+  const facilityIdsEarly = [...new Set(links.map((l) => l.facilityId))];
+  const gymsForRank =
+    facilityIdsEarly.length === 0
+      ? []
+      : await db
+          .select()
+          .from(gymFacilities)
+          .where(inArray(gymFacilities.id, facilityIdsEarly));
+  const gymById = new Map(gymsForRank.map((g) => [g.id, g]));
+
   const ranked = rankMarketplaceProfiles(
-    visible.map((p) => ({
-      id: p.id,
-      featuredUntil: p.featuredUntil,
-      facilityIds: facilityByProfile.get(p.id) || [],
-      lat: p.lat,
-      lng: p.lng,
-    })),
+    visible.map((p) => {
+      const fids = facilityByProfile.get(p.id) || [];
+      const brands = [
+        ...new Set(
+          fids
+            .map((fid) => gymById.get(fid)?.brand)
+            .filter((b): b is string => !!b)
+        ),
+      ];
+      return {
+        id: p.id,
+        featuredUntil: p.featuredUntil,
+        facilityIds: fids,
+        brands,
+        lat: p.lat,
+        lng: p.lng,
+      };
+    }),
     {
       now,
       lat: input.lat,
       lng: input.lng,
       facilityId: input.facilityId,
+      brand: input.brand,
       radiusKm: input.radiusKm,
     }
   );
@@ -147,16 +182,6 @@ export async function searchPublicProfiles(input: {
     .from(users)
     .where(inArray(users.id, userIds));
   const userById = new Map(userRows.map((u) => [u.id, u]));
-
-  const facilityIds = [...new Set(links.map((l) => l.facilityId))];
-  const gyms =
-    facilityIds.length === 0
-      ? []
-      : await db
-          .select()
-          .from(gymFacilities)
-          .where(inArray(gymFacilities.id, facilityIds));
-  const gymById = new Map(gyms.map((g) => [g.id, g]));
 
   const byId = new Map(visible.map((p) => [p.id, p]));
   return ranked.map((r) => {

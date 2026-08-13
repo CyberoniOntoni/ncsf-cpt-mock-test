@@ -6,6 +6,9 @@ import { requestIntroAction } from "@/app/actions/marketplace";
 export function FindIntroForm(props: {
   profileId: string;
   facilities: { id: string; name: string }[];
+  defaultName?: string;
+  defaultEmail?: string;
+  defaultFacilityId?: string;
 }) {
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -34,6 +37,7 @@ export function FindIntroForm(props: {
       <input
         name="seekerName"
         required
+        defaultValue={props.defaultName || ""}
         placeholder="Your name"
         className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
       />
@@ -41,6 +45,7 @@ export function FindIntroForm(props: {
         name="seekerEmail"
         type="email"
         required
+        defaultValue={props.defaultEmail || ""}
         placeholder="Email"
         className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
       />
@@ -52,6 +57,7 @@ export function FindIntroForm(props: {
       {props.facilities.length > 0 ? (
         <select
           name="facilityId"
+          defaultValue={props.defaultFacilityId || ""}
           className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
         >
           <option value="">No specific gym</option>

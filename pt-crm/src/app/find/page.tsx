@@ -1,32 +1,56 @@
 import Link from "next/link";
+import { FindChrome } from "@/components/find-chrome";
 import { FindSearch } from "@/components/find-search";
-import { listPublicGyms, searchPublicProfiles } from "@/db/queries/marketplace";
+import {
+  listPublicBrands,
+  listPublicGyms,
+  searchPublicProfiles,
+} from "@/db/queries/marketplace";
 import { DEFAULT_RADIUS_KM } from "@/lib/marketplace/types";
+import { getSeekerById, optionalSeekerSession } from "@/lib/seeker-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function FindPage({
   searchParams,
 }: {
-  searchParams: Promise<{ gym?: string; lat?: string; lng?: string; radius?: string }>;
+  searchParams: Promise<{
+    gym?: string;
+    brand?: string;
+    lat?: string;
+    lng?: string;
+    radius?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const gyms = await listPublicGyms();
-  const gymParam = (sp.gym || "").trim();
+  const brands = listPublicBrands(gyms);
+  const session = await optionalSeekerSession();
+  const seeker = session ? await getSeekerById(session.seekerId) : null;
+
+  const gymParam = (sp.gym || seeker?.preferredFacilityId || "").trim();
+  const brandParam = (sp.brand || seeker?.preferredBrand || "").trim();
   const facility =
     gyms.find((g) => g.id === gymParam || g.slug === gymParam) || null;
-  const lat = sp.lat != null && sp.lat !== "" ? Number(sp.lat) : null;
-  const lng = sp.lng != null && sp.lng !== "" ? Number(sp.lng) : null;
-  const radius = sp.radius != null ? Number(sp.radius) : DEFAULT_RADIUS_KM;
+  const latRaw = sp.lat != null && sp.lat !== "" ? Number(sp.lat) : seeker?.lat;
+  const lngRaw = sp.lng != null && sp.lng !== "" ? Number(sp.lng) : seeker?.lng;
+  const lat = latRaw != null && Number.isFinite(latRaw) ? latRaw : null;
+  const lng = lngRaw != null && Number.isFinite(lngRaw) ? lngRaw : null;
+  const radius =
+    sp.radius != null && sp.radius !== ""
+      ? Number(sp.radius)
+      : seeker?.radiusKm ?? DEFAULT_RADIUS_KM;
   const cards = await searchPublicProfiles({
-    lat: Number.isFinite(lat) ? lat : null,
-    lng: Number.isFinite(lng) ? lng : null,
+    lat,
+    lng,
     facilityId: facility?.id ?? null,
+    brand: brandParam || null,
     radiusKm: Number.isFinite(radius) ? radius : DEFAULT_RADIUS_KM,
   });
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-zinc-100">
+      <FindChrome />
       <div>
         <p className="text-xs uppercase tracking-wide text-zinc-500">
           Find a trainer
@@ -39,10 +63,12 @@ export default async function FindPage({
       </div>
       <FindSearch
         gyms={gyms}
+        brands={brands}
         gym={facility?.id || gymParam}
-        lat={sp.lat}
-        lng={sp.lng}
-        radius={sp.radius}
+        brand={brandParam}
+        lat={lat != null ? String(lat) : undefined}
+        lng={lng != null ? String(lng) : undefined}
+        radius={String(Number.isFinite(radius) ? radius : DEFAULT_RADIUS_KM)}
       />
       {cards.length === 0 ? (
         <p className="text-sm text-zinc-400">

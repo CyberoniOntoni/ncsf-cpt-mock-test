@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import { FindChrome } from "@/components/find-chrome";
 import { FindIntroForm } from "@/components/find-intro-form";
 import { getPublicProfile, listPublicGyms } from "@/db/queries/marketplace";
+import { getSeekerById, optionalSeekerSession } from "@/lib/seeker-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +18,12 @@ export default async function FindProfilePage({
   const facilities = gyms
     .filter((g) => profile.facilityNames.includes(g.name))
     .map((g) => ({ id: g.id, name: g.name }));
+  const session = await optionalSeekerSession();
+  const seeker = session ? await getSeekerById(session.seekerId) : null;
 
   return (
     <main className="mx-auto max-w-xl space-y-4 px-4 py-8 text-zinc-100">
+      <FindChrome />
       <p className="text-xs uppercase tracking-wide text-zinc-500">
         Find a trainer
       </p>
@@ -42,7 +47,15 @@ export default async function FindProfilePage({
         FloorScribe introduces you. Training and session payments are between
         you and the trainer.
       </p>
-      <FindIntroForm profileId={profile.id} facilities={facilities} />
+      <FindIntroForm
+        profileId={profile.id}
+        facilities={facilities}
+        defaultName={
+          seeker ? `${seeker.firstName} ${seeker.lastName}`.trim() : ""
+        }
+        defaultEmail={seeker?.email || ""}
+        defaultFacilityId={seeker?.preferredFacilityId || ""}
+      />
     </main>
   );
 }

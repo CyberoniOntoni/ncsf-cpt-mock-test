@@ -60,6 +60,7 @@ async function main() {
     id: "feat",
     featuredUntil: new Date("2026-09-01T00:00:00Z"),
     facilityIds: ["gym_a"],
+    brands: ["Anytime Fitness"],
     lat: orchard.lat,
     lng: orchard.lng,
   };
@@ -67,6 +68,7 @@ async function main() {
     id: "gym",
     featuredUntil: null,
     facilityIds: ["gym_a"],
+    brands: ["Anytime Fitness"],
     lat: tampines.lat,
     lng: tampines.lng,
   };
@@ -74,6 +76,7 @@ async function main() {
     id: "far",
     featuredUntil: null,
     facilityIds: ["gym_b"],
+    brands: ["Gold's Gym"],
     lat: 1.44,
     lng: 103.8,
   };
@@ -85,8 +88,8 @@ async function main() {
     radiusKm: 50,
   });
   assert(
-    ranked.map((p) => p.id).join(",") === "feat,gym,far",
-    "featured then gym then distance"
+    ranked.map((p) => p.id).join(",") === "feat,gym",
+    "gym filter drops other clubs; featured still first"
   );
 
   const filtered = rankMarketplaceProfiles([far, gymMatch], {
@@ -98,6 +101,15 @@ async function main() {
   assert(
     filtered.every((p) => p.id !== "far") && filtered[0].id === "gym",
     "radius drops far"
+  );
+  const networkOnly = rankMarketplaceProfiles([far, gymMatch, featured], {
+    now,
+    brand: "Anytime Fitness",
+    radiusKm: 80,
+  });
+  assert(
+    networkOnly.every((p) => p.id !== "far") && networkOnly.length === 2,
+    "network filter keeps Anytime only"
   );
 
   assert(
@@ -285,6 +297,57 @@ async function main() {
     !!alexAfter?.featuredUntil && alexAfter.featuredUntil > paidAt,
     "featured until after paid"
   );
+
+  const {
+    registerSeeker,
+    verifySeekerLogin,
+    updateSeekerPrefs,
+    addSeekerMeasurement,
+    listSeekerMeasurements,
+  } = await import("../src/lib/seeker-auth");
+  const email = `seeker-${Date.now()}@example.com`;
+  const createdSeeker = await registerSeeker({
+    email,
+    password: "password1",
+    firstName: "Riley",
+    lastName: "Client",
+  });
+  assert(createdSeeker.ok, "seeker register");
+  const dup = await registerSeeker({
+    email,
+    password: "password1",
+    firstName: "Riley",
+  });
+  assert(!dup.ok, "duplicate seeker email rejected");
+  const login = await verifySeekerLogin({ email, password: "password1" });
+  assert(login.ok && login.seeker.firstName === "Riley", "seeker login");
+  const badLogin = await verifySeekerLogin({ email, password: "nope" });
+  assert(!badLogin.ok, "bad seeker password rejected");
+  if (createdSeeker.ok) {
+    const updated = await updateSeekerPrefs(createdSeeker.seeker.id, {
+      preferredFacilityId: "gym_demo_tampines",
+      preferredBrand: "Anytime Fitness",
+      city: "Singapore",
+      lat: 1.3496,
+      lng: 103.9568,
+    });
+    assert(updated.preferredBrand === "Anytime Fitness", "seeker network saved");
+    assert(updated.preferredFacilityId === "gym_demo_tampines", "seeker gym saved");
+    await addSeekerMeasurement(createdSeeker.seeker.id, { weightKg: 72.5 });
+    const meas = await listSeekerMeasurements(createdSeeker.seeker.id);
+    assert(meas.some((m) => m.weightKg === 72.5), "seeker measurement stored");
+    const matched = await q.searchPublicProfiles({
+      facilityId: updated.preferredFacilityId,
+      brand: updated.preferredBrand,
+      lat: updated.lat,
+      lng: updated.lng,
+      radiusKm: 20,
+    });
+    assert(
+      matched.some((c) => c.id === "mp_demo_alex"),
+      "prefs surface PTs at selected gym/network"
+    );
+  }
 
   console.log("\nmarketplace smoke: ALL PASS");
 }

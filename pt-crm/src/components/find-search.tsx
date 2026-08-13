@@ -7,19 +7,23 @@ type Gym = { id: string; name: string; slug: string; city: string; brand: string
 
 export function FindSearch(props: {
   gyms: Gym[];
+  brands: string[];
   gym?: string;
+  brand?: string;
   lat?: string;
   lng?: string;
   radius?: string;
 }) {
   const router = useRouter();
   const [gym, setGym] = useState(props.gym || "");
+  const [brand, setBrand] = useState(props.brand || "");
   const [radius, setRadius] = useState(props.radius || "15");
   const [geoError, setGeoError] = useState<string | null>(null);
 
   function go(extra?: { lat?: string; lng?: string }) {
     const q = new URLSearchParams();
     if (gym) q.set("gym", gym);
+    if (brand) q.set("brand", brand);
     if (radius) q.set("radius", radius);
     if (extra?.lat) q.set("lat", extra.lat);
     else if (props.lat) q.set("lat", props.lat);
@@ -47,6 +51,21 @@ export function FindSearch(props: {
           {props.gyms.map((g) => (
             <option key={g.id} value={g.id}>
               {g.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-sm">
+        <span className="text-zinc-500">Gym network</span>
+        <select
+          className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
+          value={brand}
+          onChange={(e) => setBrand(e.target.value)}
+        >
+          <option value="">Any network</option>
+          {props.brands.map((b) => (
+            <option key={b} value={b}>
+              {b}
             </option>
           ))}
         </select>

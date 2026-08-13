@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 22; // 22 = marketplace matchmaking
+const SCHEMA_VERSION = 23; // 23 = persistent seeker accounts
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -797,6 +797,34 @@ async function ensureSchema() {
     );
     CREATE INDEX IF NOT EXISTS platform_charges_org_status_idx ON platform_charges(organization_id, status);
     ALTER TABLE platform_charges ADD COLUMN IF NOT EXISTS profile_id TEXT REFERENCES marketplace_profiles(id) ON DELETE SET NULL;
+
+    CREATE TABLE IF NOT EXISTS seeker_profiles (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      first_name TEXT NOT NULL,
+      last_name TEXT NOT NULL DEFAULT '',
+      city TEXT,
+      lat REAL,
+      lng REAL,
+      radius_km INTEGER NOT NULL DEFAULT 15,
+      preferred_facility_id TEXT REFERENCES gym_facilities(id) ON DELETE SET NULL,
+      preferred_brand TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS seeker_profiles_email_idx ON seeker_profiles(email);
+
+    CREATE TABLE IF NOT EXISTS seeker_measurements (
+      id TEXT PRIMARY KEY,
+      seeker_id TEXT NOT NULL REFERENCES seeker_profiles(id) ON DELETE CASCADE,
+      taken_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      height_cm REAL,
+      weight_kg REAL,
+      waist_cm REAL,
+      notes TEXT
+    );
+    CREATE INDEX IF NOT EXISTS seeker_measurements_seeker_idx ON seeker_measurements(seeker_id, taken_at);
   `);
 }
 
