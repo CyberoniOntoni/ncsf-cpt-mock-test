@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import { BrandMark } from "@/components/brand-mark";
+import Link from "next/link";
+import { PublicSiteFooter } from "@/components/public-site-footer";
+import { PublicSiteHeader } from "@/components/public-site-header";
+import { SITE_COPY } from "@/lib/site/copy";
 
-/**
- * Shared backdrop + brand header for /login and /register.
- */
 export function AuthShell({
   title,
   subtitle,
@@ -16,28 +16,28 @@ export function AuthShell({
   footer?: ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-zinc-950 px-4 py-10">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-40"
-        aria-hidden
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16,185,129,0.18), transparent), radial-gradient(ellipse 60% 40% at 100% 100%, rgba(16,185,129,0.06), transparent)",
-        }}
-      />
-      <div className="relative w-full max-w-md animate-in">
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center rounded-full border border-emerald-900/40 bg-emerald-950/30 px-3.5 py-1.5">
-            <BrandMark size="sm" />
-          </div>
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-zinc-50">
-            {title}
-          </h1>
-          <p className="mt-1.5 text-sm text-zinc-500">{subtitle}</p>
-        </div>
-        {children}
+    <div className="min-h-dvh bg-[#141210] text-stone-100">
+      <PublicSiteHeader variant="auth" scrolled />
+      <div className="relative mx-auto flex max-w-md flex-col px-4 py-10">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-50">
+          {title}
+        </h1>
+        <p className="mt-1.5 text-sm text-stone-500">{subtitle}</p>
+        <div className="mt-6">{children}</div>
         {footer}
+        <p className="mt-8 text-center text-xs text-stone-600">
+          Looking for a trainer?{" "}
+          <Link href={SITE_COPY.findCta.href} className="text-emerald-500 hover:underline">
+            {SITE_COPY.findCta.label}
+          </Link>
+          {" · "}
+          Already a client?{" "}
+          <Link href={SITE_COPY.portalCta.href} className="text-emerald-500 hover:underline">
+            {SITE_COPY.portalCta.label}
+          </Link>
+        </p>
       </div>
+      <PublicSiteFooter />
     </div>
   );
 }

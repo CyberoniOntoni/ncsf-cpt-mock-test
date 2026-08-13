@@ -4,6 +4,7 @@ import { loginAction } from "@/app/actions/auth";
 import { AuthShell } from "@/components/auth-shell";
 import { AuthSubmitButton } from "@/components/auth-submit-button";
 import { Alert, Card, Input, Label } from "@/components/ui";
+import { SITE_COPY } from "@/lib/site/copy";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -32,7 +33,7 @@ export default async function LoginPage({
       subtitle={
         isInviteReturn
           ? "Sign in to accept your studio invite."
-          : "Sessions, clients, programs & coach — on the floor."
+          : SITE_COPY.oneLiner
       }
     >
       <Card className="border-zinc-800/80 p-5 shadow-xl shadow-black/40">

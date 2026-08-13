@@ -83,4 +83,8 @@ assert.equal(AUDIENCE_DOORS[0].href, SITE_COPY.primaryCta.href);
 assert.equal(SITE_COPY.findCta.href, "/find");
 assert.match(SITE_DISCLAIMERS.findIntro, /FloorScribe introduces you/);
 
+assert.equal(AUDIENCE_DOORS[1].href, "/portal/login");
+assert.equal(SITE_COPY.signInCta.href, "/login");
+assert.notEqual(SITE_COPY.primaryCta.href, "/find/register");
+
 console.log("site-copy ok");

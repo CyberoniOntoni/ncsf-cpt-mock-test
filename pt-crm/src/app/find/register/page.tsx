@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { registerSeekerAction } from "@/app/actions/marketplace-seeker";
+import { SITE_COPY } from "@/lib/site/copy";
 
 export default function FindRegisterPage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function FindRegisterPage() {
   return (
     <main className="mx-auto max-w-md space-y-4">
       <p className="text-xs uppercase tracking-wide text-zinc-500">
-        Client account
+        {SITE_COPY.findCta.label}
       </p>
       <h1 className="text-2xl font-semibold">Create your profile</h1>
       <p className="text-sm text-zinc-400">
@@ -89,6 +90,11 @@ export default function FindRegisterPage() {
         <Link href="/find/login" className="text-emerald-400">
           Log in
         </Link>
+      </p>
+      <p className="text-xs text-zinc-500">
+        Trainer? <Link href="/login">Staff login</Link>
+        {" · "}
+        Assigned client? <Link href="/portal/login">Client portal</Link>
       </p>
     </main>
   );

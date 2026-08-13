@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Building2, User } from "lucide-react";
 import { AuthShell } from "@/components/auth-shell";
 import { Card } from "@/components/ui";
+import { SITE_COPY } from "@/lib/site/copy";
 
 export const metadata: Metadata = {
   title: "Create account",
@@ -13,7 +14,7 @@ export default function RegisterChooserPage() {
   return (
     <AuthShell
       title="How will you use FloorScribe?"
-      subtitle="Pick the path that matches how you work."
+      subtitle={SITE_COPY.heroEyebrow}
     >
       <div className="space-y-3">
         <Link
