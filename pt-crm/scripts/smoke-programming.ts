@@ -65,9 +65,16 @@ import {
 } from "../src/lib/exercise-order";
 import { detectIntent } from "../src/lib/ai/intents";
 import { assignSetScheme, type SetSchemeId } from "../src/lib/set-schemes";
+import { leftoverLowerIntensity } from "../src/lib/program-builder";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT: ${msg}`);
+}
+
+function assertEqual<T>(actual: T, expected: T, msg: string): void {
+  if (actual !== expected) {
+    throw new Error(`ASSERT: ${msg} (got ${String(actual)}, expected ${String(expected)})`);
+  }
 }
 
 function ex(
@@ -818,6 +825,21 @@ function main() {
     assert(warmupScheme === "straight", "warmup stays straight");
   }
   console.log("ok assignSetScheme novice + work-slot index");
+
+  // leftoverLowerIntensity: any squat/hinge on the day makes leftover lower volume
+  {
+    assertEqual(
+      leftoverLowerIntensity("hinge", ["squat", "horizontal_push"]),
+      "hypertrophy",
+      "hinge leftover on squat day is volume"
+    );
+    assertEqual(
+      leftoverLowerIntensity("squat", ["horizontal_push"]),
+      undefined,
+      "first lower leftover stays primary"
+    );
+  }
+  console.log("ok leftoverLowerIntensity same-day second lower");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

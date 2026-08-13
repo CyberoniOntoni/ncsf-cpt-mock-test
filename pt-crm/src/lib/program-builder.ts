@@ -908,6 +908,18 @@ function buildCorrectiveWarmups(opts: {
   return out;
 }
 
+/** Tag leftover squat/hinge as volume if any squat or hinge already exists that day. */
+export function leftoverLowerIntensity(
+  pattern: string,
+  dayPatterns: string[]
+): "hypertrophy" | undefined {
+  if (pattern !== "squat" && pattern !== "hinge") return undefined;
+  if (dayPatterns.some((p) => p === "squat" || p === "hinge")) {
+    return "hypertrophy";
+  }
+  return undefined;
+}
+
 function leftoverPinnedRow(
   ex: ExerciseWithAvailability,
   goal: ProgramGoal,
@@ -1637,15 +1649,14 @@ export async function buildProgramDraft(
       const day0 = days[0];
       let sort = day0.exercises.length;
       let leftoverWorkIndex = 0;
-      const dayHasPattern = (pattern: string) =>
-        day0.exercises.some(
-          (row) => !row.isWarmup && row.movementPattern === pattern
-        );
+      const dayPatterns = day0.exercises
+        .filter((row) => !row.isWarmup)
+        .map((row) => row.movementPattern)
+        .filter((p): p is string => !!p);
       for (const ex of leftover) {
         usedGlobal.add(ex.id);
         const pat = ex.movementPattern;
-        const secondLower =
-          (pat === "squat" || pat === "hinge") && dayHasPattern(pat);
+        const intensity = leftoverLowerIntensity(pat, dayPatterns);
         day0.exercises.push(
           leftoverPinnedRow(
             ex,
@@ -1653,10 +1664,12 @@ export async function buildProgramDraft(
             experience,
             mesoPlan,
             sort++,
-            secondLower ? "hypertrophy" : undefined,
+            intensity,
             leftoverWorkIndex++
           )
         );
+        // So a second leftover lower on the same day also stays volume.
+        dayPatterns.push(pat);
       }
       const session0 = split[0];
       day0.exercises = sortExercisesForSession(day0.exercises, {
