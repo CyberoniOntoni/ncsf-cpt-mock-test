@@ -10,7 +10,7 @@ import {
   TRAINER_SECTION_NAV,
 } from "../src/lib/site/copy";
 
-function hrefs(items: { href: string }[]) {
+function hrefs(items: readonly { href: string }[]) {
   return items.map((i) => i.href);
 }
 
@@ -69,5 +69,11 @@ assert.match(SITE_DISCLAIMERS.findIntro, /session payments are between you and t
 
 assert.doesNotMatch(JSON.stringify(SITE_COPY), /franchise erp/i);
 assert.doesNotMatch(JSON.stringify(FEATURE_PILLARS), /card payment network/i);
+
+assert.equal(PUBLIC_NAV[0].label, "For trainers");
+assert.equal(PUBLIC_NAV[1].label, "Find a trainer");
+assert.equal(PUBLIC_NAV[2].label, "Client portal");
+assert.equal(SITE_COPY.primaryCta.label, "Create account");
+assert.equal(SITE_COPY.signInCta.label, "Sign in");
 
 console.log("site-copy ok");
