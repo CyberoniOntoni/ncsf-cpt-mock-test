@@ -16,7 +16,6 @@ import {
 import { findTrainingArea } from "@/lib/marketplace/areas";
 import { introFeeDecision } from "@/lib/marketplace/fees";
 import {
-  FEATURED_DAYS,
   FEATURED_FEE_CENTS,
   INTRO_FEE_CENTS,
 } from "@/lib/marketplace/types";
@@ -468,6 +467,3 @@ export async function listOrgIntrosAction() {
   const session = await requireSession();
   return listOrgIntros(session.organizationId);
 }
-
-/** Exported for smoke — FEATURED_DAYS used when marking paid. */
-export const featuredDays = FEATURED_DAYS;

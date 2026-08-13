@@ -28,6 +28,7 @@ import {
   acceptIntroRequest,
   upsertMarketplaceListing,
 } from "../src/app/actions/marketplace-trainer";
+import * as trainerActions from "../src/app/actions/marketplace-trainer";
 import {
   createPlatformCheckoutSession,
   markPlatformChargePaid,
@@ -39,6 +40,13 @@ import { id } from "../src/lib/utils";
 function assert(cond: unknown, msg: string) {
   if (!cond) throw new Error(msg);
   console.log("ok", msg);
+}
+
+for (const [name, value] of Object.entries(trainerActions)) {
+  assert(
+    typeof value === "function",
+    `marketplace-trainer export ${name} must be a function (got ${typeof value})`
+  );
 }
 
 async function main() {
