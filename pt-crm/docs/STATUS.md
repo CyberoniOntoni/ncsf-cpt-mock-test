@@ -298,7 +298,7 @@ Typical candidates (pick from pain, don’t pre-build all):
 | **Deploy** | Env-only `FLOORSCRIBE_DEPLOY_*` + `python scripts/deploy_lxc.py` |
 | **Verify** | `npm run typecheck` · `smoke:programming` · `smoke:portal` · `smoke:marketplace` · `smoke:pilot` · `/api/health` |
 | **Schema** | Bump `SCHEMA_VERSION` in `src/db/index.ts` when migrations change; restart app |
-| **Secrets** | Never commit passwords, `AUTH_SECRET`, or private LXC IPs into the public repo |
+| **Secrets** | Never commit passwords, `AUTH_SECRET` / `CLIENT_AUTH_SECRET` (both required in production), or private LXC IPs into the public repo |
 | **Scope** | Session/plan/CRM first; knowledge & analytics stay secondary |
 
 ---
@@ -326,6 +326,7 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 
 | Date | Note |
 |------|------|
+| 2026-08-13 | Review remediation: featuredDays export gone; intro-fee Pay + mock complete; portal pre-auth no PII; hashOtp fail-closed; calendar Done does not debit packs; audience-aware public footer. `AUTH_SECRET` + `CLIENT_AUTH_SECRET` both required in production. |
 | 2026-08-13 | Public website overhaul: marketing + find + auth + portal share one chrome; copy covers programs, portal, and Find. |
 | 2026-08-08 | Initial audit after programs science polish + LXC deploy (`a977bbb` / local `4d4fa35`) |
 | 2026-08-08 | Build from scratch + save-for-later drafts (unassigned templates) |
