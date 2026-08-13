@@ -22,6 +22,7 @@ import { requireSession } from "@/lib/auth";
 import {
   correctivesFromAssessmentResults,
   correctivesFromClientHistory,
+  deficienciesFromCorrectives,
   mergeCorrectives,
 } from "@/lib/assessment-correctives";
 import {
@@ -61,9 +62,6 @@ import {
   measurementsFromRow,
   prioritizeAndRotateCorrectives,
   type ClientEvaluationContext,
-  type DetectedDeficiency,
-  type DeficiencySeverity,
-  type DeficiencySource,
 } from "@/lib/smarter-rule-engine";
 
 type BaselineRx = {
@@ -2495,51 +2493,6 @@ export async function suggestProgramMesocycleWeekAction(programId: string) {
   const week = suggestMesocycleWeekFromStartDate(program.createdAt);
   const plan = getMesocycleWeek(week);
   return { week: plan.week, label: plan.label, notes: plan.notes };
-}
-
-/** Desk prescriptions → engine slugs so Insert shares Auto-design ranking. */
-const CORRECTIVE_ID_TO_SLUG: Record<string, string> = {
-  "shoulder-mobility": "upper_cross_syndrome",
-  "ohs-arms-tspine-shoulder": "upper_cross_syndrome",
-  "posture-upper-quarter": "upper_cross_syndrome",
-  "tspine-mobility-history": "upper_cross_syndrome",
-  "neck-posture-history": "forward_head_posture",
-  "posture-pelvis-core": "lower_cross_syndrome",
-  "low-back-gentle": "lower_cross_syndrome",
-  "hip-mobility-history": "lower_cross_syndrome",
-  "ankle-df-mobility": "ankle_mobility_restriction",
-  "ohs-heels-ankle": "ankle_mobility_restriction",
-  "ohs-global-mobility": "ankle_mobility_restriction",
-  "ohs-knee-valgus-control": "knee_valgus_collapse",
-  "knee-control-history": "knee_valgus_collapse",
-};
-
-function deficienciesFromCorrectives(
-  correctives: Array<{ id: string; reason: string; priority: number }>
-): DetectedDeficiency[] {
-  const defs: DetectedDeficiency[] = [];
-  const seen = new Set<string>();
-  correctives.forEach((c, i) => {
-    const slug = CORRECTIVE_ID_TO_SLUG[c.id] ?? c.id.replace(/-/g, "_");
-    if (seen.has(slug)) return;
-    seen.add(slug);
-    const severity: DeficiencySeverity =
-      c.priority >= 80 ? "severe" : c.priority >= 60 ? "moderate" : "mild";
-    const source: DeficiencySource = c.id.includes("history")
-      ? "history"
-      : "assessment";
-    defs.push({
-      slug,
-      name: c.reason,
-      category: "mobility",
-      severity,
-      affectedSide: "bilateral",
-      source,
-      triggerDescription: c.reason,
-      identifiedAt: new Date(i),
-    });
-  });
-  return defs;
 }
 
 /**

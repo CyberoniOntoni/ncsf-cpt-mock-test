@@ -164,6 +164,10 @@ const CORRECTIVE_HINTS: Record<
     nameHints: ["scapular retraction", "isometric", "seated"],
     tags: ["mobility", "low-impact"],
   },
+  gentle_pain_mobility: {
+    nameHints: ["cat-cow", "open book", "breathing", "gentle"],
+    tags: ["mobility", "gentle", "pain-free", "warmup"],
+  },
   abdominal_adiposity_core_restriction: {
     nameHints: ["pallof", "bird dog", "bird-dog", "farmer", "anti-rotation"],
     tags: ["core", "anti-rotation", "carry"],

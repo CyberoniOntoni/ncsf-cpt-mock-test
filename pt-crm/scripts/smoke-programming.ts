@@ -20,7 +20,10 @@ import {
   hasDraftContent,
   type SessionDraftPayload,
 } from "../src/lib/session-draft";
-import { correctivesFromAssessmentResults } from "../src/lib/assessment-correctives";
+import {
+  correctivesFromAssessmentResults,
+  deficienciesFromCorrectives,
+} from "../src/lib/assessment-correctives";
 import {
   accumulateVolumeByPattern,
   sessionsToAdvanceMesocycle,
@@ -1140,9 +1143,56 @@ async function main() {
       new Set(names).size > 1,
       "three days do not all get the same two correctives"
     );
+
+    const desk = deficienciesFromCorrectives([
+      { id: "shoulder-mobility", reason: "shoulder", priority: 70 },
+      { id: "ankle-df-mobility", reason: "ankle", priority: 68 },
+    ]);
+    assert(
+      desk[0].identifiedAt.getTime() > desk[1].identifiedAt.getTime(),
+      "higher desk priority gets newer identifiedAt"
+    );
+    const sameBand = prioritizeAndRotateCorrectives(desk, 1, ctx, rotatePool);
+    assert(
+      sameBand.get(1)?.[0]?.deficiencySlug === "upper_cross_syndrome",
+      "day 1 opens on the higher-priority moderate"
+    );
+
+    const painDefs = deficienciesFromCorrectives([
+      {
+        id: "gentle-pain-mobility",
+        reason: "pain",
+        priority: 95,
+      },
+    ]);
+    assertEqual(
+      painDefs[0]?.slug,
+      "gentle_pain_mobility",
+      "pain prescription maps to catalog slug"
+    );
+    const painPool = [
+      {
+        id: "ex_gentle",
+        name: "Cat-cow",
+        tags: "mobility,gentle",
+        movementPattern: "mobility",
+      },
+    ];
+    const painCands = getCorrectiveCandidatesForSlug(
+      painDefs[0].slug,
+      painPool,
+      ctx
+    );
+    assert(painCands[0]?.id === "ex_gentle", "pain slug ranks a gentle warmup");
+    const painDays = prioritizeAndRotateCorrectives(painDefs, 1, ctx, painPool);
+    assert(
+      painDays.get(1)?.[0]?.exerciseId === "ex_gentle",
+      "pain-only desk insert gets a warmup"
+    );
   }
   console.log("ok mapping ranks beat hints; no ghost primer");
   console.log("ok corrective rotation uniqueness across days");
+  console.log("ok desk priority recency; pain prescription ranks a warmup");
 
   await smokeBuildProgramDraft();
 

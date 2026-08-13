@@ -3,6 +3,12 @@
  * No I/O; maps screen fails / injury free-text into ranked, tag-aware hints.
  */
 
+import type {
+  DetectedDeficiency,
+  DeficiencySeverity,
+  DeficiencySource,
+} from "@/lib/smarter-rule-engine";
+
 export type CorrectivePrescription = {
   id: string;
   reason: string;
@@ -442,6 +448,54 @@ export function mergeCorrectives(lists: CorrectivePrescription[][]): CorrectiveP
     }
   }
   return Array.from(byId.values()).sort((a, b) => b.priority - a.priority);
+}
+
+/** Desk prescriptions → engine slugs so Insert shares Auto-design ranking. */
+const CORRECTIVE_ID_TO_SLUG: Record<string, string> = {
+  "shoulder-mobility": "upper_cross_syndrome",
+  "ohs-arms-tspine-shoulder": "upper_cross_syndrome",
+  "posture-upper-quarter": "upper_cross_syndrome",
+  "tspine-mobility-history": "upper_cross_syndrome",
+  "neck-posture-history": "forward_head_posture",
+  "posture-pelvis-core": "lower_cross_syndrome",
+  "low-back-gentle": "lower_cross_syndrome",
+  "hip-mobility-history": "lower_cross_syndrome",
+  "ankle-df-mobility": "ankle_mobility_restriction",
+  "ohs-heels-ankle": "ankle_mobility_restriction",
+  "ohs-global-mobility": "ankle_mobility_restriction",
+  "ohs-knee-valgus-control": "knee_valgus_collapse",
+  "knee-control-history": "knee_valgus_collapse",
+  "gentle-pain-mobility": "gentle_pain_mobility",
+};
+
+export function deficienciesFromCorrectives(
+  correctives: Array<{ id: string; reason: string; priority: number }>
+): DetectedDeficiency[] {
+  const defs: DetectedDeficiency[] = [];
+  const seen = new Set<string>();
+  const n = correctives.length;
+  correctives.forEach((c, i) => {
+    const slug = CORRECTIVE_ID_TO_SLUG[c.id] ?? c.id.replace(/-/g, "_");
+    if (seen.has(slug)) return;
+    seen.add(slug);
+    const severity: DeficiencySeverity =
+      c.priority >= 80 ? "severe" : c.priority >= 60 ? "moderate" : "mild";
+    const source: DeficiencySource = c.id.includes("history")
+      ? "history"
+      : "assessment";
+    defs.push({
+      slug,
+      name: c.reason,
+      category: "mobility",
+      severity,
+      affectedSide: "bilateral",
+      source,
+      triggerDescription: c.reason,
+      // mergeCorrectives is priority-desc; newer identifiedAt wins same-severity ties
+      identifiedAt: new Date(n - i),
+    });
+  });
+  return defs;
 }
 
 function tokenizeTags(tags: string): string[] {
