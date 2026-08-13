@@ -76,7 +76,7 @@ Four primary areas (`src/lib/nav.ts`):
 
 | Capability | Status | Notes |
 |------------|--------|--------|
-| Login / session cookie | **Done** | `AUTH_SECRET` required in production |
+| Login / session cookie | **Done** | `AUTH_SECRET` required in production; portal/seeker: `CLIENT_AUTH_SECRET` required in production |
 | Solo registration | **Done** | `/register/solo` |
 | Studio registration | **Done** | `/register/studio` |
 | Team invites | **Done** | Settings → Team; roles; 14-day token |

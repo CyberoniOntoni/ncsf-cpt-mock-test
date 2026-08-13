@@ -11,7 +11,7 @@ import {
   clients,
   organizations,
 } from "@/db/schema";
-import { sendEmail } from "@/lib/email";
+import { isMockEmail, sendEmail } from "@/lib/email";
 import { REQUIRED_PORTAL_DOCUMENTS } from "@/lib/portal-documents";
 import { id } from "@/lib/utils";
 
@@ -23,6 +23,13 @@ const OTP_RATE_MAX = 3;
 const SESSION_DAYS = 14;
 
 const DEV_CLIENT_SECRET = "dev-only-change-me-floorscribe-client-secret";
+
+const WEAK_CLIENT_SECRETS = new Set([
+  "change-me-in-production",
+  "dev-only-change-me-floorscribe-client-secret",
+  "replace-with-long-random-string-min-32-chars",
+  "replace-with-another-long-random-string-min-32-chars",
+]);
 
 export type ClientSessionPayload = {
   role: "client";
@@ -40,12 +47,19 @@ export type PortalStudioChoice = {
   organizationName: string;
 };
 
+function isWeakClientSecret(s: string | undefined | null): boolean {
+  if (!s) return true;
+  if (WEAK_CLIENT_SECRETS.has(s)) return true;
+  if (s.length < 32) return true;
+  return false;
+}
+
 function clientSecret(): Uint8Array {
   const s = process.env.CLIENT_AUTH_SECRET || "";
   if (process.env.NODE_ENV === "production") {
-    if (!s || s.length < 24) {
+    if (isWeakClientSecret(s)) {
       throw new Error(
-        "CLIENT_AUTH_SECRET is missing or weak in production. Set a long random secret (≥24 characters)."
+        "CLIENT_AUTH_SECRET is missing or weak in production. Set a long random secret (≥32 characters)."
       );
     }
     return new TextEncoder().encode(s);
@@ -54,8 +68,8 @@ function clientSecret(): Uint8Array {
 }
 
 export function hashOtp(code: string): string {
-  const secret = process.env.CLIENT_AUTH_SECRET || DEV_CLIENT_SECRET;
-  return createHmac("sha256", secret).update(code.trim()).digest("hex");
+  const secretBytes = clientSecret();
+  return createHmac("sha256", Buffer.from(secretBytes)).update(code.trim()).digest("hex");
 }
 
 export function normalizePortalEmail(raw: string): string {
@@ -125,6 +139,11 @@ export async function requestClientOtp(opts: {
     eligible.find((r) => r.organizationId === opts.organizationId) || eligible[0];
   if (!match) {
     return { ok: false, error: "Studio not found for this email" };
+  }
+
+  // Production must not log OTPs via mock email; require real delivery.
+  if (process.env.NODE_ENV === "production" && isMockEmail()) {
+    return { ok: false, error: "Email is not configured" };
   }
 
   const db = await getDb();

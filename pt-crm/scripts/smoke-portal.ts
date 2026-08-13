@@ -39,6 +39,9 @@ async function main() {
   assert(jane, "demo client jane exists");
   assert(jane.status === "active", "jane is active");
 
+  // Fresh OTP window so re-runs are not blocked by prior smoke rate-limit rows.
+  await db.delete(clientOtps).where(eq(clientOtps.email, "jane@example.com"));
+
   const unknown = await requestClientOtp({
     email: `nobody-${Date.now()}@example.com`,
   });
@@ -137,6 +140,22 @@ async function main() {
   assert(blocked.ok && "sent" in blocked && blocked.sent, "trainer email looks like unknown");
   assert(!("organizationId" in blocked && blocked.organizationId), "trainer email has no org");
   assert(!peekLastEmailTo("pt@demo.local"), "trainer email is not mailed a code");
+
+  const env = process.env as { NODE_ENV?: string; CLIENT_AUTH_SECRET?: string };
+  const prev = env.NODE_ENV;
+  const prevSecret = env.CLIENT_AUTH_SECRET;
+  env.NODE_ENV = "production";
+  delete env.CLIENT_AUTH_SECRET;
+  let threw = false;
+  try {
+    hashOtp("123456");
+  } catch {
+    threw = true;
+  }
+  env.NODE_ENV = prev;
+  if (prevSecret === undefined) delete env.CLIENT_AUTH_SECRET;
+  else env.CLIENT_AUTH_SECRET = prevSecret;
+  assert(threw, "hashOtp fails closed in production without CLIENT_AUTH_SECRET");
 
   console.log("\nPortal smoke: ALL PASS");
 }

@@ -35,7 +35,12 @@ export async function sendEmail(msg: OutboundEmail): Promise<void> {
   if (recent.length > 50) recent.shift();
 
   if (isMockEmail()) {
-    console.info(`[email:mock] to=${msg.to} subject=${msg.subject}\n${msg.text}`);
+    // Never log message body (may contain OTP) in production.
+    if (process.env.NODE_ENV === "production") {
+      console.info(`[email:mock] to=${msg.to} subject=${msg.subject} (body omitted)`);
+    } else {
+      console.info(`[email:mock] to=${msg.to} subject=${msg.subject}\n${msg.text}`);
+    }
     return;
   }
 
