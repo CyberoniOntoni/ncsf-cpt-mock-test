@@ -12,6 +12,7 @@ import {
   MARKETPLACE_SPECIALTIES,
   parseCsvSlugs,
 } from "@/lib/marketplace/specialties";
+import { MAX_UNPAID_INTRO_CHARGES } from "@/lib/marketplace/types";
 
 type Profile = {
   id: string;
@@ -34,9 +35,11 @@ type Profile = {
 export function MarketplaceListingForm(props: {
   profile: Profile | null;
   gyms: { id: string; name: string; slug: string }[];
+  dueIntroCharges?: { id: string; amountCents: number }[];
   defaultCredentials?: string;
 }) {
   const p = props.profile;
+  const dueIntroCharges = props.dueIntroCharges ?? [];
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const selectedSpecs = new Set(parseCsvSlugs(p?.specialties));
@@ -235,6 +238,32 @@ export function MarketplaceListingForm(props: {
         </div>
       </fieldset>
 
+      {dueIntroCharges.length >= MAX_UNPAID_INTRO_CHARGES ? (
+        <p className="text-sm text-amber-400">
+          Find a trainer is hiding your card until unpaid intro fees are settled.
+        </p>
+      ) : null}
+      {dueIntroCharges.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {dueIntroCharges.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className="min-h-11 rounded-lg border border-amber-800 px-4 text-sm text-amber-200"
+              onClick={async () => {
+                const r = await startPlatformCheckoutAction({
+                  kind: "intro_accept",
+                  chargeId: c.id,
+                });
+                if (r.ok) window.location.href = r.url;
+                else setMsg(r.error);
+              }}
+            >
+              Pay intro fee USD {(c.amountCents / 100).toFixed(0)}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="published" defaultChecked={!!p?.published} />
         Show me on Find a trainer

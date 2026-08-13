@@ -91,6 +91,7 @@ export default async function SettingsPage({
           <MarketplaceListingForm
             profile={listing.profile}
             gyms={listing.gyms}
+            dueIntroCharges={listing.dueIntroCharges}
             defaultCredentials={user?.title || ""}
           />
         </Card>

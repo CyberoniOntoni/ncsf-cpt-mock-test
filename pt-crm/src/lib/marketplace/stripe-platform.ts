@@ -14,9 +14,10 @@ export async function createPlatformCheckoutSession(opts: {
 }): Promise<CheckoutSession> {
   const secret = process.env.STRIPE_SECRET_KEY || "";
   if (!secret || process.env.MOCK_STRIPE === "true") {
+    const origin = new URL(opts.successUrl).origin;
     return {
       id: `cs_test_${opts.chargeId}`,
-      url: `https://checkout.stripe.com/mock/${opts.chargeId}`,
+      url: `${origin}/api/stripe/mock-complete?chargeId=${encodeURIComponent(opts.chargeId)}`,
     };
   }
 

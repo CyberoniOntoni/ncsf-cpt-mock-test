@@ -312,7 +312,7 @@ async function main() {
     cancelUrl: "http://127.0.0.1:4000/settings",
   });
   assert(
-    session.url.includes("checkout.stripe.com/mock/"),
+    session.url.includes("/api/stripe/mock-complete?chargeId="),
     "mock checkout url"
   );
 

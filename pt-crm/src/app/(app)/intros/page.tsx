@@ -2,21 +2,25 @@ import Link from "next/link";
 import {
   acceptIntroAction,
   declineIntroAction,
+  getMyMarketplaceListingAction,
   listOrgIntrosAction,
 } from "@/app/actions/marketplace-trainer";
 import { AreaEyebrow } from "@/components/area-eyebrow";
 import { PageShell } from "@/components/page-shell";
 import { Card, PageHeader } from "@/components/ui";
 import { listPublicGyms } from "@/db/queries/marketplace";
+import { MAX_UNPAID_INTRO_CHARGES } from "@/lib/marketplace/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function IntrosPage() {
-  const [intros, gyms] = await Promise.all([
+  const [intros, gyms, listing] = await Promise.all([
     listOrgIntrosAction(),
     listPublicGyms(),
+    getMyMarketplaceListingAction(),
   ]);
   const gymName = new Map(gyms.map((g) => [g.id, g.name]));
+  const dueIntroCharges = listing.dueIntroCharges;
   return (
     <PageShell className="space-y-4">
       <PageHeader
@@ -24,6 +28,17 @@ export default async function IntrosPage() {
         eyebrow={<AreaEyebrow areaId="people" current="Intros" />}
         description="Marketplace requests. Accepting creates a CRM lead."
       />
+      {dueIntroCharges.length >= MAX_UNPAID_INTRO_CHARGES ? (
+        <Card>
+          <p className="text-sm text-amber-400">
+            Find a trainer is hiding your card. Pay in{" "}
+            <Link href="/settings" className="text-emerald-400">
+              Settings
+            </Link>
+            .
+          </p>
+        </Card>
+      ) : null}
       {intros.length === 0 ? (
         <Card>
           <p className="text-sm text-zinc-500">

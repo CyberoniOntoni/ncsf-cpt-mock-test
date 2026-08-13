@@ -136,6 +136,19 @@ export async function getMyMarketplaceListingAction() {
       .where(eq(marketplaceProfileFacilities.profileId, profile.id));
     facilityIds = links.map((l) => l.facilityId);
   }
+  const dueIntroCharges = await db
+    .select({
+      id: platformCharges.id,
+      amountCents: platformCharges.amountCents,
+    })
+    .from(platformCharges)
+    .where(
+      and(
+        eq(platformCharges.organizationId, session.organizationId),
+        eq(platformCharges.kind, "intro_accept"),
+        eq(platformCharges.status, "due")
+      )
+    );
   return {
     profile: profile
       ? {
@@ -157,6 +170,7 @@ export async function getMyMarketplaceListingAction() {
         }
       : null,
     gyms: gyms.map((g) => ({ id: g.id, name: g.name, slug: g.slug })),
+    dueIntroCharges,
   };
 }
 
@@ -312,7 +326,7 @@ export async function acceptIntroRequest(opts: {
     | { status: "waived" }
     | { status: "due"; chargeId: string; amountCents: number };
   const chargeId = id("chg");
-  if (decision.action === "waive") {
+  if (decision.action === "waive" || decision.action === "hide_listing") {
     await db.insert(platformCharges).values({
       id: chargeId,
       organizationId: opts.organizationId,
