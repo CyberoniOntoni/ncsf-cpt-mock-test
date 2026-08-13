@@ -16,6 +16,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Your profile" };
+
 export default async function FindAccountPage() {
   const session = await requireSeekerSession();
   const seeker = await getSeekerById(session.seekerId);

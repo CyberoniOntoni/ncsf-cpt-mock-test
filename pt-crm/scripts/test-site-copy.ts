@@ -87,4 +87,7 @@ assert.equal(AUDIENCE_DOORS[1].href, "/portal/login");
 assert.equal(SITE_COPY.signInCta.href, "/login");
 assert.notEqual(SITE_COPY.primaryCta.href, "/find/register");
 
+assert.match(SITE_COPY.oneLiner, /programs/i);
+assert.match(SITE_COPY.oneLiner, /session/i);
+
 console.log("site-copy ok");

@@ -3,6 +3,8 @@ import { PublicSiteHeader } from "@/components/public-site-header";
 import { SITE_COPY, SITE_DISCLAIMERS } from "@/lib/site/copy";
 import { PortalLoginForm } from "@/components/portal/portal-login-form";
 
+export const metadata = { title: "Client portal" };
+
 export default async function PortalLoginPage({
   searchParams,
 }: {

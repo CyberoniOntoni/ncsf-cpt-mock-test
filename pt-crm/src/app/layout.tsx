@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SITE_COPY } from "@/lib/site/copy";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,16 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.APP_URL || "https://floorscribe.com"
-  ),
+  metadataBase: new URL(process.env.APP_URL || "https://floorscribe.com"),
   title: {
-    default: "FloorScribe",
-    template: "%s · FloorScribe",
+    default: SITE_COPY.productName,
+    template: `%s · ${SITE_COPY.productName}`,
   },
-  description:
-    "Floor OS for personal trainers — log sessions, keep clients, run the day.",
-  applicationName: "FloorScribe",
+  description: SITE_COPY.oneLiner,
+  applicationName: SITE_COPY.productName,
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
