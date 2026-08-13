@@ -164,6 +164,90 @@ async function smokeBuildProgramDraft(): Promise<void> {
   console.log("ok buildProgramDraft same-day lower schemes + note hygiene");
 }
 
+function isCorrectiveWarmup(ex: {
+  isWarmup: boolean;
+  notes?: string | null;
+  setSchemeMeta?: { summary?: string } | null;
+}): boolean {
+  if (!ex.isWarmup) return false;
+  const summary = String(ex.setSchemeMeta?.summary || "");
+  const notes = String(ex.notes || "");
+  return /Corrective/.test(summary) || /Corrective first/.test(notes);
+}
+
+async function smokeRotatorDoesNotFallBackToOldMatcher(): Promise<void> {
+  await seedIfNeeded();
+  const db = await getDb();
+  const [org] = await db.select().from(organizations).limit(1);
+  if (!org) throw new Error("no org after seed");
+
+  const pool = await listExercisesForOrg(org.id);
+  if (pool.filter((e) => e.available).length === 0) {
+    console.log(
+      "skip rotator fallback: available.length === 0 (empty seed library)"
+    );
+    return;
+  }
+
+  const assessmentHints = [
+    {
+      templateSlug: "posture-static",
+      results: { head: "forward", shoulders: "rounded", pelvis: "anterior_tilt" },
+    },
+  ];
+  const base = {
+    organizationId: org.id,
+    goal: "strength" as const,
+    daysPerWeek: 4,
+    sessionMinutes: 45,
+    experienceLevel: "intermediate",
+    assessmentHints,
+  };
+
+  const withEval = await buildProgramDraft({
+    ...base,
+    title: "Smoke rotator baseline",
+  });
+  const detected = (
+    (withEval.meta.detectedDeficiencies as { slug?: string }[] | undefined) ||
+    []
+  )
+    .map((d) => d.slug)
+    .filter((s): s is string => !!s);
+  assert(detected.length > 0, "posture screen yields smarter-eval deficiencies");
+  const baselineCorrectives = withEval.days.flatMap((d) =>
+    d.exercises.filter(isCorrectiveWarmup)
+  );
+  assert(
+    baselineCorrectives.length > 0,
+    "rotator path injects at least one corrective warmup"
+  );
+
+  const suppressedAll = await buildProgramDraft({
+    ...base,
+    title: "Smoke rotator suppressed",
+    suppressedDeficiencySlugs: detected,
+  });
+  const leftover = suppressedAll.days.flatMap((d) =>
+    d.exercises.filter(isCorrectiveWarmup)
+  );
+  assertEqual(
+    leftover.length,
+    0,
+    "suppressing every deficiency does not rebuild from assessment/history matcher"
+  );
+  assert(
+    suppressedAll.days.every((d) =>
+      d.exercises.filter((e) => e.isWarmup).every((e) => e.exerciseId)
+    ),
+    "empty rotation does not invent ghost primers"
+  );
+
+  console.log(
+    "ok Auto-design empty/suppressed rotation does not fall back to old matcher"
+  );
+}
+
 async function main() {
   // 1) Constraint profile: "left shoulder pain" → shoulder flag
   const profile = buildConstraintProfile({
@@ -1197,6 +1281,7 @@ async function main() {
   console.log("ok desk priority recency; pain prescription ranks a warmup");
 
   await smokeBuildProgramDraft();
+  await smokeRotatorDoesNotFallBackToOldMatcher();
   await smokeActiveDeficiencyUpsert();
 
   console.log("\nLane B programming smoke: ALL PASS");

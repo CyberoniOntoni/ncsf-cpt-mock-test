@@ -1273,13 +1273,17 @@ export async function buildProgramDraft(
     let sort = 0;
     let workSlotIndex = 0;
 
-    // Prepend up to 2 assessment/history corrective mobility warm-ups per day
+    // Prepend up to 2 assessment/history corrective mobility warm-ups per day.
+    // Once the rotator ran — or suppression emptied the eval list so it never
+    // ran — keep that result even when the day is []. Old matcher is only for
+    // the no-evalCtx / no-smarter-eval path.
     const dayLimit = densityForMinutes(sessionMinutes) === "short" ? 1 : 2;
+    const rotatorOwnsCorrectives =
+      rotatedCorrectives != null || suppressed.size > 0;
     const rotated = rotatedCorrectives?.get(i + 1) ?? [];
-    const correctiveWarmups =
-      rotated.length > 0
-        ? prescribedToWarmups(rotated, dayLimit)
-        : buildCorrectiveWarmups({
+    const correctiveWarmups = rotatorOwnsCorrectives
+      ? prescribedToWarmups(rotated, dayLimit)
+      : buildCorrectiveWarmups({
             correctives,
             pool: available,
             usedIds: new Set([...dayUsed, ...usedGlobal]),
