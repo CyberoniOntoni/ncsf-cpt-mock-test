@@ -966,6 +966,15 @@ function leftoverPinnedRow(
     },
     mesoPlan
   );
+  if (
+    Array.isArray(planned.setSchemeMeta.plannedSets) &&
+    mesoRx.sets < planned.setSchemeMeta.plannedSets.length
+  ) {
+    planned.setSchemeMeta.plannedSets = planned.setSchemeMeta.plannedSets.slice(
+      0,
+      mesoRx.sets
+    );
+  }
   return {
     id: id("pe"),
     exerciseId: ex.id,
@@ -1556,6 +1565,14 @@ export async function buildProgramDraft(
             },
             mesoPlan
           );
+
+      if (
+        Array.isArray(planned.setSchemeMeta.plannedSets) &&
+        mesoRx.sets < planned.setSchemeMeta.plannedSets.length
+      ) {
+        planned.setSchemeMeta.plannedSets =
+          planned.setSchemeMeta.plannedSets.slice(0, mesoRx.sets);
+      }
 
       const prepHow =
         isPrep && role

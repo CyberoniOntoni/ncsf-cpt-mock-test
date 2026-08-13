@@ -381,10 +381,12 @@ export async function startSessionFromProgramDayAction(
       const prevSets = lastByKey.get(key) || null;
       const scheme = ex.setScheme || "straight";
       const schemeMeta = ex.setSchemeMeta || null;
+      const planned = schemeMeta?.plannedSets;
+      const targetSets = ex.sets ?? planned?.length;
       const setLogs = initSetLogsFromScheme(
         scheme,
         schemeMeta,
-        ex.sets,
+        targetSets,
         ex.reps,
         prevSets
       );

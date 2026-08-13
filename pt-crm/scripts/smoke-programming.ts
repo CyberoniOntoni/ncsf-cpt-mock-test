@@ -65,7 +65,11 @@ import {
   suggestedInsertSortOrder,
 } from "../src/lib/exercise-order";
 import { detectIntent } from "../src/lib/ai/intents";
-import { assignSetScheme, type SetSchemeId } from "../src/lib/set-schemes";
+import {
+  assignSetScheme,
+  initSetLogsFromScheme,
+  type SetSchemeId,
+} from "../src/lib/set-schemes";
 import {
   composeProgramNotes,
   leftoverLowerIntensity,
@@ -890,6 +894,23 @@ function main() {
     );
   }
   console.log("ok leftoverLowerIntensity same-day second lower");
+
+  // Floor logger follows mesocycle-scaled sets, not leftover plannedSets
+  {
+    const plannedSix = Array.from({ length: 6 }, (_, i) => ({
+      reps: String(12 - i),
+      rpe: "7",
+      role: "work" as const,
+    }));
+    const logs = initSetLogsFromScheme(
+      "wave",
+      { plannedSets: plannedSix },
+      4,
+      "8-10"
+    );
+    assertEqual(logs.length, 4, "floor follows meso-scaled sets");
+  }
+  console.log("ok initSetLogsFromScheme trims to meso-scaled sets");
 
   // composeProgramNotes: trainer notes + fresh generation block; no library count
   {

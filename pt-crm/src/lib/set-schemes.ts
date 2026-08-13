@@ -832,8 +832,17 @@ export function initSetLogsFromScheme(
   const planned = meta?.plannedSets;
   const isEmom =
     schemeId === "emom" || (meta?.emomMinutes != null && meta.emomMinutes > 0);
+  const mesoSets = Number(fallbackSets);
+  const targetSets =
+    Number.isFinite(mesoSets) && mesoSets > 0
+      ? Math.max(1, Math.round(mesoSets))
+      : planned?.length
+        ? planned.length
+        : 3;
+
   if (planned?.length) {
-    return planned.map((p, i) => {
+    const rows = planned.slice(0, targetSets);
+    const logs = rows.map((p, i) => {
       const prev = previous?.[i] ?? previous?.[previous.length - 1];
       let restSec = p.restSec ?? null;
       // Legacy EMOM rows stored restSec: 0 — treat as full 60s interval
@@ -853,10 +862,30 @@ export function initSetLogsFromScheme(
         pain: null,
       };
     });
+    if (logs.length < targetSets) {
+      const last = logs[logs.length - 1];
+      const reps = last?.reps || fallbackReps || "8-10";
+      for (let i = logs.length; i < targetSets; i++) {
+        const prev = previous?.[i] ?? previous?.[previous.length - 1];
+        logs.push({
+          setIndex: i + 1,
+          reps,
+          weightKg: prev?.weightKg ?? null,
+          rpe: last?.rpe ?? prev?.rpe ?? null,
+          completed: false,
+          role: last?.role ?? (schemeId && schemeId !== "straight" ? "work" : null),
+          tempo: last?.tempo || meta?.tempo || null,
+          restSec: last?.restSec ?? null,
+          note: null,
+          pain: null,
+        });
+      }
+    }
+    return logs;
   }
 
   // Fallback straight sets
-  const n = Math.max(1, fallbackSets || 3);
+  const n = Math.max(1, targetSets);
   const reps = fallbackReps || "8-10";
   return Array.from({ length: n }, (_, i) => {
     const prev = previous?.[i] ?? previous?.[previous.length - 1];
