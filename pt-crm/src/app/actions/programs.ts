@@ -526,7 +526,11 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
       experienceLevel: draft.experienceLevel,
       status: input.activate ? "active" : "draft",
       notes: draft.notes,
-      generationMeta: draft.meta,
+      generationMeta: {
+        ...draft.meta,
+        // Original wizard coach field only — regen must not re-feed composed notes
+        coachNotes: input.notes ?? null,
+      },
       facilityEquipmentMode: asFacilityEquipmentMode(input.facilityEquipmentMode) ?? "org",
     });
 
@@ -1850,6 +1854,13 @@ export async function regenerateProgramInPlaceAction(
       ? (prevMeta.preferMobility as boolean)
       : undefined;
 
+  const coachNotes =
+    typeof prevMeta.coachNotes === "string"
+      ? (prevMeta.coachNotes as string)
+      : prevMeta.coachNotes === null
+        ? null
+        : undefined;
+
   const draft = await buildProgramDraft({
     organizationId: session.organizationId,
     title: program.title,
@@ -1857,7 +1868,7 @@ export async function regenerateProgramInPlaceAction(
     daysPerWeek: program.daysPerWeek,
     sessionMinutes: program.sessionMinutes,
     experienceLevel: experience,
-    notes: program.notes || undefined,
+    notes: coachNotes ?? undefined,
     clientInjuries,
     clientGoals,
     contraindications,
@@ -1954,6 +1965,7 @@ export async function regenerateProgramInPlaceAction(
         notes: draft.notes,
         generationMeta: {
           ...draft.meta,
+          coachNotes: coachNotes ?? null,
           baselinePrescriptions: baselines,
           regeneratedAt: new Date().toISOString(),
           previousVariationSeed: prevMeta.variationSeed ?? null,
@@ -2042,6 +2054,13 @@ export async function regenerateProgramDayAction(
       ? (prevMeta.preferMobility as boolean)
       : undefined;
 
+  const coachNotes =
+    typeof prevMeta.coachNotes === "string"
+      ? (prevMeta.coachNotes as string)
+      : prevMeta.coachNotes === null
+        ? null
+        : undefined;
+
   const draft = await buildProgramDraft({
     organizationId: session.organizationId,
     title: program.title,
@@ -2049,7 +2068,7 @@ export async function regenerateProgramDayAction(
     daysPerWeek: program.daysPerWeek,
     sessionMinutes: program.sessionMinutes,
     experienceLevel: experience,
-    notes: program.notes || undefined,
+    notes: coachNotes ?? undefined,
     clientInjuries,
     clientGoals,
     contraindications,
@@ -2138,6 +2157,7 @@ export async function regenerateProgramDayAction(
       generationMeta: {
         ...prevMeta,
         ...draft.meta,
+        coachNotes: coachNotes ?? prevMeta.coachNotes ?? null,
         baselinePrescriptions: nextBaselines,
         variationSeed,
         lastDayRegenerated: {

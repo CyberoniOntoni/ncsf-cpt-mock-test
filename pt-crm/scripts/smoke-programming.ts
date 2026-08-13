@@ -65,7 +65,10 @@ import {
 } from "../src/lib/exercise-order";
 import { detectIntent } from "../src/lib/ai/intents";
 import { assignSetScheme, type SetSchemeId } from "../src/lib/set-schemes";
-import { leftoverLowerIntensity } from "../src/lib/program-builder";
+import {
+  composeProgramNotes,
+  leftoverLowerIntensity,
+} from "../src/lib/program-builder";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT: ${msg}`);
@@ -840,6 +843,60 @@ function main() {
     );
   }
   console.log("ok leftoverLowerIntensity same-day second lower");
+
+  // composeProgramNotes: trainer notes + fresh generation block; no library count
+  {
+    const once = composeProgramNotes({
+      coachNotes: "Keep knees happy",
+      clientGoals: "get stronger",
+      generationNotes: [
+        "Frequency: squat, hinge, push, and pull hit ≥2×/week when the split allows (Schoenfeld hypertrophic frequency).",
+        "Rest: compounds ~3 min on strength / ~2 min hypertrophy; accessories 45–90s (NSCA / ACSM rest intervals).",
+      ],
+    });
+    assert(
+      once.includes("Keep knees happy"),
+      "coach notes preserved in composed notes"
+    );
+    assert(once.includes("Client goal: get stronger"), "client goals line");
+    assert(once.includes("Frequency:"), "generation notes included once");
+    assert(
+      !/exercises in pool/i.test(once),
+      "notes omit library count (exercises in pool)"
+    );
+    assert(
+      !String(once).includes("Uses only equipment"),
+      "library count not in notes"
+    );
+
+    // Simulating the old bug: if previous composed notes were passed as coachNotes,
+    // Frequency would appear twice. Regen must pass generationMeta.coachNotes only.
+    const stacked = composeProgramNotes({
+      coachNotes: once,
+      generationNotes: [
+        "Frequency: squat, hinge, push, and pull hit ≥2×/week when the split allows (Schoenfeld hypertrophic frequency).",
+      ],
+    });
+    const frequencyHits = (stacked.match(/Frequency:/g) || []).length;
+    assertEqual(
+      frequencyHits,
+      2,
+      "passing prior notes as coachNotes would stack Frequency (documents the bug shape)"
+    );
+
+    const regenSafe = composeProgramNotes({
+      coachNotes: "Keep knees happy",
+      generationNotes: [
+        "Frequency: squat, hinge, push, and pull hit ≥2×/week when the split allows (Schoenfeld hypertrophic frequency).",
+      ],
+    });
+    assertEqual(
+      (regenSafe.match(/Frequency:/g) || []).length,
+      1,
+      "original coachNotes only → single Frequency line after regen"
+    );
+  }
+  console.log("ok composeProgramNotes no library count; regen uses coachNotes");
 
   console.log("\nLane B programming smoke: ALL PASS");
 }

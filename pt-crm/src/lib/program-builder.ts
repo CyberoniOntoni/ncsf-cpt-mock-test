@@ -139,6 +139,21 @@ export type BuiltProgram = {
   meta: Record<string, unknown>;
 };
 
+/** Trainer notes + one fresh generation block. Never includes library pool size. */
+export function composeProgramNotes(opts: {
+  coachNotes?: string | null;
+  clientGoals?: string | null;
+  generationNotes: string[];
+}): string {
+  return [
+    opts.coachNotes?.trim() || null,
+    opts.clientGoals ? `Client goal: ${opts.clientGoals}` : null,
+    ...opts.generationNotes.slice(0, 4),
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 type SessionKind =
   | "full_a"
   | "full_b"
@@ -1741,19 +1756,12 @@ export async function buildProgramDraft(
     );
   }
 
-  const noteParts = [
-    input.notes,
-    input.clientGoals ? `Client goal: ${input.clientGoals}` : null,
-    input.clientInjuries ? `Constraints: ${input.clientInjuries}` : null,
-    input.contraindications
-      ? `Contraindications: ${input.contraindications}`
-      : null,
-    constraintSummary !== "Constraints: none detected."
-      ? constraintSummary
-      : null,
-    mesoPlan.notes,
-    `Uses only equipment marked available in Library (${available.length} exercises in pool).`,
-  ].filter(Boolean);
+  const notes =
+    composeProgramNotes({
+      coachNotes: input.notes,
+      clientGoals: input.clientGoals,
+      generationNotes,
+    }) || null;
 
   return {
     title,
@@ -1762,7 +1770,7 @@ export async function buildProgramDraft(
     sessionMinutes,
     splitType,
     experienceLevel: experience,
-    notes: noteParts.join("\n") || null,
+    notes,
     days,
     meta: {
       availableExerciseCount: available.length,
