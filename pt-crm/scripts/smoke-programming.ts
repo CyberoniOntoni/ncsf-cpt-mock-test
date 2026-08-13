@@ -491,6 +491,25 @@ function main() {
       "long day estimate > 40 min"
     );
 
+    const cooldownAnalysis = analyzeProgramPlan(
+      [
+        {
+          name: "A",
+          exercises: [
+            { sets: 3, movementPattern: "squat", isWarmup: false },
+            {
+              sets: 2,
+              movementPattern: "mobility",
+              isWarmup: false,
+              setSchemeMeta: { phase: "cooldown" },
+            },
+          ],
+        },
+      ],
+      { goal: "hypertrophy", sessionMinutes: 45 }
+    );
+    assertEqual(cooldownAnalysis.weeklyWorkingSets, 3, "cooldown sets excluded");
+
     const order = sessionOrderHints("Day X", [
       { sets: 3, movementPattern: "core", isWarmup: false },
       { sets: 4, movementPattern: "squat", isWarmup: false },

@@ -27,6 +27,7 @@ export type PlannedExercise = {
   movementPattern?: string | null;
   exerciseName?: string;
   setScheme?: string | null;
+  setSchemeMeta?: { phase?: string } | null;
 };
 
 export type DayPlan = {
@@ -332,22 +333,23 @@ export function defaultRxForGoal(
  */
 export function estimateDayMinutes(exercises: PlannedExercise[]): number {
   let sec = 0;
-  // Setup / transitions between exercises
-  const working = exercises.filter((e) => !e.isWarmup);
-  const warmups = exercises.filter((e) => e.isWarmup);
+  // Setup / transitions between exercises (work block only; prep excluded)
+  const working = exercises.filter((e) => sessionPhase(e) === "work");
+  const warmups = exercises.filter((e) => sessionPhase(e) === "warmup");
   sec += warmups.length * 45;
   sec += Math.max(0, working.length - 1) * 30; // transitions
 
   for (const ex of exercises) {
+    if (sessionPhase(ex) !== "work") continue;
     const sets = Math.max(0, ex.sets || 0);
     if (sets === 0) continue;
-    const workPerSet = ex.isWarmup ? 25 : 40; // seconds under tension-ish
+    const workPerSet = 40; // seconds under tension-ish
     const rest =
       ex.restSec != null && ex.restSec > 0
         ? ex.restSec
         : recommendedRestSec({
             pattern: ex.movementPattern,
-            isWarmup: ex.isWarmup,
+            isWarmup: false,
             reps: ex.reps,
           }).restSec;
     // rest between sets only (sets - 1)
@@ -471,7 +473,7 @@ export function analyzeProgramPlan(
     const minutes = estimateDayMinutes(day.exercises);
     let dayWorking = 0;
     for (const ex of day.exercises) {
-      if (ex.isWarmup) continue;
+      if (sessionPhase(ex) !== "work") continue;
       const sets = Math.max(0, Math.round(ex.sets || 0));
       if (sets <= 0) continue;
       dayWorking += sets;

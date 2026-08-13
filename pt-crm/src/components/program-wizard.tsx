@@ -385,6 +385,7 @@ export function ProgramWizard({
           movementPattern: ex.movementPattern,
           exerciseName: ex.exerciseName,
           setScheme: ex.setScheme,
+          setSchemeMeta: ex.setSchemeMeta,
         })),
       })),
       { goal: preview.goal, sessionMinutes: preview.sessionMinutes }

@@ -655,6 +655,7 @@ export function ProgramDetail({
             movementPattern: ex.movementPattern,
             exerciseName: ex.exerciseName,
             setScheme: ex.setScheme,
+            setSchemeMeta: ex.setSchemeMeta,
           })),
         })),
         { goal: program.goal, sessionMinutes: program.sessionMinutes }
