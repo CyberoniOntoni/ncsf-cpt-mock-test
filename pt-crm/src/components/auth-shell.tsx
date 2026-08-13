@@ -9,11 +9,13 @@ export function AuthShell({
   subtitle,
   children,
   footer,
+  showAudienceLinks = true,
 }: {
   title: string;
   subtitle: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  showAudienceLinks?: boolean;
 }) {
   return (
     <div className="min-h-dvh bg-[#141210] text-stone-100">
@@ -25,17 +27,19 @@ export function AuthShell({
         <p className="mt-1.5 text-sm text-stone-500">{subtitle}</p>
         <div className="mt-6">{children}</div>
         {footer}
-        <p className="mt-8 text-center text-xs text-stone-600">
-          Looking for a trainer?{" "}
-          <Link href={SITE_COPY.findCta.href} className="text-emerald-500 hover:underline">
-            {SITE_COPY.findCta.label}
-          </Link>
-          {" · "}
-          Already a client?{" "}
-          <Link href={SITE_COPY.portalCta.href} className="text-emerald-500 hover:underline">
-            {SITE_COPY.portalCta.label}
-          </Link>
-        </p>
+        {showAudienceLinks ? (
+          <p className="mt-8 text-center text-xs text-stone-600">
+            Looking for a trainer?{" "}
+            <Link href={SITE_COPY.findCta.href} className="text-emerald-500 hover:underline">
+              {SITE_COPY.findCta.label}
+            </Link>
+            {" · "}
+            Already a client?{" "}
+            <Link href={SITE_COPY.portalCta.href} className="text-emerald-500 hover:underline">
+              {SITE_COPY.portalCta.label}
+            </Link>
+          </p>
+        ) : null}
       </div>
       <PublicSiteFooter />
     </div>

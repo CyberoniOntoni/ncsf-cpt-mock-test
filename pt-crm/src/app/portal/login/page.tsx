@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
-import { SITE_COPY, SITE_DISCLAIMERS } from "@/lib/site/copy";
+import { SITE_COPY } from "@/lib/site/copy";
 import { PortalLoginForm } from "@/components/portal/portal-login-form";
 
 export const metadata = { title: "Client portal" };
@@ -13,7 +14,18 @@ export default async function PortalLoginPage({
   const { redirectTo } = await searchParams;
   return (
     <div className="min-h-dvh bg-[#141210] text-stone-100">
-      <PublicSiteHeader variant="portal" scrolled />
+      <PublicSiteHeader
+        variant="portal"
+        scrolled
+        trailing={
+          <Link
+            href="/login"
+            className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm text-stone-500 hover:text-stone-300"
+          >
+            Trainer? Staff login
+          </Link>
+        }
+      />
       <div className="mx-auto flex max-w-md flex-col px-4 py-10">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">
           {SITE_COPY.portalCta.label}
@@ -38,9 +50,6 @@ export default async function PortalLoginPage({
           <a href={SITE_COPY.findCta.href} className="text-emerald-500 hover:underline">
             {SITE_COPY.findCta.label}
           </a>
-        </p>
-        <p className="mt-4 text-center text-[11px] text-stone-600">
-          {SITE_DISCLAIMERS.findIntro}
         </p>
       </div>
       <PublicSiteFooter />

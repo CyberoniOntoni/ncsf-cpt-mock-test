@@ -2,7 +2,6 @@ import Link from "next/link";
 import { logoutSeekerAction } from "@/app/actions/marketplace-seeker";
 import { PublicSiteHeader } from "@/components/public-site-header";
 import { optionalSeekerSession } from "@/lib/seeker-auth";
-import { SITE_COPY } from "@/lib/site/copy";
 
 export async function FindChrome() {
   const seeker = await optionalSeekerSession();

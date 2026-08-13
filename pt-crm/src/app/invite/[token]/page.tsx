@@ -38,6 +38,7 @@ export default async function InvitePage({
       <AuthShell
         title="Invite not found"
         subtitle="This link is invalid or no longer works."
+        showAudienceLinks={false}
       >
         <Card className="space-y-4 border-zinc-800/80 p-5 text-center">
           <p className="text-sm text-zinc-400">
@@ -66,7 +67,7 @@ export default async function InvitePage({
           : "This invite was revoked.";
 
     return (
-      <AuthShell title="Invite unavailable" subtitle={reason}>
+      <AuthShell title="Invite unavailable" subtitle={reason} showAudienceLinks={false}>
         <Card className="space-y-4 border-zinc-800/80 p-5 text-center">
           <p className="text-sm text-zinc-400">
             {invite.status === "accepted"
@@ -99,6 +100,7 @@ export default async function InvitePage({
       <AuthShell
         title={`Join ${orgName}`}
         subtitle={`Invited as ${role} · ${invite.email}`}
+        showAudienceLinks={false}
       >
         <Card className="space-y-4 border-zinc-800/80 p-5 shadow-xl shadow-black/40">
           {error && <Alert tone="error">{error}</Alert>}
@@ -147,6 +149,7 @@ export default async function InvitePage({
     <AuthShell
       title={`Join ${orgName}`}
       subtitle={`Create your account as ${role}`}
+      showAudienceLinks={false}
     >
       <Card className="border-zinc-800/80 p-5 shadow-xl shadow-black/40">
         <form action={acceptInviteRegisterAction} className="space-y-3.5">

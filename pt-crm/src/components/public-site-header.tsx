@@ -112,18 +112,28 @@ export function PublicSiteHeader(props: PublicSiteHeaderProps) {
           className="flex gap-2 overflow-x-auto border-t border-stone-900/70 px-3 py-2 md:hidden"
           aria-label="Site"
         >
-          {PUBLIC_NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "inline-flex min-h-9 shrink-0 items-center rounded-full border border-stone-800/80 px-3.5 text-[11px] font-medium text-stone-400",
-                linkFocus
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {PUBLIC_NAV.map((item) => {
+            const current =
+              (item.audience === "seeker" && isFind) ||
+              (item.audience === "client" && isPortal) ||
+              (item.audience === "trainer" && props.variant === "marketing");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "inline-flex min-h-9 shrink-0 items-center rounded-full border px-3.5 text-[11px] font-medium",
+                  linkFocus,
+                  current
+                    ? "border-emerald-800/55 bg-emerald-950/45 text-emerald-500"
+                    : "border-stone-800/80 text-stone-400"
+                )}
+                aria-current={current ? "page" : undefined}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
       )}
     </header>
