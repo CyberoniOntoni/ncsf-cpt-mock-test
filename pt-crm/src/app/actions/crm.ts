@@ -1097,8 +1097,6 @@ export async function updateAppointmentStatusAction(
   const [existing] = await db
     .select({
       status: clientAppointments.status,
-      sessionId: clientAppointments.sessionId,
-      packageId: clientAppointments.packageId,
     })
     .from(clientAppointments)
     .where(
@@ -1113,8 +1111,6 @@ export async function updateAppointmentStatusAction(
     throw new Error("Appointment not found");
   }
 
-  const wasCompleted = existing.status === "completed";
-
   await db
     .update(clientAppointments)
     .set({ status })
@@ -1125,29 +1121,7 @@ export async function updateAppointmentStatusAction(
       )
     );
 
-  // Product: calendar complete debits pack; leaving completed restores when stamped
-  if (status === "completed" && !wasCompleted) {
-    try {
-      await tryConsumePackageSessionAction(
-        clientId,
-        existing.sessionId || undefined,
-        session,
-        appointmentId
-      );
-    } catch {
-      // pack consume optional — do not block appointment status update
-    }
-  } else if (wasCompleted && status !== "completed") {
-    try {
-      await tryRestorePackageSessionAction(
-        clientId,
-        existing.sessionId || undefined,
-        appointmentId
-      );
-    } catch {
-      // pack restore optional — status already moved off completed
-    }
-  }
+  // Pack debit is session-complete only (completeSessionAction).
 
   revalidateClient(clientId);
   return { ok: true as const };
