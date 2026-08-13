@@ -1,3 +1,5 @@
+import { getDb } from "@/db";
+import { exerciseDeficiencyMappings } from "@/db/schema";
 import type { ExerciseWithAvailability } from "@/lib/exercises";
 import { listExercisesForOrg } from "@/lib/exercises";
 import {
@@ -1066,6 +1068,26 @@ function prescribedToWarmups(
   }));
 }
 
+async function loadExerciseDeficiencyMappingsBySlug(): Promise<
+  Map<string, Map<string, number>>
+> {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      exerciseId: exerciseDeficiencyMappings.exerciseId,
+      slug: exerciseDeficiencyMappings.deficiencySlug,
+      rank: exerciseDeficiencyMappings.effectivenessRank,
+    })
+    .from(exerciseDeficiencyMappings);
+  const bySlug = new Map<string, Map<string, number>>();
+  for (const r of rows) {
+    const m = bySlug.get(r.slug) || new Map();
+    m.set(r.exerciseId, r.rank);
+    bySlug.set(r.slug, m);
+  }
+  return bySlug;
+}
+
 export async function buildProgramDraft(
   input: ProgramBuilderInput
 ): Promise<BuiltProgram> {
@@ -1176,6 +1198,11 @@ export async function buildProgramDraft(
         }
       : evalCtx;
 
+  const mappingsBySlug =
+    gatedCtx && smarterEval && smarterEval.deficiencies.length > 0
+      ? await loadExerciseDeficiencyMappingsBySlug()
+      : undefined;
+
   const rotatedCorrectives =
     gatedCtx && smarterEval && smarterEval.deficiencies.length > 0
       ? prioritizeAndRotateCorrectives(
@@ -1190,7 +1217,8 @@ export async function buildProgramDraft(
             equipmentIds: e.equipmentIds,
             equipmentAny: e.equipmentAny,
             available: e.available,
-          }))
+          })),
+          mappingsBySlug
         )
       : null;
 

@@ -79,6 +79,11 @@ import {
   composeProgramNotes,
   leftoverLowerIntensity,
 } from "../src/lib/program-builder";
+import {
+  getCorrectiveCandidatesForSlug,
+  prioritizeAndRotateCorrectives,
+  type ClientEvaluationContext,
+} from "../src/lib/smarter-rule-engine";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT: ${msg}`);
@@ -1020,6 +1025,57 @@ async function main() {
     );
   }
   console.log("ok composeProgramNotes no library count; regen uses coachNotes");
+
+  // Task 8: mapping ranks beat tag hints; no ghost primer when pool has no match
+  {
+    const pool = [
+      { id: "ex_hint", name: "Dead bug", tags: "core,anti_extension", movementPattern: "core" },
+      { id: "ex_mapped", name: "Bird dog", tags: "", movementPattern: "core" },
+    ];
+    const ctx = {
+      client: {
+        injuriesText: "",
+        contraindicationsText: "",
+        medicalHistoryText: "",
+      },
+      measurements: null,
+      assessments: [],
+    } as ClientEvaluationContext;
+    const unmapped = getCorrectiveCandidatesForSlug("lower_cross_syndrome", pool, ctx);
+    assert(unmapped[0]?.id === "ex_hint", "no mapping → tag/name hints win");
+
+    const mapped = getCorrectiveCandidatesForSlug(
+      "lower_cross_syndrome",
+      pool,
+      ctx,
+      new Map([["ex_mapped", 1]])
+    );
+    assert(mapped[0]?.id === "ex_mapped", "mapping rank beats tag hints");
+
+    const rotated = prioritizeAndRotateCorrectives(
+      [
+        {
+          slug: "no_such_def",
+          name: "Unknown",
+          category: "unknown",
+          severity: "moderate",
+          affectedSide: "bilateral",
+          source: "assessment",
+          triggerDescription: "",
+          identifiedAt: new Date(0),
+        },
+      ],
+      2,
+      ctx,
+      pool
+    );
+    const day1 = rotated.get(1) || [];
+    assert(
+      day1.every((c) => c.exerciseId),
+      "no ghost primer when pool has no match"
+    );
+  }
+  console.log("ok mapping ranks beat hints; no ghost primer");
 
   await smokeBuildProgramDraft();
 

@@ -745,11 +745,22 @@ function scoreCorrectiveCandidate(
 export function getCorrectiveCandidatesForSlug<T extends GateExercise>(
   slug: string,
   pool: T[],
-  ctx: ClientEvaluationContext
+  ctx: ClientEvaluationContext,
+  mappingRanks?: Map<string, number>
 ): T[] {
   const gated = enforceHardSafetyGates(pool, ctx);
+  const hasMap = mappingRanks && mappingRanks.size > 0;
   const scored = gated
-    .map((ex) => ({ ex, score: scoreCorrectiveCandidate(ex, slug) }))
+    .map((ex) => {
+      const mapped = mappingRanks?.get(ex.id);
+      const hint = scoreCorrectiveCandidate(ex, slug);
+      const score = hasMap
+        ? mapped != null
+          ? 1000 - mapped
+          : hint
+        : hint;
+      return { ex, score };
+    })
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score);
   return scored.map((x) => x.ex);
@@ -759,7 +770,8 @@ export function prioritizeAndRotateCorrectives(
   deficiencies: DetectedDeficiency[],
   daysPerWeek: number,
   ctx: ClientEvaluationContext,
-  pool: GateExercise[]
+  pool: GateExercise[],
+  mappingsBySlug?: Map<string, Map<string, number>>
 ): Map<number, PrescribedCorrective[]> {
   const severityScore: Record<DeficiencySeverity, number> = {
     severe: 3,
@@ -793,17 +805,21 @@ export function prioritizeAndRotateCorrectives(
     const dayCorrectives: PrescribedCorrective[] = [];
     const usedIds = new Set<string>();
     for (const def of unique) {
-      const candidates = getCorrectiveCandidatesForSlug(def.slug, pool, ctx).filter(
-        (c) => !usedIds.has(c.id)
-      );
+      const candidates = getCorrectiveCandidatesForSlug(
+        def.slug,
+        pool,
+        ctx,
+        mappingsBySlug?.get(def.slug)
+      ).filter((c) => !usedIds.has(c.id));
       const selected = candidates[0];
-      if (selected) usedIds.add(selected.id);
+      if (!selected) continue; // do not push a nameless primer
+      usedIds.add(selected.id);
       dayCorrectives.push({
         deficiencySlug: def.slug,
         placement: "warmup",
-        exerciseId: selected?.id ?? null,
-        exerciseName: selected?.name ?? `${def.name} primer`,
-        movementPattern: selected?.movementPattern || "mobility",
+        exerciseId: selected.id,
+        exerciseName: selected.name,
+        movementPattern: selected.movementPattern || "mobility",
         sets: 2,
         reps: "10-12",
         rpe: "5-6",
