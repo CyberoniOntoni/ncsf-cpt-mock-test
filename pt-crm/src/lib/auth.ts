@@ -18,6 +18,8 @@ import {
   setSessionCookie,
   type SessionPayload,
 } from "@/lib/session";
+import { sendEmail } from "@/lib/email";
+import { inviteAbsoluteUrl, mailOrgInvite } from "@/lib/mail-copy";
 import { id } from "@/lib/utils";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -324,11 +326,27 @@ export async function createOrgInvite(input: {
       )
     );
 
+  const inviteUrl = inviteAbsoluteUrl(token);
+  const copy = mailOrgInvite({
+    orgName: session.organizationName,
+    role,
+    inviteUrl,
+  });
+  const { delivered } = await sendEmail({
+    to: email,
+    subject: copy.subject,
+    text: copy.text,
+    category: copy.category,
+  });
+  // Production delivery failure still keeps the invite + copy-link backup
+  const emailed = delivered;
+
   revalidatePath("/settings");
   return {
     ok: true as const,
     inviteId,
     token,
+    emailed,
     email,
     role,
     expiresAt,

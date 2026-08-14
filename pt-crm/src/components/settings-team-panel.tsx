@@ -162,17 +162,26 @@ export function SettingsTeamPanel({
             if ("token" in res && res.token) {
               const url = invitePath(origin, res.token);
               setLastLink(res.token);
+              const invitedEmail =
+                "email" in res && typeof res.email === "string"
+                  ? res.email
+                  : email;
               setEmail("");
+              const emailed = "emailed" in res && res.emailed === true;
               try {
                 await navigator.clipboard.writeText(url);
                 setMsg({
                   tone: "ok",
-                  text: `Invite for ${res.email} created — link copied.`,
+                  text: emailed
+                    ? `Invite sent to ${invitedEmail}`
+                    : `Invite for ${invitedEmail} created — link copied.`,
                 });
               } catch {
                 setMsg({
                   tone: "ok",
-                  text: `Invite for ${res.email} created. Copy the link below.`,
+                  text: emailed
+                    ? `Invite sent to ${invitedEmail}`
+                    : `Invite for ${invitedEmail} created. Copy the link below.`,
                 });
               }
               router.refresh();
@@ -185,8 +194,8 @@ export function SettingsTeamPanel({
           <h3 className="text-sm font-medium text-zinc-200">Invite someone</h3>
         </div>
         <p className="text-[11px] leading-relaxed text-zinc-600">
-          Creates a link you can paste into WhatsApp, email, or SMS. Expires in
-          14 days. Email delivery is not built in yet.
+          Sends an email invite and creates a shareable link. Expires in 14
+          days. You can always copy the link if mail is unavailable.
         </p>
         <div className="grid gap-3 sm:grid-cols-[1fr_8.5rem_auto]">
           <div>

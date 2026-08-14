@@ -45,6 +45,14 @@ export function mailTrainerVerify(opts: {
   };
 }
 
+export function inviteAbsoluteUrl(
+  token: string,
+  appUrl = process.env.APP_URL
+): string {
+  const base = (appUrl || "https://floorscribe.com").replace(/\/$/, "");
+  return `${base}/invite/${token}`;
+}
+
 export function mailOrgInvite(opts: {
   orgName: string;
   role: string;
