@@ -13,6 +13,7 @@ import { findTrainingArea } from "@/lib/marketplace/areas";
 import { introFeeDecision } from "@/lib/marketplace/fees";
 import { INTRO_FEE_CENTS } from "@/lib/marketplace/types";
 import { sendEmail } from "@/lib/email";
+import { mailIntroAccepted, mailIntroDeclined } from "@/lib/mail-copy";
 import { id } from "@/lib/utils";
 
 export async function upsertMarketplaceListing(opts: {
@@ -240,11 +241,20 @@ export async function acceptIntroRequest(opts: {
     charge = { status: "due", chargeId, amountCents: INTRO_FEE_CENTS };
   }
 
-  await sendEmail({
-    to: email,
-    subject: "Your FloorScribe intro was accepted",
-    text: `${intro.seekerName.split(" ")[0]}, a trainer accepted your intro. They’ll reach out. You can use /portal/login with this email after they activate you. FloorScribe introduces you; session payments are with the trainer.`,
+  const acceptedCopy = mailIntroAccepted({
+    firstName: intro.seekerName.split(" ")[0],
   });
+  const acceptedSend = await sendEmail({
+    to: email,
+    subject: acceptedCopy.subject,
+    text: acceptedCopy.text,
+    category: acceptedCopy.category,
+  });
+  if (!acceptedSend.delivered) {
+    console.warn(
+      `[intro] accept notify not delivered introId=${intro.id} to=${email}`
+    );
+  }
 
   return { ok: true, clientId, charge };
 }
@@ -268,10 +278,17 @@ export async function declineIntroRequest(opts: {
     .update(introRequests)
     .set({ status: "declined", respondedAt: new Date() })
     .where(eq(introRequests.id, intro.id));
-  await sendEmail({
+  const declinedCopy = mailIntroDeclined();
+  const declinedSend = await sendEmail({
     to: intro.seekerEmail,
-    subject: "Update on your trainer intro",
-    text: "The trainer couldn’t take this intro right now. You can search again at /find.",
+    subject: declinedCopy.subject,
+    text: declinedCopy.text,
+    category: declinedCopy.category,
   });
+  if (!declinedSend.delivered) {
+    console.warn(
+      `[intro] decline notify not delivered introId=${intro.id} to=${intro.seekerEmail}`
+    );
+  }
   return { ok: true };
 }

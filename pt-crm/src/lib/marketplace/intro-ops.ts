@@ -9,6 +9,10 @@ import {
 import { listingVisibleInSearch } from "@/lib/marketplace/fees";
 import { INTROS_PER_EMAIL_PER_DAY } from "@/lib/marketplace/types";
 import { sendEmail } from "@/lib/email";
+import {
+  mailIntroRequested,
+  mailIntroRequestedSeeker,
+} from "@/lib/mail-copy";
 import { id } from "@/lib/utils";
 
 export async function createIntroRequest(opts: {
@@ -96,17 +100,39 @@ export async function createIntroRequest(opts: {
     .limit(1);
 
   if (trainer?.email) {
-    await sendEmail({
-      to: trainer.email,
-      subject: `New intro request from ${name}`,
-      text: `${name} (${email}) requested an intro.\n\n${opts.message || "(no message)"}\n\nReview intros in FloorScribe.`,
+    const trainerCopy = mailIntroRequested({
+      seekerName: name,
+      seekerEmail: email,
+      message: opts.message || null,
     });
+    const trainerSend = await sendEmail({
+      to: trainer.email,
+      subject: trainerCopy.subject,
+      text: trainerCopy.text,
+      category: trainerCopy.category,
+    });
+    if (!trainerSend.delivered) {
+      console.warn(
+        `[intro] trainer notify not delivered introId=${introId} to=${trainer.email}`
+      );
+    }
   }
-  await sendEmail({
-    to: email,
-    subject: `We sent your intro to ${trainer?.name || "the trainer"}`,
-    text: `We sent your intro to ${trainer?.name || "the trainer"}. They will follow up. FloorScribe introduces you; session payments are with the trainer.`,
+
+  const seekerCopy = mailIntroRequestedSeeker({
+    trainerName: trainer?.name || "the trainer",
   });
+  const seekerSend = await sendEmail({
+    to: email,
+    subject: seekerCopy.subject,
+    text: seekerCopy.text,
+    category: seekerCopy.category,
+  });
+  if (!seekerSend.delivered) {
+    // Intro already persisted — do not roll back; seeker already submitted.
+    console.warn(
+      `[intro] seeker confirm not delivered introId=${introId} to=${email}`
+    );
+  }
 
   return { ok: true, introId };
 }

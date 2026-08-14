@@ -12,6 +12,7 @@ import {
   organizations,
 } from "@/db/schema";
 import { isMockEmail, sendEmail } from "@/lib/email";
+import { mailPortalOtp } from "@/lib/mail-copy";
 import { REQUIRED_PORTAL_DOCUMENTS } from "@/lib/portal-documents";
 import { id } from "@/lib/utils";
 
@@ -271,11 +272,16 @@ export async function requestClientOtp(opts: {
     expiresAt: new Date(Date.now() + OTP_TTL_MS),
   });
 
+  const copy = mailPortalOtp({
+    firstName: match.firstName,
+    organizationName: match.organizationName,
+    code,
+  });
   const { delivered } = await sendEmail({
     to: email,
-    subject: `Your FloorScribe code for ${match.organizationName}`,
-    text: `Hi ${match.firstName},\n\nYour FloorScribe client portal code is ${code}. It expires in 10 minutes.\n\nIf you did not request this, ignore this email.`,
-    category: "portal-otp",
+    subject: copy.subject,
+    text: copy.text,
+    category: copy.category,
   });
 
   if (!delivered && process.env.NODE_ENV === "production") {
