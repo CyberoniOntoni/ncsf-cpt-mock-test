@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Find a trainer",
   description:
-    "Search FloorScribe trainers by area or gym and request an intro. Training and session payments are with the trainer.",
+    "Create a seeker account, tell us where you train, then search FloorScribe trainers and request an intro.",
 };
 
 export default async function FindLayout({

@@ -45,7 +45,7 @@ export function FindSearch(props: {
     q.set("brand", brand);
     q.set("area", area);
     if (radius) q.set("radius", radius);
-    router.push(`/find?${q.toString()}`);
+    router.push(`/portal/find?${q.toString()}`);
   }
 
   return (

@@ -2,12 +2,12 @@ import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/portal/onboarding-form";
 import {
   clientNeedsOnboarding,
-  requireClientSession,
+  requireStudioSession,
 } from "@/lib/client-auth";
 import { getPortalDocuments } from "@/db/queries/portal";
 
 export default async function PortalOnboardingPage() {
-  const session = await requireClientSession();
+  const session = await requireStudioSession();
   const needs = await clientNeedsOnboarding(
     session.organizationId,
     session.clientId

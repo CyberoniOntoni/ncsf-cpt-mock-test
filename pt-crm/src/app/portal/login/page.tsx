@@ -9,9 +9,10 @@ export const metadata = { title: "Client portal" };
 export default async function PortalLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ redirectTo?: string }>;
+  searchParams: Promise<{ redirectTo?: string; next?: string }>;
 }) {
-  const { redirectTo } = await searchParams;
+  const { redirectTo, next } = await searchParams;
+  const dest = redirectTo || next;
   return (
     <div className="mkt-root min-h-dvh bg-[#12100e] text-stone-100">
       <PublicSiteHeader
@@ -31,24 +32,24 @@ export default async function PortalLoginPage({
           {SITE_COPY.portalCta.label}
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-          Sign in to your plan
+          Sign in
         </h1>
         <p className="mt-2 text-sm text-stone-400">
-          We email a one-time code. No password. If you train at more than one
-          studio, you will pick which one.
+          Use the password you created, or a one-time code if your trainer
+          already has you on file.
         </p>
         <div className="mt-6">
-          <PortalLoginForm redirectTo={redirectTo} />
+          <PortalLoginForm redirectTo={dest} />
         </div>
         <p className="mt-8 text-center text-xs text-stone-600">
+          New here?{" "}
+          <a href="/portal/register" className="text-emerald-500 hover:underline">
+            Create an account
+          </a>
+          {" · "}
           Trainer?{" "}
           <a href={SITE_COPY.signInCta.href} className="text-emerald-500 hover:underline">
             Staff login
-          </a>
-          {" · "}
-          Looking for a trainer?{" "}
-          <a href={SITE_COPY.findCta.href} className="text-emerald-500 hover:underline">
-            {SITE_COPY.findCta.label}
           </a>
         </p>
       </div>

@@ -14,7 +14,13 @@ import {
 } from "@/db/schema";
 import { findTrainingArea } from "@/lib/marketplace/areas";
 import { DEFAULT_RADIUS_KM } from "@/lib/marketplace/types";
+import {
+  isSeekerProfileComplete,
+  safeSeekerNext,
+} from "@/lib/seeker-profile";
 import { id } from "@/lib/utils";
+
+export { isSeekerProfileComplete, safeSeekerNext } from "@/lib/seeker-profile";
 
 export const SEEKER_COOKIE = "seeker_session";
 const SESSION_DAYS = 30;
@@ -109,6 +115,48 @@ export async function registerSeeker(opts: {
     .where(eq(seekerProfiles.id, seekerId))
     .limit(1);
   return { ok: true, seeker: toPublic(row!) };
+}
+
+/** Create a seeker row for an assigned client who signed in with a code. */
+export async function ensureSeekerForPerson(opts: {
+  email: string;
+  firstName: string;
+  lastName?: string;
+}): Promise<SeekerPublic> {
+  const email = normalizeSeekerEmail(opts.email);
+  const existing = await getSeekerByEmail(email);
+  if (existing) return existing;
+  const passwordHash = await bcrypt.hash(randomPlaceholderPassword(), 10);
+  const seekerId = id("sk");
+  const db = await getDb();
+  await db.insert(seekerProfiles).values({
+    id: seekerId,
+    email,
+    passwordHash,
+    firstName: (opts.firstName || "Client").trim() || "Client",
+    lastName: (opts.lastName || "").trim(),
+    radiusKm: DEFAULT_RADIUS_KM,
+  });
+  const [row] = await db
+    .select()
+    .from(seekerProfiles)
+    .where(eq(seekerProfiles.id, seekerId))
+    .limit(1);
+  return toPublic(row!);
+}
+
+function randomPlaceholderPassword() {
+  return `otp-${Math.random().toString(36).slice(2)}${Date.now()}`;
+}
+
+export async function getSeekerByEmail(email: string): Promise<SeekerPublic | null> {
+  const db = await getDb();
+  const [row] = await db
+    .select()
+    .from(seekerProfiles)
+    .where(eq(seekerProfiles.email, normalizeSeekerEmail(email)))
+    .limit(1);
+  return row ? toPublic(row) : null;
 }
 
 export async function verifySeekerLogin(opts: {
@@ -298,6 +346,19 @@ export async function issueSeekerSession(seeker: SeekerPublic) {
     maxAge: SESSION_DAYS * 24 * 60 * 60,
     secure: process.env.NODE_ENV === "production",
   });
+  const { firstStudioForEmail, issuePortalSession } = await import(
+    "@/lib/client-auth"
+  );
+  const studio = await firstStudioForEmail(seeker.email);
+  await issuePortalSession({
+    seekerId: seeker.id,
+    email: seeker.email,
+    firstName: seeker.firstName,
+    lastName: seeker.lastName,
+    clientId: studio?.clientId ?? null,
+    organizationId: studio?.organizationId ?? null,
+    organizationName: studio?.organizationName ?? "FloorScribe",
+  });
 }
 
 export async function clearSeekerSession() {
@@ -306,6 +367,17 @@ export async function clearSeekerSession() {
 }
 
 export async function optionalSeekerSession(): Promise<SeekerSessionPayload | null> {
+  const { readClientSession } = await import("@/lib/client-auth");
+  const portal = await readClientSession();
+  if (portal?.seekerId) {
+    return {
+      role: "seeker",
+      seekerId: portal.seekerId,
+      email: portal.email,
+      firstName: portal.firstName,
+      lastName: portal.lastName,
+    };
+  }
   const jar = await cookies();
   const token = jar.get(SEEKER_COOKIE)?.value;
   if (!token) return null;
@@ -324,10 +396,31 @@ export async function optionalSeekerSession(): Promise<SeekerSessionPayload | nu
   }
 }
 
-export async function requireSeekerSession(): Promise<SeekerSessionPayload> {
+export async function requireSeekerSession(
+  nextPath = "/portal/profile"
+): Promise<SeekerSessionPayload> {
   const s = await optionalSeekerSession();
-  if (!s) redirect("/find/login");
+  if (!s) {
+    const next = safeSeekerNext(nextPath);
+    redirect(`/portal/login?next=${encodeURIComponent(next)}`);
+  }
   return s;
+}
+
+export async function requireCompleteSeeker(nextPath?: string): Promise<{
+  session: SeekerSessionPayload;
+  seeker: SeekerPublic;
+}> {
+  const dest = safeSeekerNext(nextPath);
+  const session = await optionalSeekerSession();
+  if (!session) {
+    redirect(`/portal/register?next=${encodeURIComponent(dest)}`);
+  }
+  const seeker = await getSeekerById(session.seekerId);
+  if (!seeker || !isSeekerProfileComplete(seeker)) {
+    redirect("/portal/profile?setup=1");
+  }
+  return { session, seeker };
 }
 
 export async function getSeekerById(seekerId: string): Promise<SeekerPublic | null> {

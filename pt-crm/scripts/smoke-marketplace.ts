@@ -367,12 +367,19 @@ async function main() {
   );
 
   const {
+    isSeekerProfileComplete,
     registerSeeker,
     verifySeekerLogin,
     updateSeekerPrefs,
     addSeekerMeasurement,
     listSeekerMeasurements,
   } = await import("../src/lib/seeker-auth");
+  const { safeSeekerNext } = await import("../src/lib/seeker-profile");
+  assert(safeSeekerNext("https://evil.test") === "/portal", "reject absolute next");
+  assert(safeSeekerNext("//evil.test") === "/portal", "reject protocol-relative next");
+  assert(safeSeekerNext("/login") === "/portal", "reject staff next");
+  assert(safeSeekerNext("/find/abc") === "/portal/find/abc", "map find profile next");
+  assert(safeSeekerNext("/portal/find") === "/portal/find", "allow portal find next");
   const email = `seeker-${Date.now()}@example.com`;
   const createdSeeker = await registerSeeker({
     email,
@@ -381,6 +388,12 @@ async function main() {
     lastName: "Client",
   });
   assert(createdSeeker.ok, "seeker register");
+  if (createdSeeker.ok) {
+    assert(
+      !isSeekerProfileComplete(createdSeeker.seeker),
+      "new seeker cannot search until area is set"
+    );
+  }
   const dup = await registerSeeker({
     email,
     password: "password1",
@@ -400,6 +413,7 @@ async function main() {
     assert(updated.preferredBrand === "Anytime Fitness", "seeker network saved");
     assert(updated.preferredFacilityId === "gym_anytime-fitness-tampines", "seeker gym saved");
     assert(updated.preferredArea === "tampines", "seeker area slug saved");
+    assert(isSeekerProfileComplete(updated), "area completes seeker profile");
     assert(updated.city === "Singapore", "area sets city");
     const mapped = findTrainingArea(updated.preferredArea);
     assert(mapped?.lat === 1.3496, "area maps to Tampines coords internally");

@@ -4,14 +4,14 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import { clients, notifications } from "@/db/schema";
-import { requireClientSession } from "@/lib/client-auth";
+import { requireStudioSession } from "@/lib/client-auth";
 
 export async function updatePortalPreferencesAction(prefs: {
   sessionReminders?: boolean;
   invoiceAlerts?: boolean;
   programUpdates?: boolean;
 }) {
-  const session = await requireClientSession();
+  const session = await requireStudioSession();
   const db = await getDb();
   await db
     .update(clients)
@@ -34,7 +34,7 @@ export async function updatePortalPreferencesAction(prefs: {
 }
 
 export async function markPortalNotificationReadAction(notificationId: string) {
-  const session = await requireClientSession();
+  const session = await requireStudioSession();
   const db = await getDb();
   await db
     .update(notifications)

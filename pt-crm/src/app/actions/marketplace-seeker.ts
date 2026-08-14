@@ -6,6 +6,7 @@ import {
   addSeekerMeasurement,
   clearSeekerSession,
   getSeekerById,
+  isSeekerProfileComplete,
   issueSeekerSession,
   registerSeeker,
   requireSeekerSession,
@@ -28,16 +29,20 @@ export async function registerSeekerAction(form: {
 export async function loginSeekerAction(form: {
   email: string;
   password: string;
-}): Promise<{ ok: true } | { ok: false; error: string }> {
+}): Promise<
+  { ok: true; profileComplete: boolean } | { ok: false; error: string }
+> {
   const result = await verifySeekerLogin(form);
   if (!result.ok) return result;
   await issueSeekerSession(result.seeker);
-  return { ok: true };
+  return { ok: true, profileComplete: isSeekerProfileComplete(result.seeker) };
 }
 
 export async function logoutSeekerAction() {
   await clearSeekerSession();
-  redirect("/find");
+  const { logoutClientPortal } = await import("@/lib/client-auth");
+  await logoutClientPortal();
+  redirect("/portal/login");
 }
 
 export async function saveSeekerPrefsAction(form: {
@@ -47,14 +52,20 @@ export async function saveSeekerPrefsAction(form: {
   preferredBrand?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await requireSeekerSession();
+  const preferredArea = (form.preferredArea || "").trim();
+  if (!preferredArea) {
+    return { ok: false, error: "Choose the area where you train." };
+  }
   await updateSeekerPrefs(session.seekerId, {
-    preferredArea: form.preferredArea || null,
+    preferredArea,
     radiusKm: form.radiusKm,
     preferredFacilityId: form.preferredFacilityId || null,
     preferredBrand: form.preferredBrand || null,
   });
   revalidatePath("/find");
   revalidatePath("/find/account");
+  revalidatePath("/portal/find");
+  revalidatePath("/portal/profile");
   return { ok: true };
 }
 
@@ -74,6 +85,7 @@ export async function addSeekerMeasurementAction(form: {
   }
   await addSeekerMeasurement(session.seekerId, form);
   revalidatePath("/find/account");
+  revalidatePath("/portal/profile");
   return { ok: true };
 }
 

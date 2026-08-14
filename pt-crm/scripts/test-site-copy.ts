@@ -23,7 +23,7 @@ assert.doesNotMatch(SITE_COPY.heroBody, /find a trainer first/i);
 
 assert.deepEqual(hrefs(PUBLIC_NAV), [
   "/marketing",
-  "/find",
+  "/portal/find",
   "/portal/login",
 ]);
 assert.equal(SITE_COPY.primaryCta.href, "/register");
@@ -51,7 +51,7 @@ assert.doesNotMatch(find!.body, /stripe connect/i);
 assert.equal(AUDIENCE_DOORS.length, 3);
 assert.equal(AUDIENCE_DOORS[0].href, "/register");
 assert.equal(AUDIENCE_DOORS[1].href, "/portal/login");
-assert.equal(AUDIENCE_DOORS[2].href, "/find");
+assert.equal(AUDIENCE_DOORS[2].href, "/portal/register");
 assert.equal(AUDIENCE_DOORS[0].audience, "trainer");
 
 assert.equal(DAY_STEPS.length, 3);
@@ -82,7 +82,7 @@ assert.ok(FEATURE_PILLARS.every((p) => p.body.length > 40 && p.body.length < 220
 assert.ok(AUDIENCE_DOORS.every((d) => d.cta.length > 0 && d.href.startsWith("/")));
 assert.equal(AUDIENCE_DOORS[0].href, SITE_COPY.primaryCta.href);
 
-assert.equal(SITE_COPY.findCta.href, "/find");
+assert.equal(SITE_COPY.findCta.href, "/portal/find");
 assert.match(SITE_DISCLAIMERS.findIntro, /FloorScribe introduces you/);
 
 assert.equal(AUDIENCE_DOORS[1].href, "/portal/login");
@@ -92,7 +92,7 @@ assert.notEqual(SITE_COPY.primaryCta.href, "/find/register");
 assert.match(SITE_COPY.oneLiner, /programs/i);
 assert.match(SITE_COPY.oneLiner, /session/i);
 
-assert.equal(SEEKER_AUTH.register.href, "/find/register");
+assert.equal(SEEKER_AUTH.register.href, "/portal/register");
 assert.notEqual(SEEKER_AUTH.register.href, SITE_COPY.primaryCta.href);
 assert.match(PORTAL_FOOTER_NOTE, /one-time code/i);
 assert.doesNotMatch(PORTAL_FOOTER_NOTE, /introduces you/i);

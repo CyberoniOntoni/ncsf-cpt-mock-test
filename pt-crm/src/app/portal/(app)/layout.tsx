@@ -4,6 +4,7 @@ import { PortalShell } from "@/components/portal/portal-shell";
 import {
   clientNeedsOnboarding,
   requireClientSession,
+  resolvePortalStudio,
 } from "@/lib/client-auth";
 
 export default async function PortalAppLayout({
@@ -12,11 +13,18 @@ export default async function PortalAppLayout({
   children: ReactNode;
 }) {
   const session = await requireClientSession();
-  const needs = await clientNeedsOnboarding(
-    session.organizationId,
-    session.clientId
-  );
-  if (needs) redirect("/portal/onboarding");
+  const studio = await resolvePortalStudio(session);
+  if (studio) {
+    const needs = await clientNeedsOnboarding(
+      studio.organizationId,
+      studio.clientId
+    );
+    if (needs) redirect("/portal/onboarding");
+  }
 
-  return <PortalShell studioName={session.organizationName}>{children}</PortalShell>;
+  return (
+    <PortalShell studioName={studio?.organizationName || "Your profile"}>
+      {children}
+    </PortalShell>
+  );
 }

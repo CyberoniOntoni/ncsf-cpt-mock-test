@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Dumbbell, LineChart, UserRound } from "lucide-react";
+import {
+  CalendarDays,
+  Dumbbell,
+  LineChart,
+  Search,
+  UserRound,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/portal/dashboard", label: "Home", icon: CalendarDays },
+  { href: "/portal/find", label: "Find", icon: Search },
   { href: "/portal/program", label: "Program", icon: Dumbbell },
   { href: "/portal/progress", label: "Progress", icon: LineChart },
   { href: "/portal/profile", label: "Profile", icon: UserRound },
@@ -35,7 +42,8 @@ export function PortalShell({
       >
         <ul className="mx-auto flex max-w-lg">
           {TABS.map((tab) => {
-            const active = path === tab.href || path.startsWith(tab.href + "/");
+            const active =
+              path === tab.href || path.startsWith(tab.href + "/");
             const Icon = tab.icon;
             return (
               <li key={tab.href} className="flex-1">

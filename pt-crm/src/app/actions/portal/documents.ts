@@ -6,14 +6,14 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db";
 import { clientDocuments, clients } from "@/db/schema";
-import { requireClientSession } from "@/lib/client-auth";
+import { requireStudioSession } from "@/lib/client-auth";
 import { REQUIRED_PORTAL_DOCUMENTS } from "@/lib/portal-documents";
 
 export async function signPortalDocumentAction(input: {
   documentId: string;
   signatureData: string;
 }) {
-  const session = await requireClientSession();
+  const session = await requireStudioSession();
   const sig = (input.signatureData || "").trim();
   if (!sig.startsWith("data:image")) {
     return { ok: false as const, error: "Sign in the box first" };

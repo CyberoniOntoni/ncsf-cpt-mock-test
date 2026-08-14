@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   addSeekerMeasurementAction,
   saveSeekerPrefsAction,
@@ -23,8 +24,10 @@ export function SeekerAccountForms(props: {
     independent?: boolean;
   }[];
   brands: string[];
+  setup?: boolean;
 }) {
   const s = props.seeker;
+  const router = useRouter();
   const [prefMsg, setPrefMsg] = useState<string | null>(null);
   const [measMsg, setMeasMsg] = useState<string | null>(null);
   const [brand, setBrand] = useState(s.preferredBrand || "");
@@ -54,7 +57,12 @@ export function SeekerAccountForms(props: {
             preferredFacilityId: String(fd.get("preferredFacilityId") || ""),
             preferredBrand: String(fd.get("preferredBrand") || ""),
           });
-          setPrefMsg(result.ok ? "Saved. Search now uses these filters." : result.error);
+          if (!result.ok) {
+            setPrefMsg(result.error);
+            return;
+          }
+          setPrefMsg("Profile saved.");
+          if (props.setup) router.replace("/portal/profile");
         }}
       >
         <h2 className="font-medium">Where you train</h2>
@@ -62,10 +70,11 @@ export function SeekerAccountForms(props: {
           Area
           <select
             name="preferredArea"
+            required
             defaultValue={s.preferredArea || ""}
             className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
           >
-            <option value="">No area</option>
+            <option value="">Choose an area</option>
             {TRAINING_AREAS.map((a) => (
               <option key={a.slug} value={a.slug}>
                 {a.label}, {a.city}
@@ -125,7 +134,7 @@ export function SeekerAccountForms(props: {
           type="submit"
           className="min-h-11 rounded-lg bg-emerald-800 px-4 text-sm font-semibold text-stone-50"
         >
-          Save training spots
+          {props.setup ? "Save profile" : "Save training spots"}
         </button>
         {prefMsg ? <p className="text-sm text-zinc-400">{prefMsg}</p> : null}
       </form>

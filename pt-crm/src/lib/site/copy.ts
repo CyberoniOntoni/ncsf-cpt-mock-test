@@ -11,14 +11,14 @@ export const SITE_COPY = {
   soloCta: { href: "/register/solo", label: "Start solo" },
   studioCta: { href: "/register/studio", label: "Start a studio" },
   signInCta: { href: "/login", label: "Sign in" },
-  findCta: { href: "/find", label: "Find a trainer" },
+  findCta: { href: "/portal/find", label: "Find a trainer" },
   portalCta: { href: "/portal/login", label: "Client portal" },
   marketingHome: { href: "/marketing", label: "For trainers" },
 } as const;
 
 export const PUBLIC_NAV = [
   { href: "/marketing", label: "For trainers", audience: "trainer" as const },
-  { href: "/find", label: "Find a trainer", audience: "seeker" as const },
+  { href: "/portal/find", label: "Find a trainer", audience: "seeker" as const },
   { href: "/portal/login", label: "Client portal", audience: "client" as const },
 ] as const;
 
@@ -48,11 +48,11 @@ export const FEATURE_PILLARS = [
   },
   {
     title: "Client portal",
-    body: "Assigned clients sign in with a one-time code to see their plan, progress, and invoices. Not a public social app.",
+    body: "One home for clients: sign in with a password or a one-time code. See the plan, progress, invoices, or find a trainer.",
   },
   {
     title: "Find a trainer",
-    body: "People search by named area or gym and send an intro. You accept into the CRM. FloorScribe introduces; session pay stays with you.",
+    body: "The same client portal lets people create an account, tell us where they train, and send an intro. You accept into the CRM.",
   },
 ] as const;
 
@@ -67,16 +67,16 @@ export const AUDIENCE_DOORS = [
   {
     audience: "client" as const,
     title: "I already train with someone",
-    body: "If your trainer uses FloorScribe, sign in with the email they have on file. We send a one-time code.",
+    body: "If your trainer uses FloorScribe, sign in with your password or a one-time code sent to the email they have on file.",
     href: "/portal/login",
     cta: "Open client portal",
   },
   {
     audience: "seeker" as const,
     title: "I am looking for a trainer",
-    body: "Search by area or gym, read credentials and rates, and request an intro. Training payments are with the trainer.",
-    href: "/find",
-    cta: "Find a trainer",
+    body: "Create an account, tell us where you train, then search by area or gym and request an intro. Training payments are with the trainer.",
+    href: "/portal/register",
+    cta: "Create an account",
   },
 ] as const;
 
@@ -110,9 +110,9 @@ export const SITE_DISCLAIMERS = {
 } as const;
 
 export const SEEKER_AUTH = {
-  signIn: { href: "/find/login", label: "Log in" },
-  register: { href: "/find/register", label: "Create seeker account" },
+  signIn: { href: "/portal/login", label: "Log in" },
+  register: { href: "/portal/register", label: "Create account" },
 } as const;
 
 export const PORTAL_FOOTER_NOTE =
-  "Assigned clients sign in with a one-time code. This is not Find a trainer.";
+  "Sign in with a password or a one-time code. Same portal for your plan and for finding a trainer.";

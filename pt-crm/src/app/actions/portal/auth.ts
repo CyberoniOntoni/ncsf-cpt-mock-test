@@ -8,6 +8,12 @@ import {
   requestClientOtp,
   verifyClientOtp,
 } from "@/lib/client-auth";
+import {
+  isSeekerProfileComplete,
+  issueSeekerSession,
+  registerSeeker,
+  verifySeekerLogin,
+} from "@/lib/seeker-auth";
 
 async function requestMeta() {
   const h = await headers();
@@ -57,4 +63,30 @@ export async function verifyPortalOtpAction(input: {
 export async function logoutPortalAction() {
   await logoutClientPortal();
   redirect("/portal/login");
+}
+
+export async function registerPortalAction(form: {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  password: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  await seedIfNeeded();
+  const result = await registerSeeker(form);
+  if (!result.ok) return result;
+  await issueSeekerSession(result.seeker);
+  return { ok: true };
+}
+
+export async function loginPortalPasswordAction(form: {
+  email: string;
+  password: string;
+}): Promise<
+  { ok: true; profileComplete: boolean } | { ok: false; error: string }
+> {
+  await seedIfNeeded();
+  const result = await verifySeekerLogin(form);
+  if (!result.ok) return result;
+  await issueSeekerSession(result.seeker);
+  return { ok: true, profileComplete: isSeekerProfileComplete(result.seeker) };
 }

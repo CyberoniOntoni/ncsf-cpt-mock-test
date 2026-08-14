@@ -33,13 +33,20 @@ const WEAK_CLIENT_SECRETS = new Set([
 
 export type ClientSessionPayload = {
   role: "client";
-  clientId: string;
-  organizationId: string;
+  seekerId: string | null;
+  clientId: string | null;
+  organizationId: string | null;
   organizationName: string;
   email: string;
   firstName: string;
   lastName: string;
-  sessionId: string;
+  sessionId: string | null;
+};
+
+export type PortalStudio = {
+  clientId: string;
+  organizationId: string;
+  organizationName: string;
 };
 
 export type PortalStudioChoice = {
@@ -92,6 +99,33 @@ async function findEligibleClients(email: string) {
     .where(sql`lower(coalesce(${clients.email}, '')) = ${email}`);
 
   return rows.filter((r) => r.status === "active" || r.status === "paused");
+}
+
+export async function firstStudioForEmail(
+  rawEmail: string
+): Promise<PortalStudio | null> {
+  const rows = await findEligibleClients(normalizePortalEmail(rawEmail));
+  const first = rows[0];
+  if (!first) return null;
+  return {
+    clientId: first.clientId,
+    organizationId: first.organizationId,
+    organizationName: first.organizationName,
+  };
+}
+
+export async function resolvePortalStudio(
+  session: ClientSessionPayload
+): Promise<PortalStudio | null> {
+  if (session.clientId && session.organizationId) {
+    return {
+      clientId: session.clientId,
+      organizationId: session.organizationId,
+      organizationName: session.organizationName,
+    };
+  }
+  if (!session.email) return null;
+  return firstStudioForEmail(session.email);
 }
 
 export async function listPortalStudiosForEmail(
@@ -278,8 +312,16 @@ export async function verifyClientOtp(opts: {
     expiresAt,
   });
 
+  const { ensureSeekerForPerson } = await import("@/lib/seeker-auth");
+  const seeker = await ensureSeekerForPerson({
+    email: client.email || email,
+    firstName: client.firstName,
+    lastName: client.lastName,
+  });
+
   const jwt = await signClientJwt({
     role: "client",
+    seekerId: seeker.id,
     clientId: client.id,
     organizationId: client.organizationId,
     organizationName: org?.name || "Studio",
@@ -292,6 +334,28 @@ export async function verifyClientOtp(opts: {
 
   await persistClientCookie(jwt);
   return { ok: true };
+}
+
+export async function issuePortalSession(opts: {
+  seekerId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  clientId?: string | null;
+  organizationId?: string | null;
+  organizationName?: string;
+}) {
+  const jwt = await signClientJwt({
+    role: "client",
+    seekerId: opts.seekerId,
+    clientId: opts.clientId || null,
+    organizationId: opts.organizationId || null,
+    organizationName: opts.organizationName || "FloorScribe",
+    email: opts.email,
+    firstName: opts.firstName,
+    lastName: opts.lastName,
+  });
+  await persistClientCookie(jwt);
 }
 
 async function signClientJwt(payload: Record<string, unknown>) {
@@ -324,29 +388,37 @@ export async function readClientSession(): Promise<ClientSessionPayload | null> 
   try {
     const { payload } = await jwtVerify(raw, clientSecret());
     if (payload.role !== "client") return null;
-    const sessionId = String(payload.sessionId || "");
-    const token = String(payload.token || "");
-    const clientId = String(payload.clientId || "");
-    const organizationId = String(payload.organizationId || "");
-    if (!sessionId || !clientId || !organizationId) return null;
+    const seekerId = payload.seekerId ? String(payload.seekerId) : null;
+    const sessionId = payload.sessionId ? String(payload.sessionId) : null;
+    const token = payload.token ? String(payload.token) : "";
+    const clientId = payload.clientId ? String(payload.clientId) : null;
+    const organizationId = payload.organizationId
+      ? String(payload.organizationId)
+      : null;
 
-    const db = await getDb();
-    const [row] = await db
-      .select()
-      .from(clientSessions)
-      .where(eq(clientSessions.id, sessionId))
-      .limit(1);
-    if (!row || row.token !== token) return null;
-    if (row.expiresAt.getTime() < Date.now()) return null;
-    if (row.clientId !== clientId || row.organizationId !== organizationId) {
+    if (sessionId) {
+      if (!clientId || !organizationId || !token) return null;
+      const db = await getDb();
+      const [row] = await db
+        .select()
+        .from(clientSessions)
+        .where(eq(clientSessions.id, sessionId))
+        .limit(1);
+      if (!row || row.token !== token) return null;
+      if (row.expiresAt.getTime() < Date.now()) return null;
+      if (row.clientId !== clientId || row.organizationId !== organizationId) {
+        return null;
+      }
+    } else if (!seekerId) {
       return null;
     }
 
     return {
       role: "client",
+      seekerId,
       clientId,
       organizationId,
-      organizationName: String(payload.organizationName || "Studio"),
+      organizationName: String(payload.organizationName || "FloorScribe"),
       email: String(payload.email || ""),
       firstName: String(payload.firstName || ""),
       lastName: String(payload.lastName || ""),
@@ -363,6 +435,20 @@ export async function requireClientSession(): Promise<ClientSessionPayload> {
   return session;
 }
 
+export async function requireStudioSession(): Promise<
+  ClientSessionPayload & { clientId: string; organizationId: string }
+> {
+  const session = await requireClientSession();
+  const studio = await resolvePortalStudio(session);
+  if (!studio) redirect("/portal/dashboard");
+  return {
+    ...session,
+    clientId: studio.clientId,
+    organizationId: studio.organizationId,
+    organizationName: studio.organizationName,
+  };
+}
+
 export async function clearClientSessionCookie() {
   const jar = await cookies();
   jar.set(CLIENT_COOKIE, "", {
@@ -374,11 +460,17 @@ export async function clearClientSessionCookie() {
 
 export async function logoutClientPortal() {
   const session = await readClientSession();
-  if (session) {
+  if (session?.sessionId) {
     const db = await getDb();
     await db.delete(clientSessions).where(eq(clientSessions.id, session.sessionId));
   }
   await clearClientSessionCookie();
+  try {
+    const { clearSeekerSession } = await import("@/lib/seeker-auth");
+    await clearSeekerSession();
+  } catch {
+    // Seeker cookie is optional.
+  }
 }
 
 export async function ensureRequiredDocuments(

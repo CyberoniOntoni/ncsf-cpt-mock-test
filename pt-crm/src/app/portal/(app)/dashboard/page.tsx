@@ -1,20 +1,56 @@
 import Link from "next/link";
-import { requireClientSession } from "@/lib/client-auth";
+import { requireClientSession, resolvePortalStudio } from "@/lib/client-auth";
 import {
   getPortalClient,
   getPortalInvoices,
   getPortalNextAppointment,
   getPortalNotifications,
 } from "@/db/queries/portal";
+import { getSeekerById, isSeekerProfileComplete } from "@/lib/seeker-auth";
 import { formatMoney } from "@/lib/money";
 
 export default async function PortalDashboardPage() {
   const session = await requireClientSession();
+  const studio = await resolvePortalStudio(session);
+  const seeker = session.seekerId ? await getSeekerById(session.seekerId) : null;
+  const readyToSearch = seeker ? isSeekerProfileComplete(seeker) : false;
+
+  if (!studio) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-xl font-semibold">
+            Hi {seeker?.firstName || session.firstName}
+          </h1>
+          <p className="text-sm text-zinc-500">
+            Your client home. Find a trainer, then your plan shows up here.
+          </p>
+        </div>
+        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+            Find a trainer
+          </p>
+          <p className="mt-1 text-sm text-zinc-300">
+            {readyToSearch
+              ? "Your profile is ready. Search by area or gym and send an intro."
+              : "Tell us where you train on your profile, then you can search."}
+          </p>
+          <Link
+            href={readyToSearch ? "/portal/find" : "/portal/profile?setup=1"}
+            className="mt-3 inline-flex min-h-11 items-center rounded-lg bg-emerald-800 px-4 text-sm font-semibold text-stone-50"
+          >
+            {readyToSearch ? "Search trainers" : "Complete profile"}
+          </Link>
+        </section>
+      </div>
+    );
+  }
+
   const [me, next, invoices, notes] = await Promise.all([
-    getPortalClient(session.organizationId, session.clientId),
-    getPortalNextAppointment(session.organizationId, session.clientId),
-    getPortalInvoices(session.organizationId, session.clientId),
-    getPortalNotifications(session.organizationId, session.clientId),
+    getPortalClient(studio.organizationId, studio.clientId),
+    getPortalNextAppointment(studio.organizationId, studio.clientId),
+    getPortalInvoices(studio.organizationId, studio.clientId),
+    getPortalNotifications(studio.organizationId, studio.clientId),
   ]);
 
   const unpaid = invoices.filter(
@@ -29,7 +65,7 @@ export default async function PortalDashboardPage() {
           Hi {me?.firstName || session.firstName}
         </h1>
         <p className="text-sm text-zinc-500">
-          Your plan with {session.organizationName}
+          Your plan with {studio.organizationName}
         </p>
       </div>
 

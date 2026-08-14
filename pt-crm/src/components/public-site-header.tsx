@@ -1,7 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { PUBLIC_NAV, SITE_COPY } from "@/lib/site/copy";
 import { cn } from "@/lib/utils";
@@ -9,8 +12,11 @@ import { cn } from "@/lib/utils";
 const linkFocus =
   "rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141210]";
 
-const btnPrimarySm =
-  "inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-800 px-3.5 py-2 text-sm font-semibold text-stone-50 shadow-[0_8px_20px_-10px_rgb(6_78_59)] transition hover:bg-emerald-700 active:bg-emerald-800 motion-reduce:transition-none motion-safe:hover:-translate-y-px";
+const btnGhost =
+  "inline-flex min-h-10 items-center justify-center rounded-lg px-3 text-sm font-medium text-stone-400 transition hover:bg-stone-900/70 hover:text-stone-100";
+
+const btnPrimary =
+  "inline-flex min-h-10 items-center justify-center rounded-xl bg-emerald-800 px-3.5 text-sm font-semibold text-stone-50 shadow-[0_8px_20px_-10px_rgb(6_78_59)] transition hover:bg-emerald-700 active:bg-emerald-800 motion-reduce:transition-none";
 
 export type PublicSiteHeaderProps = {
   variant: "marketing" | "find" | "auth" | "portal";
@@ -21,41 +27,83 @@ export type PublicSiteHeaderProps = {
 };
 
 export function PublicSiteHeader(props: PublicSiteHeaderProps) {
+  const [open, setOpen] = useState(false);
+  const menuId = useId();
+  const pathname = usePathname();
   const isFind = props.variant === "find";
   const isPortal = props.variant === "portal";
+  const isAuth = props.variant === "auth";
+  const onRegister = pathname.startsWith("/register");
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  function isCurrent(audience: "trainer" | "seeker" | "client") {
+    return (
+      (audience === "seeker" && isFind) ||
+      (audience === "client" && isPortal) ||
+      (audience === "trainer" && props.variant === "marketing")
+    );
+  }
+
+  const defaultTrailing = isAuth ? (
+    onRegister ? (
+      <Link href={SITE_COPY.signInCta.href} className={cn(btnPrimary, linkFocus)}>
+        {SITE_COPY.signInCta.label}
+      </Link>
+    ) : (
+      <Link href={SITE_COPY.primaryCta.href} className={cn(btnPrimary, linkFocus)}>
+        {SITE_COPY.primaryCta.label}
+      </Link>
+    )
+  ) : (
+    <>
+      <Link
+        href={SITE_COPY.signInCta.href}
+        className={cn(btnGhost, linkFocus, "hidden sm:inline-flex")}
+      >
+        {SITE_COPY.signInCta.label}
+      </Link>
+      <Link href={SITE_COPY.primaryCta.href} className={cn(btnPrimary, linkFocus)}>
+        {SITE_COPY.primaryCta.label}
+      </Link>
+    </>
+  );
+
   return (
     <header
       className={cn(
         "sticky top-0 z-40 border-b transition-[background-color,border-color,box-shadow] duration-300 motion-reduce:transition-none",
-        props.scrolled
-          ? "border-white/[0.06] bg-[#12100e]/88 shadow-[0_12px_40px_-20px_rgb(0_0_0/0.7)] backdrop-blur-xl"
-          : "border-transparent bg-[#12100e]/40 backdrop-blur-md"
+        props.scrolled || open
+          ? "border-white/[0.07] bg-[#12100e]/92 shadow-[0_12px_40px_-24px_rgb(0_0_0/0.85)] backdrop-blur-xl"
+          : "border-transparent bg-[#12100e]/35 backdrop-blur-md"
       )}
     >
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <BrandMark href="/marketing" size="md" className="text-emerald-600" />
-          <span className="hidden h-4 w-px bg-stone-800/90 sm:block" aria-hidden />
-          <span className="hidden truncate text-[11px] font-medium text-stone-500 sm:inline">
-            {SITE_COPY.oneLiner}
-          </span>
-        </div>
-        <nav className="hidden items-center gap-0.5 md:flex" aria-label="Site">
+      <div className="mx-auto flex h-16 max-w-5xl items-center gap-4 px-4 sm:px-6">
+        <BrandMark href="/marketing" size="md" />
+
+        <nav
+          className="hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex"
+          aria-label="Site"
+        >
           {PUBLIC_NAV.map((item) => {
-            const current =
-              (item.audience === "seeker" && isFind) ||
-              (item.audience === "client" && isPortal) ||
-              (item.audience === "trainer" && props.variant === "marketing");
+            const current = isCurrent(item.audience);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "inline-flex min-h-10 items-center rounded-lg px-3 text-sm transition",
+                  "inline-flex h-9 items-center whitespace-nowrap rounded-full px-3.5 text-sm transition",
                   linkFocus,
                   current
-                    ? "bg-emerald-950/45 font-medium text-emerald-500"
-                    : "text-stone-400 hover:bg-stone-900/60 hover:text-stone-100"
+                    ? "bg-white/[0.06] font-medium text-stone-50"
+                    : "text-stone-400 hover:bg-white/[0.04] hover:text-stone-100"
                 )}
                 aria-current={current ? "page" : undefined}
               >
@@ -64,78 +112,89 @@ export function PublicSiteHeader(props: PublicSiteHeaderProps) {
             );
           })}
         </nav>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          {props.trailing ?? (
-            <>
+
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          {props.trailing ?? defaultTrailing}
+          <button
+            type="button"
+            className={cn(
+              "inline-flex h-10 w-10 items-center justify-center rounded-lg text-stone-300 hover:bg-stone-900 hover:text-stone-50 lg:hidden",
+              linkFocus
+            )}
+            aria-expanded={open}
+            aria-controls={menuId}
+            aria-label={open ? "Close menu" : "Open menu"}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
+
+      {open ? (
+        <div
+          id={menuId}
+          className="border-t border-white/[0.06] bg-[#12100e]/96 lg:hidden"
+        >
+          <nav className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-3 sm:px-6" aria-label="Site">
+            {PUBLIC_NAV.map((item) => {
+              const current = isCurrent(item.audience);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "flex min-h-11 items-center rounded-xl px-3 text-sm",
+                    linkFocus,
+                    current
+                      ? "bg-white/[0.06] font-medium text-stone-50"
+                      : "text-stone-300 hover:bg-white/[0.04]"
+                  )}
+                  aria-current={current ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+            {isAuth || props.trailing ? null : (
               <Link
                 href={SITE_COPY.signInCta.href}
+                onClick={() => setOpen(false)}
                 className={cn(
-                  "inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-medium text-stone-400 hover:text-stone-100",
+                  "flex min-h-11 items-center rounded-xl px-3 text-sm text-stone-300 hover:bg-white/[0.04] sm:hidden",
                   linkFocus
                 )}
               >
                 {SITE_COPY.signInCta.label}
               </Link>
-              <Link
-                href={SITE_COPY.primaryCta.href}
-                className={cn(btnPrimarySm, linkFocus)}
-              >
-                {SITE_COPY.primaryCta.label}
-              </Link>
-            </>
-          )}
+            )}
+            {props.sectionNav && props.sectionNav.length > 0 ? (
+              <>
+                <p className="mt-2 px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-stone-600">
+                  On this page
+                </p>
+                {props.sectionNav.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex min-h-11 items-center rounded-xl px-3 text-sm",
+                      linkFocus,
+                      props.activeSectionId === item.id
+                        ? "text-emerald-400"
+                        : "text-stone-400 hover:bg-white/[0.04] hover:text-stone-200"
+                    )}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </>
+            ) : null}
+          </nav>
         </div>
-      </div>
-      {props.sectionNav && props.sectionNav.length > 0 ? (
-        <nav
-          className="flex snap-x snap-mandatory gap-2 overflow-x-auto border-t border-stone-900/70 px-3 py-2 md:hidden"
-          aria-label="On this page"
-        >
-          {props.sectionNav.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "inline-flex min-h-9 shrink-0 items-center rounded-full border px-3.5 text-[11px] font-medium",
-                linkFocus,
-                props.activeSectionId === item.id
-                  ? "border-emerald-800/55 bg-emerald-950/45 text-emerald-400"
-                  : "border-stone-800/80 text-stone-400"
-              )}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      ) : (
-        <nav
-          className="flex gap-2 overflow-x-auto border-t border-stone-900/70 px-3 py-2 md:hidden"
-          aria-label="Site"
-        >
-          {PUBLIC_NAV.map((item) => {
-            const current =
-              (item.audience === "seeker" && isFind) ||
-              (item.audience === "client" && isPortal) ||
-              (item.audience === "trainer" && props.variant === "marketing");
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "inline-flex min-h-9 shrink-0 items-center rounded-full border px-3.5 text-[11px] font-medium",
-                  linkFocus,
-                  current
-                    ? "border-emerald-800/55 bg-emerald-950/45 text-emerald-500"
-                    : "border-stone-800/80 text-stone-400"
-                )}
-                aria-current={current ? "page" : undefined}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      )}
+      ) : null}
     </header>
   );
 }
