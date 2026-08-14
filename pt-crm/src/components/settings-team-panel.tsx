@@ -8,6 +8,7 @@ import {
   revokeInviteAction,
 } from "@/app/actions/auth";
 import { Alert, Badge, Button, Input, Label, Select } from "@/components/ui";
+import { inviteAbsoluteUrl } from "@/lib/mail-copy";
 
 type Member = {
   membershipId: string;
@@ -34,10 +35,6 @@ function roleLabel(role: string) {
   return role;
 }
 
-function invitePath(origin: string, token: string) {
-  return `${origin.replace(/\/$/, "")}/invite/${token}`;
-}
-
 export function SettingsTeamPanel({
   members,
   invites,
@@ -51,6 +48,7 @@ export function SettingsTeamPanel({
   canManage: boolean;
   /** Only owners may invite role=admin */
   canInviteAdmin?: boolean;
+  /** APP_URL from the server — same base as emailed invite links */
   appOrigin: string;
   currentUserId?: string;
 }) {
@@ -62,7 +60,6 @@ export function SettingsTeamPanel({
     null
   );
   const [lastLink, setLastLink] = useState<string | null>(null);
-  const [origin, setOrigin] = useState(appOrigin);
 
   // If admin option is hidden and role was admin, fall back to trainer
   useEffect(() => {
@@ -71,17 +68,10 @@ export function SettingsTeamPanel({
     }
   }, [canInviteAdmin, role]);
 
-  // Prefer live browser origin so invite links work even if APP_URL is stale
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.location?.origin) {
-      setOrigin(window.location.origin);
-    }
-  }, []);
-
   const inviteUrl = useMemo(() => {
     if (!lastLink) return null;
-    return invitePath(origin, lastLink);
-  }, [origin, lastLink]);
+    return inviteAbsoluteUrl(lastLink, appOrigin);
+  }, [appOrigin, lastLink]);
 
   function memberRow(m: Member) {
     const isYou = currentUserId && m.userId === currentUserId;
@@ -160,7 +150,7 @@ export function SettingsTeamPanel({
               return;
             }
             if ("token" in res && res.token) {
-              const url = invitePath(origin, res.token);
+              const url = inviteAbsoluteUrl(res.token, appOrigin);
               setLastLink(res.token);
               const invitedEmail =
                 "email" in res && typeof res.email === "string"
@@ -282,7 +272,7 @@ export function SettingsTeamPanel({
           </div>
           <ul className="mt-2 space-y-2">
             {invites.map((inv) => {
-              const link = invitePath(origin, inv.token);
+              const link = inviteAbsoluteUrl(inv.token, appOrigin);
               const expires = new Date(inv.expiresAt);
               const daysLeft = Math.max(
                 0,

@@ -34,6 +34,10 @@ assert.equal(
   "https://app.example.com/invite/tok_abc"
 );
 assert.equal(
+  inviteAbsoluteUrl("tok_abc", "https://floorscribe.com/"),
+  "https://floorscribe.com/invite/tok_abc"
+);
+assert.equal(
   inviteAbsoluteUrl("tok_abc", undefined),
   "https://floorscribe.com/invite/tok_abc"
 );
