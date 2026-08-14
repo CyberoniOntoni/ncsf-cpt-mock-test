@@ -59,18 +59,7 @@ export type CrmSignalClient = {
   updatedAt?: Date | string | null;
 };
 
-/**
- * Consume one session from the oldest burnable pack (active, not expired, used < total).
- * Used on **floor complete** and **calendar complete** (product: both debit).
- *
- * **Shared debit key** — pass sessionId and/or appointmentId. If either already has
- * `packageId` set (or the linked peer does), returns `already_debited` without a second burn.
- * Unlinked same-client same-day visits are treated as one visit when there is a
- * unique in-progress/completed floor log or completed booking to pair with.
- * On success, stamps packageId on both the training session and linked appointment when known.
- *
- * Race-safe: conditional usedSessions update + returning(); one retry re-checks stamps.
- */
+/** Debit the oldest burnable pack. Same-day unlinked floor+calendar pair once. */
 export async function tryConsumePackageSession(
   clientId: string,
   session: SessionPayload,

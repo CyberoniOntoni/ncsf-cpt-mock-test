@@ -37,8 +37,8 @@ export default async function PortalProgressPage() {
   const trainer =
     studio
       ? await Promise.all([
-          getPortalMeasurements(studio.clientId),
-          getPortalAssessments(studio.clientId),
+          getPortalMeasurements(studio.organizationId, studio.clientId),
+          getPortalAssessments(studio.organizationId, studio.clientId),
         ])
       : [[], []];
   const [meas, assessments] = trainer;

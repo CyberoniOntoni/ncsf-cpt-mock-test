@@ -159,8 +159,10 @@ export async function getPortalNextAppointment(
       location: clientAppointments.location,
     })
     .from(clientAppointments)
+    .innerJoin(clients, eq(clientAppointments.clientId, clients.id))
     .where(
       and(
+        eq(clients.organizationId, organizationId),
         eq(clientAppointments.clientId, clientId),
         eq(clientAppointments.status, "scheduled"),
         gte(clientAppointments.startsAt, grace)
@@ -263,7 +265,11 @@ export async function getPortalDocuments(organizationId: string, clientId: strin
     .orderBy(asc(clientDocuments.createdAt));
 }
 
-export async function getPortalMeasurements(clientId: string, limit = 12) {
+export async function getPortalMeasurements(
+  organizationId: string,
+  clientId: string,
+  limit = 12
+) {
   const db = await getDb();
   return db
     .select({
@@ -274,12 +280,22 @@ export async function getPortalMeasurements(clientId: string, limit = 12) {
       waistCm: clientMeasurements.waistCm,
     })
     .from(clientMeasurements)
-    .where(eq(clientMeasurements.clientId, clientId))
+    .innerJoin(clients, eq(clientMeasurements.clientId, clients.id))
+    .where(
+      and(
+        eq(clients.organizationId, organizationId),
+        eq(clientMeasurements.clientId, clientId)
+      )
+    )
     .orderBy(desc(clientMeasurements.takenAt))
     .limit(limit);
 }
 
-export async function getPortalAssessments(clientId: string, limit = 8) {
+export async function getPortalAssessments(
+  organizationId: string,
+  clientId: string,
+  limit = 8
+) {
   const db = await getDb();
   return db
     .select({
@@ -288,7 +304,13 @@ export async function getPortalAssessments(clientId: string, limit = 8) {
       summary: clientAssessments.summary,
     })
     .from(clientAssessments)
-    .where(eq(clientAssessments.clientId, clientId))
+    .innerJoin(clients, eq(clientAssessments.clientId, clients.id))
+    .where(
+      and(
+        eq(clients.organizationId, organizationId),
+        eq(clientAssessments.clientId, clientId)
+      )
+    )
     .orderBy(desc(clientAssessments.takenAt))
     .limit(limit);
 }

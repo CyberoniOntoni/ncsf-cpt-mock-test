@@ -258,10 +258,7 @@ export async function adjustPackageUsedAction(
   return { usedSessions: used, remaining, status };
 }
 
-/**
- * Consume one session from the oldest burnable pack (active, not expired, used < total).
- * Session-bound wrapper — cookie only, never a SessionPayload argument.
- */
+/** Debit the oldest burnable pack. Same-day unlinked floor+calendar pair once. */
 export async function tryConsumePackageSessionAction(
   clientId: string,
   sessionId?: string,
