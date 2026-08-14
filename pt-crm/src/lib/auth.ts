@@ -578,6 +578,9 @@ export async function acceptInviteExistingUser(token: string) {
       .where(eq(orgInvites.id, invite.id));
   }
 
+  // Opening the emailed invite is inbox proof (same as acceptInviteRegister)
+  await markUserEmailVerified(session.userId);
+
   // Switch session to the invited org (including alreadyMember path)
   const payload = await buildSessionForUserInOrg(
     session.userId,

@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { getDb, getPGlite } from "./index";
 import {
   clients,
@@ -56,6 +56,13 @@ async function runSeed() {
   if (meta.rows.length > 0) {
     await seedLibraryIfNeeded();
     await seedPlaybooksIfNeeded();
+    // Backfill verify on pre-SCHEMA-27 demo users
+    await db
+      .update(users)
+      .set({ emailVerifiedAt: new Date(), updatedAt: new Date() })
+      .where(
+        and(eq(users.email, "pt@demo.local"), isNull(users.emailVerifiedAt))
+      );
     return;
   }
 
