@@ -3,6 +3,7 @@ import {
   mailPortalOtp,
   mailOrgInvite,
   mailSeekerVerify,
+  mailTrainerVerify,
 } from "../src/lib/mail-copy";
 import { issueEmailChallenge, consumeEmailChallenge } from "../src/lib/email-challenge";
 
@@ -24,6 +25,9 @@ assert.match(inv.text, /https:\/\/floorscribe.com\/invite\/tok_abc/);
 const seekerV = mailSeekerVerify({ firstName: "Jane", code: "654321" });
 assert.equal(seekerV.category, "seeker-verify");
 assert.match(seekerV.text, /654321/);
+const trainerV = mailTrainerVerify({ name: "Alex", code: "654321" });
+assert.equal(trainerV.category, "trainer-verify");
+assert.match(trainerV.text, /654321/);
 console.log("mail-verify copy ok");
 
 async function main() {

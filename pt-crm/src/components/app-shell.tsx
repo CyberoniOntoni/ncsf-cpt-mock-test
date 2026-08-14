@@ -140,12 +140,14 @@ export function AppShell({
   userName,
   userTitle,
   orgName,
+  emailVerified = true,
 }: {
   children: React.ReactNode;
   userName: string;
   /** Optional credentials (e.g. NCSF-CPT) under the name */
   userTitle?: string | null;
   orgName: string;
+  emailVerified?: boolean;
 }) {
   const userLine = userTitle?.trim()
     ? `${userName} · ${userTitle.trim()}`
@@ -281,6 +283,17 @@ export function AppShell({
         </header>
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+          {!emailVerified ? (
+            <div
+              role="status"
+              className="border-b border-amber-900/50 bg-amber-950/30 px-4 py-2 text-sm text-amber-100"
+            >
+              Verify your email to publish your card and invite teammates.{" "}
+              <Link href="/verify-email" className="font-medium underline">
+                Verify email
+              </Link>
+            </div>
+          ) : null}
           {children}
         </main>
 

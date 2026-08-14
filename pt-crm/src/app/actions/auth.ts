@@ -8,12 +8,17 @@ import {
   createOrgInvite,
   loginWithPassword,
   logout,
+  markUserEmailVerified,
   registerSoloTrainer,
   registerStudio,
+  requireSession,
   revokeOrgInvite,
   updateOrganizationProfile,
   updateUserProfile,
 } from "@/lib/auth";
+import { consumeEmailChallenge, issueEmailChallenge } from "@/lib/email-challenge";
+import { sendEmail } from "@/lib/email";
+import { mailTrainerVerify } from "@/lib/mail-copy";
 
 function safeNextPath(raw: unknown): string {
   const next = String(raw || "").trim();
@@ -58,7 +63,7 @@ export async function registerSoloAction(formData: FormData) {
   if ("error" in result && result.error) {
     redirect(`/register/solo?error=${encodeURIComponent(result.error)}`);
   }
-  redirect("/");
+  redirect("/verify-email?setup=1");
 }
 
 export async function registerStudioAction(formData: FormData) {
@@ -82,12 +87,51 @@ export async function registerStudioAction(formData: FormData) {
   if ("error" in result && result.error) {
     redirect(`/register/studio?error=${encodeURIComponent(result.error)}`);
   }
-  redirect("/");
+  redirect("/verify-email?setup=1");
 }
 
 /** @deprecated prefer registerSoloAction / registerStudioAction */
 export async function registerAction(formData: FormData) {
   return registerStudioAction(formData);
+}
+
+export async function requestTrainerVerifyAction(): Promise<
+  { ok: true } | { ok: false; error: string }
+> {
+  const session = await requireSession();
+  const issued = await issueEmailChallenge({
+    purpose: "trainer_verify",
+    email: session.email,
+  });
+  if (!issued.ok) return issued;
+  const copy = mailTrainerVerify({
+    name: session.name,
+    code: issued.code,
+  });
+  const { delivered } = await sendEmail({
+    to: session.email,
+    subject: copy.subject,
+    text: copy.text,
+    category: copy.category,
+  });
+  if (!delivered && process.env.NODE_ENV === "production") {
+    return { ok: false, error: "Email is not configured" };
+  }
+  return { ok: true };
+}
+
+export async function verifyTrainerEmailAction(input: {
+  code: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const session = await requireSession();
+  const consumed = await consumeEmailChallenge({
+    purpose: "trainer_verify",
+    email: session.email,
+    code: input.code,
+  });
+  if (!consumed.ok) return consumed;
+  await markUserEmailVerified(session.userId);
+  return { ok: true };
 }
 
 export async function logoutAction(formData?: FormData) {

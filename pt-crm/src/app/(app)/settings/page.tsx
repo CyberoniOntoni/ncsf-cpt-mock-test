@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db";
 import { organizations } from "@/db/schema";
@@ -14,7 +15,7 @@ import { PageShell } from "@/components/page-shell";
 import { SettingsOrgForm } from "@/components/settings-org-form";
 import { SettingsProfileForm } from "@/components/settings-profile-form";
 import { SettingsTeamPanel } from "@/components/settings-team-panel";
-import { Badge, Card, PageHeader } from "@/components/ui";
+import { Alert, Badge, Card, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,15 @@ export default async function SettingsPage({
         eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
         description="Account, practice, team, deploy, and AI"
       />
+
+      {!user?.emailVerifiedAt ? (
+        <Alert tone="warning">
+          Verify your email to publish your card and invite teammates.{" "}
+          <Link href="/verify-email" className="font-medium underline">
+            Verify email
+          </Link>
+        </Alert>
+      ) : null}
 
       <Card>
         <h2 className="font-medium">Account</h2>

@@ -2,7 +2,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { requireSession } from "@/lib/auth";
+import { isUserEmailVerified, requireSession } from "@/lib/auth";
 import { getDb } from "@/db";
 import { listPublicGyms } from "@/db/queries/marketplace";
 import {
@@ -108,6 +108,12 @@ export async function saveMarketplaceListingAction(input: {
 }): Promise<{ ok: true; profileId: string } | { ok: false; error: string }> {
   try {
     const session = await requireSession();
+    if (input.published && !(await isUserEmailVerified(session.userId))) {
+      return {
+        ok: false,
+        error: "Verify your email before publishing your card.",
+      };
+    }
     const { profileId } = await upsertMarketplaceListing({
       organizationId: session.organizationId,
       userId: session.userId,

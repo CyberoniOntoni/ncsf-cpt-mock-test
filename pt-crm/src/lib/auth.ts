@@ -90,6 +90,7 @@ async function createUserAndSignIn(input: {
     createdAt: now,
     updatedAt: now,
   });
+  // emailVerifiedAt stays null — invite-accept marks it after insert
   await db.insert(memberships).values({
     id: id("mem"),
     userId,
@@ -244,6 +245,9 @@ export async function createOrgInvite(input: {
   role?: string;
 }) {
   const session = await requireSession();
+  if (!(await isUserEmailVerified(session.userId))) {
+    return { error: "Verify your email before inviting teammates." as const };
+  }
   if (session.role !== "owner" && session.role !== "admin") {
     return { error: "Only owners and admins can invite team members" as const };
   }
@@ -497,6 +501,8 @@ export async function acceptInviteRegister(input: {
     role: invite.role || "trainer",
   });
   if ("error" in result && result.error) return result;
+  // Opening the emailed invite is proof of inbox
+  await markUserEmailVerified(result.session.userId);
 
   const db = await getDb();
   await db
@@ -749,12 +755,31 @@ export async function getUserProfile() {
       name: users.name,
       phone: users.phone,
       title: users.title,
+      emailVerifiedAt: users.emailVerifiedAt,
       createdAt: users.createdAt,
     })
     .from(users)
     .where(eq(users.id, session.userId))
     .limit(1);
   return { session, user: user ?? null };
+}
+
+export async function markUserEmailVerified(userId: string): Promise<void> {
+  const db = await getDb();
+  await db
+    .update(users)
+    .set({ emailVerifiedAt: new Date(), updatedAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
+export async function isUserEmailVerified(userId: string): Promise<boolean> {
+  const db = await getDb();
+  const [row] = await db
+    .select({ emailVerifiedAt: users.emailVerifiedAt })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return !!row?.emailVerifiedAt;
 }
 
 async function buildSessionForUser(userId: string): Promise<SessionPayload | null> {
