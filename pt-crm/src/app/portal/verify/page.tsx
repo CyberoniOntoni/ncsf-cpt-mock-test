@@ -36,15 +36,15 @@ export default async function PortalSeekerVerifyPage({
       />
       <main className="mx-auto max-w-md space-y-4 px-4 py-10">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-500">
-          Check your email
+          Email verification
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">
           Verify your email
         </h1>
         <p className="text-sm text-stone-400">
           {setup === "1"
-            ? "Confirm this inbox before you finish setup and send intros."
-            : "Confirm this inbox before you search trainers and send intros."}
+            ? "Tap Send code, then enter the 6-digit code we email you before you finish setup and send intros."
+            : "Tap Send code, then enter the 6-digit code we email you before you search trainers and send intros."}
         </p>
         <SeekerVerifyForm email={session.email} setup={setup === "1"} />
       </main>

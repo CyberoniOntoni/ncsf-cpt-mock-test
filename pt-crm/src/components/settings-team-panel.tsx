@@ -48,8 +48,8 @@ export function SettingsTeamPanel({
   canManage: boolean;
   /** Only owners may invite role=admin */
   canInviteAdmin?: boolean;
-  /** APP_URL from the server — same base as emailed invite links */
-  appOrigin: string;
+  /** APP_URL from the server — same base as emailed invite links; omit when unset */
+  appOrigin?: string;
   currentUserId?: string;
 }) {
   const router = useRouter();

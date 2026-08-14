@@ -39,7 +39,8 @@ export default async function TrainerVerifyEmailPage({
       <Card className="border-zinc-800/80 p-5 shadow-xl shadow-black/40">
         {setup === "1" ? (
           <Alert tone="info" className="mb-4">
-            Account created. Check {session.email} for a 6-digit code.
+            Account created. Tap Send code, then enter the 6-digit code we
+            email to {session.email}.
           </Alert>
         ) : null}
         <TrainerVerifyForm email={session.email} />

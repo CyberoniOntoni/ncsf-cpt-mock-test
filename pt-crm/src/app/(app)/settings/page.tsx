@@ -64,8 +64,8 @@ export default async function SettingsPage({
         expiresAt: inv.expiresAt,
       }))
     : [];
-  const appOrigin =
-    (process.env.APP_URL || "").replace(/\/$/, "") || "http://127.0.0.1:3000";
+  // Pass APP_URL as-is so inviteAbsoluteUrl applies the same floorscribe.com fallback as mail
+  const appOrigin = process.env.APP_URL;
 
   return (
     <PageShell className="space-y-4">
