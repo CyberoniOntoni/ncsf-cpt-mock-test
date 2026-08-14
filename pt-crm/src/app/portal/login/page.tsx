@@ -3,6 +3,7 @@ import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
 import { SITE_COPY } from "@/lib/site/copy";
 import { PortalLoginForm } from "@/components/portal/portal-login-form";
+import { safeSeekerNext } from "@/lib/seeker-profile";
 
 export const metadata = { title: "Client portal" };
 
@@ -12,7 +13,6 @@ export default async function PortalLoginPage({
   searchParams: Promise<{ redirectTo?: string; next?: string }>;
 }) {
   const { redirectTo, next } = await searchParams;
-  const dest = redirectTo || next;
   return (
     <div className="mkt-root min-h-dvh bg-[#12100e] text-stone-100">
       <PublicSiteHeader
@@ -39,7 +39,7 @@ export default async function PortalLoginPage({
           already has you on file.
         </p>
         <div className="mt-6">
-          <PortalLoginForm redirectTo={dest} />
+          <PortalLoginForm redirectTo={safeSeekerNext(redirectTo || next)} />
         </div>
         <p className="mt-8 text-center text-xs text-stone-600">
           New here?{" "}

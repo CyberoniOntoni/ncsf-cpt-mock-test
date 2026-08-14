@@ -47,9 +47,10 @@ nano .env
 **Must set:**
 
 ```bash
-# Long random secret (do not use the example value)
+# Long random secrets (do not use the example values)
 AUTH_SECRET=$(openssl rand -base64 48)
-# put that value into .env
+CLIENT_AUTH_SECRET=$(openssl rand -base64 48)
+# put those values into .env
 
 APP_URL=https://floorscribe.example.com   # or http://YOUR_LXC_IP:4000
 FLOORSCRIBE_PORT=4000
@@ -149,7 +150,7 @@ Schema/playbook seeds apply on startup (idempotent). **Always backup before upgr
 ## 10. Security notes
 
 - Never commit `.env`.
-- Use a strong unique `AUTH_SECRET` in production.
+- Use strong unique `AUTH_SECRET` and `CLIENT_AUTH_SECRET` in production.
 - Prefer HTTPS + firewall: only 80/443 public; bind app to localhost if behind Caddy (`ports: "127.0.0.1:3000:3000"`).
 - Demo password is public knowledge — change workflow for production users.
 - Client health data: encrypt host disks if required by your compliance needs; backups contain the full DB.
@@ -162,7 +163,7 @@ PGlite is single-node embedded Postgres-compatible storage. Fine for a freelance
 
 | Symptom | Fix |
 |---------|-----|
-| `AUTH_SECRET` compose error | Set `AUTH_SECRET` in `.env` (required) |
+| `AUTH_SECRET` / `CLIENT_AUTH_SECRET` compose error | Set both secrets in `.env` (required) |
 | Health 503 | `docker compose logs app` — DB path permissions |
 | Port in use | Change `FLOORSCRIBE_PORT` (or legacy `PTCRM_PORT`) in `.env` |
 | Lost clients after recreate | Volume removed with `-v`; restore from backup |

@@ -14,6 +14,7 @@ import {
   registerSeeker,
   verifySeekerLogin,
 } from "@/lib/seeker-auth";
+import { safeSeekerNext } from "@/lib/seeker-profile";
 
 async function requestMeta() {
   const h = await headers();
@@ -51,13 +52,7 @@ export async function verifyPortalOtpAction(input: {
     ...meta,
   });
   if (!res.ok) return res;
-  const dest =
-    input.redirectTo &&
-    input.redirectTo.startsWith("/portal") &&
-    !input.redirectTo.startsWith("//")
-      ? input.redirectTo
-      : "/portal/dashboard";
-  redirect(dest);
+  redirect(safeSeekerNext(input.redirectTo));
 }
 
 export async function logoutPortalAction() {

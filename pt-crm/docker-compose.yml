@@ -1,6 +1,6 @@
 # FloorScribe — production-oriented compose for Proxmox LXC / Docker hosts
 # Usage:
-#   cp .env.example .env   # set AUTH_SECRET (required)
+#   cp .env.example .env   # set AUTH_SECRET and CLIENT_AUTH_SECRET
 #   docker compose up -d --build
 #   curl -s http://localhost:4000/api/health
 
@@ -17,6 +17,7 @@ services:
     environment:
       NODE_ENV: production
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env — use a long random string}
+      CLIENT_AUTH_SECRET: ${CLIENT_AUTH_SECRET:?Set CLIENT_AUTH_SECRET in .env — use a long random string}
       XAI_API_KEY: ${XAI_API_KEY:-}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_BASE_URL: ${AI_BASE_URL:-https://api.x.ai/v1}
