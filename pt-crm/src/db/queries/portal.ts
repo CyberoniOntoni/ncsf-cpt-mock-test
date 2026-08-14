@@ -14,6 +14,10 @@ import {
   programs,
 } from "@/db/schema";
 import { getEffectiveInvoiceStatus } from "@/lib/invoice-status";
+import {
+  toClientProgramView,
+  type PortalClientProgram,
+} from "@/lib/portal-program";
 
 export async function getPortalClient(organizationId: string, clientId: string) {
   const db = await getDb();
@@ -42,7 +46,7 @@ export async function getPortalClient(organizationId: string, clientId: string) 
 export async function getPortalActiveProgram(
   organizationId: string,
   clientId: string
-) {
+): Promise<PortalClientProgram | null> {
   const db = await getDb();
   const [program] = await db
     .select({
@@ -94,20 +98,48 @@ export async function getPortalActiveProgram(
             notes: programExercises.notes,
             sortOrder: programExercises.sortOrder,
             isWarmup: programExercises.isWarmup,
+            setScheme: programExercises.setScheme,
+            setSchemeMeta: programExercises.setSchemeMeta,
+            groupId: programExercises.groupId,
+            groupKind: programExercises.groupKind,
+            groupLabel: programExercises.groupLabel,
+            groupOrder: programExercises.groupOrder,
           })
           .from(programExercises)
           .where(inArray(programExercises.programDayId, dayIds))
           .orderBy(asc(programExercises.sortOrder));
 
-  return {
-    ...program,
+  return toClientProgramView({
+    title: program.title,
+    goal: program.goal,
+    daysPerWeek: program.daysPerWeek,
+    sessionMinutes: program.sessionMinutes,
     days: days.map((d) => ({
-      ...d,
+      id: d.id,
+      name: d.name,
+      focus: d.focus,
       exercises: filtered
         .filter((e) => e.programDayId === d.id)
-        .sort((a, b) => a.sortOrder - b.sortOrder),
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((e) => ({
+          id: e.id,
+          exerciseName: e.exerciseName,
+          sets: e.sets,
+          reps: e.reps,
+          rpe: e.rpe,
+          restSec: e.restSec,
+          notes: e.notes,
+          sortOrder: e.sortOrder,
+          isWarmup: e.isWarmup,
+          setScheme: e.setScheme,
+          setSchemeMeta: e.setSchemeMeta,
+          groupId: e.groupId,
+          groupKind: e.groupKind,
+          groupLabel: e.groupLabel,
+          groupOrder: e.groupOrder,
+        })),
     })),
-  };
+  });
 }
 
 export async function getPortalNextAppointment(

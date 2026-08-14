@@ -157,6 +157,49 @@ async function main() {
   else env.CLIENT_AUTH_SECRET = prevSecret;
   assert(threw, "hashOtp fails closed in production without CLIENT_AUTH_SECRET");
 
+  const { programs, programDays, programExercises } = await import("../src/db/schema");
+  const { getPortalActiveProgram } = await import("../src/db/queries/portal");
+  const { id } = await import("../src/lib/utils");
+  const programId = id("prg");
+  const dayId = id("pday");
+  await db.insert(programs).values({
+    id: programId,
+    organizationId: jane.organizationId,
+    clientId: jane.id,
+    title: "Smoke mobility",
+    goal: "mobility",
+    daysPerWeek: 3,
+    sessionMinutes: 45,
+    status: "active",
+  });
+  await db.insert(programDays).values({
+    id: dayId,
+    programId,
+    dayIndex: 0,
+    name: "Day 1",
+    focus: "Shoulders",
+  });
+  await db.insert(programExercises).values({
+    id: id("pex"),
+    programDayId: dayId,
+    exerciseName: "Wall slides",
+    sets: 2,
+    reps: "8",
+    rpe: "5",
+    restSec: 30,
+    notes: "Ribs down. · Mesocycle: W1",
+    sortOrder: 0,
+    isWarmup: true,
+    setScheme: "straight",
+  });
+  const portalProgram = await getPortalActiveProgram(jane.organizationId, jane.id);
+  assert(portalProgram, "assigned client has an active program in portal");
+  assert(portalProgram!.days[0].blocks[0].phase === "warmup", "warmup phase mapped");
+  assert(
+    !JSON.stringify(portalProgram).includes("Mesocycle"),
+    "portal program strips trainer-internal notes"
+  );
+
   console.log("\nPortal smoke: ALL PASS");
 }
 

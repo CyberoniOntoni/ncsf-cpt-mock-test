@@ -27,5 +27,10 @@ export default async function PortalProgramPage() {
     studio.clientId
   );
 
-  return <PortalProgramView data={program} />;
+  // Task 3 will rewrite PortalProgramView for PortalClientProgram; keep compile green until then.
+  return (
+    <PortalProgramView
+      data={program as unknown as Parameters<typeof PortalProgramView>[0]["data"]}
+    />
+  );
 }
