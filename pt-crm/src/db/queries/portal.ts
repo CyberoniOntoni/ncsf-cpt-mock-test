@@ -18,6 +18,7 @@ import {
   toClientProgramView,
   type PortalClientProgram,
 } from "@/lib/portal-program";
+import { id } from "@/lib/utils";
 
 export async function getPortalClient(organizationId: string, clientId: string) {
   const db = await getDb();
@@ -223,6 +224,22 @@ export async function getPortalNotifications(
     )
     .orderBy(desc(notifications.createdAt))
     .limit(limit);
+}
+
+export async function notifyProgramAssigned(opts: {
+  organizationId: string;
+  clientId: string;
+  title: string;
+}) {
+  const db = await getDb();
+  await db.insert(notifications).values({
+    id: id("ntf"),
+    organizationId: opts.organizationId,
+    clientId: opts.clientId,
+    type: "program_assigned",
+    title: "New program",
+    body: opts.title,
+  });
 }
 
 export async function getPortalDocuments(organizationId: string, clientId: string) {

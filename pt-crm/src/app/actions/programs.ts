@@ -17,6 +17,7 @@ import {
   trainingSessions,
 } from "@/db/schema";
 import { promoteLeadToActiveIfNeeded } from "@/app/actions/crm";
+import { notifyProgramAssigned } from "@/db/queries/portal";
 import { requireSession } from "@/lib/auth";
 import {
   correctivesFromAssessmentResults,
@@ -590,6 +591,13 @@ export async function createProgramFromWizardAction(input: CreateProgramInput) {
     revalidatePath(`/clients/${input.clientId}`);
     await promoteLeadToActiveIfNeeded(input.clientId);
   }
+  if (input.activate && input.clientId) {
+    await notifyProgramAssigned({
+      organizationId: session.organizationId,
+      clientId: input.clientId,
+      title: draft.title,
+    });
+  }
   return { programId };
 }
 
@@ -711,6 +719,13 @@ export async function createBlankProgramAction(input: CreateBlankProgramInput) {
   if (input.clientId) {
     revalidatePath(`/clients/${input.clientId}`);
     await promoteLeadToActiveIfNeeded(input.clientId);
+  }
+  if (input.activate && input.clientId) {
+    await notifyProgramAssigned({
+      organizationId: session.organizationId,
+      clientId: input.clientId,
+      title,
+    });
   }
   return { programId };
 }
@@ -908,11 +923,16 @@ export async function updateProgramMetaAction(
     if (!c) throw new Error("Client not found");
   }
 
+  const nextTitle = data.title ?? p.title;
+  const nextStatus = data.status ?? p.status;
+  const linkedClientId =
+    data.clientId !== undefined ? data.clientId : p.clientId;
+
   await db
     .update(programs)
     .set({
-      title: data.title ?? p.title,
-      status: data.status ?? p.status,
+      title: nextTitle,
+      status: nextStatus,
       notes: data.notes !== undefined ? data.notes : p.notes,
       clientId: data.clientId !== undefined ? data.clientId : p.clientId,
       updatedAt: new Date(),
@@ -923,11 +943,17 @@ export async function updateProgramMetaAction(
   revalidatePath("/programs");
 
   // Late client attach (desk): same promote as wizard create with clientId
-  const linkedClientId =
-    data.clientId !== undefined ? data.clientId : p.clientId;
   if (linkedClientId) {
     revalidatePath(`/clients/${linkedClientId}`);
     await promoteLeadToActiveIfNeeded(linkedClientId);
+  }
+
+  if (data.status === "active" && p.status !== "active" && linkedClientId) {
+    await notifyProgramAssigned({
+      organizationId: session.organizationId,
+      clientId: linkedClientId,
+      title: nextTitle,
+    });
   }
 
   return { ok: true };

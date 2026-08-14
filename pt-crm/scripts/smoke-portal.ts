@@ -158,7 +158,11 @@ async function main() {
   assert(threw, "hashOtp fails closed in production without CLIENT_AUTH_SECRET");
 
   const { programs, programDays, programExercises } = await import("../src/db/schema");
-  const { getPortalActiveProgram } = await import("../src/db/queries/portal");
+  const {
+    getPortalActiveProgram,
+    getPortalNotifications,
+    notifyProgramAssigned,
+  } = await import("../src/db/queries/portal");
   const { id } = await import("../src/lib/utils");
   const programId = id("prg");
   const dayId = id("pday");
@@ -198,6 +202,17 @@ async function main() {
   assert(
     !JSON.stringify(portalProgram).includes("Mesocycle"),
     "portal program strips trainer-internal notes"
+  );
+
+  await notifyProgramAssigned({
+    organizationId: jane.organizationId,
+    clientId: jane.id,
+    title: "Smoke mobility",
+  });
+  const notifs = await getPortalNotifications(jane.organizationId, jane.id);
+  assert(
+    notifs.some((n) => n.type === "program_assigned"),
+    "program_assigned notification present"
   );
 
   console.log("\nPortal smoke: ALL PASS");
