@@ -203,7 +203,7 @@ export async function requestClientOtp(opts: {
   const email = normalizePortalEmail(opts.email);
   if (!email.includes("@")) return { ok: false, error: "Enter a valid email" };
 
-  // Production + mock (e.g. AWS_SES_FROM unset) must not report sent.
+  // Production + mock (Mailtrap token unset) must not report sent.
   if (process.env.NODE_ENV === "production" && isMockEmail()) {
     return { ok: false, error: "Email is not configured" };
   }
@@ -275,6 +275,7 @@ export async function requestClientOtp(opts: {
     to: email,
     subject: `Your FloorScribe code for ${match.organizationName}`,
     text: `Hi ${match.firstName},\n\nYour FloorScribe client portal code is ${code}. It expires in 10 minutes.\n\nIf you did not request this, ignore this email.`,
+    category: "portal-otp",
   });
 
   if (!delivered && process.env.NODE_ENV === "production") {

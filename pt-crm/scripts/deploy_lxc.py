@@ -25,6 +25,12 @@ import paramiko
 HOST = os.environ.get("FLOORSCRIBE_DEPLOY_HOST", "").strip()
 USER = os.environ.get("FLOORSCRIBE_DEPLOY_USER", "root").strip()
 PASSWORD = os.environ.get("FLOORSCRIBE_DEPLOY_PASSWORD", "")
+KEY_PATH = Path(
+    os.environ.get(
+        "FLOORSCRIBE_DEPLOY_KEY",
+        str(Path.home() / ".ssh" / "floorscribe_lxc"),
+    )
+)
 PORT = int(os.environ.get("FLOORSCRIBE_DEPLOY_PORT", "4000"))
 REMOTE = os.environ.get("FLOORSCRIBE_DEPLOY_DIR", "/opt/floorscribe")
 # Public site URL (e.g. https://floorscribe.com). Prefer over http://host:port when set.
@@ -57,21 +63,37 @@ def should_exclude(path: Path) -> bool:
 def main() -> None:
     if not HOST:
         raise SystemExit("Set FLOORSCRIBE_DEPLOY_HOST")
-    if not PASSWORD:
-        raise SystemExit("Set FLOORSCRIBE_DEPLOY_PASSWORD")
+    if not PASSWORD and not KEY_PATH.is_file():
+        raise SystemExit("Set FLOORSCRIBE_DEPLOY_PASSWORD or install FLOORSCRIBE_DEPLOY_KEY")
     app_url = APP_URL or f"http://{HOST}:{PORT}"
 
     print(f"Connecting to {USER}@{HOST}...")
-    # Prefer Transport + password (some hosts fail SSHClient.connect quirks).
-    # Slow/busy LXC often needs a long banner wait (sshd accepts TCP before banner).
-    transport = paramiko.Transport((HOST, 22))
-    transport.banner_timeout = 90
-    transport.auth_timeout = 60
-    transport.connect(username=USER, password=PASSWORD)
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client._transport = transport  # noqa: SLF001 — intentional after auth
-    print("SSH OK")
+    connect_kw = dict(
+        hostname=HOST,
+        username=USER,
+        banner_timeout=90,
+        auth_timeout=60,
+        timeout=30,
+        look_for_keys=False,
+        allow_agent=False,
+    )
+    if KEY_PATH.is_file():
+        pkey = paramiko.Ed25519Key.from_private_key_file(str(KEY_PATH))
+        try:
+            client.connect(**connect_kw, pkey=pkey)
+            print("SSH OK (key)")
+        except paramiko.AuthenticationException:
+            if not PASSWORD:
+                raise
+            print("Key rejected, trying password")
+            client.connect(**connect_kw, password=PASSWORD)
+            print("SSH OK (password)")
+    else:
+        client.connect(**connect_kw, password=PASSWORD)
+        print("SSH OK (password)")
+    transport = client.get_transport()
 
     def run(cmd: str, check: bool = True, timeout: int = 600):
         print(f"$ {cmd}")
@@ -135,21 +157,59 @@ def main() -> None:
         f"mv {REMOTE}.new {REMOTE}"
     )
 
-    auth_secret = base64.b64encode(secrets.token_bytes(48)).decode()
-    code, prev, _ = run(
-        f"grep -E '^AUTH_SECRET=' {REMOTE}.bak/.env 2>/dev/null || true",
-        check=False,
-    )
-    if prev.strip().startswith("AUTH_SECRET=") and len(prev.strip()) > 20:
-        auth_secret = prev.strip().split("=", 1)[1].strip()
+    def read_bak_env(key: str) -> str:
+        _, prev, _ = run(
+            f"grep -E '^{key}=' {REMOTE}.bak/.env 2>/dev/null || true",
+            check=False,
+        )
+        line = prev.strip().splitlines()[-1] if prev.strip() else ""
+        if line.startswith(f"{key}=") and len(line) > len(key) + 8:
+            return line.split("=", 1)[1].strip()
+        return ""
+
+    auth_secret = read_bak_env("AUTH_SECRET")
+    if auth_secret:
         print("Reusing existing AUTH_SECRET")
+    else:
+        auth_secret = base64.b64encode(secrets.token_bytes(48)).decode()
+
+    client_auth_secret = read_bak_env("CLIENT_AUTH_SECRET")
+    if client_auth_secret:
+        print("Reusing existing CLIENT_AUTH_SECRET")
+    else:
+        client_auth_secret = base64.b64encode(secrets.token_bytes(48)).decode()
+        print("Generated CLIENT_AUTH_SECRET")
+
+    extra_keys = []
+    for key in (
+        "XAI_API_KEY",
+        "AI_API_KEY",
+        "AI_BASE_URL",
+        "AI_MODEL",
+        "MAILTRAP_API_TOKEN",
+        "MAILTRAP_FROM_EMAIL",
+        "MAILTRAP_FROM_NAME",
+        "MOCK_EMAIL",
+    ):
+        val = os.environ.get(f"FLOORSCRIBE_DEPLOY_{key}", "").strip() or read_bak_env(key)
+        if val:
+            extra_keys.append(f"{key}={val}")
+            print(f"Using {key}")
 
     env_body = (
         f"AUTH_SECRET={auth_secret}\n"
+        f"CLIENT_AUTH_SECRET={client_auth_secret}\n"
         f"APP_URL={app_url}\n"
         f"FLOORSCRIBE_PORT={PORT}\n"
         f"NODE_ENV=production\n"
     )
+    if extra_keys:
+        env_body += "\n".join(extra_keys) + "\n"
+    if any(k.startswith("MAILTRAP_API_TOKEN=") for k in extra_keys) and not any(
+        k.startswith("MAILTRAP_FROM_EMAIL=") for k in extra_keys
+    ):
+        env_body += "MAILTRAP_FROM_EMAIL=hello@floorscribe.com\n"
+        env_body += "MAILTRAP_FROM_NAME=FloorScribe\n"
     with sftp.file(f"{REMOTE}/.env", "w") as ef:
         ef.write(env_body)
     print(f"Wrote .env (APP_URL={app_url}, PORT={PORT})")

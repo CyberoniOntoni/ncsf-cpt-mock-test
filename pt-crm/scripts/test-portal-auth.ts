@@ -19,12 +19,12 @@ async function main() {
     assert.equal(r.delivered, true);
   }
 
-  // No working transport → delivered false (do not install SES SDK).
+  // No working transport → delivered false (no Mailtrap token).
   {
     const prevMock = process.env.MOCK_EMAIL;
-    const prevFrom = process.env.AWS_SES_FROM;
+    const prevToken = process.env.MAILTRAP_API_TOKEN;
     process.env.MOCK_EMAIL = "false";
-    delete process.env.AWS_SES_FROM;
+    delete process.env.MAILTRAP_API_TOKEN;
     try {
       assert.equal(isMockEmail(), false);
       const r = await sendEmail({
@@ -36,20 +36,20 @@ async function main() {
     } finally {
       if (prevMock === undefined) delete process.env.MOCK_EMAIL;
       else process.env.MOCK_EMAIL = prevMock;
-      if (prevFrom === undefined) delete process.env.AWS_SES_FROM;
-      else process.env.AWS_SES_FROM = prevFrom;
+      if (prevToken === undefined) delete process.env.MAILTRAP_API_TOKEN;
+      else process.env.MAILTRAP_API_TOKEN = prevToken;
     }
   }
 
-  // Production + isMockEmail (AWS_SES_FROM unset) must not report delivered.
+  // Production + isMockEmail (MAILTRAP_API_TOKEN unset) must not report delivered.
   {
     const env = process.env as { NODE_ENV?: string };
     const prevNode = env.NODE_ENV;
     const prevMock = process.env.MOCK_EMAIL;
-    const prevFrom = process.env.AWS_SES_FROM;
+    const prevToken = process.env.MAILTRAP_API_TOKEN;
     env.NODE_ENV = "production";
     delete process.env.MOCK_EMAIL;
-    delete process.env.AWS_SES_FROM;
+    delete process.env.MAILTRAP_API_TOKEN;
     try {
       assert.equal(isMockEmail(), true);
       const r = await sendEmail({
@@ -63,8 +63,8 @@ async function main() {
       else env.NODE_ENV = prevNode;
       if (prevMock === undefined) delete process.env.MOCK_EMAIL;
       else process.env.MOCK_EMAIL = prevMock;
-      if (prevFrom === undefined) delete process.env.AWS_SES_FROM;
-      else process.env.AWS_SES_FROM = prevFrom;
+      if (prevToken === undefined) delete process.env.MAILTRAP_API_TOKEN;
+      else process.env.MAILTRAP_API_TOKEN = prevToken;
     }
   }
 

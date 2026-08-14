@@ -18,6 +18,10 @@ services:
       NODE_ENV: production
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env — use a long random string}
       CLIENT_AUTH_SECRET: ${CLIENT_AUTH_SECRET:?Set CLIENT_AUTH_SECRET in .env — use a long random string}
+      MAILTRAP_API_TOKEN: ${MAILTRAP_API_TOKEN:-}
+      MAILTRAP_FROM_EMAIL: ${MAILTRAP_FROM_EMAIL:-hello@floorscribe.com}
+      MAILTRAP_FROM_NAME: ${MAILTRAP_FROM_NAME:-FloorScribe}
+      MOCK_EMAIL: ${MOCK_EMAIL:-}
       XAI_API_KEY: ${XAI_API_KEY:-}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_BASE_URL: ${AI_BASE_URL:-https://api.x.ai/v1}
