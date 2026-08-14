@@ -654,6 +654,7 @@ export async function updateUserProfile(input: {
   }
 
   const db = await getDb();
+  let emailChanged = false;
   if (email !== normalizeEmail(session.email)) {
     const currentPassword = input.currentPassword ?? "";
     if (!currentPassword) {
@@ -680,6 +681,7 @@ export async function updateUserProfile(input: {
     if (taken && taken.id !== session.userId) {
       return { error: "That email is already in use" as const };
     }
+    emailChanged = normalizeEmail(email) !== normalizeEmail(user.email);
   }
 
   await db
@@ -690,6 +692,7 @@ export async function updateUserProfile(input: {
       phone,
       title,
       updatedAt: new Date(),
+      ...(emailChanged ? { emailVerifiedAt: null } : {}),
     })
     .where(eq(users.id, session.userId));
 
