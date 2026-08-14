@@ -15,7 +15,9 @@ import {
   trainingSessions,
   type SessionSetLog,
 } from "@/db/schema";
+import { promoteLeadToActiveIfNeeded } from "@/app/actions/crm";
 import { requireSession } from "@/lib/auth";
+import { tryConsumePackageSession } from "@/lib/crm/internal";
 import type { SessionPayload } from "@/lib/session";
 import { defaultExerciseCues } from "@/lib/exercise-meta";
 import { aggregateFromSetLogs, ensureSetLogs } from "@/lib/session-sets";
@@ -32,11 +34,10 @@ import {
 import { assertClientInOrg, getClientInOrg } from "@/lib/tenant";
 import { id } from "@/lib/utils";
 
-export async function findInProgressSessionForDayAction(
+async function findInProgressSessionForDay(
   programDayId: string,
-  optSession?: SessionPayload
+  session: SessionPayload
 ) {
-  const session = optSession || (await requireSession());
   const db = await getDb();
   const [row] = await db
     .select()
@@ -51,6 +52,10 @@ export async function findInProgressSessionForDayAction(
     .orderBy(desc(trainingSessions.updatedAt))
     .limit(1);
   return row || null;
+}
+
+export async function findInProgressSessionForDayAction(programDayId: string) {
+  return findInProgressSessionForDay(programDayId, await requireSession());
 }
 
 /**
@@ -245,7 +250,7 @@ export async function startSessionFromAppointmentAction(
       };
     }
 
-    const res = await startSessionFromProgramDayAction(
+    const res = await startSessionFromProgramDay(
       day.id,
       { appointmentId: row.id },
       session
@@ -278,18 +283,17 @@ export async function startSessionFromAppointmentAction(
  * Start a new session for a program day, or resume an existing in-progress one.
  * Returns { ok:false } for expected failures (avoids React #441 digests in production).
  */
-export async function startSessionFromProgramDayAction(
+async function startSessionFromProgramDay(
   programDayId: string,
-  opts?: { forceNew?: boolean; appointmentId?: string | null },
-  optSession?: SessionPayload
+  opts: { forceNew?: boolean; appointmentId?: string | null } | undefined,
+  session: SessionPayload
 ): Promise<StartSessionResult> {
   try {
-    const session = optSession || (await requireSession());
     const db = await getDb();
     const appointmentId = opts?.appointmentId?.trim() || null;
 
     if (!opts?.forceNew) {
-      const existing = await findInProgressSessionForDayAction(programDayId, session);
+      const existing = await findInProgressSessionForDay(programDayId, session);
       if (existing) {
         if (appointmentId && !existing.appointmentId) {
           await linkSessionAndAppointment(
@@ -477,6 +481,17 @@ export async function startSessionFromProgramDayAction(
       code: "error",
     };
   }
+}
+
+export async function startSessionFromProgramDayAction(
+  programDayId: string,
+  opts?: { forceNew?: boolean; appointmentId?: string | null }
+): Promise<StartSessionResult> {
+  return startSessionFromProgramDay(
+    programDayId,
+    opts,
+    await requireSession()
+  );
 }
 
 function exerciseKey(exerciseId: string | null | undefined, name: string) {
@@ -961,7 +976,7 @@ export type SessionExerciseUpdate = {
   setLogs?: SessionSetLog[];
 };
 
-export async function saveSessionProgressAction(
+async function saveSessionProgress(
   sessionId: string,
   data: {
     durationMin?: number | null;
@@ -971,9 +986,8 @@ export async function saveSessionProgressAction(
     performedAt?: string | null;
     exercises: SessionExerciseUpdate[];
   },
-  optSession?: SessionPayload
+  session: SessionPayload
 ) {
-  const session = optSession || (await requireSession());
   const db = await getDb();
   const [row] = await db
     .select()
@@ -1170,6 +1184,20 @@ export async function saveSessionProgressAction(
   return { ok: true };
 }
 
+export async function saveSessionProgressAction(
+  sessionId: string,
+  data: {
+    durationMin?: number | null;
+    overallRpe?: string | null;
+    painNotes?: string | null;
+    notes?: string | null;
+    performedAt?: string | null;
+    exercises: SessionExerciseUpdate[];
+  }
+) {
+  return saveSessionProgress(sessionId, data, await requireSession());
+}
+
 export async function completeSessionAction(
   sessionId: string,
   data: {
@@ -1184,7 +1212,7 @@ export async function completeSessionAction(
   const session = await requireSession();
   // Persist user state as-is — do NOT auto-complete every planned set
   // (planned reps alone must not count as completed)
-  await saveSessionProgressAction(sessionId, data, session);
+  await saveSessionProgress(sessionId, data, session);
 
   const db = await getDb();
   const [row] = await db
@@ -1264,14 +1292,10 @@ export async function completeSessionAction(
   // Floor complete: burn pack + promote lead → active (defensive first engagement)
   if (wasInProgress && row.clientId) {
     try {
-      const {
-        tryConsumePackageSessionAction,
-        promoteLeadToActiveIfNeeded,
-      } = await import("@/app/actions/crm");
-      const burn = await tryConsumePackageSessionAction(
+      const burn = await tryConsumePackageSession(
         row.clientId,
-        sessionId,
         session,
+        sessionId,
         row.appointmentId
       );
       if (burn.consumed) {
@@ -1305,7 +1329,7 @@ export async function completeSessionAction(
           status: "status" in burn ? burn.status : undefined,
         };
       }
-      await promoteLeadToActiveIfNeeded(row.clientId, session);
+      await promoteLeadToActiveIfNeeded(row.clientId);
     } catch {
       // pack/promote optional — never block session complete
       packBurn = { consumed: false, reason: "error" };

@@ -4,7 +4,7 @@ import { and, desc, eq, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { clients, programs, trainingSessions } from "@/db/schema";
 import { requireSession } from "@/lib/auth";
-import { listOrgCrmSignalsAction } from "@/app/actions/crm";
+import { listOrgCrmSignals } from "@/lib/crm/internal";
 import { formatMoney } from "@/lib/money";
 import { fullName } from "@/lib/utils";
 
@@ -234,7 +234,7 @@ export async function getHomeDashboardAction() {
   }
 
   // CRM signals: low packages, upcoming appts (48h), quiet leads, open tasks
-  const signals = await listOrgCrmSignalsAction(session, clientList);
+  const signals = await listOrgCrmSignals(session, clientList);
   const fourHours = 4 * 60 * 60 * 1000;
 
   // Today agenda = upcoming appointments (first-class Home surface)
