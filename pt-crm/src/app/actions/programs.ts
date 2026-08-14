@@ -277,6 +277,7 @@ async function persistSmarterArtifacts(opts: {
       severity: d.severity,
       affectedSide: d.affectedSide,
       notes: d.triggerDescription || null,
+      db: opts.tx as Awaited<ReturnType<typeof getDb>>,
     });
     await opts.tx.insert(programCorrectivePrescriptions).values({
       id: id("pcp"),

@@ -560,18 +560,6 @@ async function ensureSchema() {
     );
     CREATE INDEX IF NOT EXISTS client_deficiencies_org_client_status_idx ON client_deficiencies(organization_id, client_id, status);
     CREATE INDEX IF NOT EXISTS client_deficiencies_client_slug_idx ON client_deficiencies(client_id, deficiency_slug);
-    DELETE FROM client_deficiencies a
-    USING client_deficiencies b
-    WHERE a.client_id = b.client_id
-      AND a.deficiency_slug = b.deficiency_slug
-      AND a.status = 'active' AND b.status = 'active'
-      AND (
-        a.identified_at < b.identified_at
-        OR (a.identified_at = b.identified_at AND a.id < b.id)
-      );
-    CREATE UNIQUE INDEX IF NOT EXISTS client_deficiencies_client_slug_active_uidx
-      ON client_deficiencies(client_id, deficiency_slug)
-      WHERE status = 'active';
 
     CREATE TABLE IF NOT EXISTS client_equipment (
       id TEXT PRIMARY KEY,
@@ -846,6 +834,35 @@ async function ensureSchema() {
     );
     CREATE INDEX IF NOT EXISTS seeker_measurements_seeker_idx ON seeker_measurements(seeker_id, taken_at);
   `);
+  await applyActiveDeficiencyUniqueIndex(client);
+}
+
+/** SCHEMA 26: one active deficiency per client+slug. Isolated so a PGlite
+ *  abort here cannot take down the rest of ensureSchema. */
+async function applyActiveDeficiencyUniqueIndex(client: PGlite) {
+  try {
+    await client.exec(`
+      DELETE FROM client_deficiencies
+      WHERE id IN (
+        SELECT a.id
+        FROM client_deficiencies a
+        INNER JOIN client_deficiencies b
+          ON a.client_id = b.client_id
+         AND a.deficiency_slug = b.deficiency_slug
+         AND a.status = 'active'
+         AND b.status = 'active'
+         AND (
+           a.identified_at < b.identified_at
+           OR (a.identified_at = b.identified_at AND a.id < b.id)
+         )
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS client_deficiencies_client_slug_active_uidx
+        ON client_deficiencies(client_id, deficiency_slug)
+        WHERE status = 'active';
+    `);
+  } catch (err) {
+    console.warn("[schema 26] unique active deficiencies skipped:", err);
+  }
 }
 
 export type Db = Awaited<ReturnType<typeof getDb>>;

@@ -12,8 +12,10 @@ export async function upsertActiveClientDeficiency(opts: {
   severity?: string;
   affectedSide?: string;
   notes?: string | null;
+  /** Use the caller transaction — a second getDb() on PGlite deadlocks. */
+  db?: Awaited<ReturnType<typeof getDb>>;
 }): Promise<string> {
-  const db = await getDb();
+  const db = opts.db ?? (await getDb());
   const [existing] = await db
     .select({ id: clientDeficiencies.id })
     .from(clientDeficiencies)
