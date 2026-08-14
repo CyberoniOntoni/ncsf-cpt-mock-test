@@ -37,12 +37,12 @@ export async function sendEmail(msg: OutboundEmail): Promise<SendEmailResult> {
   if (recent.length > 50) recent.shift();
 
   if (isMockEmail()) {
-    // Never log message body (may contain OTP) in production.
+    // Production mock is not delivery — fail closed (AWS_SES_FROM unset still mocks).
     if (process.env.NODE_ENV === "production") {
-      console.info(`[email:mock] to=${msg.to} subject=${msg.subject} (body omitted)`);
-    } else {
-      console.info(`[email:mock] to=${msg.to} subject=${msg.subject}\n${msg.text}`);
+      console.info(`[email:no-transport] production mock is not delivery; to=${msg.to}`);
+      return { delivered: false };
     }
+    console.info(`[email:mock] to=${msg.to} subject=${msg.subject}\n${msg.text}`);
     return { delivered: true };
   }
 

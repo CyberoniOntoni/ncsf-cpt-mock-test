@@ -13,7 +13,7 @@ export function PortalVerifyForm({
   redirectTo,
 }: {
   email: string;
-  organizationId: string;
+  organizationId?: string;
   redirectTo?: string;
 }) {
   const [code, setCode] = useState("");

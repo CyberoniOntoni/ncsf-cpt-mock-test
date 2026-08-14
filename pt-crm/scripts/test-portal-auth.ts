@@ -41,6 +41,33 @@ async function main() {
     }
   }
 
+  // Production + isMockEmail (AWS_SES_FROM unset) must not report delivered.
+  {
+    const env = process.env as { NODE_ENV?: string };
+    const prevNode = env.NODE_ENV;
+    const prevMock = process.env.MOCK_EMAIL;
+    const prevFrom = process.env.AWS_SES_FROM;
+    env.NODE_ENV = "production";
+    delete process.env.MOCK_EMAIL;
+    delete process.env.AWS_SES_FROM;
+    try {
+      assert.equal(isMockEmail(), true);
+      const r = await sendEmail({
+        to: "otp-test@example.com",
+        subject: "prod mock is not delivery",
+        text: "body",
+      });
+      assert.equal(r.delivered, false);
+    } finally {
+      if (prevNode === undefined) delete env.NODE_ENV;
+      else env.NODE_ENV = prevNode;
+      if (prevMock === undefined) delete process.env.MOCK_EMAIL;
+      else process.env.MOCK_EMAIL = prevMock;
+      if (prevFrom === undefined) delete process.env.AWS_SES_FROM;
+      else process.env.AWS_SES_FROM = prevFrom;
+    }
+  }
+
   console.log("test-portal-auth: ok");
 }
 

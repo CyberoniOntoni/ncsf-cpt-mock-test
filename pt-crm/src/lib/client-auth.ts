@@ -11,7 +11,7 @@ import {
   clients,
   organizations,
 } from "@/db/schema";
-import { sendEmail } from "@/lib/email";
+import { isMockEmail, sendEmail } from "@/lib/email";
 import { REQUIRED_PORTAL_DOCUMENTS } from "@/lib/portal-documents";
 import { id } from "@/lib/utils";
 
@@ -203,6 +203,11 @@ export async function requestClientOtp(opts: {
   const email = normalizePortalEmail(opts.email);
   if (!email.includes("@")) return { ok: false, error: "Enter a valid email" };
 
+  // Production + mock (e.g. AWS_SES_FROM unset) must not report sent.
+  if (process.env.NODE_ENV === "production" && isMockEmail()) {
+    return { ok: false, error: "Email is not configured" };
+  }
+
   const eligible = await findEligibleClients(email);
   if (!eligible.length) {
     // Uniform with single-studio success — no enumeration, no devCode.
@@ -284,8 +289,8 @@ export async function requestClientOtp(opts: {
   };
 }
 
-/** Latest unused, unexpired OTP org for email — used when verify URL has no org. */
-export async function latestOtpOrganizationId(
+/** Latest unused, unexpired OTP org — verify/resend only, never unauthenticated GET. */
+async function latestOtpOrganizationId(
   email: string
 ): Promise<string | null> {
   const normalized = normalizePortalEmail(email);
@@ -308,7 +313,7 @@ export async function latestOtpOrganizationId(
 
 export async function verifyClientOtp(opts: {
   email: string;
-  organizationId: string;
+  organizationId?: string | null;
   code: string;
   ipAddress?: string | null;
   userAgent?: string | null;
@@ -317,6 +322,13 @@ export async function verifyClientOtp(opts: {
   const code = (opts.code || "").replace(/\s/g, "");
   if (!/^\d{6}$/.test(code)) return { ok: false, error: "Enter the 6-digit code" };
 
+  // Org is resolved here (not on unauthenticated GET /portal/login/verify).
+  const organizationId =
+    (opts.organizationId || "").trim() ||
+    (await latestOtpOrganizationId(email)) ||
+    "";
+  if (!organizationId) return { ok: false, error: "No active code. Request a new one." };
+
   const db = await getDb();
   const [otp] = await db
     .select()
@@ -324,7 +336,7 @@ export async function verifyClientOtp(opts: {
     .where(
       and(
         eq(clientOtps.email, email),
-        eq(clientOtps.organizationId, opts.organizationId),
+        eq(clientOtps.organizationId, organizationId),
         isNull(clientOtps.usedAt)
       )
     )

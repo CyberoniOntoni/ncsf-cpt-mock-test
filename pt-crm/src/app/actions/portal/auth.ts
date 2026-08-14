@@ -38,7 +38,7 @@ export async function requestPortalOtpAction(input: {
 
 export async function verifyPortalOtpAction(input: {
   email: string;
-  organizationId: string;
+  organizationId?: string | null;
   code: string;
   redirectTo?: string | null;
 }) {
