@@ -123,12 +123,10 @@ function OtpRequestForm({ redirectTo }: { redirectTo?: string }) {
     Array<{ organizationId: string; organizationName: string }>
   >([]);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   function submit() {
     setError(null);
-    setNotice(null);
     start(async () => {
       const res = await requestPortalOtpAction({
         email,
@@ -143,18 +141,12 @@ function OtpRequestForm({ redirectTo }: { redirectTo?: string }) {
         return;
       }
       if ("sent" in res && res.sent) {
-        if (res.organizationId) {
-          const q = new URLSearchParams({
-            email,
-            org: res.organizationId,
-          });
-          if (redirectTo) q.set("redirectTo", redirectTo);
-          router.push(`/portal/login/verify?${q.toString()}`);
-          return;
-        }
-        setNotice(
-          "If this email is on a trainer’s roster, we sent a code. New here? Create an account and use a password."
-        );
+        // organizationId is never returned (anti-enumeration). Multi-studio
+        // clients already picked one; single-studio verify resolves org from OTP.
+        const q = new URLSearchParams({ email });
+        if (organizationId) q.set("org", organizationId);
+        if (redirectTo) q.set("redirectTo", redirectTo);
+        router.push(`/portal/login/verify?${q.toString()}`);
         return;
       }
       setError("Could not send a code");
@@ -204,7 +196,6 @@ function OtpRequestForm({ redirectTo }: { redirectTo?: string }) {
           </p>
         </div>
       )}
-      {notice && <p className="text-sm text-emerald-300">{notice}</p>}
       {error && (
         <p className="text-sm text-red-300" role="alert">
           {error}

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { PortalVerifyForm } from "@/components/portal/portal-verify-form";
 import { PublicSiteFooter } from "@/components/public-site-footer";
 import { PublicSiteHeader } from "@/components/public-site-header";
+import { latestOtpOrganizationId } from "@/lib/client-auth";
 
 export default async function PortalVerifyPage({
   searchParams,
@@ -10,7 +11,11 @@ export default async function PortalVerifyPage({
   searchParams: Promise<{ email?: string; org?: string; redirectTo?: string }>;
 }) {
   const { email, org, redirectTo } = await searchParams;
-  if (!email || !org) redirect("/portal/login");
+  if (!email) redirect("/portal/login");
+  // Multi-studio passes org from the picker; single-studio resolves from the OTP row
+  // so requestClientOtp need not return organizationId. Empty org keeps the form up for
+  // unknown emails (same path as known) — verify fails until a real code exists.
+  const organizationId = org || (await latestOtpOrganizationId(email)) || "";
   return (
     <div className="mkt-root min-h-dvh bg-[#12100e] text-stone-100">
       <PublicSiteHeader
@@ -33,7 +38,7 @@ export default async function PortalVerifyPage({
         <div className="mt-6">
           <PortalVerifyForm
             email={email}
-            organizationId={org}
+            organizationId={organizationId}
             redirectTo={redirectTo}
           />
         </div>

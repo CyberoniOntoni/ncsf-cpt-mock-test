@@ -11,7 +11,7 @@ import {
   clients,
   organizations,
 } from "@/db/schema";
-import { isMockEmail, sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
 import { REQUIRED_PORTAL_DOCUMENTS } from "@/lib/portal-documents";
 import { id } from "@/lib/utils";
 
@@ -196,7 +196,7 @@ export async function requestClientOtp(opts: {
   ipAddress?: string | null;
   userAgent?: string | null;
 }): Promise<
-  | { ok: true; sent: true; organizationId?: string; devCode?: string }
+  | { ok: true; sent: true; devCode?: string }
   | { ok: true; needsOrg: true; studios: PortalStudioChoice[] }
   | { ok: false; error: string }
 > {
@@ -205,6 +205,7 @@ export async function requestClientOtp(opts: {
 
   const eligible = await findEligibleClients(email);
   if (!eligible.length) {
+    // Uniform with single-studio success — no enumeration, no devCode.
     return { ok: true, sent: true };
   }
 
@@ -223,11 +224,6 @@ export async function requestClientOtp(opts: {
     eligible.find((r) => r.organizationId === opts.organizationId) || eligible[0];
   if (!match) {
     return { ok: false, error: "Studio not found for this email" };
-  }
-
-  // Production must not log OTPs via mock email; require real delivery.
-  if (process.env.NODE_ENV === "production" && isMockEmail()) {
-    return { ok: false, error: "Email is not configured" };
   }
 
   const db = await getDb();
@@ -270,18 +266,44 @@ export async function requestClientOtp(opts: {
     expiresAt: new Date(Date.now() + OTP_TTL_MS),
   });
 
-  await sendEmail({
+  const { delivered } = await sendEmail({
     to: email,
     subject: `Your FloorScribe code for ${match.organizationName}`,
     text: `Hi ${match.firstName},\n\nYour FloorScribe client portal code is ${code}. It expires in 10 minutes.\n\nIf you did not request this, ignore this email.`,
   });
 
+  if (!delivered && process.env.NODE_ENV === "production") {
+    return { ok: false, error: "Email is not configured" };
+  }
+
+  // Never return organizationId (enumeration). Multi-studio uses needsOrg + client pick.
   return {
     ok: true,
     sent: true,
-    organizationId: match.organizationId,
     ...(process.env.NODE_ENV !== "production" ? { devCode: code } : {}),
   };
+}
+
+/** Latest unused, unexpired OTP org for email — used when verify URL has no org. */
+export async function latestOtpOrganizationId(
+  email: string
+): Promise<string | null> {
+  const normalized = normalizePortalEmail(email);
+  if (!normalized.includes("@")) return null;
+  const db = await getDb();
+  const [row] = await db
+    .select({ organizationId: clientOtps.organizationId })
+    .from(clientOtps)
+    .where(
+      and(
+        eq(clientOtps.email, normalized),
+        isNull(clientOtps.usedAt),
+        gte(clientOtps.expiresAt, new Date())
+      )
+    )
+    .orderBy(desc(clientOtps.createdAt))
+    .limit(1);
+  return row?.organizationId ?? null;
 }
 
 export async function verifyClientOtp(opts: {

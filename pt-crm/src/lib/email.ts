@@ -1,7 +1,7 @@
 /**
  * Outbound email adapter.
  * Default / MOCK_EMAIL=true: log only (dev + smoke).
- * Optional AWS SES when AWS_SES_FROM is set (lazy import so SES is not a hard dep).
+ * No SES SDK: without mock there is no working transport → delivered false.
  */
 
 export type OutboundEmail = {
@@ -9,6 +9,8 @@ export type OutboundEmail = {
   subject: string;
   text: string;
 };
+
+export type SendEmailResult = { delivered: boolean };
 
 const recent: OutboundEmail[] = [];
 
@@ -30,7 +32,7 @@ export function peekLastEmailTo(to: string): OutboundEmail | undefined {
   return undefined;
 }
 
-export async function sendEmail(msg: OutboundEmail): Promise<void> {
+export async function sendEmail(msg: OutboundEmail): Promise<SendEmailResult> {
   recent.push(msg);
   if (recent.length > 50) recent.shift();
 
@@ -41,17 +43,19 @@ export async function sendEmail(msg: OutboundEmail): Promise<void> {
     } else {
       console.info(`[email:mock] to=${msg.to} subject=${msg.subject}\n${msg.text}`);
     }
-    return;
+    return { delivered: true };
   }
 
   const from = process.env.AWS_SES_FROM || "";
   if (!from) {
-    console.info(`[email:mock-fallback] missing AWS_SES_FROM; to=${msg.to}`);
-    return;
+    console.info(`[email:no-transport] missing AWS_SES_FROM; to=${msg.to}`);
+    return { delivered: false };
   }
 
+  // SES package is intentionally not a dependency; treat as undelivered.
   console.warn(
-    "[email] SES package is not installed. Set MOCK_EMAIL=true or add @aws-sdk/client-ses. Logged instead."
+    "[email] SES package is not installed. Set MOCK_EMAIL=true or add @aws-sdk/client-ses."
   );
-  console.info(`[email:queued] to=${msg.to} subject=${msg.subject}`);
+  console.info(`[email:no-transport] to=${msg.to} subject=${msg.subject}`);
+  return { delivered: false };
 }
