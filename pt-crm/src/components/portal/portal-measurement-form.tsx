@@ -13,7 +13,8 @@ export function PortalMeasurementForm() {
       className="space-y-3 rounded-xl border border-zinc-800 p-4"
       onSubmit={async (e) => {
         e.preventDefault();
-        const fd = new FormData(e.currentTarget);
+        const form = e.currentTarget;
+        const fd = new FormData(form);
         const num = (k: string) => {
           const v = String(fd.get(k) || "").trim();
           return v ? Number(v) : null;
@@ -26,7 +27,7 @@ export function PortalMeasurementForm() {
         });
         setMeasMsg(result.ok ? "Measurement saved." : result.error);
         if (result.ok) {
-          e.currentTarget.reset();
+          form.reset();
           router.refresh();
         }
       }}
