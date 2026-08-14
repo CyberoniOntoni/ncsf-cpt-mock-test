@@ -346,18 +346,24 @@ export async function issueSeekerSession(seeker: SeekerPublic) {
     maxAge: SESSION_DAYS * 24 * 60 * 60,
     secure: process.env.NODE_ENV === "production",
   });
-  const { firstStudioForEmail, issuePortalSession } = await import(
-    "@/lib/client-auth"
-  );
-  const studio = await firstStudioForEmail(seeker.email);
+  const { issuePortalSession, persistStudioSession, studioProvenByOtp } =
+    await import("@/lib/client-auth");
+  const studio = await studioProvenByOtp(seeker.email);
+  if (studio) {
+    await persistStudioSession({
+      seekerId: seeker.id,
+      email: seeker.email,
+      firstName: seeker.firstName,
+      lastName: seeker.lastName,
+      studio,
+    });
+    return;
+  }
   await issuePortalSession({
     seekerId: seeker.id,
     email: seeker.email,
     firstName: seeker.firstName,
     lastName: seeker.lastName,
-    clientId: studio?.clientId ?? null,
-    organizationId: studio?.organizationId ?? null,
-    organizationName: studio?.organizationName ?? "FloorScribe",
   });
 }
 

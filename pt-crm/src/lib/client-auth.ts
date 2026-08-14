@@ -114,18 +114,68 @@ export async function firstStudioForEmail(
   };
 }
 
+/** Studio attach only after a prior OTP session row exists for that client. */
+export async function studioProvenByOtp(
+  rawEmail: string
+): Promise<PortalStudio | null> {
+  const email = normalizePortalEmail(rawEmail);
+  if (!email.includes("@")) return null;
+  const eligible = await findEligibleClients(email);
+  if (!eligible.length) return null;
+  const db = await getDb();
+  for (const row of eligible) {
+    const [sess] = await db
+      .select({ id: clientSessions.id })
+      .from(clientSessions)
+      .where(eq(clientSessions.clientId, row.clientId))
+      .limit(1);
+    if (!sess) continue;
+    return {
+      clientId: row.clientId,
+      organizationId: row.organizationId,
+      organizationName: row.organizationName,
+    };
+  }
+  return null;
+}
+
 export async function resolvePortalStudio(
   session: ClientSessionPayload
 ): Promise<PortalStudio | null> {
+  const email = normalizePortalEmail(session.email);
   if (session.clientId && session.organizationId) {
-    return {
-      clientId: session.clientId,
-      organizationId: session.organizationId,
-      organizationName: session.organizationName,
-    };
+    const db = await getDb();
+    const [row] = await db
+      .select({
+        clientId: clients.id,
+        status: clients.status,
+        email: clients.email,
+        organizationId: clients.organizationId,
+        organizationName: organizations.name,
+      })
+      .from(clients)
+      .innerJoin(organizations, eq(organizations.id, clients.organizationId))
+      .where(
+        and(
+          eq(clients.id, session.clientId),
+          eq(clients.organizationId, session.organizationId)
+        )
+      )
+      .limit(1);
+    if (
+      row &&
+      (row.status === "active" || row.status === "paused") &&
+      normalizePortalEmail(row.email || "") === email
+    ) {
+      return {
+        clientId: row.clientId,
+        organizationId: row.organizationId,
+        organizationName: row.organizationName,
+      };
+    }
   }
-  if (!session.email) return null;
-  return firstStudioForEmail(session.email);
+  if (!email) return null;
+  return studioProvenByOtp(email);
 }
 
 export async function listPortalStudiosForEmail(
@@ -299,19 +349,6 @@ export async function verifyClientOtp(opts: {
 
   await ensureRequiredDocuments(client.organizationId, client.id);
 
-  const sessionId = id("csess");
-  const token = randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  await db.insert(clientSessions).values({
-    id: sessionId,
-    organizationId: client.organizationId,
-    clientId: client.id,
-    token,
-    ipAddress: opts.ipAddress || null,
-    userAgent: opts.userAgent || null,
-    expiresAt,
-  });
-
   const { ensureSeekerForPerson } = await import("@/lib/seeker-auth");
   const seeker = await ensureSeekerForPerson({
     email: client.email || email,
@@ -319,21 +356,58 @@ export async function verifyClientOtp(opts: {
     lastName: client.lastName,
   });
 
-  const jwt = await signClientJwt({
-    role: "client",
+  await persistStudioSession({
     seekerId: seeker.id,
-    clientId: client.id,
-    organizationId: client.organizationId,
-    organizationName: org?.name || "Studio",
     email: client.email || email,
     firstName: client.firstName,
     lastName: client.lastName,
+    studio: {
+      clientId: client.id,
+      organizationId: client.organizationId,
+      organizationName: org?.name || "Studio",
+    },
+    ipAddress: opts.ipAddress,
+    userAgent: opts.userAgent,
+  });
+  return { ok: true };
+}
+
+export async function persistStudioSession(opts: {
+  seekerId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  studio: PortalStudio;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}) {
+  const db = await getDb();
+  const sessionId = id("csess");
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  await db.insert(clientSessions).values({
+    id: sessionId,
+    organizationId: opts.studio.organizationId,
+    clientId: opts.studio.clientId,
+    token,
+    ipAddress: opts.ipAddress || null,
+    userAgent: opts.userAgent || null,
+    expiresAt,
+  });
+
+  const jwt = await signClientJwt({
+    role: "client",
+    seekerId: opts.seekerId,
+    clientId: opts.studio.clientId,
+    organizationId: opts.studio.organizationId,
+    organizationName: opts.studio.organizationName,
+    email: opts.email,
+    firstName: opts.firstName,
+    lastName: opts.lastName,
     sessionId,
     token,
   });
-
   await persistClientCookie(jwt);
-  return { ok: true };
 }
 
 export async function issuePortalSession(opts: {
