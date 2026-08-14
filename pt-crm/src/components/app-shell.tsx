@@ -12,6 +12,7 @@ import {
   Home,
   LayoutGrid,
   Menu,
+  IdCard,
   Settings,
   Timer,
   Users,
@@ -39,6 +40,7 @@ const AREA_ICONS = {
 const LEAF_ICONS: Record<string, typeof Home> = {
   "/clients": Users,
   "/calendar": CalendarDays,
+  "/card": IdCard,
   "/programs": ClipboardList,
   "/sessions": Timer,
   "/library": Dumbbell,

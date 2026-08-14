@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 function redirectUnpaid() {
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: "/settings?paid=0" },
+    headers: { Location: "/card?paid=0" },
   });
 }
 
@@ -35,6 +35,6 @@ export async function GET(req: Request) {
   await markPlatformChargePaid({ chargeId, paidAt: new Date() });
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: "/settings?paid=1" },
+    headers: { Location: "/card?paid=1" },
   });
 }

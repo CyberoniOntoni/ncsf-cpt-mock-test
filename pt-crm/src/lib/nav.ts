@@ -30,11 +30,12 @@ export const NAV_AREAS: NavArea[] = [
     id: "people",
     href: "/clients",
     label: "People",
-    match: ["/clients", "/calendar", "/intros"],
+    match: ["/clients", "/calendar", "/intros", "/card"],
     children: [
       { href: "/clients", label: "Clients" },
       { href: "/calendar", label: "Calendar" },
       { href: "/intros", label: "Intros" },
+      { href: "/card", label: "Trainer card" },
     ],
   },
   {

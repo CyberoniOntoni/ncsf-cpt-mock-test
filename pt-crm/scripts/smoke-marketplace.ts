@@ -308,8 +308,8 @@ async function main() {
     chargeId: "chg_test",
     amountCents: 2900,
     currency: "usd",
-    successUrl: "http://127.0.0.1:4000/settings",
-    cancelUrl: "http://127.0.0.1:4000/settings",
+    successUrl: "http://127.0.0.1:4000/card",
+    cancelUrl: "http://127.0.0.1:4000/card",
   });
   assert(
     session.url.includes("/api/stripe/mock-complete?chargeId="),

@@ -202,8 +202,9 @@ export async function saveMarketplaceListingAction(input: {
         .set({ title: input.credentials.trim(), updatedAt: new Date() })
         .where(eq(users.id, session.userId));
     }
-    revalidatePath("/settings");
+    revalidatePath("/card");
     revalidatePath("/find");
+    revalidatePath("/intros");
     return { ok: true, profileId };
   } catch (e) {
     return {
@@ -458,8 +459,8 @@ export async function startPlatformCheckoutAction(input: {
       chargeId: chargeId!,
       amountCents,
       currency: "usd",
-      successUrl: `${origin}/settings?paid=1`,
-      cancelUrl: `${origin}/settings?paid=0`,
+      successUrl: `${origin}/card?paid=1`,
+      cancelUrl: `${origin}/card?paid=0`,
     });
     await db
       .update(platformCharges)

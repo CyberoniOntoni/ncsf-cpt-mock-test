@@ -32,8 +32,8 @@ export default async function IntrosPage() {
         <Card>
           <p className="text-sm text-amber-400">
             Find a trainer is hiding your card. Pay in{" "}
-            <Link href="/settings" className="text-emerald-400">
-              Settings
+            <Link href="/card" className="text-emerald-400">
+              Trainer card
             </Link>
             .
           </p>
@@ -43,8 +43,8 @@ export default async function IntrosPage() {
         <Card>
           <p className="text-sm text-zinc-500">
             No intro requests yet. Publish your trainer card in{" "}
-            <Link href="/settings" className="text-emerald-400">
-              Settings
+            <Link href="/card" className="text-emerald-400">
+              Trainer card
             </Link>{" "}
             — clients send intros from /find.
           </p>

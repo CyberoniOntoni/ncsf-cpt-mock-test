@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import { getDb } from "@/db";
 import { organizations } from "@/db/schema";
 import {
@@ -13,8 +14,6 @@ import { PageShell } from "@/components/page-shell";
 import { SettingsOrgForm } from "@/components/settings-org-form";
 import { SettingsProfileForm } from "@/components/settings-profile-form";
 import { SettingsTeamPanel } from "@/components/settings-team-panel";
-import { MarketplaceListingForm } from "@/components/marketplace-listing-form";
-import { getMyMarketplaceListingAction } from "@/app/actions/marketplace-trainer";
 import { Badge, Card, PageHeader } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +33,9 @@ export default async function SettingsPage({
   searchParams: Promise<{ paid?: string }>;
 }) {
   const paid = (await searchParams).paid;
+  if (paid === "1" || paid === "0") {
+    redirect(`/card?paid=${paid}`);
+  }
   const { session, user } = await getUserProfile();
   const db = await getDb();
   const [org] = await db
@@ -63,39 +65,14 @@ export default async function SettingsPage({
     : [];
   const appOrigin =
     (process.env.APP_URL || "").replace(/\/$/, "") || "http://127.0.0.1:3000";
-  const listing =
-    session.role === "owner" ||
-    session.role === "admin" ||
-    session.role === "trainer"
-      ? await getMyMarketplaceListingAction()
-      : null;
 
   return (
     <PageShell className="space-y-4">
       <PageHeader
         title="Settings"
         eyebrow={<AreaEyebrow areaId="studio" current="Settings" />}
-        description="Your profile, trainer card, practice, team, deploy, and AI"
+        description="Account, practice, team, deploy, and AI"
       />
-      {paid === "1" ? (
-        <p className="text-sm text-emerald-400">
-          Featured / fee marked. Refresh if the badge is not updated yet.
-        </p>
-      ) : null}
-      {paid === "0" ? (
-        <p className="text-sm text-zinc-400">Checkout canceled.</p>
-      ) : null}
-
-      {listing ? (
-        <Card>
-          <MarketplaceListingForm
-            profile={listing.profile}
-            gyms={listing.gyms}
-            dueIntroCharges={listing.dueIntroCharges}
-            defaultCredentials={user?.title || ""}
-          />
-        </Card>
-      ) : null}
 
       <Card>
         <h2 className="font-medium">Account</h2>
