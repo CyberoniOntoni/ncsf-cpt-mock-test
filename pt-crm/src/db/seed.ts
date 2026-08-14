@@ -4,13 +4,20 @@ import { getDb, getPGlite } from "./index";
 import {
   clients,
   gymFacilities,
+  introRequests,
   marketplaceProfileFacilities,
   marketplaceProfiles,
   memberships,
   organizations,
+  seekerProfiles,
   users,
 } from "./schema";
 import { id } from "@/lib/utils";
+import {
+  catalogFacilityRow,
+  gymCatalogEntry,
+  gymFacilityId,
+} from "@/lib/marketplace/gym-catalog";
 import { seedLibraryIfNeeded } from "./seed-library";
 import { seedPlaybooksIfNeeded } from "./seed-playbooks";
 
@@ -175,10 +182,110 @@ async function ensureDemoClients(forceOrgId?: string) {
   }
 }
 
-export async function seedMarketplaceIfNeeded() {
+const DEMO_TAMPINES_SLUG = "anytime-fitness-tampines";
+const DEMO_GYM_SLUGS = [DEMO_TAMPINES_SLUG, "anytime-fitness-orchard"];
+
+async function ensureDemoCatalogGyms() {
   const db = await getDb();
-  const existing = await db.select().from(gymFacilities).limit(1);
-  if (existing.length > 0) return;
+  for (const slug of DEMO_GYM_SLUGS) {
+    const entry = gymCatalogEntry(slug);
+    if (!entry) continue;
+    const row = catalogFacilityRow(entry);
+    const [byId] = await db
+      .select({ id: gymFacilities.id })
+      .from(gymFacilities)
+      .where(eq(gymFacilities.id, row.id))
+      .limit(1);
+    if (byId) continue;
+    const [bySlug] = await db
+      .select({ id: gymFacilities.id })
+      .from(gymFacilities)
+      .where(eq(gymFacilities.slug, row.slug))
+      .limit(1);
+    if (bySlug) continue;
+    await db.insert(gymFacilities).values(row).onConflictDoNothing();
+  }
+}
+
+async function reassignFacility(fromId: string, toId: string) {
+  if (fromId === toId) return;
+  const db = await getDb();
+  const links = await db
+    .select()
+    .from(marketplaceProfileFacilities)
+    .where(eq(marketplaceProfileFacilities.facilityId, fromId));
+  for (const link of links) {
+    const destLinks = await db
+      .select()
+      .from(marketplaceProfileFacilities)
+      .where(eq(marketplaceProfileFacilities.profileId, link.profileId));
+    if (destLinks.some((l) => l.facilityId === toId)) {
+      await db
+        .delete(marketplaceProfileFacilities)
+        .where(eq(marketplaceProfileFacilities.id, link.id));
+    } else {
+      await db
+        .update(marketplaceProfileFacilities)
+        .set({ facilityId: toId })
+        .where(eq(marketplaceProfileFacilities.id, link.id));
+    }
+  }
+  await db
+    .update(introRequests)
+    .set({ facilityId: toId })
+    .where(eq(introRequests.facilityId, fromId));
+  await db
+    .update(seekerProfiles)
+    .set({ preferredFacilityId: toId })
+    .where(eq(seekerProfiles.preferredFacilityId, fromId));
+}
+
+async function remapLegacyDemoGyms() {
+  const db = await getDb();
+  const all = await db.select().from(gymFacilities);
+  const bySlug = new Map(all.map((g) => [g.slug, g]));
+  const remaps = [
+    {
+      oldSlugs: ["anytime-tampines"],
+      oldIds: ["gym_demo_tampines"],
+      newSlug: DEMO_TAMPINES_SLUG,
+    },
+    {
+      oldSlugs: ["anytime-orchard"],
+      oldIds: ["gym_demo_orchard"],
+      newSlug: "anytime-fitness-orchard",
+    },
+  ];
+  for (const r of remaps) {
+    const dest = bySlug.get(r.newSlug);
+    if (!dest) continue;
+    const sources = all.filter(
+      (g) => r.oldIds.includes(g.id) || r.oldSlugs.includes(g.slug)
+    );
+    for (const src of sources) {
+      if (src.id === dest.id) continue;
+      await reassignFacility(src.id, dest.id);
+      await db.delete(gymFacilities).where(eq(gymFacilities.id, src.id));
+    }
+  }
+}
+
+let marketplaceSeedPromise: Promise<void> | null = null;
+
+export async function seedMarketplaceIfNeeded() {
+  if (!marketplaceSeedPromise) {
+    marketplaceSeedPromise = runMarketplaceSeed().catch((err) => {
+      marketplaceSeedPromise = null;
+      throw err;
+    });
+  }
+  await marketplaceSeedPromise;
+}
+
+async function runMarketplaceSeed() {
+  const db = await getDb();
+  await ensureDemoCatalogGyms();
+  await remapLegacyDemoGyms();
 
   const [demoUser] = await db
     .select()
@@ -188,31 +295,14 @@ export async function seedMarketplaceIfNeeded() {
   const [demoOrg] = await db.select().from(organizations).limit(1);
   if (!demoUser || !demoOrg) return;
 
-  await db.insert(gymFacilities).values([
-    {
-      id: "gym_demo_tampines",
-      name: "Anytime Fitness Tampines",
-      slug: "anytime-tampines",
-      brand: "Anytime Fitness",
-      city: "Singapore",
-      region: "Tampines",
-      country: "SG",
-      lat: 1.3496,
-      lng: 103.9568,
-    },
-    {
-      id: "gym_demo_orchard",
-      name: "Anytime Fitness Orchard",
-      slug: "anytime-orchard",
-      brand: "Anytime Fitness",
-      city: "Singapore",
-      region: "Orchard",
-      country: "SG",
-      lat: 1.3048,
-      lng: 103.8318,
-    },
-  ]);
+  const [existingProfile] = await db
+    .select({ id: marketplaceProfiles.id })
+    .from(marketplaceProfiles)
+    .where(eq(marketplaceProfiles.id, "mp_demo_alex"))
+    .limit(1);
+  if (existingProfile) return;
 
+  const tampinesId = gymFacilityId(DEMO_TAMPINES_SLUG);
   await db.insert(marketplaceProfiles).values({
     id: "mp_demo_alex",
     organizationId: demoOrg.id,
@@ -238,7 +328,7 @@ export async function seedMarketplaceIfNeeded() {
   await db.insert(marketplaceProfileFacilities).values({
     id: "mpf_demo_alex_tampines",
     profileId: "mp_demo_alex",
-    facilityId: "gym_demo_tampines",
+    facilityId: tampinesId,
   });
 }
 

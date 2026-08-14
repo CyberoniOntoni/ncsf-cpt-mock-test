@@ -1,10 +1,22 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { TRAINING_AREAS } from "@/lib/marketplace/areas";
+import {
+  INDEPENDENT_NETWORK,
+  gymOutletLabel,
+  gymsInNetwork,
+} from "@/lib/marketplace/gym-catalog";
 
-type Gym = { id: string; name: string; slug: string; city: string; brand: string | null };
+type Gym = {
+  id: string;
+  name: string;
+  slug: string;
+  city: string;
+  brand: string | null;
+  independent?: boolean;
+};
 
 export function FindSearch(props: {
   gyms: Gym[];
@@ -19,6 +31,13 @@ export function FindSearch(props: {
   const [brand, setBrand] = useState(props.brand || "");
   const [area, setArea] = useState(props.area || "");
   const [radius, setRadius] = useState(props.radius || "15");
+  const gymChoices = useMemo(() => {
+    const list = gymsInNetwork(props.gyms, brand);
+    return list.slice().sort((a, b) => {
+      if (brand === INDEPENDENT_NETWORK) return a.name.localeCompare(b.name);
+      return gymOutletLabel(a).localeCompare(gymOutletLabel(b));
+    });
+  }, [props.gyms, brand]);
 
   function go() {
     const q = new URLSearchParams();
@@ -52,6 +71,24 @@ export function FindSearch(props: {
           ))}
         </select>
       </label>
+      <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-sm">
+        <span className="text-zinc-500">Gym network</span>
+        <select
+          className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
+          value={brand}
+          onChange={(e) => {
+            setBrand(e.target.value);
+            setGym("");
+          }}
+        >
+          <option value="">Any network</option>
+          {props.brands.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
+      </label>
       <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm">
         <span className="text-zinc-500">Gym</span>
         <select
@@ -59,25 +96,14 @@ export function FindSearch(props: {
           value={gym}
           onChange={(e) => setGym(e.target.value)}
         >
-          <option value="">Any gym</option>
-          {props.gyms.map((g) => (
+          <option value="">
+            {brand ? "Any gym in this network" : "Any gym"}
+          </option>
+          {gymChoices.map((g) => (
             <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex min-w-[10rem] flex-1 flex-col gap-1 text-sm">
-        <span className="text-zinc-500">Gym network</span>
-        <select
-          className="min-h-11 rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-        >
-          <option value="">Any network</option>
-          {props.brands.map((b) => (
-            <option key={b} value={b}>
-              {b}
+              {brand && brand !== INDEPENDENT_NETWORK
+                ? gymOutletLabel(g)
+                : g.name}
             </option>
           ))}
         </select>

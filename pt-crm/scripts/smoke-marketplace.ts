@@ -124,6 +124,23 @@ async function main() {
     networkOnly.every((p) => p.id !== "far") && networkOnly.length === 2,
     "network filter keeps Anytime only"
   );
+  const boutique = {
+    id: "boutique",
+    featuredUntil: null,
+    facilityIds: ["gym_u"],
+    brands: ["Independent / boutique"],
+    lat: 1.28,
+    lng: 103.85,
+  };
+  const indepOnly = rankMarketplaceProfiles([far, gymMatch, boutique], {
+    now,
+    brand: "Independent / boutique",
+    radiusKm: 80,
+  });
+  assert(
+    indepOnly.length === 1 && indepOnly[0].id === "boutique",
+    "independent network filter"
+  );
 
   assert(
     introFeeDecision({ acceptedIntroCountForOrg: 0, unpaidIntroCharges: 0 })
@@ -161,7 +178,19 @@ async function main() {
   await seedIfNeeded();
   const db = await getDb();
   const gyms = await db.select().from(gymFacilities);
-  assert(gyms.some((g) => g.slug === "anytime-tampines"), "demo tampines gym");
+  assert(
+    gyms.some((g) => g.slug === "anytime-fitness-tampines"),
+    "catalog tampines gym"
+  );
+  const listed = await q.listPublicGyms();
+  assert(
+    listed.filter((g) => g.brand === "Anytime Fitness").length > 20,
+    "anytime fitness outlets listed"
+  );
+  assert(
+    listed.some((g) => g.slug === "ufit-cbd" && g.independent),
+    "independent gyms listed under boutique group"
+  );
   const [alex] = await db
     .select()
     .from(marketplaceProfiles)
@@ -177,7 +206,7 @@ async function main() {
   const cards = await q.searchPublicProfiles({
     lat: 1.3496,
     lng: 103.9568,
-    facilityId: "gym_demo_tampines",
+    facilityId: "gym_anytime-fitness-tampines",
     radiusKm: 20,
   });
   assert(cards.some((c) => c.id === "mp_demo_alex"), "search finds alex");
@@ -226,7 +255,7 @@ async function main() {
     preferredArea: "tampines",
     radiusKm: 15,
     published: true,
-    facilityIds: ["gym_demo_tampines"],
+    facilityIds: ["gym_anytime-fitness-tampines"],
     serviceModes: "studio,at_gym",
   });
   const alexCard = await q.getPublicProfile("mp_demo_alex");
@@ -239,7 +268,7 @@ async function main() {
     profileId: "mp_demo_alex",
     seekerEmail: firstEmail,
     seekerName: "Sam Seeker",
-    facilityId: "gym_demo_tampines",
+    facilityId: "gym_anytime-fitness-tampines",
     message: "I train at Tampines three mornings a week.",
   });
   assert(first.ok && "introId" in first, "intro created");
@@ -364,12 +393,12 @@ async function main() {
   assert(!badLogin.ok, "bad seeker password rejected");
   if (createdSeeker.ok) {
     const updated = await updateSeekerPrefs(createdSeeker.seeker.id, {
-      preferredFacilityId: "gym_demo_tampines",
+      preferredFacilityId: "gym_anytime-fitness-tampines",
       preferredBrand: "Anytime Fitness",
       preferredArea: "tampines",
     });
     assert(updated.preferredBrand === "Anytime Fitness", "seeker network saved");
-    assert(updated.preferredFacilityId === "gym_demo_tampines", "seeker gym saved");
+    assert(updated.preferredFacilityId === "gym_anytime-fitness-tampines", "seeker gym saved");
     assert(updated.preferredArea === "tampines", "seeker area slug saved");
     assert(updated.city === "Singapore", "area sets city");
     const mapped = findTrainingArea(updated.preferredArea);

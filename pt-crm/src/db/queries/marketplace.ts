@@ -8,6 +8,14 @@ import {
   users,
 } from "@/db/schema";
 import { listingVisibleInSearch } from "@/lib/marketplace/fees";
+import {
+  catalogAsPublicGyms,
+  catalogFacilityRow,
+  gymCatalogEntry,
+  gymIsIndependent,
+  gymNetworkOf,
+  listGymNetworks,
+} from "@/lib/marketplace/gym-catalog";
 import { rankMarketplaceProfiles } from "@/lib/marketplace/rank";
 
 export type PublicProfileCard = {
@@ -59,29 +67,74 @@ async function unpaidIntroCounts(
 }
 
 export async function listPublicGyms(): Promise<
-  { id: string; name: string; slug: string; city: string; brand: string | null }[]
+  {
+    id: string;
+    name: string;
+    slug: string;
+    city: string;
+    brand: string | null;
+    independent: boolean;
+  }[]
 > {
   const db = await getDb();
   const rows = await db.select().from(gymFacilities);
-  return rows.map((g) => ({
-    id: g.id,
-    name: g.name,
-    slug: g.slug,
-    city: g.city,
-    brand: g.brand,
-  }));
+  const byId = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      slug: string;
+      city: string;
+      brand: string | null;
+      independent: boolean;
+    }
+  >(catalogAsPublicGyms().map((g) => [g.id, g]));
+  for (const g of rows) {
+    if (byId.has(g.id)) continue;
+    byId.set(g.id, {
+      id: g.id,
+      name: g.name,
+      slug: g.slug,
+      city: g.city,
+      brand: g.brand,
+      independent: gymIsIndependent(g),
+    });
+  }
+  return [...byId.values()];
+}
+
+/** Persist catalog rows so facility FKs succeed for selected gyms. */
+export async function ensureGymFacilities(ids: string[]): Promise<void> {
+  const unique = [...new Set(ids)].filter(Boolean);
+  if (unique.length === 0) return;
+  const db = await getDb();
+  for (const facilityId of unique) {
+    const slug = facilityId.startsWith("gym_")
+      ? facilityId.slice(4)
+      : facilityId;
+    const entry = gymCatalogEntry(slug);
+    if (!entry) continue;
+    const row = catalogFacilityRow(entry);
+    const [existing] = await db
+      .select({ id: gymFacilities.id })
+      .from(gymFacilities)
+      .where(eq(gymFacilities.id, row.id))
+      .limit(1);
+    if (existing) continue;
+    const [bySlug] = await db
+      .select({ id: gymFacilities.id })
+      .from(gymFacilities)
+      .where(eq(gymFacilities.slug, row.slug))
+      .limit(1);
+    if (bySlug) continue;
+    await db.insert(gymFacilities).values(row).onConflictDoNothing();
+  }
 }
 
 export function listPublicBrands(
-  gyms: { brand: string | null }[]
+  gyms: { slug: string; brand: string | null; independent?: boolean }[]
 ): string[] {
-  return [
-    ...new Set(
-      gyms
-        .map((g) => (g.brand || "").trim())
-        .filter(Boolean)
-    ),
-  ].sort((a, b) => a.localeCompare(b));
+  return listGymNetworks(gyms);
 }
 
 export async function searchPublicProfiles(input: {
@@ -159,7 +212,10 @@ export async function searchPublicProfiles(input: {
       const brands = [
         ...new Set(
           fids
-            .map((fid) => gymById.get(fid)?.brand)
+            .map((fid) => {
+              const gym = gymById.get(fid);
+              return gym ? gymNetworkOf(gym) : null;
+            })
             .filter((b): b is string => !!b)
         ),
       ];

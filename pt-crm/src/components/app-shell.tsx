@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ClipboardList,
   Dumbbell,
+  Handshake,
   History,
   Home,
   LayoutGrid,
@@ -40,6 +41,7 @@ const AREA_ICONS = {
 const LEAF_ICONS: Record<string, typeof Home> = {
   "/clients": Users,
   "/calendar": CalendarDays,
+  "/intros": Handshake,
   "/card": IdCard,
   "/programs": ClipboardList,
   "/sessions": Timer,

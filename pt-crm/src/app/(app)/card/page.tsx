@@ -25,7 +25,7 @@ export default async function TrainerCardPage({
       <PageHeader
         title="Trainer card"
         eyebrow={<AreaEyebrow areaId="people" current="Trainer card" />}
-        description="What people see on Find a trainer. Intros land next door."
+        description="Public listing on Find a trainer. Intros from that page land next door."
       />
       {paid === "1" ? (
         <p className="text-sm text-emerald-400">

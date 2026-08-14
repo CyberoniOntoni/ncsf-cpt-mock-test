@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   saveMarketplaceListingAction,
   startPlatformCheckoutAction,
 } from "@/app/actions/marketplace-trainer";
-import { TRAINING_AREAS } from "@/lib/marketplace/areas";
+import { GymFacilityPicker } from "@/components/gym-facility-picker";
+import { FindTrainerMeta } from "@/components/find-trainer-meta";
+import { findTrainingArea, TRAINING_AREAS } from "@/lib/marketplace/areas";
 import {
   MARKETPLACE_CURRENCIES,
   MARKETPLACE_SERVICE_MODES,
@@ -32,9 +35,17 @@ type Profile = {
   serviceModes: string;
 };
 
+type Gym = {
+  id: string;
+  name: string;
+  slug: string;
+  brand: string | null;
+  independent?: boolean;
+};
+
 export function MarketplaceListingForm(props: {
   profile: Profile | null;
-  gyms: { id: string; name: string; slug: string }[];
+  gyms: Gym[];
   dueIntroCharges?: { id: string; amountCents: number }[];
   defaultCredentials?: string;
 }) {
@@ -42,76 +53,152 @@ export function MarketplaceListingForm(props: {
   const dueIntroCharges = props.dueIntroCharges ?? [];
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const selectedSpecs = new Set(parseCsvSlugs(p?.specialties));
-  const selectedModes = new Set(
-    parseCsvSlugs(p?.serviceModes || "studio,at_gym")
+  const [credentials, setCredentials] = useState(
+    p?.credentials || props.defaultCredentials || ""
   );
+  const [headline, setHeadline] = useState(p?.headline || "");
+  const [bio, setBio] = useState(p?.bio || "");
+  const [area, setArea] = useState(p?.preferredArea || "");
+  const [facilityIds, setFacilityIds] = useState(p?.facilityIds ?? []);
+  const [modes, setModes] = useState(
+    () => new Set(parseCsvSlugs(p?.serviceModes || "studio,at_gym"))
+  );
+  const [specs, setSpecs] = useState(
+    () => new Set(parseCsvSlugs(p?.specialties))
+  );
+  const [currency, setCurrency] = useState(p?.currency || "SGD");
+  const [hourly, setHourly] = useState(
+    p?.hourlyRateCents != null ? String(p.hourlyRateCents / 100) : ""
+  );
+  const [session, setSession] = useState(
+    p?.sessionRateCents != null ? String(p.sessionRateCents / 100) : ""
+  );
+  const [published, setPublished] = useState(!!p?.published);
+
+  const gymById = useMemo(
+    () => new Map(props.gyms.map((g) => [g.id, g])),
+    [props.gyms]
+  );
+  const areaRow = findTrainingArea(area);
+  const facilityNames = facilityIds
+    .map((id) => gymById.get(id)?.name)
+    .filter((n): n is string => !!n);
+
+  function toggle(set: Set<string>, slug: string, on: boolean) {
+    const next = new Set(set);
+    if (on) next.add(slug);
+    else next.delete(slug);
+    return next;
+  }
 
   return (
     <form
-      className="space-y-5"
+      className="space-y-6"
       onSubmit={async (e) => {
         e.preventDefault();
         setPending(true);
-        const fd = new FormData(e.currentTarget);
-        const facilityIds = fd.getAll("facilityIds").map(String);
-        const specialties = fd.getAll("specialties").map(String).join(",");
-        const serviceModes = fd.getAll("serviceModes").map(String).join(",");
-        const hourlyRaw = String(fd.get("hourlyRate") || "").trim();
-        const sessionRaw = String(fd.get("sessionRate") || "").trim();
         const result = await saveMarketplaceListingAction({
-          headline: String(fd.get("headline") || ""),
-          bio: String(fd.get("bio") || ""),
-          credentials: String(fd.get("credentials") || ""),
-          specialties,
-          hourlyRateCents: hourlyRaw ? Math.round(Number(hourlyRaw) * 100) : null,
-          sessionRateCents: sessionRaw
-            ? Math.round(Number(sessionRaw) * 100)
+          headline,
+          bio,
+          credentials,
+          specialties: [...specs].join(","),
+          hourlyRateCents: hourly.trim()
+            ? Math.round(Number(hourly) * 100)
             : null,
-          currency: String(fd.get("currency") || "SGD"),
-          preferredArea: String(fd.get("preferredArea") || "") || null,
-          radiusKm: Number(fd.get("radiusKm") || 15),
-          published: fd.get("published") === "on",
+          sessionRateCents: session.trim()
+            ? Math.round(Number(session) * 100)
+            : null,
+          currency,
+          preferredArea: area || null,
+          radiusKm: Number(
+            (e.currentTarget.elements.namedItem("radiusKm") as HTMLInputElement)
+              ?.value || 15
+          ),
+          published,
           facilityIds,
-          serviceModes: serviceModes || "studio",
+          serviceModes: [...modes].join(",") || "studio",
         });
         setPending(false);
         setMsg(result.ok ? "Trainer card saved." : result.error);
       }}
     >
-      <div>
-        <h2 className="font-medium">Your trainer card</h2>
-        <p className="mt-1 text-xs text-zinc-500">
-          Credentials, where you train, specialties, and rates. This is what
-          clients see on Find a trainer.
+      <section className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Preview
+          </p>
+          <Link href="/find" className="text-xs text-emerald-400 hover:underline">
+            Open Find a trainer
+          </Link>
+        </div>
+        <h2 className="mt-2 font-medium">
+          {headline.trim() || "Your headline"}
+        </h2>
+        {bio.trim() ? (
+          <p className="mt-1 line-clamp-3 text-sm text-zinc-400">{bio}</p>
+        ) : (
+          <p className="mt-1 text-sm text-zinc-600">
+            Add a short bio so clients know how you coach.
+          </p>
+        )}
+        <FindTrainerMeta
+          credentials={credentials}
+          region={areaRow?.label}
+          city={areaRow?.city}
+          facilityNames={facilityNames}
+          specialties={[...specs]}
+          serviceModes={[...modes]}
+          hourlyRateCents={hourly.trim() ? Math.round(Number(hourly) * 100) : null}
+          sessionRateCents={
+            session.trim() ? Math.round(Number(session) * 100) : null
+          }
+          currency={currency}
+        />
+        <p className="mt-2 text-xs text-zinc-600">
+          {published
+            ? "This card is live on Find a trainer."
+            : "Hidden until you turn on “Show me on Find a trainer”."}
         </p>
-      </div>
+      </section>
 
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Credentials
         </legend>
-        <input
-          name="credentials"
-          defaultValue={p?.credentials || props.defaultCredentials || ""}
-          placeholder="e.g. NCSF-CPT, CSCS"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
-        <input
-          name="headline"
-          defaultValue={p?.headline || ""}
-          placeholder="Short headline (required to publish)"
-          className="min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3"
-        />
-        <textarea
-          name="bio"
-          defaultValue={p?.bio || ""}
-          placeholder="How you coach"
-          className="min-h-24 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-        />
+        <label className="block text-sm text-zinc-500">
+          Certifications
+          <input
+            name="credentials"
+            value={credentials}
+            onChange={(e) => setCredentials(e.target.value)}
+            placeholder="e.g. NCSF-CPT, CSCS"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
+        <label className="block text-sm text-zinc-500">
+          Headline
+          <input
+            name="headline"
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
+            placeholder="Required to publish"
+            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+          />
+        </label>
+        <label className="block text-sm text-zinc-500">
+          How you coach
+          <textarea
+            name="bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={4}
+            placeholder="Who you work with and how sessions run"
+            className="mt-1 min-h-24 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100"
+          />
+        </label>
       </fieldset>
 
-      <fieldset className="space-y-2">
+      <fieldset className="space-y-3">
         <legend className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
           Where you train
         </legend>
@@ -119,7 +206,8 @@ export function MarketplaceListingForm(props: {
           Primary area
           <select
             name="preferredArea"
-            defaultValue={p?.preferredArea || ""}
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
             className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
           >
             <option value="">No primary area</option>
@@ -130,35 +218,33 @@ export function MarketplaceListingForm(props: {
             ))}
           </select>
         </label>
-        <div className="space-y-1 text-sm">
-          <p className="text-zinc-500">Gyms</p>
-          {props.gyms.length === 0 ? (
-            <p className="text-zinc-500">No gyms in the directory yet.</p>
-          ) : null}
-          {props.gyms.map((g) => (
-            <label key={g.id} className="flex min-h-11 items-center gap-2">
-              <input
-                type="checkbox"
-                name="facilityIds"
-                value={g.id}
-                defaultChecked={p?.facilityIds.includes(g.id)}
-              />
-              {g.name}
-            </label>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-3 text-sm">
-          {MARKETPLACE_SERVICE_MODES.map((m) => (
-            <label key={m.slug} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="serviceModes"
-                value={m.slug}
-                defaultChecked={selectedModes.has(m.slug)}
-              />
-              {m.label}
-            </label>
-          ))}
+        {props.gyms.length === 0 ? (
+          <p className="text-sm text-zinc-500">No gyms in the directory yet.</p>
+        ) : (
+          <GymFacilityPicker
+            gyms={props.gyms}
+            selectedIds={facilityIds}
+            onChange={setFacilityIds}
+          />
+        )}
+        <div>
+          <p className="text-sm text-zinc-500">How you train</p>
+          <div className="mt-1 flex flex-wrap gap-3 text-sm">
+            {MARKETPLACE_SERVICE_MODES.map((m) => (
+              <label key={m.slug} className="flex min-h-11 items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="serviceModes"
+                  value={m.slug}
+                  checked={modes.has(m.slug)}
+                  onChange={(e) =>
+                    setModes(toggle(modes, m.slug, e.target.checked))
+                  }
+                />
+                {m.label}
+              </label>
+            ))}
+          </div>
         </div>
         <label className="block text-sm text-zinc-500">
           Travel radius (km)
@@ -184,7 +270,10 @@ export function MarketplaceListingForm(props: {
                 type="checkbox"
                 name="specialties"
                 value={s.slug}
-                defaultChecked={selectedSpecs.has(s.slug)}
+                checked={specs.has(s.slug)}
+                onChange={(e) =>
+                  setSpecs(toggle(specs, s.slug, e.target.checked))
+                }
               />
               {s.label}
             </label>
@@ -201,7 +290,8 @@ export function MarketplaceListingForm(props: {
             Currency
             <select
               name="currency"
-              defaultValue={p?.currency || "SGD"}
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
               className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
             >
               {MARKETPLACE_CURRENCIES.map((c) => (
@@ -216,9 +306,8 @@ export function MarketplaceListingForm(props: {
             <input
               name="hourlyRate"
               inputMode="decimal"
-              defaultValue={
-                p?.hourlyRateCents != null ? p.hourlyRateCents / 100 : ""
-              }
+              value={hourly}
+              onChange={(e) => setHourly(e.target.value)}
               placeholder="120"
               className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
             />
@@ -228,9 +317,8 @@ export function MarketplaceListingForm(props: {
             <input
               name="sessionRate"
               inputMode="decimal"
-              defaultValue={
-                p?.sessionRateCents != null ? p.sessionRateCents / 100 : ""
-              }
+              value={session}
+              onChange={(e) => setSession(e.target.value)}
               placeholder="150"
               className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
             />
@@ -238,42 +326,62 @@ export function MarketplaceListingForm(props: {
         </div>
       </fieldset>
 
-      {dueIntroCharges.length >= MAX_UNPAID_INTRO_CHARGES ? (
-        <p className="text-sm text-amber-400">
-          Find a trainer is hiding your card until unpaid intro fees are settled.
-        </p>
-      ) : null}
-      {dueIntroCharges.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {dueIntroCharges.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className="min-h-11 rounded-lg border border-amber-800 px-4 text-sm text-amber-200"
-              onClick={async () => {
-                const r = await startPlatformCheckoutAction({
-                  kind: "intro_accept",
-                  chargeId: c.id,
-                });
-                if (r.ok) window.location.href = r.url;
-                else setMsg(r.error);
-              }}
-            >
-              Pay intro fee USD {(c.amountCents / 100).toFixed(0)}
-            </button>
-          ))}
-        </div>
-      ) : null}
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="published" defaultChecked={!!p?.published} />
-        Show me on Find a trainer
-      </label>
-      {p?.featuredUntil ? (
-        <p className="text-xs text-emerald-500">
-          Featured until {new Date(p.featuredUntil).toLocaleDateString()}
-        </p>
-      ) : null}
-      <div className="flex flex-wrap gap-2">
+      <fieldset className="space-y-2">
+        <legend className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Visibility
+        </legend>
+        {dueIntroCharges.length >= MAX_UNPAID_INTRO_CHARGES ? (
+          <p className="text-sm text-amber-400">
+            Find a trainer is hiding your card until unpaid intro fees are
+            settled. Pay below or in{" "}
+            <Link href="/intros" className="underline">
+              Intros
+            </Link>
+            .
+          </p>
+        ) : null}
+        {dueIntroCharges.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {dueIntroCharges.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className="min-h-11 rounded-lg border border-amber-800 px-4 text-sm text-amber-200"
+                onClick={async () => {
+                  const r = await startPlatformCheckoutAction({
+                    kind: "intro_accept",
+                    chargeId: c.id,
+                  });
+                  if (r.ok) window.location.href = r.url;
+                  else setMsg(r.error);
+                }}
+              >
+                Pay intro fee USD {(c.amountCents / 100).toFixed(0)}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <label className="flex min-h-11 items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="published"
+            checked={published}
+            onChange={(e) => setPublished(e.target.checked)}
+          />
+          Show me on Find a trainer
+        </label>
+        {p?.featuredUntil ? (
+          <p className="text-xs text-emerald-500">
+            Featured until {new Date(p.featuredUntil).toLocaleDateString()}
+          </p>
+        ) : (
+          <p className="text-xs text-zinc-600">
+            Featured cards sort first on Find a trainer.
+          </p>
+        )}
+      </fieldset>
+
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="submit"
           disabled={pending}
@@ -294,6 +402,12 @@ export function MarketplaceListingForm(props: {
         >
           Feature for USD 29/mo
         </button>
+        <Link
+          href="/intros"
+          className="inline-flex min-h-11 items-center px-2 text-sm text-zinc-400 hover:text-zinc-200"
+        >
+          Intros
+        </Link>
       </div>
       {msg ? <p className="text-sm text-zinc-400">{msg}</p> : null}
     </form>

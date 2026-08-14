@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth";
 import { getDb } from "@/db";
 import {
+  ensureGymFacilities,
+  listPublicGyms,
+} from "@/db/queries/marketplace";
+import {
   clients,
   gymFacilities,
   introRequests,
@@ -14,6 +18,7 @@ import {
   users,
 } from "@/db/schema";
 import { findTrainingArea } from "@/lib/marketplace/areas";
+
 import { introFeeDecision } from "@/lib/marketplace/fees";
 import {
   FEATURED_FEE_CENTS,
@@ -98,6 +103,7 @@ export async function upsertMarketplaceListing(opts: {
     .delete(marketplaceProfileFacilities)
     .where(eq(marketplaceProfileFacilities.profileId, profileId));
   const unique = [...new Set(opts.facilityIds)].slice(0, 8);
+  await ensureGymFacilities(unique);
   for (const facilityId of unique) {
     const [gym] = await db
       .select({ id: gymFacilities.id })
@@ -127,7 +133,7 @@ export async function getMyMarketplaceListingAction() {
       )
     )
     .limit(1);
-  const gyms = await db.select().from(gymFacilities);
+  const gyms = await listPublicGyms();
   let facilityIds: string[] = [];
   if (profile) {
     const links = await db
@@ -169,7 +175,13 @@ export async function getMyMarketplaceListingAction() {
           serviceModes: profile.serviceModes,
         }
       : null,
-    gyms: gyms.map((g) => ({ id: g.id, name: g.name, slug: g.slug })),
+    gyms: gyms.map((g) => ({
+      id: g.id,
+      name: g.name,
+      slug: g.slug,
+      brand: g.brand,
+      independent: g.independent,
+    })),
     dueIntroCharges,
   };
 }
