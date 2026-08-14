@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireClientSession, resolvePortalStudio } from "@/lib/client-auth";
 import {
+  getPortalActiveProgram,
   getPortalClient,
   getPortalInvoices,
   getPortalNextAppointment,
@@ -46,11 +47,12 @@ export default async function PortalDashboardPage() {
     );
   }
 
-  const [me, next, invoices, notes] = await Promise.all([
+  const [me, next, invoices, notes, assigned] = await Promise.all([
     getPortalClient(studio.organizationId, studio.clientId),
     getPortalNextAppointment(studio.organizationId, studio.clientId),
     getPortalInvoices(studio.organizationId, studio.clientId),
     getPortalNotifications(studio.organizationId, studio.clientId),
+    getPortalActiveProgram(studio.organizationId, studio.clientId),
   ]);
 
   const unpaid = invoices.filter(
@@ -68,6 +70,30 @@ export default async function PortalDashboardPage() {
           Your plan with {studio.organizationName}
         </p>
       </div>
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+          Your program
+        </p>
+        {assigned ? (
+          <>
+            <p className="mt-1 text-lg font-medium text-zinc-100">{assigned.title}</p>
+            <p className="text-sm text-zinc-400">
+              {assigned.daysPerWeek} days · {assigned.sessionMinutes} min
+            </p>
+            <Link
+              href="/portal/program"
+              className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-emerald-400"
+            >
+              Open program
+            </Link>
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-zinc-400">
+            Your trainer has not assigned an active plan yet.
+          </p>
+        )}
+      </section>
 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
