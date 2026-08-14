@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   requestSeekerVerifyAction,
@@ -20,17 +20,6 @@ export function SeekerVerifyForm({
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const sent = useRef(false);
-
-  useEffect(() => {
-    if (sent.current) return;
-    sent.current = true;
-    start(async () => {
-      const res = await requestSeekerVerifyAction();
-      if (!res.ok) setError(res.error);
-      else setMsg("Code sent.");
-    });
-  }, []);
 
   function submit() {
     setError(null);
@@ -49,7 +38,7 @@ export function SeekerVerifyForm({
     start(async () => {
       const res = await requestSeekerVerifyAction();
       if (!res.ok) setError(res.error);
-      else setMsg("New code sent.");
+      else setMsg((prev) => (prev ? "New code sent." : "Code sent."));
     });
   }
 
@@ -83,7 +72,9 @@ export function SeekerVerifyForm({
           placeholder="000000"
           className="tracking-[0.4em]"
         />
-        <p className="mt-1 text-[11px] text-zinc-500">Sent to {email}</p>
+        <p className="mt-1 text-[11px] text-zinc-500">
+          {msg ? `Sent to ${email}` : "Enter the 6-digit code after you tap Send code."}
+        </p>
       </div>
       {error && (
         <p className="text-sm text-red-300" role="alert">
@@ -105,7 +96,7 @@ export function SeekerVerifyForm({
         onClick={resend}
         disabled={pending}
       >
-        Resend code
+        {msg ? "Resend code" : "Send code"}
       </button>
     </form>
   );
