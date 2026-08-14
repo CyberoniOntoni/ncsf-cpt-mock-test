@@ -27,7 +27,7 @@ import { createIntroRequest } from "../src/app/actions/marketplace";
 import {
   acceptIntroRequest,
   upsertMarketplaceListing,
-} from "../src/app/actions/marketplace-trainer";
+} from "../src/lib/marketplace/trainer-ops";
 import * as trainerActions from "../src/app/actions/marketplace-trainer";
 import {
   createPlatformCheckoutSession,
