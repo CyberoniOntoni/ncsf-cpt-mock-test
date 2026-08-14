@@ -57,6 +57,18 @@ FLOORSCRIBE_PORT=4000
 # PTCRM_PORT still accepted as a legacy alias
 ```
 
+**Mail (Mailtrap — required for live OTP / verify / invites):**
+
+```bash
+# Sending API token from Mailtrap (env name only — never commit the value)
+MAILTRAP_API_TOKEN=
+MAILTRAP_FROM_EMAIL=hello@floorscribe.com
+MAILTRAP_FROM_NAME=FloorScribe
+# MOCK_EMAIL=true   # local only; production fails closed without a token
+```
+
+Without `MAILTRAP_API_TOKEN`, portal OTP, seeker/trainer verification codes, and studio invite emails do not deliver (mock logs in dev; production reports undelivered).
+
 **Optional AI:**
 
 ```bash
@@ -149,7 +161,7 @@ Schema/playbook seeds apply on startup (idempotent). **Always backup before upgr
 
 ## 10. Security notes
 
-- Never commit `.env`.
+- Never commit `.env` or `MAILTRAP_API_TOKEN` values.
 - Use strong unique `AUTH_SECRET` and `CLIENT_AUTH_SECRET` in production.
 - Prefer HTTPS + firewall: only 80/443 public; bind app to localhost if behind Caddy (`ports: "127.0.0.1:3000:3000"`).
 - Demo password is public knowledge — change workflow for production users.

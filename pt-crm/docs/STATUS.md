@@ -5,11 +5,11 @@ Update this file when a slice ships or scope changes — don’t let it go stale
 
 | | |
 |--|--|
-| **Last audited** | 2026-08-13 |
+| **Last audited** | 2026-08-14 |
 | **Product** | FloorScribe (repo folder `pt-crm/`) |
 | **GitHub** | [CyberoniOntoni/floorscribe](https://github.com/CyberoniOntoni/floorscribe) `main` |
 | **Live** | https://floorscribe.com (self-host LXC + Docker; private IP not for public docs) |
-| **Schema** | `SCHEMA_VERSION` **26** (18 pack debit · 19 smarter gen · 20–21 portal · 22–25 find/seeker/areas/trainer card · 26 one active deficiency per client+slug). Restart `npm run dev` after the bump. |
+| **Schema** | `SCHEMA_VERSION` **27** (18 pack debit · 19 smarter gen · 20–21 portal · 22–25 find/seeker/areas/trainer card · 26 one active deficiency per client+slug · 27 mail verify / email challenges). Restart `npm run dev` after the bump. |
 | **Stack** | Next.js 16 App Router · TypeScript · Tailwind · PGlite + Drizzle · multi-tenant org |
 | **Demo** | `pt@demo.local` / `trainer123` |
 
@@ -77,9 +77,9 @@ Four primary areas (`src/lib/nav.ts`):
 | Capability | Status | Notes |
 |------------|--------|--------|
 | Login / session cookie | **Done** | `AUTH_SECRET` required in production; portal/seeker: `CLIENT_AUTH_SECRET` required in production |
-| Solo registration | **Done** | `/register/solo` |
-| Studio registration | **Done** | `/register/studio` |
-| Team invites | **Done** | Settings → Team; roles; 14-day token |
+| Solo registration | **Done** | `/register/solo`; email verify before publish/invites (SCHEMA 27) |
+| Studio registration | **Done** | `/register/studio`; email verify before publish/invites (SCHEMA 27) |
+| Team invites | **Done** | Settings → Team; roles; 14-day token; invite emailed via Mailtrap |
 | Org-scoped data | **Done** | Tenant guards on actions |
 | Multi-trainer RBAC depth | **Partial** | Roles exist; not a full permission matrix product |
 
@@ -149,7 +149,7 @@ Four primary areas (`src/lib/nav.ts`):
 | Capability | Status | Notes |
 |------------|--------|--------|
 | Public `/find` search | **Done** | Named area + gym + network (SCHEMA 22–24) |
-| Seeker register / login | **Done** | Password account, not trainer `users` (23) |
+| Seeker register / login | **Done** | Password account, not trainer `users` (23); email verify before intros (SCHEMA 27) |
 | Named areas | **Done** | Bedok, Tampines, Orchard, … — no client lat/lng (24) |
 | Self measurements + progress | **Done** | Account + trainer-logged if email matches |
 | Intro → CRM lead | **Done** | People → Intros; 3 free then USD 19 |
@@ -296,7 +296,7 @@ Typical candidates (pick from pain, don’t pre-build all):
 |------|--------|
 | **Push** | `git subtree push --prefix=pt-crm floorscribe main` from monorepo root (or push from floorscribe clone) |
 | **Deploy** | Env-only `FLOORSCRIBE_DEPLOY_*` + `python scripts/deploy_lxc.py` |
-| **Verify** | `npm run typecheck` · `smoke:programming` · `smoke:portal` · `smoke:marketplace` · `smoke:pilot` · `/api/health` |
+| **Verify** | `npm run typecheck` · `smoke:programming` · `smoke:portal` · `smoke:portal-auth` · `smoke:mail-verify` · `smoke:marketplace` · `smoke:site-copy` · `smoke:pilot` · `/api/health` |
 | **Schema** | Bump `SCHEMA_VERSION` in `src/db/index.ts` when migrations change; restart app |
 | **Secrets** | Never commit passwords, `AUTH_SECRET` / `CLIENT_AUTH_SECRET` (both required in production), or private LXC IPs into the public repo |
 | **Scope** | Session/plan/CRM first; knowledge & analytics stay secondary |
@@ -312,7 +312,10 @@ npm run smoke
 npm run smoke:pilot
 npm run smoke:programming
 npm run smoke:portal
+npm run smoke:portal-auth
+npm run smoke:mail-verify
 npm run smoke:marketplace
+npm run smoke:site-copy
 npm run smoke:floor
 npm run smoke:library
 curl -s https://floorscribe.com/api/health
@@ -326,6 +329,7 @@ Browser: [happy-path.md](./happy-path.md) checklist at the bottom.
 
 | Date | Note |
 |------|------|
+| 2026-08-14 | SCHEMA 27: mail verify — email challenges for seeker/trainer inbox proof; portal OTP + invites via Mailtrap. |
 | 2026-08-14 | SCHEMA 26: one active `client_deficiencies` row per (client, slug); upsert on generate. Restart `npm run dev`. |
 | 2026-08-13 | Review remediation: featuredDays export gone; intro-fee Pay + mock complete; portal pre-auth no PII; hashOtp fail-closed; calendar Done does not debit packs; audience-aware public footer. `AUTH_SECRET` + `CLIENT_AUTH_SECRET` both required in production. |
 | 2026-08-13 | Public website overhaul: marketing + find + auth + portal share one chrome; copy covers programs, portal, and Find. |
