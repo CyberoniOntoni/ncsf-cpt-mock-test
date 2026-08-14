@@ -14,10 +14,9 @@ function redirectUnpaid() {
 }
 
 export async function GET(req: Request) {
-  if (
-    process.env.MOCK_STRIPE !== "true" ||
-    process.env.NODE_ENV === "production"
-  ) {
+  const mockCheckout =
+    process.env.MOCK_STRIPE === "true" || !process.env.STRIPE_SECRET_KEY;
+  if (!mockCheckout || process.env.NODE_ENV === "production") {
     return NextResponse.json({ error: "not available" }, { status: 404 });
   }
   const chargeId = new URL(req.url).searchParams.get("chargeId") || "";
