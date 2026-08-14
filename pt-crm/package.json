@@ -16,6 +16,7 @@
     "smoke:portal": "tsx scripts/smoke-portal.ts",
     "smoke:marketplace": "tsx scripts/smoke-marketplace.ts",
     "smoke:site-copy": "tsx scripts/test-site-copy.ts",
+    "smoke:portal-program": "tsx scripts/test-portal-program.ts",
     "test:pack-debit": "tsx scripts/test-pack-debit-policy.ts",
     "typecheck": "tsc --noEmit",
     "backup:host": "bash scripts/backup-host.sh",
