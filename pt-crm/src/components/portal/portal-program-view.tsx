@@ -15,25 +15,27 @@ const PHASE_LABEL = {
 
 export function PortalProgramView({
   data,
+  ownerKey,
 }: {
   data: PortalClientProgram | null;
+  ownerKey?: string;
 }) {
   const [program, setProgram] = useState<PortalClientProgram | null>(data);
   const [stale, setStale] = useState(false);
 
   useEffect(() => {
     if (data) {
-      cachePortalProgram(data);
+      cachePortalProgram(data, ownerKey);
       setProgram(data);
       setStale(false);
       return;
     }
-    const cached = readCachedPortalProgram<PortalClientProgram>();
+    const cached = readCachedPortalProgram<PortalClientProgram>(ownerKey);
     if (cached) {
       setProgram(cached);
       setStale(true);
     }
-  }, [data]);
+  }, [data, ownerKey]);
 
   return (
     <div className="space-y-4">

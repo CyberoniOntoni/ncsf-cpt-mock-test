@@ -59,7 +59,7 @@ export type PortalClientProgram = {
   days: PortalClientDay[];
 };
 
-const INTERNAL = /mesocycle|smarter engine|corrective_prep|deficiency →/i;
+const INTERNAL = /mesocycle|smarter engine|corrective|deficiency/i;
 
 export function clientExerciseCue(
   notes: string | null,
@@ -71,8 +71,14 @@ export function clientExerciseCue(
     .split("·")
     .map((p) => p.trim())
     .filter((p) => p && !INTERNAL.test(p));
-  if (!raw.length) return how || null;
+  if (!raw.length) return null;
   return raw.join(" · ");
+}
+
+function clientFacingSummary(summary: string | null | undefined): string | null {
+  const s = (summary || "").trim();
+  if (!s || INTERNAL.test(s)) return null;
+  return s;
 }
 
 export function exercisePhase(
@@ -92,7 +98,7 @@ function toItem(ex: PortalExerciseIn): PortalClientExercise {
       sets: ex.sets,
       reps: ex.reps,
       rpe: ex.rpe,
-      summary: ex.setSchemeMeta?.summary || null,
+      summary: clientFacingSummary(ex.setSchemeMeta?.summary),
     }),
     restLabel: formatRestLabel(ex.restSec),
     schemeLabel: scheme ? formatSchemeName(scheme) : null,

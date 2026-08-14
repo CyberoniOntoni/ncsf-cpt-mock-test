@@ -27,5 +27,5 @@ export default async function PortalProgramPage() {
     studio.clientId
   );
 
-  return <PortalProgramView data={program} />;
+  return <PortalProgramView data={program} ownerKey={session.email} />;
 }

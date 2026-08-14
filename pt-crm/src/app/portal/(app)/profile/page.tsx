@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { logoutPortalAction } from "@/app/actions/portal/auth";
+import { PortalLogoutForm } from "@/components/portal/portal-logout-form";
 import { PortalMeasurementForm } from "@/components/portal/portal-measurement-form";
 import { SeekerAccountForms } from "@/components/seeker-account-forms";
-import { Button } from "@/components/ui";
 import {
   listPublicBrands,
   listPublicGyms,
@@ -175,11 +174,7 @@ export default async function PortalProfilePage({
         </>
       ) : null}
 
-      <form action={logoutPortalAction}>
-        <Button type="submit" variant="ghost" className="w-full">
-          Sign out
-        </Button>
-      </form>
+      <PortalLogoutForm />
     </div>
   );
 }

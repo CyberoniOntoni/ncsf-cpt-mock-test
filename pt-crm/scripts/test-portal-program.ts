@@ -20,6 +20,13 @@ assert.equal(
   "Count tempo. Don’t rush the pause."
 );
 assert.equal(clientExerciseCue("Mesocycle: W1", null), null);
+assert.equal(
+  clientExerciseCue(
+    "Smarter engine: 1 deficiency → Mesocycle 1 corrective_prep.",
+    "Smarter engine: keep this internal."
+  ),
+  null
+);
 
 assert.equal(
   exercisePhase({
@@ -138,5 +145,43 @@ assert.equal(view.days[0].blocks[1].groupLabel, "Superset · A1/A2");
 assert.match(view.days[0].blocks[1].items[0].prescription, /3/);
 assert.match(view.days[0].blocks[1].items[0].restLabel, /Rest/);
 assert.doesNotMatch(JSON.stringify(view), /Mesocycle/);
+
+const correctiveView = toClientProgramView({
+  title: "Warmup leak check",
+  goal: "mobility",
+  daysPerWeek: 1,
+  sessionMinutes: 30,
+  days: [
+    {
+      id: "d-corr",
+      name: "Day A",
+      focus: null,
+      exercises: [
+        {
+          id: "e-wu",
+          exerciseName: "Wall slides",
+          sets: 2,
+          reps: "8",
+          rpe: "5",
+          restSec: 30,
+          notes: null,
+          sortOrder: 0,
+          isWarmup: true,
+          setScheme: "straight",
+          setSchemeMeta: { summary: "Warm-up · Corrective · Upper Cross" },
+          groupId: null,
+          groupKind: null,
+          groupLabel: null,
+          groupOrder: null,
+        },
+      ],
+    },
+  ],
+});
+const correctiveJson = JSON.stringify(correctiveView);
+assert.doesNotMatch(correctiveJson, /Warm-up · Corrective · Upper Cross/);
+assert.doesNotMatch(correctiveJson, /Corrective/);
+assert.doesNotMatch(correctiveJson, /Upper Cross/);
+assert.match(correctiveView.days[0].blocks[0].items[0].prescription, /2\s*×\s*8/);
 
 console.log("portal-program mapper ok");

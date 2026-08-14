@@ -948,7 +948,10 @@ export async function updateProgramMetaAction(
     await promoteLeadToActiveIfNeeded(linkedClientId);
   }
 
-  if (data.status === "active" && p.status !== "active" && linkedClientId) {
+  const newlyLinked =
+    Boolean(linkedClientId) && linkedClientId !== p.clientId;
+  const becameActive = nextStatus === "active" && p.status !== "active";
+  if (linkedClientId && nextStatus === "active" && (becameActive || newlyLinked)) {
     await notifyProgramAssigned({
       organizationId: session.organizationId,
       clientId: linkedClientId,
