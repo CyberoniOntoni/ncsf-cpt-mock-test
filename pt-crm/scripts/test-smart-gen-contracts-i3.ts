@@ -102,8 +102,8 @@ function filterExercisesByEquipment(
 }
 
 // 5. Rotation Loop Zero-Length Guard Test
-function prioritizeAndRotateCorrectives(deficiencies: any[], daysPerWeek: number) {
-  const dailySchedule = new Map<number, any[]>();
+function prioritizeAndRotateCorrectives(deficiencies: unknown[], daysPerWeek: number) {
+  const dailySchedule = new Map<number, unknown[]>();
   if (deficiencies.length === 0) return dailySchedule;
 
   for (let day = 1; day <= daysPerWeek; day++) {
