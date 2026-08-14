@@ -23,7 +23,7 @@ import {
   marketplaceProfiles,
   platformCharges,
 } from "../src/db/schema";
-import { createIntroRequest } from "../src/app/actions/marketplace";
+import { createIntroRequest } from "../src/lib/marketplace/intro-ops";
 import {
   acceptIntroRequest,
   upsertMarketplaceListing,

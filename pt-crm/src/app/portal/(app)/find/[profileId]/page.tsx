@@ -45,11 +45,9 @@ export default async function PortalFindProfilePage({
       <FindIntroForm
         profileId={profile.id}
         facilities={facilities}
-        defaultName={
-          seeker ? `${seeker.firstName} ${seeker.lastName}`.trim() : ""
-        }
-        defaultEmail={seeker?.email || ""}
-        defaultFacilityId={seeker?.preferredFacilityId || ""}
+        displayName={`${seeker.firstName} ${seeker.lastName}`.trim()}
+        displayEmail={seeker.email}
+        defaultFacilityId={seeker.preferredFacilityId || ""}
       />
     </div>
   );

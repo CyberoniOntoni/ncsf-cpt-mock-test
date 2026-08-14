@@ -6,8 +6,8 @@ import { requestIntroAction } from "@/app/actions/marketplace";
 export function FindIntroForm(props: {
   profileId: string;
   facilities: { id: string; name: string }[];
-  defaultName?: string;
-  defaultEmail?: string;
+  displayName?: string;
+  displayEmail?: string;
   defaultFacilityId?: string;
 }) {
   const [status, setStatus] = useState<string | null>(null);
@@ -23,8 +23,6 @@ export function FindIntroForm(props: {
         const fd = new FormData(e.currentTarget);
         const result = await requestIntroAction({
           profileId: props.profileId,
-          seekerName: String(fd.get("seekerName") || ""),
-          seekerEmail: String(fd.get("seekerEmail") || ""),
           seekerPhone: String(fd.get("seekerPhone") || "") || undefined,
           facilityId: String(fd.get("facilityId") || "") || undefined,
           message: String(fd.get("message") || "") || undefined,
@@ -34,25 +32,15 @@ export function FindIntroForm(props: {
       }}
     >
       <h2 className="font-medium">Request an intro</h2>
-      <label className="block text-sm text-zinc-500">
-        Your name
-        <input
-          name="seekerName"
-          required
-          defaultValue={props.defaultName || ""}
-          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-        />
-      </label>
-      <label className="block text-sm text-zinc-500">
-        Email
-        <input
-          name="seekerEmail"
-          type="email"
-          required
-          defaultValue={props.defaultEmail || ""}
-          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-        />
-      </label>
+      {props.displayName || props.displayEmail ? (
+        <p className="text-sm text-zinc-400">
+          Sending as{" "}
+          <span className="text-zinc-200">
+            {props.displayName || "you"}
+            {props.displayEmail ? ` (${props.displayEmail})` : ""}
+          </span>
+        </p>
+      ) : null}
       <label className="block text-sm text-zinc-500">
         Phone (optional)
         <input
