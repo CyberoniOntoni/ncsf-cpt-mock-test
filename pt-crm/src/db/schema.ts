@@ -31,6 +31,7 @@ export const users = pgTable("users", {
   /** Optional credentials / title line e.g. "NCSF-CPT" */
   title: text("title"),
   isPlatformAdmin: boolean("is_platform_admin").notNull().default(false),
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -903,6 +904,7 @@ export const seekerProfiles = pgTable(
       { onDelete: "set null" }
     ),
     preferredBrand: text("preferred_brand"),
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1289,6 +1291,21 @@ export const clientOtps = pgTable(
     index("client_otps_email_org_idx").on(t.email, t.organizationId),
     index("client_otps_client_idx").on(t.clientId),
   ]
+);
+
+export const emailChallenges = pgTable(
+  "email_challenges",
+  {
+    id: text("id").primaryKey(),
+    purpose: text("purpose").notNull(),
+    email: text("email").notNull(),
+    codeHash: text("code_hash").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("email_challenges_email_idx").on(t.email, t.purpose)]
 );
 
 export const notifications = pgTable(

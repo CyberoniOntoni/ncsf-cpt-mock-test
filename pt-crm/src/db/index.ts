@@ -5,7 +5,7 @@ import fs from "fs";
 import * as schema from "./schema";
 
 /** Bump when adding tables/columns so long-lived dev servers re-run CREATE IF NOT EXISTS. */
-const SCHEMA_VERSION = 26; // 26 = one active deficiency per client+slug
+const SCHEMA_VERSION = 27; // 27 = email verification challenges
 
 const globalForDb = globalThis as unknown as {
   pglite?: PGlite;
@@ -833,6 +833,20 @@ async function ensureSchema() {
       notes TEXT
     );
     CREATE INDEX IF NOT EXISTS seeker_measurements_seeker_idx ON seeker_measurements(seeker_id, taken_at);
+
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
+    ALTER TABLE seeker_profiles ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
+    CREATE TABLE IF NOT EXISTS email_challenges (
+      id TEXT PRIMARY KEY,
+      purpose TEXT NOT NULL,
+      email TEXT NOT NULL,
+      code_hash TEXT NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      used_at TIMESTAMPTZ,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS email_challenges_email_idx ON email_challenges(email, purpose);
   `);
   await applyActiveDeficiencyUniqueIndex(client);
 }

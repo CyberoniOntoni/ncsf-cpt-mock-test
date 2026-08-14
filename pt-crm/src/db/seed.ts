@@ -90,6 +90,7 @@ async function runSeed() {
     name: "Alex Trainer",
     passwordHash,
     isPlatformAdmin: true,
+    emailVerifiedAt: new Date(),
   });
 
   await db.insert(memberships).values({
