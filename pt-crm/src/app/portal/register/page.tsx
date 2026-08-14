@@ -63,7 +63,7 @@ function PortalRegisterForm() {
             });
             setPending(false);
             if (!result.ok) setError(result.error);
-            else router.push("/portal/profile?setup=1");
+            else router.push("/portal/verify?setup=1");
           }}
         >
           <label className="block text-sm text-zinc-500">

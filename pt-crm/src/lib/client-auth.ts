@@ -390,12 +390,15 @@ export async function verifyClientOtp(opts: {
 
   await ensureRequiredDocuments(client.organizationId, client.id);
 
-  const { ensureSeekerForPerson } = await import("@/lib/seeker-auth");
+  const { ensureSeekerForPerson, markSeekerEmailVerified } = await import(
+    "@/lib/seeker-auth"
+  );
   const seeker = await ensureSeekerForPerson({
     email: client.email || email,
     firstName: client.firstName,
     lastName: client.lastName,
   });
+  await markSeekerEmailVerified(client.email || email);
 
   await persistStudioSession({
     seekerId: seeker.id,

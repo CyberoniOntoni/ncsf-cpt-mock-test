@@ -1,7 +1,7 @@
 "use server";
 
 import { createIntroRequest } from "@/lib/marketplace/intro-ops";
-import { requireSeekerSession } from "@/lib/seeker-auth";
+import { getSeekerById, requireSeekerSession } from "@/lib/seeker-auth";
 
 export async function requestIntroAction(form: {
   profileId: string;
@@ -11,6 +11,10 @@ export async function requestIntroAction(form: {
   message?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await requireSeekerSession();
+  const seeker = await getSeekerById(session.seekerId);
+  if (!seeker?.emailVerifiedAt) {
+    return { ok: false, error: "Verify your email first." };
+  }
   const seekerName = `${session.firstName} ${session.lastName}`.trim();
   const result = await createIntroRequest({
     profileId: form.profileId,

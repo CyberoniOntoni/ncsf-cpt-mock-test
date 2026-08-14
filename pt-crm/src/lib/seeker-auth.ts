@@ -44,6 +44,7 @@ export type SeekerPublic = {
   radiusKm: number;
   preferredFacilityId: string | null;
   preferredBrand: string | null;
+  emailVerifiedAt: Date | null;
 };
 
 function seekerSecret(): Uint8Array {
@@ -74,6 +75,7 @@ function toPublic(row: typeof seekerProfiles.$inferSelect): SeekerPublic {
     radiusKm: row.radiusKm,
     preferredFacilityId: row.preferredFacilityId,
     preferredBrand: row.preferredBrand,
+    emailVerifiedAt: row.emailVerifiedAt ?? null,
   };
 }
 
@@ -136,6 +138,7 @@ export async function ensureSeekerForPerson(opts: {
     firstName: (opts.firstName || "Client").trim() || "Client",
     lastName: (opts.lastName || "").trim(),
     radiusKm: DEFAULT_RADIUS_KM,
+    emailVerifiedAt: new Date(),
   });
   const [row] = await db
     .select()
@@ -147,6 +150,14 @@ export async function ensureSeekerForPerson(opts: {
 
 function randomPlaceholderPassword() {
   return `otp-${Math.random().toString(36).slice(2)}${Date.now()}`;
+}
+
+export async function markSeekerEmailVerified(email: string): Promise<void> {
+  const db = await getDb();
+  await db
+    .update(seekerProfiles)
+    .set({ emailVerifiedAt: new Date(), updatedAt: new Date() })
+    .where(eq(seekerProfiles.email, normalizeSeekerEmail(email)));
 }
 
 export async function getSeekerByEmail(email: string): Promise<SeekerPublic | null> {
@@ -425,6 +436,9 @@ export async function requireCompleteSeeker(nextPath?: string): Promise<{
   const seeker = await getSeekerById(session.seekerId);
   if (!seeker || !isSeekerProfileComplete(seeker)) {
     redirect("/portal/profile?setup=1");
+  }
+  if (!seeker.emailVerifiedAt) {
+    redirect("/portal/verify");
   }
   return { session, seeker };
 }

@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
-import { mailPortalOtp, mailOrgInvite } from "../src/lib/mail-copy";
+import {
+  mailPortalOtp,
+  mailOrgInvite,
+  mailSeekerVerify,
+} from "../src/lib/mail-copy";
 import { issueEmailChallenge, consumeEmailChallenge } from "../src/lib/email-challenge";
 
 // Copy asserts (sync, no DB) — run before challenge block
@@ -17,6 +21,9 @@ const inv = mailOrgInvite({
   inviteUrl: "https://floorscribe.com/invite/tok_abc",
 });
 assert.match(inv.text, /https:\/\/floorscribe.com\/invite\/tok_abc/);
+const seekerV = mailSeekerVerify({ firstName: "Jane", code: "654321" });
+assert.equal(seekerV.category, "seeker-verify");
+assert.match(seekerV.text, /654321/);
 console.log("mail-verify copy ok");
 
 async function main() {
