@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PortalMeasurementForm } from "@/components/portal/portal-measurement-form";
 import { requireClientSession, resolvePortalStudio } from "@/lib/client-auth";
 import {
   getPortalAssessments,
@@ -31,9 +32,18 @@ export default async function PortalProgressPage() {
         <h2 className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
           Your measurements
         </h2>
+        {session.seekerId ? (
+          <div className="mt-2">
+            <PortalMeasurementForm />
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-zinc-500">
+            Sign in with a password next time to log your own measurements.
+          </p>
+        )}
         {selfMeas.length === 0 ? (
           <p className="mt-2 text-sm text-zinc-500">
-            Nothing logged yet. Add one on your profile.
+            Nothing logged yet.
           </p>
         ) : (
           <ul className="mt-2 space-y-2">

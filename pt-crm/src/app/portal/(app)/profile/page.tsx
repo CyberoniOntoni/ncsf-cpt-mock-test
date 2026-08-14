@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logoutPortalAction } from "@/app/actions/portal/auth";
+import { PortalMeasurementForm } from "@/components/portal/portal-measurement-form";
 import { SeekerAccountForms } from "@/components/seeker-account-forms";
 import { Button } from "@/components/ui";
 import {
@@ -84,6 +85,11 @@ export default async function PortalProfilePage({
         <h2 className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
           Your measurements
         </h2>
+        {seeker ? (
+          <div className="mt-2">
+            <PortalMeasurementForm />
+          </div>
+        ) : null}
         {selfMeas.length === 0 ? (
           <p className="mt-2 text-sm text-zinc-500">Nothing logged yet.</p>
         ) : (

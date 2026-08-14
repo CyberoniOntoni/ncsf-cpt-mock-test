@@ -86,6 +86,7 @@ export async function addSeekerMeasurementAction(form: {
   await addSeekerMeasurement(session.seekerId, form);
   revalidatePath("/find/account");
   revalidatePath("/portal/profile");
+  revalidatePath("/portal/progress");
   return { ok: true };
 }
 

@@ -2,10 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  addSeekerMeasurementAction,
-  saveSeekerPrefsAction,
-} from "@/app/actions/marketplace-seeker";
+import { saveSeekerPrefsAction } from "@/app/actions/marketplace-seeker";
 import { TRAINING_AREAS } from "@/lib/marketplace/areas";
 import {
   INDEPENDENT_NETWORK,
@@ -29,7 +26,6 @@ export function SeekerAccountForms(props: {
   const s = props.seeker;
   const router = useRouter();
   const [prefMsg, setPrefMsg] = useState<string | null>(null);
-  const [measMsg, setMeasMsg] = useState<string | null>(null);
   const [brand, setBrand] = useState(s.preferredBrand || "");
   const [facilityId, setFacilityId] = useState(s.preferredFacilityId || "");
   const gymChoices = useMemo(() => {
@@ -45,159 +41,97 @@ export function SeekerAccountForms(props: {
   }, [props.gyms, brand]);
 
   return (
-    <div className="space-y-6">
-      <form
-        className="space-y-3 rounded-xl border border-zinc-800 p-4"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          const result = await saveSeekerPrefsAction({
-            preferredArea: String(fd.get("preferredArea") || ""),
-            radiusKm: Number(fd.get("radiusKm") || 15),
-            preferredFacilityId: String(fd.get("preferredFacilityId") || ""),
-            preferredBrand: String(fd.get("preferredBrand") || ""),
-          });
-          if (!result.ok) {
-            setPrefMsg(result.error);
-            return;
-          }
-          setPrefMsg("Profile saved.");
-          if (props.setup) router.replace("/portal/profile");
-        }}
-      >
-        <h2 className="font-medium">Where you train</h2>
-        <label className="block text-sm text-zinc-500">
-          Area
-          <select
-            name="preferredArea"
-            required
-            defaultValue={s.preferredArea || ""}
-            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-          >
-            <option value="">Choose an area</option>
-            {TRAINING_AREAS.map((a) => (
-              <option key={a.slug} value={a.slug}>
-                {a.label}, {a.city}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm text-zinc-500">
-          Gym network
-          <select
-            name="preferredBrand"
-            value={brand}
-            onChange={(e) => {
-              setBrand(e.target.value);
-              setFacilityId("");
-            }}
-            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-          >
-            <option value="">No network</option>
-            {props.brands.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm text-zinc-500">
-          Specific gym
-          <select
-            name="preferredFacilityId"
-            value={facilityId}
-            onChange={(e) => setFacilityId(e.target.value)}
-            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-          >
-            <option value="">No specific gym</option>
-            {gymChoices.map((g) => (
-              <option key={g.id} value={g.id}>
-                {brand && brand !== INDEPENDENT_NETWORK
-                  ? gymOutletLabel(g)
-                  : g.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm text-zinc-500">
-          Search radius (km)
-          <input
-            name="radiusKm"
-            type="number"
-            min={5}
-            max={80}
-            defaultValue={s.radiusKm}
-            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-          />
-        </label>
-        <button
-          type="submit"
-          className="min-h-11 rounded-lg bg-emerald-800 px-4 text-sm font-semibold text-stone-50"
+    <form
+      className="space-y-3 rounded-xl border border-zinc-800 p-4"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        const result = await saveSeekerPrefsAction({
+          preferredArea: String(fd.get("preferredArea") || ""),
+          radiusKm: Number(fd.get("radiusKm") || 15),
+          preferredFacilityId: String(fd.get("preferredFacilityId") || ""),
+          preferredBrand: String(fd.get("preferredBrand") || ""),
+        });
+        if (!result.ok) {
+          setPrefMsg(result.error);
+          return;
+        }
+        setPrefMsg("Profile saved.");
+        if (props.setup) router.replace("/portal/profile");
+      }}
+    >
+      <h2 className="font-medium">Where you train</h2>
+      <label className="block text-sm text-zinc-500">
+        Area
+        <select
+          name="preferredArea"
+          required
+          defaultValue={s.preferredArea || ""}
+          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
         >
-          {props.setup ? "Save profile" : "Save training spots"}
-        </button>
-        {prefMsg ? <p className="text-sm text-zinc-400">{prefMsg}</p> : null}
-      </form>
-
-      <form
-        className="space-y-3 rounded-xl border border-zinc-800 p-4"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const fd = new FormData(e.currentTarget);
-          const num = (k: string) => {
-            const v = String(fd.get(k) || "").trim();
-            return v ? Number(v) : null;
-          };
-          const result = await addSeekerMeasurementAction({
-            heightCm: num("heightCm"),
-            weightKg: num("weightKg"),
-            waistCm: num("waistCm"),
-            notes: String(fd.get("notes") || "") || null,
-          });
-          setMeasMsg(result.ok ? "Measurement saved." : result.error);
-          if (result.ok) e.currentTarget.reset();
-        }}
-      >
-        <h2 className="font-medium">Add a measurement</h2>
-        <p className="text-xs text-zinc-500">Optional. You control what you log.</p>
-        <div className="grid grid-cols-3 gap-2">
-          <label className="text-sm text-zinc-500">
-            Weight (kg)
-            <input
-              name="weightKg"
-              className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-            />
-          </label>
-          <label className="text-sm text-zinc-500">
-            Waist (cm)
-            <input
-              name="waistCm"
-              className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-            />
-          </label>
-          <label className="text-sm text-zinc-500">
-            Height (cm)
-            <input
-              name="heightCm"
-              className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-            />
-          </label>
-        </div>
-        <label className="block text-sm text-zinc-500">
-          Note (optional)
-          <input
-            name="notes"
-            className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
-          />
-        </label>
-        <button
-          type="submit"
-          className="min-h-11 rounded-lg border border-zinc-700 px-4 text-sm"
+          <option value="">Choose an area</option>
+          {TRAINING_AREAS.map((a) => (
+            <option key={a.slug} value={a.slug}>
+              {a.label}, {a.city}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block text-sm text-zinc-500">
+        Gym network
+        <select
+          name="preferredBrand"
+          value={brand}
+          onChange={(e) => {
+            setBrand(e.target.value);
+            setFacilityId("");
+          }}
+          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
         >
-          Save measurement
-        </button>
-        {measMsg ? <p className="text-sm text-zinc-400">{measMsg}</p> : null}
-      </form>
-    </div>
+          <option value="">No network</option>
+          {props.brands.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block text-sm text-zinc-500">
+        Specific gym
+        <select
+          name="preferredFacilityId"
+          value={facilityId}
+          onChange={(e) => setFacilityId(e.target.value)}
+          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+        >
+          <option value="">No specific gym</option>
+          {gymChoices.map((g) => (
+            <option key={g.id} value={g.id}>
+              {brand && brand !== INDEPENDENT_NETWORK
+                ? gymOutletLabel(g)
+                : g.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block text-sm text-zinc-500">
+        Search radius (km)
+        <input
+          name="radiusKm"
+          type="number"
+          min={5}
+          max={80}
+          defaultValue={s.radiusKm}
+          className="mt-1 min-h-11 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 text-zinc-100"
+        />
+      </label>
+      <button
+        type="submit"
+        className="min-h-11 rounded-lg bg-emerald-800 px-4 text-sm font-semibold text-stone-50"
+      >
+        {props.setup ? "Save profile" : "Save training spots"}
+      </button>
+      {prefMsg ? <p className="text-sm text-zinc-400">{prefMsg}</p> : null}
+    </form>
   );
 }
